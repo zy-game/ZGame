@@ -1,0 +1,12 @@
+{
+  "name": "com.zygame.zengine",
+  "description": "zygame frame work",
+  "version": "0.0.1",
+  "unity": "2021.2",
+  "displayName": "ZEngine",
+  "dependencies": {
+    "com.unity.textmeshpro": "3.0.6",
+    "com.unity.render-pipelines.universal": "12.1.7",
+    "com.unity.collab-proxy": "1.15.18"
+  }
+}
