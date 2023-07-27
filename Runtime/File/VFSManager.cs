@@ -30,14 +30,9 @@ namespace ZEngine.VFS
             return dataList.Find(x => x.name.IsNullOrEmpty());
         }
 
-        public VFSData[] CreateVFS()
+        private string Generate()
         {
-            List<VFSData> list = new List<VFSData>();
             string vfsName = Guid.NewGuid().ToString().Replace("-", String.Empty);
-            for (int i = 0; i < AppConfig.instance.vfsOptions.sgementCount; i++)
-            {
-                list.Add(new VFSData() { vfs = vfsName });
-            }
 
             string vfsPath = AppConfig.GetLocalFilePath(vfsName);
             if (File.Exists(vfsPath))
@@ -47,27 +42,23 @@ namespace ZEngine.VFS
 
             FileStream fileStream = File.Create(vfsPath);
             fileHandleList.Add(vfsName, fileStream);
+            return vfsName;
+        }
+
+        public VFSData[] GenerateVFSystem(int count)
+        {
+            List<VFSData> list = new List<VFSData>();
+            string vfsName = Generate();
+            for (int i = 0; i < count; i++)
+            {
+                list.Add(new VFSData() { vfs = vfsName });
+            }
+
             dataList.AddRange(list);
             SaveVFSData();
             return list.ToArray();
         }
 
-        public VFSData CreateSingleVFS()
-        {
-            string vfsName = Guid.NewGuid().ToString().Replace("-", String.Empty);
-            VFSData vfsData = new VFSData() { vfs = vfsName, offset = 0 };
-            string vfsPath = AppConfig.GetLocalFilePath(vfsName);
-            if (File.Exists(vfsPath))
-            {
-                File.Delete(vfsPath);
-            }
-
-            FileStream fileStream = File.Create(vfsPath);
-            fileHandleList.Add(vfsName, fileStream);
-            dataList.Add(vfsData);
-            SaveVFSData();
-            return vfsData;
-        }
 
         public FileStream GetFileStream(string vfsName)
         {
@@ -76,7 +67,8 @@ namespace ZEngine.VFS
                 return stream;
             }
 
-            fileHandleList.Add(vfsName, stream = new FileStream(AppConfig.GetLocalFilePath(vfsName), FileMode.Open, FileAccess.ReadWrite));
+            fileHandleList.Add(vfsName,
+                stream = new FileStream(AppConfig.GetLocalFilePath(vfsName), FileMode.Open, FileAccess.ReadWrite));
             return stream;
         }
 
@@ -134,7 +126,8 @@ namespace ZEngine.VFS
         public IWriteFileAsyncExecuteHandle WriteFileAsync(string fileName, byte[] bytes)
         {
             Delete(fileName);
-            GameWriteFileAsyncExecuteHandle writeFileExecuteHandle = Engine.Reference.Dequeue<GameWriteFileAsyncExecuteHandle>();
+            GameWriteFileAsyncExecuteHandle writeFileExecuteHandle =
+                Engine.Reference.Dequeue<GameWriteFileAsyncExecuteHandle>();
             writeFileExecuteHandle.Execute(fileName, bytes);
             return writeFileExecuteHandle;
         }
@@ -158,7 +151,8 @@ namespace ZEngine.VFS
                 return default;
             }
 
-            GameReadFileAsyncExecuteHandle gameReadFileAsyncExecuteHandle = Engine.Reference.Dequeue<GameReadFileAsyncExecuteHandle>();
+            GameReadFileAsyncExecuteHandle gameReadFileAsyncExecuteHandle =
+                Engine.Reference.Dequeue<GameReadFileAsyncExecuteHandle>();
             gameReadFileAsyncExecuteHandle.Execute(fileName);
             return gameReadFileAsyncExecuteHandle;
         }

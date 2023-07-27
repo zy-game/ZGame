@@ -53,7 +53,7 @@ namespace ZEngine.VFS
                         VFSData vfsData = VFSManager.instance.GetNotUseSgement();
                         if (vfsData is null)
                         {
-                            vfsData = VFSManager.instance.CreateVFS().FirstOrDefault();
+                            vfsData = VFSManager.instance.GenerateVFSystem(count).FirstOrDefault();
                         }
 
                         WriteToVFS(vfsData, bytes, offset, length);
@@ -68,7 +68,7 @@ namespace ZEngine.VFS
                         VFSData vfsData = VFSManager.instance.GetNotUseSgement();
                         if (vfsData is null)
                         {
-                            vfsData = VFSManager.instance.CreateVFS().FirstOrDefault();
+                            vfsData = VFSManager.instance.GenerateVFSystem(AppConfig.instance.vfsOptions.sgementCount).FirstOrDefault();
                         }
 
                         WriteToVFS(vfsData, bytes, 0, bytes.Length);
@@ -76,7 +76,7 @@ namespace ZEngine.VFS
                     }
                     else
                     {
-                        VFSData vfsData = VFSManager.instance.CreateSingleVFS();
+                        VFSData vfsData = VFSManager.instance.GenerateVFSystem(1).FirstOrDefault();
                         WriteToVFS(vfsData, bytes, 0, bytes.Length);
                     }
 
