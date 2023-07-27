@@ -1,4 +1,3 @@
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using ZEngine.Options;
 using Object = UnityEngine.Object;
@@ -60,7 +59,7 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public UniTask<ResContext> LoadAssetAsync(string assetPath)
+        public IGameAsyncExecuteHandle<ResContext> LoadAssetAsync(string assetPath)
         {
             return default;
         }

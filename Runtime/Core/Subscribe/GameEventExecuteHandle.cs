@@ -2,14 +2,20 @@
 
 namespace ZEngine
 {
-    class GameEventExecuteHandle : IGameExecuteHandle
+    class GameEventExecuteHandle : IGameExecuteHandle<object>
     {
+        public object result { get; }
         public float progress { get; internal set; }
         public ExecuteStatus status { get; private set; }
 
         public void Execute(params object[] args)
         {
             throw new NotImplementedException();
+        }
+
+        public bool EnsureExecuteSuccessfuly()
+        {
+            return status == ExecuteStatus.Success;
         }
 
         public void Execute<T>(T args, IGameCancelToken cancelToken, params ISubscribe[] subscribes) where T : IEventArgs

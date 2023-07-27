@@ -38,7 +38,7 @@ namespace ZEngine
             list.Clear();
         }
 
-        public IGameExecuteHandle ExecuteGameEvent<T>(T eventArgs, GameCancelToken gameCancelToken = null) where T : IEventArgs
+        public IGameExecuteHandle<object> ExecuteGameEvent<T>(T eventArgs, GameCancelToken gameCancelToken = null) where T : IEventArgs
         {
             if (!subscribes.TryGetValue(typeof(T), out List<ISubscribe> list))
             {

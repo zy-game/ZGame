@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
+using Runtime.Core;
 using UnityEngine;
 using UnityEngine.Internal;
+using ZEngine;
 using ZEngine.Core;
-using ZEngine.File;
+using ZEngine.VFS;
 using ZEngine.Network;
 using ZEngine.Options;
 using ZEngine.Resource;
@@ -17,6 +18,15 @@ using Object = UnityEngine.Object;
 
 public sealed class Engine
 {
+    public sealed class Cache
+    {
+        public static ICacheToken Enqueue<T>(T value)
+            => RuntimeCacheing.instance.Enqueue(value);
+
+        public static T Dequeue<T>(ICacheToken token)
+            => RuntimeCacheing.instance.Dequeue<T>(token);
+    }
+
     /// <summary>
     /// 控制台
     /// </summary>
@@ -116,39 +126,39 @@ public sealed class Engine
         /// <param name="fileName"></param>
         /// <returns></returns>
         public static bool Exist(string fileName)
-            => FileManager.instance.Exist(fileName);
+            => VFSManager.instance.Exist(fileName);
 
         /// <summary>
         /// 写入文件数据
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileHandle WriteFile(string fileName, MemoryStream stream)
-            => FileManager.instance.WriteFile(fileName, stream);
+        public static IWriteFileExecuteHandle WriteFile(string fileName, byte[] bytes)
+            => VFSManager.instance.WriteFile(fileName, bytes);
 
         /// <summary>
         /// 写入文件数据
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static UniTask<IWriteFileHandle> WriteFileAsync(string fileName, MemoryStream stream)
-            => FileManager.instance.WriteFileAsync(fileName, stream);
+        public static IWriteFileAsyncExecuteHandle WriteFileAsync(string fileName, byte[] bytes)
+            => VFSManager.instance.WriteFileAsync(fileName, bytes);
 
         /// <summary>
         /// 读取文件数据
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileHandle ReadFile(string fileName)
-            => FileManager.instance.ReadFile(fileName);
+        public static IReadFileExecuteHandle ReadFile(string fileName)
+            => VFSManager.instance.ReadFile(fileName);
 
         /// <summary>
         /// 读取文件数据
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static UniTask<IReadFileHandle> ReadFileAsync(string fileName)
-            => FileManager.instance.ReadFileAsync(fileName);
+        public static IGameAsyncExecuteHandle<ReadFileResult> ReadFileAsync(string fileName)
+            => VFSManager.instance.ReadFileAsync(fileName);
     }
 
     /// <summary>
@@ -226,7 +236,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static UniTask<ResContext> LoadAssetAsync(string assetPath)
+        public static IGameAsyncExecuteHandle<ResContext> LoadAssetAsync(string assetPath)
             => ResourceManager.instance.LoadAssetAsync(assetPath);
 
         /// <summary>
@@ -315,7 +325,7 @@ public sealed class Engine
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static UniTask<T> OpenWindowAsync<T>() where T : IWindowHandle
+        public static IGameAsyncExecuteHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
             => WindowManager.instance.OpenWindowAsync<T>();
 
         /// <summary>
@@ -323,7 +333,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="windowType"></param>
         /// <returns></returns>
-        public static UniTask<IWindowHandle> OpenWindowAsync(Type windowType)
+        public static IGameAsyncExecuteHandle<IWindowHandle> OpenWindowAsync(Type windowType)
             => WindowManager.instance.OpenWindowAsync(windowType);
 
         /// <summary>
@@ -369,8 +379,8 @@ public sealed class Engine
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static UniTask<string> Get(string url, object data, Dictionary<string, object> header = default)
-            => NetworkManager.instance.Get(url, data, header);
+        public static IGameAsyncExecuteHandle<string> Get(string url, object data, Dictionary<string, object> header = default)
+            => NetworkManager.instance.Get<string>(url, data, header);
 
         /// <summary>
         /// 请求数据
@@ -380,7 +390,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static UniTask<T> Get<T>(string url, object data, Dictionary<string, object> header = default)
+        public static IGameAsyncExecuteHandle<T> GetAsync<T>(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Get<T>(url, data, header);
 
         /// <summary>
@@ -390,7 +400,7 @@ public sealed class Engine
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static UniTask<string> Post(string url, object data, Dictionary<string, object> header = default)
+        public static IGameAsyncExecuteHandle<string> Post(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Post(url, data, header);
 
         /// <summary>
@@ -401,7 +411,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static UniTask<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+        public static IGameAsyncExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Post<T>(url, data, header);
     }
 }

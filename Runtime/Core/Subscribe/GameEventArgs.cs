@@ -23,12 +23,12 @@ namespace ZEngine
             GC.SuppressFinalize(this);
         }
 
-        public static IGameExecuteHandle Execute(params object[] paramsList)
+        public static IGameExecuteHandle<object> Execute(params object[] paramsList)
         {
             return Execute(default, paramsList);
         }
 
-        public static IGameExecuteHandle Execute(GameCancelToken executeCancelToken, params object[] paramsList)
+        public static IGameExecuteHandle<object> Execute(GameCancelToken executeCancelToken, params object[] paramsList)
         {
             T eventArgs = Engine.Reference.Dequeue<T>();
             foreach (var item in paramsList)

@@ -1,5 +1,4 @@
 ﻿using System;
-using Cysharp.Threading.Tasks;
 
 namespace ZEngine.Window
 {
@@ -10,12 +9,12 @@ namespace ZEngine.Window
             return default;
         }
 
-        public UniTask<IWindowHandle> OpenWindowAsync(Type windowType)
+        public IGameAsyncExecuteHandle<IWindowHandle> OpenWindowAsync(Type windowType)
         {
             return default;
         }
 
-        public UniTask<T> OpenWindowAsync<T>() where T : IWindowHandle
+        public IGameAsyncExecuteHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
         {
             return default;
         }

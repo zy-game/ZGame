@@ -1,6 +1,6 @@
 ﻿namespace ZEngine.Resource
 {
-    public interface IResourcePreloadExecuteHandle : IGameExecuteHandle
+    public interface IResourcePreloadExecuteHandle : IGameAsyncExecuteHandle<IResourcePreloadExecuteHandle>
     {
     }
 }
