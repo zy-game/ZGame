@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using Runtime.Core;
 using UnityEngine;
 using UnityEngine.Internal;
 using ZEngine;
-using ZEngine.Core;
 using ZEngine.VFS;
 using ZEngine.Network;
 using ZEngine.Options;
@@ -20,11 +18,11 @@ public sealed class Engine
 {
     public sealed class Cache
     {
-        public static ICacheToken Enqueue<T>(T value)
+        public static CacheTokenHandle Enqueue<T>(T value)
             => RuntimeCacheing.instance.Enqueue(value);
 
-        public static T Dequeue<T>(ICacheToken token)
-            => RuntimeCacheing.instance.Dequeue<T>(token);
+        public static T Dequeue<T>(CacheTokenHandle tokenHandle)
+            => RuntimeCacheing.instance.Dequeue<T>(tokenHandle);
     }
 
     /// <summary>
@@ -57,30 +55,30 @@ public sealed class Engine
     /// <summary>
     /// 引用池
     /// </summary>
-    public sealed class Reference
+    public sealed class Class
     {
         /// <summary>
         /// 获取一个引用对象
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T Dequeue<T>()
-            => ReferenceManager.instance.Dequeue<T>();
+        public static T Loader<T>() where T : IReference
+            => ClassManager.instance.Dequeue<T>();
 
         /// <summary>
         /// 获取一个引用对象
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static IReference Dequeue(Type type)
-            => ReferenceManager.instance.Dequeue(type);
+        public static IReference Loader(Type type)
+            => ClassManager.instance.Dequeue(type);
 
         /// <summary>
         /// 回收引用对象，但是不释放对象
         /// </summary>
         /// <param name="reference"></param>
         public static void Release(IReference reference)
-            => ReferenceManager.instance.Enqueue(reference);
+            => ClassManager.instance.Enqueue(reference);
     }
 
     /// <summary>
@@ -129,20 +127,44 @@ public sealed class Engine
             => VFSManager.instance.Exist(fileName);
 
         /// <summary>
-        /// 写入文件数据
+        /// 获取文件版本
+        /// </summary>
+        /// <param name="fileName">文件名</param>
+        /// <returns></returns>
+        public static VersionOptions GetFileVersion(string fileName)
+            => VFSManager.instance.GetFileVersion(fileName);
+
+        /// <summary>
+        /// 获取本地缓存文件地址
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileExecuteHandle WriteFile(string fileName, byte[] bytes)
-            => VFSManager.instance.WriteFile(fileName, bytes);
+        public static string GetLocalFilePath(string fileName)
+            => VFSManager.GetLocalFilePath(fileName);
+
+        /// <summary>
+        /// 获取热更文件地址
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public static string GetHotfixFilePath(string fileName)
+            => fileName;
 
         /// <summary>
         /// 写入文件数据
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileAsyncExecuteHandle WriteFileAsync(string fileName, byte[] bytes)
-            => VFSManager.instance.WriteFileAsync(fileName, bytes);
+        public static IWriteFileExecuteHandle WriteFile(string fileName, byte[] bytes, VersionOptions version)
+            => VFSManager.instance.WriteFile(fileName, bytes, version);
+
+        /// <summary>
+        /// 写入文件数据
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public static IWriteFileAsyncExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
+            => VFSManager.instance.WriteFileAsync(fileName, bytes, version);
 
         /// <summary>
         /// 读取文件数据
@@ -157,7 +179,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IGameAsyncExecuteHandle<ReadFileResult> ReadFileAsync(string fileName)
+        public static IReadFileAsyncExecuteHandle ReadFileAsync(string fileName)
             => VFSManager.instance.ReadFileAsync(fileName);
     }
 
@@ -211,7 +233,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
-        public static ResourceModuleVersion GetResourceModuleVersion(string moduleName)
+        public static ResourceModuleOptions GetResourceModuleVersion(string moduleName)
             => ResourceManager.instance.GetResourceModuleVersion(moduleName);
 
         /// <summary>
@@ -220,7 +242,7 @@ public sealed class Engine
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public static ResourceBundleVersion GetResourceBundleVersion(string moduleName, string bundleName)
+        public static ResourceBundleOptions GetResourceBundleVersion(string moduleName, string bundleName)
             => ResourceManager.instance.GetResourceBundleVersion(moduleName, bundleName);
 
         /// <summary>
@@ -228,22 +250,44 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static ResContext LoadAsset(string assetPath)
-            => ResourceManager.instance.LoadAsset(assetPath);
+        public static ILoadGameAssetExecuteHandle<T> LoadAsset<T>(string assetPath) where T : Object
+            => ResourceManager.instance.LoadAsset<T>(assetPath);
+
+        /// <summary>
+        /// 加载资源
+        /// </summary>
+        /// <param name="module">资源所在模块</param>
+        /// <param name="bundle">资源所在包</param>
+        /// <param name="assetName">资源名</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static ILoadGameAssetExecuteHandle<T> LoadAsset<T>(string module, string bundle, string assetName) where T : Object
+            => ResourceManager.instance.LoadAsset<T>($"{module}/{bundle}/{assetName}");
 
         /// <summary>
         /// 异步加载资源
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static IGameAsyncExecuteHandle<ResContext> LoadAssetAsync(string assetPath)
-            => ResourceManager.instance.LoadAssetAsync(assetPath);
+        public static ILoadGameAssetAsyncExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
+            => ResourceManager.instance.LoadAssetAsync<T>(assetPath);
+
+        /// <summary>
+        /// 加载资源
+        /// </summary>
+        /// <param name="module">资源所在模块</param>
+        /// <param name="bundle">资源所在包</param>
+        /// <param name="assetName">资源名</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static ILoadGameAssetAsyncExecuteHandle<T> LoadAssetAsync<T>(string module, string bundle, string assetName) where T : Object
+            => ResourceManager.instance.LoadAssetAsync<T>($"{module}/{bundle}/{assetName}");
 
         /// <summary>
         /// 回收资源
         /// </summary>
         /// <param name="handle">资源句柄</param>
-        public static void Release(ResContext handle)
+        public static void Release(Object handle)
             => ResourceManager.instance.Release(handle);
 
         /// <summary>
@@ -258,7 +302,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ICheckUpdateExecuteHandle CheckUpdateResource(ResourceCheckUpdateOptions options)
+        public static ICheckResourceUpdateExecuteHandle CheckUpdateResource(ResourceCheckUpdateOptions options)
             => ResourceManager.instance.CheckUpdateResource(options);
     }
 
@@ -325,7 +369,7 @@ public sealed class Engine
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IGameAsyncExecuteHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
+        public static IOpenedWindowExecuteHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
             => WindowManager.instance.OpenWindowAsync<T>();
 
         /// <summary>
@@ -333,7 +377,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="windowType"></param>
         /// <returns></returns>
-        public static IGameAsyncExecuteHandle<IWindowHandle> OpenWindowAsync(Type windowType)
+        public static IOpenedWindowExecuteHandle<IWindowHandle> OpenWindowAsync(Type windowType)
             => WindowManager.instance.OpenWindowAsync(windowType);
 
         /// <summary>
@@ -379,7 +423,7 @@ public sealed class Engine
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static IGameAsyncExecuteHandle<string> Get(string url, object data, Dictionary<string, object> header = default)
+        public static INetworkRequestExecuteHandle<string> Get(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Get<string>(url, data, header);
 
         /// <summary>
@@ -390,7 +434,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IGameAsyncExecuteHandle<T> GetAsync<T>(string url, object data, Dictionary<string, object> header = default)
+        public static INetworkRequestExecuteHandle<T> GetAsync<T>(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Get<T>(url, data, header);
 
         /// <summary>
@@ -400,7 +444,7 @@ public sealed class Engine
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static IGameAsyncExecuteHandle<string> Post(string url, object data, Dictionary<string, object> header = default)
+        public static INetworkRequestExecuteHandle<string> Post(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Post(url, data, header);
 
         /// <summary>
@@ -411,7 +455,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IGameAsyncExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+        public static INetworkRequestExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Post<T>(url, data, header);
     }
 }

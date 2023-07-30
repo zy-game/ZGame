@@ -12,24 +12,29 @@ namespace ZEngine.Network
         public ushort port;
     }
 
+    public interface INetworkRequestExecuteHandle<T> : IExecuteAsyncHandle<INetworkRequestExecuteHandle<T>>
+    {
+        
+    }
+
     public class NetworkManager : Single<NetworkManager>
     {
-        public IGameAsyncExecuteHandle<string> Get(string url, object data, Dictionary<string, object> header = default)
+        public INetworkRequestExecuteHandle<string> Get(string url, object data, Dictionary<string, object> header = default)
         {
             return default;
         }
 
-        public IGameAsyncExecuteHandle<string> Post(string url, object data, Dictionary<string, object> header = default)
+        public INetworkRequestExecuteHandle<string> Post(string url, object data, Dictionary<string, object> header = default)
         {
             return default;
         }
 
-        public IGameAsyncExecuteHandle<T> Get<T>(string url, object data, Dictionary<string, object> header = default)
+        public INetworkRequestExecuteHandle<T> Get<T>(string url, object data, Dictionary<string, object> header = default)
         {
             return default;
         }
 
-        public IGameAsyncExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+        public INetworkRequestExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
         {
             return default;
         }

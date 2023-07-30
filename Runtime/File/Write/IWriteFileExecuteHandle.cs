@@ -1,106 +1,38 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using UnityEngine;
 
 namespace ZEngine.VFS
 {
-    public interface IWriteFileExecuteHandle : IGameExecuteHandle<WriteFileResult>
+    /// <summary>
+    /// 文件写入句柄
+    /// </summary>
+    public interface IWriteFileExecuteHandle : IExecuteHandle<IWriteFileExecuteHandle>
     {
+        /// <summary>
+        /// 文件名
+        /// </summary>
+        string name { get; }
+
+        /// <summary>
+        /// 文件数据
+        /// </summary>
+        byte[] bytes { get; }
+
+        /// <summary>
+        /// 文件版本
+        /// </summary>
+        VersionOptions version { get; }
     }
 
     class GameWriteFileExecuteHandle : IWriteFileExecuteHandle
     {
-        public float progress { get; }
-        public ExecuteStatus status { get; private set; }
-        public WriteFileResult result { get; private set; }
-
-
-        public void Execute(params object[] args)
-        {
-            if (args is null || args.Length is 0)
-            {
-                status = ExecuteStatus.Failed;
-                Engine.Console.Error("Not Find Write File Patg or fileData");
-                return;
-            }
-
-            string fileName = (string)args[0];
-            byte[] bytes = (byte[])args[1];
-            if (AppConfig.instance.vfsOptions.vfsState == Status.Off)
-            {
-                //todo 如果没有开启vfs，则将所有数据写入单个文件中
-                WriteToSingleFile(AppConfig.GetLocalFilePath(fileName), bytes);
-            }
-            else
-            {
-                //todo 更具vfs布局写入文件
-                WriteToVFS(fileName, bytes);
-            }
-        }
-
-        private void WriteToVFS(string filePath, byte[] bytes)
-        {
-            switch (AppConfig.instance.vfsOptions.layout)
-            {
-                case VFSLayout.SpacePriority:
-                    //紧密布局，将每个文件系统都塞满，
-                    int sl = AppConfig.instance.vfsOptions.sgementLenght;
-                    int count = bytes.Length / sl;
-                    count = bytes.Length > count * sl ? count + 1 : count;
-                    int offset = 0;
-                    int length = sl;
-                    for (int i = 0; i < count; i++)
-                    {
-                        VFSData vfsData = VFSManager.instance.GetNotUseSgement();
-                        if (vfsData is null)
-                        {
-                            vfsData = VFSManager.instance.GenerateVFSystem(count).FirstOrDefault();
-                        }
-
-                        WriteToVFS(vfsData, bytes, offset, length);
-                        offset += length;
-                    }
-
-                    break;
-                case VFSLayout.ReadWritePriority:
-                    //如果当前文件大于分片，就写入单独文件中，只有小于分片的才去合并文件
-                    if (bytes.Length <= AppConfig.instance.vfsOptions.sgementLenght)
-                    {
-                        VFSData vfsData = VFSManager.instance.GetNotUseSgement();
-                        if (vfsData is null)
-                        {
-                            vfsData = VFSManager.instance.GenerateVFSystem(AppConfig.instance.vfsOptions.sgementCount).FirstOrDefault();
-                        }
-
-                        WriteToVFS(vfsData, bytes, 0, bytes.Length);
-                        return;
-                    }
-                    else
-                    {
-                        VFSData vfsData = VFSManager.instance.GenerateVFSystem(1).FirstOrDefault();
-                        WriteToVFS(vfsData, bytes, 0, bytes.Length);
-                    }
-
-                    break;
-            }
-        }
-
-        private void WriteToVFS(VFSData vfsData, byte[] bytes, int byteOffset, int length)
-        {
-            FileStream fileStream = VFSManager.instance.GetFileStream(vfsData.vfs);
-            fileStream.Seek(vfsData.offset, SeekOrigin.Begin);
-            fileStream.Write(bytes, byteOffset, length);
-        }
-
-        private void WriteToSingleFile(string filePath, byte[] bytes)
-        {
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-
-            File.WriteAllBytes(filePath, bytes);
-            status = ExecuteStatus.Success;
-        }
+        public string name { get; set; }
+        public byte[] bytes { get; set; }
+        public ExecuteStatus status { get; set; }
+        public VersionOptions version { get; set; }
 
         public bool EnsureExecuteSuccessfuly()
         {
@@ -109,9 +41,47 @@ namespace ZEngine.VFS
 
         public void Release()
         {
-            Engine.Reference.Release(result);
-            result = null;
             status = ExecuteStatus.None;
+        }
+
+        public void Execute(params object[] args)
+        {
+            name = (string)args[0];
+            bytes = (byte[])args[1];
+            VersionOptions version = (VersionOptions)args[2];
+            VFSData vfsData = default;
+            //todo 根据vfs布局写入文件
+            if (VFSOptions.instance.layout == VFSLayout.ReadWritePriority || VFSOptions.instance.vfsState == Switch.Off)
+            {
+                //todo 如果单个文件小于等于一个VFS数据块，则写入VFS，如果大于单个VFS数据块，则写入单独的VFS中
+                vfsData = VFSManager.instance.GetVFSData(Mathf.Max(VFSOptions.instance.sgementLenght, bytes.Length));
+                if (vfsData is null)
+                {
+                    status = ExecuteStatus.Failed;
+                    return;
+                }
+
+                vfsData.Write(bytes, 0, bytes.Length, version);
+                return;
+            }
+
+            int count = bytes.Length.SpiltCount(VFSOptions.instance.sgementLenght);
+            int offset = 0;
+            int length = 0;
+            for (int i = 0; i < count; i++)
+            {
+                //todo 不用理会文件是否连续
+                vfsData = VFSManager.instance.GetVFSData();
+                if (vfsData is null)
+                {
+                    status = ExecuteStatus.Failed;
+                    return;
+                }
+
+                offset += i * length;
+                length = Mathf.Min(VFSOptions.instance.sgementLenght, bytes.Length - offset);
+                vfsData.Write(bytes, offset, length, version);
+            }
         }
     }
 }

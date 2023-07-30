@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using ZEngine.Options;
+using ZEngine.VFS;
 using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
@@ -9,18 +12,58 @@ namespace ZEngine.Resource
     /// </summary>
     public class ResourceManager : Single<ResourceManager>
     {
+        private List<BundleData> _bundleLists = new List<BundleData>();
+        private List<ResourceModuleOptions> moduleList = new List<ResourceModuleOptions>();
+        private Dictionary<string, IExecuteAsyncHandle> loadAssetHandles = new Dictionary<string, IExecuteAsyncHandle>();
+
+        class BundleData : IReference
+        {
+            public int refCount;
+            public AssetBundle bundle;
+            public List<int> objCode;
+
+            public void Release()
+            {
+            }
+        }
+
+        public ResourceManager()
+        {
+            Subscribe.Create(Update).Timer(ResourceOptions.instance.refershIntervalTime);
+            IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFile("module");
+            if (readFileExecuteHandle.EnsureExecuteSuccessfuly() is false)
+            {
+                return;
+            }
+
+            moduleList = Engine.Json.Parse<List<ResourceModuleOptions>>(Encoding.UTF8.GetString(readFileExecuteHandle.bytes));
+        }
+
+        private void Update()
+        {
+        }
+
         /// <summary>
         /// 预加载资源模块
         /// </summary>
-        /// <param name="module">模块名</param>
+        /// <param name="options">预加载配置</param>
         public IResourcePreloadExecuteHandle PreLoadResourceModule(ResourcePreloadOptions options)
         {
-            return default;
+            DefaultResourcePreloadExecuteHandle defaultResourcePreloadExecuteHandle = Engine.Class.Loader<DefaultResourcePreloadExecuteHandle>();
+            defaultResourcePreloadExecuteHandle.Execute(options);
+            return defaultResourcePreloadExecuteHandle;
         }
 
-        public ICheckUpdateExecuteHandle CheckUpdateResource(ResourceCheckUpdateOptions options)
+        /// <summary>
+        /// 资源更新检查
+        /// </summary>
+        /// <param name="options">资源更新检查配置</param>
+        /// <returns></returns>
+        public ICheckResourceUpdateExecuteHandle CheckUpdateResource(ResourceCheckUpdateOptions options)
         {
-            return default;
+            DefaultCheckResourceUpdateExecuteHandle defaultCheckUpdateExecuteHandle = Engine.Class.Loader<DefaultCheckResourceUpdateExecuteHandle>();
+            defaultCheckUpdateExecuteHandle.Execute(options);
+            return defaultCheckUpdateExecuteHandle;
         }
 
         /// <summary>
@@ -28,9 +71,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
-        public ResourceModuleVersion GetResourceModuleVersion(string moduleName)
+        public ResourceModuleOptions GetResourceModuleVersion(string moduleName)
         {
-            return default;
+            return moduleList.Find(x => x.moduleName == moduleName);
         }
 
         /// <summary>
@@ -39,9 +82,15 @@ namespace ZEngine.Resource
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public ResourceBundleVersion GetResourceBundleVersion(string moduleName, string bundleName)
+        public ResourceBundleOptions GetResourceBundleVersion(string moduleName, string bundleName)
         {
-            return default;
+            ResourceModuleOptions moduleOptions = GetResourceModuleVersion(moduleName);
+            if (moduleOptions is null || moduleOptions.bundleList is null)
+            {
+                return default;
+            }
+
+            return moduleOptions.bundleList.Find(x => x.bundleName == bundleName);
         }
 
         /// <summary>
@@ -49,9 +98,11 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public ResContext LoadAsset(string assetPath)
+        public ILoadGameAssetExecuteHandle<T> LoadAsset<T>(string assetPath) where T : Object
         {
-            return default;
+            DefaultLoadGameAssetExecuteHandle<T> defaultLoadGameAssetExecuteHandle = Engine.Class.Loader<DefaultLoadGameAssetExecuteHandle<T>>();
+            defaultLoadGameAssetExecuteHandle.Execute(assetPath);
+            return defaultLoadGameAssetExecuteHandle;
         }
 
         /// <summary>
@@ -59,17 +110,34 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public IGameAsyncExecuteHandle<ResContext> LoadAssetAsync(string assetPath)
+        public ILoadGameAssetAsyncExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
         {
-            return default;
+            if (loadAssetHandles.TryGetValue(assetPath, out IExecuteAsyncHandle handle))
+            {
+                return (ILoadGameAssetAsyncExecuteHandle<T>)handle;
+            }
+
+            DefaultLoadGameAssetAsyncExecuteHandle<T> loadGameAssetExecuteHandle = Engine.Class.Loader<DefaultLoadGameAssetAsyncExecuteHandle<T>>();
+            loadGameAssetExecuteHandle.Subscribe(Subscribe.Create((() => { loadAssetHandles.Remove(assetPath); })));
+            loadAssetHandles.Add(assetPath, loadGameAssetExecuteHandle);
+            loadGameAssetExecuteHandle.Execute(assetPath);
+            return loadGameAssetExecuteHandle;
         }
 
         /// <summary>
         /// 回收资源
         /// </summary>
         /// <param name="handle">资源句柄</param>
-        public void Release(ResContext handle)
+        public void Release(Object handle)
         {
+            BundleData bundleData = _bundleLists.Find(x => x.objCode.Contains(handle.GetInstanceID()));
+            if (bundleData is null)
+            {
+                Engine.Console.Error("Not Find The Object Bundle");
+                return;
+            }
+
+            
         }
     }
 }

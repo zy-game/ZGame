@@ -3,7 +3,7 @@
     public class ResourceCheckUpdateOptions : IReference
     {
         public URLOptions url;
-        public ResourceModuleVersion moduleOptions;
+        public ResourceModuleOptions moduleOptions;
 
         public void Release()
         {

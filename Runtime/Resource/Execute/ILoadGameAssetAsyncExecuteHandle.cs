@@ -1,14 +1,15 @@
 ﻿using System.Collections;
+using UnityEngine;
 
 namespace ZEngine.Resource
 {
-    public interface IResourcePreloadExecuteHandle : IExecuteAsyncHandle<IResourcePreloadExecuteHandle>
+    public interface ILoadGameAssetAsyncExecuteHandle<T> : IExecuteAsyncHandle<ILoadGameAssetAsyncExecuteHandle<T>> where T : Object
     {
     }
 
-    class DefaultResourcePreloadExecuteHandle : IResourcePreloadExecuteHandle
+    class DefaultLoadGameAssetAsyncExecuteHandle<T> : ILoadGameAssetAsyncExecuteHandle<T> where T : Object
     {
-        public void Subscribe(ISubscribe<IResourcePreloadExecuteHandle> subscribe)
+        public void Subscribe(ISubscribe<ILoadGameAssetAsyncExecuteHandle<T>> subscribe)
         {
             throw new System.NotImplementedException();
         }

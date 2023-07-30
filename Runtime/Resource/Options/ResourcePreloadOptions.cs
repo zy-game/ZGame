@@ -1,5 +1,4 @@
 ﻿using System;
-using ZEngine.Core;
 
 namespace ZEngine.Options
 {
@@ -7,6 +6,6 @@ namespace ZEngine.Options
     public sealed class ResourcePreloadOptions
     {
         public string moduleName;
-        public ZVersion version;
+        public VersionOptions version;
     }
 }

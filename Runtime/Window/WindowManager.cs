@@ -2,6 +2,10 @@
 
 namespace ZEngine.Window
 {
+    public interface IOpenedWindowExecuteHandle<T> : IExecuteAsyncHandle<IOpenedWindowExecuteHandle<T>>
+    {
+    }
+
     public class WindowManager : Single<WindowManager>
     {
         public IWindowHandle OpenWindow(Type windowType)
@@ -9,12 +13,12 @@ namespace ZEngine.Window
             return default;
         }
 
-        public IGameAsyncExecuteHandle<IWindowHandle> OpenWindowAsync(Type windowType)
+        public IOpenedWindowExecuteHandle<IWindowHandle> OpenWindowAsync(Type windowType)
         {
             return default;
         }
 
-        public IGameAsyncExecuteHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
+        public IOpenedWindowExecuteHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
         {
             return default;
         }
