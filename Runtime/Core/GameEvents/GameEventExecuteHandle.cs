@@ -3,18 +3,24 @@ using System.Collections.Generic;
 
 namespace ZEngine
 {
-    class GameEventExecuteHandle : IExecuteHandle
+    class GameEventExecuteHandle : IExecute
     {
-        public ExecuteStatus status { get; private set; }
+        private Status _status;
 
         public void Execute(params object[] args)
         {
             throw new NotImplementedException();
         }
 
+        Status IExecute.status
+        {
+            get => _status;
+            set => _status = value;
+        }
+
         public bool EnsureExecuteSuccessfuly()
         {
-            return status == ExecuteStatus.Success;
+            return _status == Status.Success;
         }
 
         public void Execute<T>(T args, params ISubscribe[] subscribes) where T : GameEventArgs<T>
@@ -26,7 +32,7 @@ namespace ZEngine
 
             for (int i = 0; i < subscribes.Length; i++)
             {
-                if (status is not ExecuteStatus.Execute)
+                if (_status is not Status.Execute)
                 {
                     return;
                 }
@@ -41,18 +47,18 @@ namespace ZEngine
                 }
                 catch (Exception e)
                 {
-                    status = ExecuteStatus.Failed;
+                    _status = Status.Failed;
                     Engine.Console.Error(e);
                 }
             }
 
-            status = ExecuteStatus.Success;
+            _status = Status.Success;
             Engine.Class.Release(args);
         }
 
         public void Release()
         {
-            status = ExecuteStatus.None;
+            _status = Status.None;
         }
     }
 }

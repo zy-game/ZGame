@@ -3,8 +3,8 @@
     /// <summary>
     /// 执行器
     /// </summary>
-    public interface IExecuteHandle : IExecute
+    /// <typeparam name="T"></typeparam>
+    public interface IExecute<T> : IExecute
     {
-
     }
 }

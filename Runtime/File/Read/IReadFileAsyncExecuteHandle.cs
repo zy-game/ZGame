@@ -14,27 +14,63 @@ namespace ZEngine.VFS
     {
     }
 
-    class GameReadFileAsyncExecuteHandle : ExecuteAsyncHandle<IReadFileAsyncExecuteHandle>, IReadFileAsyncExecuteHandle
+    class GameReadFileAsyncExecuteHandle : IExecuteAsyncHandle<IReadFileAsyncExecuteHandle>, IReadFileAsyncExecuteHandle
     {
+        private Status _status;
         public long time { get; set; }
         public string name { get; set; }
         public byte[] bytes { get; set; }
-        public ExecuteStatus status { get; set; }
+        public float progress { get; private set; }
         public VersionOptions version { get; set; }
+        private IEnumerator _enumerator;
+        private List<ISubscribe> _subscribes = new List<ISubscribe>();
 
-        public override void Execute(params object[] args)
+        Status IExecute.status
+        {
+            get => _status;
+            set => _status = value;
+        }
+
+        public void Release()
+        {
+            version = VersionOptions.None;
+            bytes = Array.Empty<byte>();
+            time = 0;
+            name = String.Empty;
+            progress = 0;
+            _enumerator = null;
+            _subscribes.ForEach(Engine.Class.Release);
+            _subscribes.Clear();
+        }
+
+        public IEnumerator GetCoroutine()
+        {
+            if (_enumerator is null)
+            {
+                _enumerator = GenericExeuteCoroutine();
+            }
+
+            return _enumerator;
+        }
+
+        public void Subscribe(ISubscribe subscribe)
+        {
+            _subscribes.Add(subscribe);
+        }
+
+        public void Execute(params object[] args)
         {
             name = args[0].ToString();
             GetCoroutine().Startup();
         }
 
-        protected override IEnumerator GenericExeuteCoroutine()
+        protected IEnumerator GenericExeuteCoroutine()
         {
             VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
             if (vfsDatas is null || vfsDatas.Length is 0)
             {
-                status = ExecuteStatus.Failed;
-                this.Completion();
+                _status = Status.Failed;
+                Completion();
                 yield break;
             }
 
@@ -49,8 +85,24 @@ namespace ZEngine.VFS
                 yield return new WaitForEndOfFrame();
             }
 
-            status = ExecuteStatus.Success;
-            this.Completion();
+            _status = Status.Success;
+            Completion();
+        }
+
+
+        void Completion()
+        {
+            foreach (var VARIABLE in _subscribes)
+            {
+                if (VARIABLE is ISubscribe<IReadFileAsyncExecuteHandle> read)
+                {
+                    read.Execute(this);
+                }
+                else
+                {
+                    VARIABLE.Execute(this);
+                }
+            }
         }
     }
 }

@@ -28,14 +28,3 @@ public sealed class ConfigOptions : Attribute
         this.localtion = localtion;
     }
 }
-
-
-
-[Serializable]
-public sealed class URLOptions
-{
-    public bool isOn;
-    public string name;
-    public string address;
-    public ushort port;
-}

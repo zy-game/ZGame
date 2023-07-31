@@ -9,27 +9,12 @@ namespace ZEngine
     /// <summary>
     /// 异步执行器
     /// </summary>
-    public interface IExecuteAsyncHandle : IExecuteHandle
+    public interface IExecuteAsyncHandle : IExecute
     {
         /// <summary>
         /// 异步执行器执行进度
         /// </summary>
         float progress { get; }
-
-        /// <summary>
-        /// 暂停执行
-        /// </summary>
-        void Paused();
-
-        /// <summary>
-        /// 恢复执行
-        /// </summary>
-        void Resume();
-
-        /// <summary>
-        /// 取消执行
-        /// </summary>
-        void Cancel();
 
         /// <summary>
         /// 获取异步对象
@@ -42,119 +27,65 @@ namespace ZEngine
         /// </summary>
         /// <param name="subscribe">订阅器</param>
         void Subscribe(ISubscribe subscribe);
-    }
 
-    public abstract class ExecuteAsyncHandle : IExecuteAsyncHandle
-    {
-        public float progress { get; protected set; }
-        public ExecuteStatus status { get; set; }
-        private IEnumerator _enumerator;
-        protected List<ISubscribe> subscribes = new List<ISubscribe>();
-
-        public IEnumerator GetCoroutine()
-        {
-            if (_enumerator is null)
-            {
-                _enumerator = GenericExeuteCoroutine();
-            }
-
-            return _enumerator;
-        }
-
-        public void Subscribe(ISubscribe subscribe)
-        {
-            subscribes.Add(subscribe);
-        }
-
-        public bool EnsureExecuteSuccessfuly()
-        {
-            return status == ExecuteStatus.Success;
-        }
-
-
+        /// <summary>
+        /// 取消执行
+        /// </summary>
         public void Cancel()
         {
-            status = ExecuteStatus.Canceled;
+            status = Status.Canceled;
         }
 
-        public virtual void Release()
-        {
-            status = ExecuteStatus.None;
-            subscribes.ForEach(Engine.Class.Release);
-            subscribes.Clear();
-            progress = 0;
-        }
-
-        public virtual void Completion()
-        {
-            for (int i = 0; i < subscribes.Count; i++)
-            {
-                try
-                {
-                    if (subscribes[i] is ISubscribe<IWriteFileAsyncExecuteHandle> write)
-                    {
-                        write.Execute(this);
-                    }
-                    else
-                    {
-                    }
-
-                    subscribes[i].Execute(this);
-                }
-                catch (Exception e)
-                {
-                    Engine.Console.Error(e);
-                }
-            }
-        }
-
+        /// <summary>
+        /// 暂停执行
+        /// </summary>
         public void Paused()
         {
-            if (status is not ExecuteStatus.None)
+            if (status is not Status.None)
             {
                 Engine.Console.Error("The current Execute has not started executing");
                 return;
             }
 
-            if (status is ExecuteStatus.Paused)
+            if (status is Status.Paused)
             {
                 Engine.Console.Error("The current execute has been paused");
                 return;
             }
 
-            if (status is ExecuteStatus.Canceled || status is ExecuteStatus.Failed || status is ExecuteStatus.Success)
+            if (status is Status.Canceled || status is Status.Failed || status is Status.Success)
             {
                 Engine.Console.Error("Current execute completed");
                 return;
             }
 
-            status = ExecuteStatus.Paused;
+            status = Status.Paused;
         }
 
+        /// <summary>
+        /// 恢复执行
+        /// </summary>
         public void Resume()
         {
-            if (status is not ExecuteStatus.Paused)
+            if (status is not Status.Paused)
             {
                 Engine.Console.Error("The current execute is not in a paused state, and there is no need to reply to the execution");
                 return;
             }
 
-            if (status is ExecuteStatus.Execute)
+            if (status is Status.Execute)
             {
                 Engine.Console.Error("The current execute is already in progress");
                 return;
             }
 
-            if (status is ExecuteStatus.Canceled || status is ExecuteStatus.Failed || status is ExecuteStatus.Success)
+            if (status is Status.Canceled || status is Status.Failed || status is Status.Success)
             {
                 Engine.Console.Error("Current execute completed");
                 return;
             }
 
-            status = ExecuteStatus.Execute;
+            status = Status.Execute;
         }
-
-        public abstract void Execute(params object[] args);
-        protected abstract IEnumerator GenericExeuteCoroutine();
     }
 }

@@ -7,7 +7,7 @@ namespace ZEngine.VFS
     /// <summary>
     /// 文件读取句柄
     /// </summary>
-    public interface IReadFileExecuteHandle : IExecuteHandle<IReadFileExecuteHandle>
+    public interface IReadFileExecuteHandle : IExecute<IReadFileExecuteHandle>
     {
         /// <summary>
         /// 文件名
@@ -32,25 +32,31 @@ namespace ZEngine.VFS
 
     class GameReadFileExecuteHandle : IReadFileExecuteHandle
     {
+        private Status _status;
         public string name { get; set; }
         public long time { get; set; }
         public byte[] bytes { get; set; }
         public VersionOptions version { get; set; }
-        public ExecuteStatus status { get; set; }
 
         public void Release()
         {
             version = null;
-            status = ExecuteStatus.None;
+            _status = Status.None;
             bytes = Array.Empty<byte>();
             time = 0;
             name = String.Empty;
             GC.SuppressFinalize(this);
         }
 
+        Status IExecute.status
+        {
+            get => _status;
+            set => _status = value;
+        }
+
         public bool EnsureExecuteSuccessfuly()
         {
-            return status == ExecuteStatus.Success;
+            return _status == Status.Success;
         }
 
         public void Execute(params object[] args)
@@ -59,7 +65,7 @@ namespace ZEngine.VFS
             VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
             if (vfsDatas is null || vfsDatas.Length is 0)
             {
-                status = ExecuteStatus.Failed;
+                _status = Status.Failed;
                 return;
             }
 
@@ -73,7 +79,7 @@ namespace ZEngine.VFS
                 offset += vfsDatas[i].fileLenght;
             }
 
-            status = ExecuteStatus.Success;
+            _status = Status.Success;
         }
     }
 }

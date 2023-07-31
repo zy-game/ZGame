@@ -233,7 +233,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
-        public static ResourceModuleOptions GetResourceModuleVersion(string moduleName)
+        public static ModuleManifest GetResourceModuleVersion(string moduleName)
             => ResourceManager.instance.GetResourceModuleVersion(moduleName);
 
         /// <summary>
@@ -242,7 +242,7 @@ public sealed class Engine
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public static ResourceBundleOptions GetResourceBundleVersion(string moduleName, string bundleName)
+        public static BundleManifest GetResourceBundleVersion(string moduleName, string bundleName)
             => ResourceManager.instance.GetResourceBundleVersion(moduleName, bundleName);
 
         /// <summary>
@@ -302,7 +302,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ICheckResourceUpdateExecuteHandle CheckUpdateResource(ResourceCheckUpdateOptions options)
+        public static ICheckResourceUpdateExecuteHandle CheckUpdateResource(ResourceUpdateOptions options)
             => ResourceManager.instance.CheckUpdateResource(options);
     }
 

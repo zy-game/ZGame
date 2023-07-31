@@ -3,15 +3,19 @@ using UnityEngine;
 
 namespace ZEngine.Resource
 {
-    public interface ILoadGameAssetAsyncExecuteHandle<T> : IExecuteAsyncHandle<ILoadGameAssetAsyncExecuteHandle<T>> where T : Object
+    public interface ILoadGameAssetAsyncExecuteHandle<T> : IRuntimeAssetObjectHandle, IExecuteAsyncHandle<ILoadGameAssetAsyncExecuteHandle<T>> where T : Object
     {
     }
 
     class DefaultLoadGameAssetAsyncExecuteHandle<T> : ILoadGameAssetAsyncExecuteHandle<T> where T : Object
     {
-        public void Subscribe(ISubscribe<ILoadGameAssetAsyncExecuteHandle<T>> subscribe)
+        private Status _status;
+        public float progress { get; private set; }
+
+        Status IExecute.status
         {
-            throw new System.NotImplementedException();
+            get => _status;
+            set => _status = value;
         }
 
         public void Release()
@@ -19,17 +23,17 @@ namespace ZEngine.Resource
             throw new System.NotImplementedException();
         }
 
-        public bool EnsureExecuteSuccessfuly()
+        public void ToBind(GameObject gameObject)
         {
             throw new System.NotImplementedException();
         }
+
 
         public void Execute(params object[] args)
         {
             throw new System.NotImplementedException();
         }
 
-        public float progress { get; }
 
         public IEnumerator GetCoroutine()
         {
@@ -37,21 +41,6 @@ namespace ZEngine.Resource
         }
 
         public void Subscribe(ISubscribe subscribe)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Paused()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Resume()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Cancel()
         {
             throw new System.NotImplementedException();
         }

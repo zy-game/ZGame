@@ -14,18 +14,55 @@ namespace ZEngine.VFS
     {
     }
 
-    class GameWriteFileAsyncExecuteHandle : ExecuteAsyncHandle<IWriteFileAsyncExecuteHandle>, IWriteFileAsyncExecuteHandle
+    class GameWriteFileAsyncExecuteHandle : IExecuteAsyncHandle<IWriteFileAsyncExecuteHandle>, IWriteFileAsyncExecuteHandle
     {
+        private Status _status;
+        private IEnumerator _enumerator;
+        private List<ISubscribe> _subscribes = new List<ISubscribe>();
         public string name { get; set; }
         public byte[] bytes { get; set; }
-        public ExecuteStatus status { get; set; }
         public VersionOptions version { get; set; }
+        public float progress { get; private set; }
 
-        public override void Execute(params object[] args)
+        Status IExecute.status
+        {
+            get => _status;
+            set => _status = value;
+        }
+
+        public void Release()
+        {
+            _status = Status.None;
+            _enumerator = null;
+            _subscribes.ForEach(Engine.Class.Release);
+            _subscribes.Clear();
+            name = String.Empty;
+            bytes = Array.Empty<byte>();
+            version = VersionOptions.None;
+            progress = 0;
+        }
+
+
+        public IEnumerator GetCoroutine()
+        {
+            if (_enumerator is null)
+            {
+                _enumerator = ExeuteCoroutine();
+            }
+
+            return _enumerator;
+        }
+
+        public void Subscribe(ISubscribe subscribe)
+        {
+            _subscribes.Add(subscribe);
+        }
+
+        public void Execute(params object[] args)
         {
             if (args is null || args.Length is 0)
             {
-                status = ExecuteStatus.Failed;
+                _status = Status.Failed;
                 Engine.Console.Error("Not Find Write File Patg or fileData");
                 this.Completion();
                 return;
@@ -37,7 +74,7 @@ namespace ZEngine.VFS
             GetCoroutine().Startup();
         }
 
-        protected override IEnumerator GenericExeuteCoroutine()
+        protected IEnumerator ExeuteCoroutine()
         {
             VFSData vfsData = default;
             //todo 根据vfs布局写入文件
@@ -47,7 +84,7 @@ namespace ZEngine.VFS
                 vfsData = VFSManager.instance.GetVFSData(Mathf.Max(VFSOptions.instance.sgementLenght, bytes.Length));
                 if (vfsData is null)
                 {
-                    status = ExecuteStatus.Failed;
+                    _status = Status.Failed;
                     this.Completion();
                     yield break;
                 }
@@ -67,7 +104,7 @@ namespace ZEngine.VFS
                 vfsData = VFSManager.instance.GetVFSData();
                 if (vfsData is null)
                 {
-                    status = ExecuteStatus.Failed;
+                    _status = Status.Failed;
                     this.Completion();
                     yield break;
                 }
@@ -79,6 +116,21 @@ namespace ZEngine.VFS
             }
 
             this.Completion();
+        }
+
+        private void Completion()
+        {
+            foreach (var VARIABLE in _subscribes)
+            {
+                if (VARIABLE is ISubscribe<IWriteFileAsyncExecuteHandle> write)
+                {
+                    write.Execute(this);
+                }
+                else
+                {
+                    VARIABLE.Execute(this);
+                }
+            }
         }
     }
 }

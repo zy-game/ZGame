@@ -50,10 +50,10 @@ namespace ZEngine
         /// <param name="executeCancelToken">执行取消令牌</param>
         /// <param name="paramsList">事件参数</param>
         /// <returns></returns>
-        public static IExecuteHandle Execute(params object[] paramsList)
+        public static IExecute Execute(params object[] paramsList)
         {
             T eventArgs = Engine.Class.Loader<T>();
-            return SubscribeManager.instance.ExecuteGameEvent(eventArgs);
+            return ZEngine.Subscribe.ExecuteGameEvent(eventArgs);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace ZEngine
         /// <returns>取消事件订阅令牌</returns>
         public static void Subscribe(ISubscribe<T> subscribe)
         {
-            SubscribeManager.instance.Add<T>(subscribe.GetHashCode(), subscribe);
+            ZEngine.Subscribe.Add<T>(subscribe.GetHashCode(), subscribe);
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace ZEngine
         /// <param name="callback">事件回调</param>
         public static void Unsubscribe(Action<T> callback)
         {
-            SubscribeManager.instance.Remove<T>(callback.GetHashCode());
+            ZEngine.Subscribe.Remove<T>(callback.GetHashCode());
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace ZEngine
         /// <param name="subscribe">事件订阅器</param>
         public static void Unsubscribe(ISubscribe<T> subscribe)
         {
-            SubscribeManager.instance.Remove<T>(subscribe.GetHashCode());
+            ZEngine.Subscribe.Remove<T>(subscribe.GetHashCode());
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace ZEngine
         /// </summary>
         public static void Clear()
         {
-            SubscribeManager.instance.Clear<T>();
+            ZEngine.Subscribe.Clear<T>();
         }
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ZEngine.VFS
 {
     [ConfigOptions(ConfigOptions.Localtion.Internal)]
-    public sealed class VFSOptions : ScriptObject<VFSOptions>
+    public sealed class VFSOptions : ScriptObjectSingle<VFSOptions>
     {
         [Header("是否启用VFS")] public Switch vfsState;
         [Header("文件扩展名")] public string extension;

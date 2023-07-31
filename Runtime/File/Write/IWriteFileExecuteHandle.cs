@@ -9,7 +9,7 @@ namespace ZEngine.VFS
     /// <summary>
     /// 文件写入句柄
     /// </summary>
-    public interface IWriteFileExecuteHandle : IExecuteHandle<IWriteFileExecuteHandle>
+    public interface IWriteFileExecuteHandle : IExecute<IWriteFileExecuteHandle>
     {
         /// <summary>
         /// 文件名
@@ -29,19 +29,28 @@ namespace ZEngine.VFS
 
     class GameWriteFileExecuteHandle : IWriteFileExecuteHandle
     {
+        private Status _status;
         public string name { get; set; }
         public byte[] bytes { get; set; }
-        public ExecuteStatus status { get; set; }
         public VersionOptions version { get; set; }
+
+        Status IExecute.status
+        {
+            get => _status;
+            set => _status = value;
+        }
 
         public bool EnsureExecuteSuccessfuly()
         {
-            return status == ExecuteStatus.Success;
+            return _status == Status.Success;
         }
 
         public void Release()
         {
-            status = ExecuteStatus.None;
+            _status = Status.None;
+            version = VersionOptions.None;
+            bytes = Array.Empty<byte>();
+            name = String.Empty;
         }
 
         public void Execute(params object[] args)
@@ -57,7 +66,7 @@ namespace ZEngine.VFS
                 vfsData = VFSManager.instance.GetVFSData(Mathf.Max(VFSOptions.instance.sgementLenght, bytes.Length));
                 if (vfsData is null)
                 {
-                    status = ExecuteStatus.Failed;
+                    _status = Status.Failed;
                     return;
                 }
 
@@ -74,7 +83,7 @@ namespace ZEngine.VFS
                 vfsData = VFSManager.instance.GetVFSData();
                 if (vfsData is null)
                 {
-                    status = ExecuteStatus.Failed;
+                    _status = Status.Failed;
                     return;
                 }
 

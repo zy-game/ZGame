@@ -3,7 +3,7 @@
     /// <summary>
     /// 执行器状态
     /// </summary>
-    public enum ExecuteStatus : byte
+    public enum Status : byte
     {
         None,
 

@@ -5,10 +5,10 @@ namespace ZEngine
     [Serializable]
     public class VersionOptions
     {
-        public int mainVersion;
-        public int subVersion;
-        public int buildVersion;
+        public uint mainVersion;
+        public uint subVersion;
+        public uint buildVersion;
 
-        public static VersionOptions None { get; } = new VersionOptions() { mainVersion = -1, subVersion = -1, buildVersion = -1 };
+        public static VersionOptions None { get; } = new VersionOptions() { mainVersion = 0, subVersion = 0, buildVersion = 0 };
     }
 }
