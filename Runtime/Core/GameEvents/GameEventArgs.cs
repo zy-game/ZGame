@@ -1,19 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ZEngine
 {
-    public abstract class GameEventSubscrbe<T> : ISubscribe<T> where T : GameEventArgs<T>
-    {
-        public abstract void Execute(T args);
-
-        public abstract void Release();
-
-        public void Execute(params object[] args)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     /// <summary>
     /// 游戏事件参数
     /// </summary>
@@ -22,9 +11,30 @@ namespace ZEngine
     {
         private bool isFree = false;
 
+        private object[] dataList;
+
+        public object this[int index] => GetData<object>(index);
+
+        public T GetData<T>(int index)
+        {
+            if (dataList is null || dataList.Length == 0)
+            {
+                return default;
+            }
+
+            if (index < 0 || index >= dataList.Length)
+            {
+                Engine.Console.Error(GameEngineException.Create(new IndexOutOfRangeException()));
+            }
+
+            return (T)dataList[index];
+        }
+
+
         public virtual void Release()
         {
             isFree = false;
+            dataList = Array.Empty<object>();
         }
 
         /// <summary>
@@ -53,7 +63,11 @@ namespace ZEngine
         public static IExecute Execute(params object[] paramsList)
         {
             T eventArgs = Engine.Class.Loader<T>();
-            return ZEngine.Subscribe.ExecuteGameEvent(eventArgs);
+            eventArgs.dataList = paramsList;
+            ISubscribe[] subscribes = SubscribeManager.instance.GetSubscribes<T>();
+            GameEventExecuteHandle defaultGameEventExecuteHandle = Engine.Class.Loader<GameEventExecuteHandle>();
+            defaultGameEventExecuteHandle.Execute(eventArgs, subscribes);
+            return defaultGameEventExecuteHandle;
         }
 
         /// <summary>
@@ -63,9 +77,8 @@ namespace ZEngine
         /// <returns>取消事件订阅令牌</returns>
         public static void Subscribe(Action<T> callback)
         {
-            InternalGameEventSubscribe<T> internalGameEventSubscribe = Engine.Class.Loader<InternalGameEventSubscribe<T>>();
-            internalGameEventSubscribe.callback = callback;
-            Subscribe(internalGameEventSubscribe);
+            SubscribeMethodHandle<T> internalGameEventSubscribeMethod = SubscribeMethodHandle<T>.Create(callback);
+            Subscribe(internalGameEventSubscribeMethod);
         }
 
 
@@ -76,7 +89,7 @@ namespace ZEngine
         /// <returns>取消事件订阅令牌</returns>
         public static void Subscribe(ISubscribe<T> subscribe)
         {
-            ZEngine.Subscribe.Add<T>(subscribe.GetHashCode(), subscribe);
+            SubscribeManager.instance.Add<T>(subscribe);
         }
 
         /// <summary>
@@ -85,7 +98,7 @@ namespace ZEngine
         /// <param name="callback">事件回调</param>
         public static void Unsubscribe(Action<T> callback)
         {
-            ZEngine.Subscribe.Remove<T>(callback.GetHashCode());
+            SubscribeManager.instance.Remove<T>(callback);
         }
 
         /// <summary>
@@ -94,7 +107,7 @@ namespace ZEngine
         /// <param name="subscribe">事件订阅器</param>
         public static void Unsubscribe(ISubscribe<T> subscribe)
         {
-            ZEngine.Subscribe.Remove<T>(subscribe.GetHashCode());
+            SubscribeManager.instance.Remove<T>(subscribe);
         }
 
         /// <summary>
@@ -102,7 +115,7 @@ namespace ZEngine
         /// </summary>
         public static void Clear()
         {
-            ZEngine.Subscribe.Clear<T>();
+            SubscribeManager.instance.Clear<T>();
         }
     }
 }

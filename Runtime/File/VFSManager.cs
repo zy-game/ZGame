@@ -34,7 +34,7 @@ namespace ZEngine.VFS
                 return;
             }
 
-            Subscribe.Create(CheckFileStreamTimeout).Timer(VFSOptions.instance.time);
+            SubscribeMethodHandle.Create(CheckFileStreamTimeout).Timer(VFSOptions.instance.time);
             dataList = Engine.Json.Parse<List<VFSData>>(File.ReadAllText(filePath));
         }
 

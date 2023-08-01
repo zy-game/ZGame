@@ -1,12 +1,10 @@
 ﻿namespace ZEngine.World
 {
-    public interface ILogicSystem
+    public interface ILogicSystem : IExecute
     {
-        
     }
 
-    public interface ILogicSystemHandle
+    public interface ILogicSystemHandle : IExecute
     {
-        
     }
 }

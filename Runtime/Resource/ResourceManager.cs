@@ -9,9 +9,33 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    public interface IRuntimeAssetObjectHandle : IReference
+    class RuntimeAssetBundleHandle : IReference
     {
-        void ToBind(GameObject gameObject);
+        public string name;
+        public int refCount;
+        public string module;
+
+        private AssetBundle bundle;
+        private HashSet<Object> _handles = new HashSet<Object>();
+
+        public void Release()
+        {
+        }
+
+        public bool Contains(Object target)
+        {
+            return _handles.Contains(target);
+        }
+
+
+        public T Load<T>(string path) where T : Object
+        {
+            return default;
+        }
+
+        public void Unload(Object obj)
+        {
+        }
     }
 
     /// <summary>
@@ -21,65 +45,11 @@ namespace ZEngine.Resource
     {
         private List<ModuleManifest> moduleList = new List<ModuleManifest>();
         private List<RuntimeAssetBundleHandle> _bundleLists = new List<RuntimeAssetBundleHandle>();
-        private List<RuntimeAssetObjectHandle> _objectHandles = new List<RuntimeAssetObjectHandle>();
         private Dictionary<string, IExecuteAsyncHandle> loadAssetHandles = new Dictionary<string, IExecuteAsyncHandle>();
 
-        class RuntimeAssetBundleHandle : IReference
-        {
-            public int refCount;
-            public AssetBundle bundle;
-
-            public void Release()
-            {
-            }
-
-            public T Load<T>(string path) where T : Object
-            {
-                return default;
-            }
-
-            public void Unload(Object obj)
-            {
-            }
-        }
-
-        class RuntimeAssetObjectHandle : IRuntimeAssetObjectHandle
-        {
-            class ObserverGameObjectDestroy : MonoBehaviour
-            {
-                public UnityEvent subscribe = new UnityEvent();
-
-                private void OnDestroy()
-                {
-                    subscribe.Invoke();
-                }
-            }
-
-            public Object target;
-            public RuntimeAssetBundleHandle onwer;
-
-            public void Release()
-            {
-                onwer.Unload(target);
-                target = null;
-                onwer = null;
-            }
-
-            public void ToBind(GameObject gameObject)
-            {
-                ObserverGameObjectDestroy observerGameObjectDestroy = gameObject.GetComponent<ObserverGameObjectDestroy>();
-                if (observerGameObjectDestroy is null)
-                {
-                    observerGameObjectDestroy = gameObject.AddComponent<ObserverGameObjectDestroy>();
-                }
-
-                observerGameObjectDestroy.subscribe.AddListener(() => Engine.Class.Release(this));
-            }
-        }
 
         public ResourceManager()
         {
-            Subscribe.Create(Update).Timer(ResourceOptions.instance.refershIntervalTime);
             IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFile("module");
             if (readFileExecuteHandle.EnsureExecuteSuccessfuly() is false)
             {
@@ -87,10 +57,6 @@ namespace ZEngine.Resource
             }
 
             moduleList = Engine.Json.Parse<List<ModuleManifest>>(Encoding.UTF8.GetString(readFileExecuteHandle.bytes));
-        }
-
-        private void Update()
-        {
         }
 
         /// <summary>
@@ -121,9 +87,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
-        public ModuleManifest GetResourceModuleVersion(string moduleName)
+        public ModuleManifest GetModuleManifest(string moduleName)
         {
-            return moduleList.Find(x => x.moduleName == moduleName);
+            return moduleList.Find(x => x.name == moduleName);
         }
 
         /// <summary>
@@ -132,15 +98,41 @@ namespace ZEngine.Resource
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public BundleManifest GetResourceBundleVersion(string moduleName, string bundleName)
+        public BundleManifest GetResourceBundleManifest(string moduleName, string bundleName)
         {
-            ModuleManifest moduleManifest = GetResourceModuleVersion(moduleName);
+            ModuleManifest moduleManifest = GetModuleManifest(moduleName);
             if (moduleManifest is null || moduleManifest.bundleList is null)
             {
                 return default;
             }
 
-            return moduleManifest.bundleList.Find(x => x.bundleName == bundleName);
+            return moduleManifest.bundleList.Find(x => x.name == bundleName);
+        }
+
+        /// <summary>
+        /// 获取资源包信息
+        /// </summary>
+        /// <param name="assetPath">资源路径</param>
+        /// <returns></returns>
+        public BundleManifest GetResourceBundleManifest(string assetPath)
+        {
+            foreach (var module in moduleList)
+            {
+                BundleManifest bundleManifest = module.GetBundleManifestWithAsset(assetPath);
+                if (bundleManifest is null)
+                {
+                    continue;
+                }
+
+                return bundleManifest;
+            }
+
+            return default;
+        }
+
+        internal RuntimeAssetBundleHandle GetRuntimeAssetBundleHandle(string bundleName)
+        {
+            return _bundleLists.Find(x => x.name == bundleName);
         }
 
         /// <summary>
@@ -168,7 +160,7 @@ namespace ZEngine.Resource
             }
 
             DefaultLoadGameAssetAsyncExecuteHandle<T> loadGameAssetExecuteHandle = Engine.Class.Loader<DefaultLoadGameAssetAsyncExecuteHandle<T>>();
-            loadGameAssetExecuteHandle.Subscribe(Subscribe.Create((() => { loadAssetHandles.Remove(assetPath); })));
+            loadGameAssetExecuteHandle.Subscribe(SubscribeMethodHandle.Create(() => { loadAssetHandles.Remove(assetPath); }));
             loadAssetHandles.Add(assetPath, loadGameAssetExecuteHandle);
             loadGameAssetExecuteHandle.Execute(assetPath);
             return loadGameAssetExecuteHandle;
@@ -177,16 +169,16 @@ namespace ZEngine.Resource
         /// <summary>
         /// 回收资源
         /// </summary>
-        /// <param name="handle">资源句柄</param>
-        public void Release(Object handle)
+        /// <param name="target">资源句柄</param>
+        public void Release(Object target)
         {
-            RuntimeAssetObjectHandle runtimeAssetObjectHandle = _objectHandles.Find(x => x.target == handle);
+            RuntimeAssetBundleHandle runtimeAssetObjectHandle = _bundleLists.Find(x => x.Contains(target));
             if (runtimeAssetObjectHandle is null)
             {
                 return;
             }
 
-            Engine.Class.Release(runtimeAssetObjectHandle);
+            runtimeAssetObjectHandle.Unload(target);
         }
     }
 }

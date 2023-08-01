@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ZEngine.Resource
 {
-    public interface ILoadGameAssetAsyncExecuteHandle<T> : IRuntimeAssetObjectHandle, IExecuteAsyncHandle<ILoadGameAssetAsyncExecuteHandle<T>> where T : Object
+    public interface ILoadGameAssetAsyncExecuteHandle<T> : ILoadGameAssetExecuteHandle<T>, IExecuteAsyncHandle<ILoadGameAssetAsyncExecuteHandle<T>> where T : Object
     {
     }
 
@@ -11,6 +11,7 @@ namespace ZEngine.Resource
     {
         private Status _status;
         public float progress { get; private set; }
+        public T result { get; }
 
         Status IExecute.status
         {
@@ -41,6 +42,16 @@ namespace ZEngine.Resource
         }
 
         public void Subscribe(ISubscribe subscribe)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void BindGameObject(GameObject gameObject)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Unload()
         {
             throw new System.NotImplementedException();
         }

@@ -233,8 +233,8 @@ public sealed class Engine
         /// </summary>
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
-        public static ModuleManifest GetResourceModuleVersion(string moduleName)
-            => ResourceManager.instance.GetResourceModuleVersion(moduleName);
+        public static ModuleManifest GetModuleManifest(string moduleName)
+            => ResourceManager.instance.GetModuleManifest(moduleName);
 
         /// <summary>
         /// 获取资源包版本
@@ -242,8 +242,17 @@ public sealed class Engine
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public static BundleManifest GetResourceBundleVersion(string moduleName, string bundleName)
-            => ResourceManager.instance.GetResourceBundleVersion(moduleName, bundleName);
+        public static BundleManifest GetResourceBundleManifest(string assetPath)
+            => ResourceManager.instance.GetResourceBundleManifest(assetPath);
+
+        /// <summary>
+        /// 获取资源包版本
+        /// </summary>
+        /// <param name="moduleName">模块名</param>
+        /// <param name="bundleName">资源包名</param>
+        /// <returns></returns>
+        public static BundleManifest GetResourceBundleManifest(string moduleName, string bundleName)
+            => ResourceManager.instance.GetResourceBundleManifest(moduleName, bundleName);
 
         /// <summary>
         /// 加载资源
