@@ -8,7 +8,7 @@ namespace ZEngine.Resource
     /// 补丁包资源
     /// </summary>
     [Serializable]
-    public sealed class BundlePatchManifest
+    public sealed class PatchManifest
     {
         /// <summary>
         /// 所属资源包

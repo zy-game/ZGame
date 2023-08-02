@@ -2,7 +2,7 @@
 
 namespace ZEngine.Window
 {
-    public interface IOpenedWindowExecuteHandle<T> : IExecuteAsyncHandle<IOpenedWindowExecuteHandle<T>>
+    public interface IOpenedWindowExecuteAsyncHandleHandle<T> : IExecuteHandle<IOpenedWindowExecuteAsyncHandleHandle<T>>
     {
     }
 
@@ -13,12 +13,12 @@ namespace ZEngine.Window
             return default;
         }
 
-        public IOpenedWindowExecuteHandle<IWindowHandle> OpenWindowAsync(Type windowType)
+        public IOpenedWindowExecuteAsyncHandleHandle<IWindowHandle> OpenWindowAsync(Type windowType)
         {
             return default;
         }
 
-        public IOpenedWindowExecuteHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
+        public IOpenedWindowExecuteAsyncHandleHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
         {
             return default;
         }

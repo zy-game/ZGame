@@ -9,7 +9,7 @@ namespace ZEngine
     /// 异步执行器
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IExecuteAsyncHandle<T> : IExecute<T>, IExecuteAsyncHandle
+    public interface IExecuteHandle<T> : IExecuteHandle
     {
         /// <summary>
         /// 订阅执行器完成回调

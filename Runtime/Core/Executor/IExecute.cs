@@ -9,16 +9,11 @@ namespace ZEngine
     /// </summary>
     public interface IExecute : IReference
     {
-        Status status { get; protected set; }
-
         /// <summary>
         /// 确保执行成功
         /// </summary>
         /// <returns></returns>
-        public bool EnsureExecuteSuccessfuly()
-        {
-            return status == Status.Success;
-        }
+        bool EnsureExecuteSuccessfuly();
 
         /// <summary>
         /// 开始执行
@@ -26,6 +21,4 @@ namespace ZEngine
         /// <param name="args"></param>
         void Execute(params object[] args);
     }
-
- 
 }

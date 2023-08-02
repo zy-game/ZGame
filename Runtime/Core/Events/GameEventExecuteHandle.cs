@@ -12,12 +12,6 @@ namespace ZEngine
             throw new NotImplementedException();
         }
 
-        Status IExecute.status
-        {
-            get => _status;
-            set => _status = value;
-        }
-
         public bool EnsureExecuteSuccessfuly()
         {
             return _status == Status.Success;

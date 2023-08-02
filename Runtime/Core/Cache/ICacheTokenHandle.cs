@@ -2,10 +2,11 @@
 
 namespace ZEngine
 {
-    public struct CacheTokenHandle
+    public class CacheTokenHandle : IReference
     {
         internal object value;
         internal float releaseTime;
+        public string name;
 
         internal void Initialized(object value)
         {
@@ -39,6 +40,14 @@ namespace ZEngine
         public void Refresh()
         {
             releaseTime = Time.realtimeSinceStartup + CacheOptions.instance.time;
+        }
+
+        public static CacheTokenHandle Create(string name, object value)
+        {
+            CacheTokenHandle handle = new CacheTokenHandle();
+            handle.value = value;
+            handle.name = name;
+            return handle;
         }
     }
 }

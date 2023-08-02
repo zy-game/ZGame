@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine;
 using UnityEngine.Events;
 using ZEngine.Options;
 using ZEngine.VFS;
@@ -9,77 +7,52 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    class RuntimeAssetBundleHandle : IReference
-    {
-        public string name;
-        public int refCount;
-        public string module;
-
-        private AssetBundle bundle;
-        private HashSet<Object> _handles = new HashSet<Object>();
-
-        public void Release()
-        {
-        }
-
-        public bool Contains(Object target)
-        {
-            return _handles.Contains(target);
-        }
-
-
-        public T Load<T>(string path) where T : Object
-        {
-            return default;
-        }
-
-        public void Unload(Object obj)
-        {
-        }
-    }
-
     /// <summary>
     /// 资源管理器
     /// </summary>
-    public class ResourceManager : Single<ResourceManager>
+    internal class ResourceManager : Single<ResourceManager>
     {
         private List<ModuleManifest> moduleList = new List<ModuleManifest>();
+        private List<CacheTokenHandle> cacheList = new List<CacheTokenHandle>();
         private List<RuntimeAssetBundleHandle> _bundleLists = new List<RuntimeAssetBundleHandle>();
-        private Dictionary<string, IExecuteAsyncHandle> loadAssetHandles = new Dictionary<string, IExecuteAsyncHandle>();
+        private Dictionary<string, IExecuteHandle> loadAssetHandles = new Dictionary<string, IExecuteHandle>();
 
 
         public ResourceManager()
         {
-            IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFile("module");
-            if (readFileExecuteHandle.EnsureExecuteSuccessfuly() is false)
+            IReadFileExecute readFileExecuteHandleHandle = Engine.FileSystem.ReadFile("module");
+            if (readFileExecuteHandleHandle.EnsureExecuteSuccessfuly() is false)
             {
                 return;
             }
 
-            moduleList = Engine.Json.Parse<List<ModuleManifest>>(Encoding.UTF8.GetString(readFileExecuteHandle.bytes));
+            moduleList = Engine.Json.Parse<List<ModuleManifest>>(Encoding.UTF8.GetString(readFileExecuteHandleHandle.bytes));
         }
 
-        /// <summary>
-        /// 预加载资源模块
-        /// </summary>
-        /// <param name="options">预加载配置</param>
-        public IResourcePreloadExecuteHandle PreLoadResourceModule(ResourcePreloadOptions options)
+        internal void AddAssetBundleHandle(RuntimeAssetBundleHandle bundleHandle)
         {
-            DefaultResourcePreloadExecuteHandle defaultResourcePreloadExecuteHandle = Engine.Class.Loader<DefaultResourcePreloadExecuteHandle>();
-            defaultResourcePreloadExecuteHandle.Execute(options);
-            return defaultResourcePreloadExecuteHandle;
+            _bundleLists.Add(bundleHandle);
         }
 
-        /// <summary>
-        /// 资源更新检查
-        /// </summary>
-        /// <param name="options">资源更新检查配置</param>
-        /// <returns></returns>
-        public ICheckResourceUpdateExecuteHandle CheckUpdateResource(ResourceUpdateOptions options)
+        internal void RemoveAssetBundleHandle(RuntimeAssetBundleHandle bundleHandle)
         {
-            DefaultCheckResourceUpdateExecuteHandle defaultCheckUpdateExecuteHandle = Engine.Class.Loader<DefaultCheckResourceUpdateExecuteHandle>();
-            defaultCheckUpdateExecuteHandle.Execute(options);
-            return defaultCheckUpdateExecuteHandle;
+            _bundleLists.Remove(bundleHandle);
+            cacheList.Add(Engine.Cache.Enqueue(bundleHandle));
+        }
+
+        internal RuntimeAssetBundleHandle GetRuntimeAssetBundleHandle(string bundleName)
+        {
+            RuntimeAssetBundleHandle runtimeAssetBundleHandle = _bundleLists.Find(x => x.name == bundleName);
+            if (runtimeAssetBundleHandle is null)
+            {
+                CacheTokenHandle cacheTokenHandle = cacheList.Find(x => x.name == bundleName);
+                if (cacheTokenHandle is not null)
+                {
+                    runtimeAssetBundleHandle = Engine.Cache.Dequeue<RuntimeAssetBundleHandle>(cacheTokenHandle);
+                }
+            }
+
+            return runtimeAssetBundleHandle;
         }
 
         /// <summary>
@@ -130,9 +103,27 @@ namespace ZEngine.Resource
             return default;
         }
 
-        internal RuntimeAssetBundleHandle GetRuntimeAssetBundleHandle(string bundleName)
+        /// <summary>
+        /// 预加载资源模块
+        /// </summary>
+        /// <param name="options">预加载配置</param>
+        public IResourcePreloadExecuteHandle PreLoadResourceModule(ResourcePreloadOptions options)
         {
-            return _bundleLists.Find(x => x.name == bundleName);
+            DefaultResourcePreloadExecuteHandle defaultResourcePreloadExecuteHandle = Engine.Class.Loader<DefaultResourcePreloadExecuteHandle>();
+            defaultResourcePreloadExecuteHandle.Execute(options);
+            return defaultResourcePreloadExecuteHandle;
+        }
+
+        /// <summary>
+        /// 资源更新检查
+        /// </summary>
+        /// <param name="options">资源更新检查配置</param>
+        /// <returns></returns>
+        public ICheckUpdateExecuteHandle CheckUpdateResource(ResourceUpdateOptions options)
+        {
+            DefaultCheckUpdateExecuteHandle defaultCheckUpdateExecuteHandle = Engine.Class.Loader<DefaultCheckUpdateExecuteHandle>();
+            defaultCheckUpdateExecuteHandle.Execute(options);
+            return defaultCheckUpdateExecuteHandle;
         }
 
         /// <summary>
@@ -140,11 +131,11 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public ILoadGameAssetExecuteHandle<T> LoadAsset<T>(string assetPath) where T : Object
+        public IAssetRequestExecute<T> LoadAsset<T>(string assetPath) where T : Object
         {
-            DefaultLoadGameAssetExecuteHandle<T> defaultLoadGameAssetExecuteHandle = Engine.Class.Loader<DefaultLoadGameAssetExecuteHandle<T>>();
-            defaultLoadGameAssetExecuteHandle.Execute(assetPath);
-            return defaultLoadGameAssetExecuteHandle;
+            DefaultAssetRequestExecute<T> defaultLoadAssetExecuteHandle = Engine.Class.Loader<DefaultAssetRequestExecute<T>>();
+            defaultLoadAssetExecuteHandle.Execute(assetPath);
+            return defaultLoadAssetExecuteHandle;
         }
 
         /// <summary>
@@ -152,18 +143,18 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public ILoadGameAssetAsyncExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
+        public IAssetRequestExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
         {
-            if (loadAssetHandles.TryGetValue(assetPath, out IExecuteAsyncHandle handle))
+            if (loadAssetHandles.TryGetValue(assetPath, out IExecuteHandle handle))
             {
-                return (ILoadGameAssetAsyncExecuteHandle<T>)handle;
+                return (IAssetRequestExecuteHandle<T>)handle;
             }
 
-            DefaultLoadGameAssetAsyncExecuteHandle<T> loadGameAssetExecuteHandle = Engine.Class.Loader<DefaultLoadGameAssetAsyncExecuteHandle<T>>();
-            loadGameAssetExecuteHandle.Subscribe(SubscribeMethodHandle.Create(() => { loadAssetHandles.Remove(assetPath); }));
-            loadAssetHandles.Add(assetPath, loadGameAssetExecuteHandle);
-            loadGameAssetExecuteHandle.Execute(assetPath);
-            return loadGameAssetExecuteHandle;
+            DefaultAssetRequestExecuteHandle<T> asyncAssetRequestExecuteHandle = Engine.Class.Loader<DefaultAssetRequestExecuteHandle<T>>();
+            asyncAssetRequestExecuteHandle.Subscribe(Method.Create(() => { loadAssetHandles.Remove(assetPath); }));
+            loadAssetHandles.Add(assetPath, asyncAssetRequestExecuteHandle);
+            asyncAssetRequestExecuteHandle.Execute(assetPath);
+            return asyncAssetRequestExecuteHandle;
         }
 
         /// <summary>

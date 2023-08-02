@@ -1,20 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ZEngine
 {
-    public interface ISubscribe : IReference
-    {
-        void Execute(params object[] args);
-    }
-
-    public interface ISubscribe<T> : ISubscribe
-    {
-        void Execute(T args);
-    }
-
-    internal class SubscribeManager : Single<SubscribeManager>
+    internal class EventManager : Single<EventManager>
     {
         private Dictionary<Type, List<ISubscribe>> _subscribes = new Dictionary<Type, List<ISubscribe>>();
 

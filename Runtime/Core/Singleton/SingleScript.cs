@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 
-public class ScriptObjectSingle<T> : ScriptableObject where T : ScriptableObject
+public class SingleScript<T> : ScriptableObject where T : ScriptableObject
 {
     private static T _instance;
     public static T instance => Initialized();

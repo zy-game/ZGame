@@ -2,7 +2,7 @@
 
 namespace ZEngine
 {
-    public class SubscribeMethodHandle<T> : ISubscribe<T>
+    public class Method<T> : ISubscribe<T>
     {
         private Action<T> callback;
 
@@ -23,7 +23,7 @@ namespace ZEngine
 
         public override bool Equals(object obj)
         {
-            if (obj is SubscribeMethodHandle<T> target)
+            if (obj is Method<T> target)
             {
                 return target.callback == callback;
             }
@@ -36,11 +36,11 @@ namespace ZEngine
             return callback.GetHashCode();
         }
 
-        public static SubscribeMethodHandle<T> Create(Action<T> action)
+        public static Method<T> Create(Action<T> action)
         {
-            SubscribeMethodHandle<T> subscribeMethod = Engine.Class.Loader<SubscribeMethodHandle<T>>();
-            subscribeMethod.callback = action;
-            return subscribeMethod;
+            Method<T> methodSubscribe = Engine.Class.Loader<Method<T>>();
+            methodSubscribe.callback = action;
+            return methodSubscribe;
         }
     }
 }

@@ -1,8 +1,7 @@
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using System.Linq;
 using UnityEngine;
 
 namespace ZEngine.VFS
@@ -10,7 +9,7 @@ namespace ZEngine.VFS
     /// <summary>
     /// 文件写入句柄
     /// </summary>
-    public interface IWriteFileExecuteHandle : IExecuteHandle<IWriteFileExecuteHandle>
+    public interface IWriteFileExecute : IExecute<IWriteFileExecute>
     {
         /// <summary>
         /// 文件名
@@ -28,44 +27,31 @@ namespace ZEngine.VFS
         VersionOptions version { get; }
     }
 
-    class DefaultWriteFileAsyncExecuteHandle : IWriteFileExecuteHandle
+    class DefaultWriteFileExecuteHandleHandle : IWriteFileExecute
     {
         private Status _status;
-        private List<ISubscribe> _subscribes = new List<ISubscribe>();
         public string name { get; set; }
         public byte[] bytes { get; set; }
         public VersionOptions version { get; set; }
-        public float progress { get; private set; }
+
+        public bool EnsureExecuteSuccessfuly()
+        {
+            return _status == Status.Success;
+        }
 
         public void Release()
         {
             _status = Status.None;
-            _subscribes.ForEach(Engine.Class.Release);
-            _subscribes.Clear();
-            name = String.Empty;
-            bytes = Array.Empty<byte>();
             version = VersionOptions.None;
-            progress = 0;
+            bytes = Array.Empty<byte>();
+            name = String.Empty;
         }
 
-        public void Subscribe(ISubscribe subscribe)
+        public void Execute(params object[] args)
         {
-            _subscribes.Add(subscribe);
-        }
-
-        public IEnumerator Execute(params object[] args)
-        {
-            if (args is null || args.Length is 0)
-            {
-                _status = Status.Failed;
-                Engine.Console.Error("Not Find Write File Patg or fileData");
-                this.Completion();
-                yield break;
-            }
-
             name = (string)args[0];
             bytes = (byte[])args[1];
-            version = (VersionOptions)args[2];
+            VersionOptions version = (VersionOptions)args[2];
             VFSData vfsData = default;
             //todo 根据vfs布局写入文件
             if (VFSOptions.instance.layout == VFSLayout.ReadWritePriority || VFSOptions.instance.vfsState == Switch.Off)
@@ -75,14 +61,11 @@ namespace ZEngine.VFS
                 if (vfsData is null)
                 {
                     _status = Status.Failed;
-                    this.Completion();
-                    yield break;
+                    return;
                 }
 
-                progress = 1f;
                 vfsData.Write(bytes, 0, bytes.Length, version);
-                this.Completion();
-                yield break;
+                return;
             }
 
             int count = bytes.Length.SpiltCount(VFSOptions.instance.sgementLenght);
@@ -95,32 +78,15 @@ namespace ZEngine.VFS
                 if (vfsData is null)
                 {
                     _status = Status.Failed;
-                    this.Completion();
-                    yield break;
+                    return;
                 }
 
                 offset += i * length;
-                progress = (float)offset / bytes.Length;
                 length = Mathf.Min(VFSOptions.instance.sgementLenght, bytes.Length - offset);
                 vfsData.Write(bytes, offset, length, version);
             }
 
-            this.Completion();
-        }
-
-        private void Completion()
-        {
-            foreach (var VARIABLE in _subscribes)
-            {
-                if (VARIABLE is ISubscribe<IWriteFileExecuteHandle> write)
-                {
-                    write.Execute(this);
-                }
-                else
-                {
-                    VARIABLE.Execute(this);
-                }
-            }
+            VFSManager.instance.SaveVFSData();
         }
     }
 }

@@ -34,7 +34,7 @@ namespace ZEngine.VFS
                 return;
             }
 
-            SubscribeMethodHandle.Create(CheckFileStreamTimeout).Timer(VFSOptions.instance.time);
+            Method.Create(CheckFileStreamTimeout).Timer(VFSOptions.instance.time);
             dataList = Engine.Json.Parse<List<VFSData>>(File.ReadAllText(filePath));
         }
 
@@ -69,7 +69,7 @@ namespace ZEngine.VFS
         /// <summary>
         /// 保存VFS数据
         /// </summary>
-        private void SaveVFSData()
+        public void SaveVFSData()
         {
             string filePath = GetLocalFilePath("vfs");
             File.WriteAllText(filePath, Engine.Json.ToJson(dataList));
@@ -176,46 +176,45 @@ namespace ZEngine.VFS
             return dataList.Where(x => x.name == fileName).ToArray();
         }
 
-        public IWriteFileExecuteHandle WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
         {
             Delete(fileName);
-            GameWriteFileExecuteHandle writeFileExecuteHandle = Engine.Class.Loader<GameWriteFileExecuteHandle>();
-            writeFileExecuteHandle.Execute(fileName, bytes, version);
-            SaveVFSData();
-            return writeFileExecuteHandle;
+            DefaultWriteFileExecuteHandleHandle defaultWriteFileAsyncExecuteHandle = Engine.Class.Loader<DefaultWriteFileExecuteHandleHandle>();
+            defaultWriteFileAsyncExecuteHandle.Execute(fileName, bytes, version);
+            return defaultWriteFileAsyncExecuteHandle;
         }
 
-        public IWriteFileAsyncExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
+        public IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
         {
             Delete(fileName);
-            GameWriteFileAsyncExecuteHandle writeFileExecuteHandle = Engine.Class.Loader<GameWriteFileAsyncExecuteHandle>();
-            writeFileExecuteHandle.Execute(fileName, bytes, version);
-            SaveVFSData();
-            return writeFileExecuteHandle;
+            DefaultWriteFileAsyncExecuteHandle defaultWriteFileAsyncExecuteHandle = Engine.Class.Loader<DefaultWriteFileAsyncExecuteHandle>();
+            defaultWriteFileAsyncExecuteHandle.Subscribe(Method.Create(SaveVFSData));
+            defaultWriteFileAsyncExecuteHandle.Execute(fileName, bytes, version).Startup();
+            return defaultWriteFileAsyncExecuteHandle;
         }
 
-        public IReadFileExecuteHandle ReadFile(string fileName)
+        public IReadFileExecute ReadFile(string fileName)
         {
             if (Exist(fileName) is false)
             {
                 return default;
             }
 
-            GameReadFileExecuteHandle gameReadFileExecuteHandle = Engine.Class.Loader<GameReadFileExecuteHandle>();
-            gameReadFileExecuteHandle.Execute(fileName);
-            return gameReadFileExecuteHandle;
+            DefaultReadFileExecuteHandleHandle defaultReadFileExecuteHandle = Engine.Class.Loader<DefaultReadFileExecuteHandleHandle>();
+            defaultReadFileExecuteHandle.Execute(fileName);
+            return defaultReadFileExecuteHandle;
         }
 
-        public IReadFileAsyncExecuteHandle ReadFileAsync(string fileName)
+        public IReadFileExecuteHandle ReadFileAsync(string fileName)
         {
             if (Exist(fileName) is false)
             {
                 return default;
             }
 
-            GameReadFileAsyncExecuteHandle gameReadFileAsyncExecuteHandle = Engine.Class.Loader<GameReadFileAsyncExecuteHandle>();
-            gameReadFileAsyncExecuteHandle.Execute(fileName);
-            return gameReadFileAsyncExecuteHandle;
+            DefaultReadFileAsyncExecuteHandle defaultReadFileAsyncExecuteHandle = Engine.Class.Loader<DefaultReadFileAsyncExecuteHandle>();
+            defaultReadFileAsyncExecuteHandle.Execute(fileName).Startup();
+            return defaultReadFileAsyncExecuteHandle;
         }
     }
 }

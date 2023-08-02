@@ -1,16 +1,13 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using UnityEngine;
 
 namespace ZEngine.VFS
 {
     /// <summary>
     /// 文件读取句柄
     /// </summary>
-    public interface IReadFileExecuteHandle : IExecuteHandle<IReadFileExecuteHandle>
+    public interface IReadFileExecute : IExecute<IReadFileExecute>
     {
         /// <summary>
         /// 文件名
@@ -33,35 +30,37 @@ namespace ZEngine.VFS
         VersionOptions version { get; }
     }
 
-    class DefaultReadFileAsyncExecuteHandle : IReadFileExecuteHandle
+    class DefaultReadFileExecuteHandleHandle : IReadFileExecute
     {
         private Status _status;
-        public long time { get; set; }
         public string name { get; set; }
+        public long time { get; set; }
         public byte[] bytes { get; set; }
-        public float progress { get; private set; }
         public VersionOptions version { get; set; }
-        private List<ISubscribe> _subscribes = new List<ISubscribe>();
 
         public void Release()
         {
-            version = VersionOptions.None;
+            version = null;
+            _status = Status.None;
             bytes = Array.Empty<byte>();
             time = 0;
             name = String.Empty;
-            progress = 0;
-            _subscribes.ForEach(Engine.Class.Release);
-            _subscribes.Clear();
+            GC.SuppressFinalize(this);
         }
 
-        public IEnumerator Execute(params object[] paramsList)
+        public bool EnsureExecuteSuccessfuly()
         {
+            return _status == Status.Success;
+        }
+
+        public void Execute(params object[] args)
+        {
+            name = args[0].ToString();
             VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
             if (vfsDatas is null || vfsDatas.Length is 0)
             {
                 _status = Status.Failed;
-                Completion();
-                yield break;
+                return;
             }
 
             bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
@@ -72,36 +71,9 @@ namespace ZEngine.VFS
             {
                 vfsDatas[i].Read(bytes, offset, vfsDatas[i].fileLenght);
                 offset += vfsDatas[i].fileLenght;
-                yield return new WaitForEndOfFrame();
             }
 
             _status = Status.Success;
-            Completion();
-        }
-
-        public void Subscribe(ISubscribe subscribe)
-        {
-            _subscribes.Add(subscribe);
-        }
-
-        public bool EnsureExecuteSuccessfuly()
-        {
-            return _status == Status.Success;
-        }
-
-        void Completion()
-        {
-            foreach (var VARIABLE in _subscribes)
-            {
-                if (VARIABLE is ISubscribe<IReadFileExecuteHandle> read)
-                {
-                    read.Execute(this);
-                }
-                else
-                {
-                    VARIABLE.Execute(this);
-                }
-            }
         }
     }
 }

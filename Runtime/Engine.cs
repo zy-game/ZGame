@@ -155,7 +155,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileExecuteHandle WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public static IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
             => VFSManager.instance.WriteFile(fileName, bytes, version);
 
         /// <summary>
@@ -163,7 +163,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileAsyncExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
+        public static IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
             => VFSManager.instance.WriteFileAsync(fileName, bytes, version);
 
         /// <summary>
@@ -171,7 +171,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileExecuteHandle ReadFile(string fileName)
+        public static IReadFileExecute ReadFile(string fileName)
             => VFSManager.instance.ReadFile(fileName);
 
         /// <summary>
@@ -179,7 +179,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileAsyncExecuteHandle ReadFileAsync(string fileName)
+        public static IReadFileExecuteHandle ReadFileAsync(string fileName)
             => VFSManager.instance.ReadFileAsync(fileName);
     }
 
@@ -219,7 +219,7 @@ public sealed class Engine
         /// <param name="paramsList">运行逻辑系统所需要的参数</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static ILogicSystemHandle LaunchLogicSystem<T>(params object[] paramsList) where T : ILogicSystem
+        public static ILogicSystemExecuteHandle LaunchLogicSystem<T>(params object[] paramsList) where T : ILogicSystemExecuteHandle
             => WorldManager.instance.LaunchLogicSystem<T>(paramsList);
     }
 
@@ -259,7 +259,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static ILoadGameAssetExecuteHandle<T> LoadAsset<T>(string assetPath) where T : Object
+        public static IAssetRequestExecute<T> LoadAsset<T>(string assetPath) where T : Object
             => ResourceManager.instance.LoadAsset<T>(assetPath);
 
         /// <summary>
@@ -270,7 +270,7 @@ public sealed class Engine
         /// <param name="assetName">资源名</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static ILoadGameAssetExecuteHandle<T> LoadAsset<T>(string module, string bundle, string assetName) where T : Object
+        public static IAssetRequestExecute<T> LoadAsset<T>(string module, string bundle, string assetName) where T : Object
             => ResourceManager.instance.LoadAsset<T>($"{module}/{bundle}/{assetName}");
 
         /// <summary>
@@ -278,7 +278,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static ILoadGameAssetAsyncExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
+        public static IAssetRequestExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
             => ResourceManager.instance.LoadAssetAsync<T>(assetPath);
 
         /// <summary>
@@ -289,7 +289,7 @@ public sealed class Engine
         /// <param name="assetName">资源名</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static ILoadGameAssetAsyncExecuteHandle<T> LoadAssetAsync<T>(string module, string bundle, string assetName) where T : Object
+        public static IAssetRequestExecuteHandle<T> LoadAssetAsync<T>(string module, string bundle, string assetName) where T : Object
             => ResourceManager.instance.LoadAssetAsync<T>($"{module}/{bundle}/{assetName}");
 
         /// <summary>
@@ -311,7 +311,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ICheckResourceUpdateExecuteHandle CheckUpdateResource(ResourceUpdateOptions options)
+        public static ICheckUpdateExecuteHandle CheckUpdateResource(ResourceUpdateOptions options)
             => ResourceManager.instance.CheckUpdateResource(options);
     }
 
@@ -378,7 +378,7 @@ public sealed class Engine
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IOpenedWindowExecuteHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
+        public static IOpenedWindowExecuteAsyncHandleHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
             => WindowManager.instance.OpenWindowAsync<T>();
 
         /// <summary>
@@ -386,7 +386,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="windowType"></param>
         /// <returns></returns>
-        public static IOpenedWindowExecuteHandle<IWindowHandle> OpenWindowAsync(Type windowType)
+        public static IOpenedWindowExecuteAsyncHandleHandle<IWindowHandle> OpenWindowAsync(Type windowType)
             => WindowManager.instance.OpenWindowAsync(windowType);
 
         /// <summary>
@@ -432,7 +432,7 @@ public sealed class Engine
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static INetworkRequestExecuteHandle<string> Get(string url, object data, Dictionary<string, object> header = default)
+        public static INetworkRequestExecuteAsyncHandleHandle<string> Get(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Get<string>(url, data, header);
 
         /// <summary>
@@ -443,7 +443,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static INetworkRequestExecuteHandle<T> GetAsync<T>(string url, object data, Dictionary<string, object> header = default)
+        public static INetworkRequestExecuteAsyncHandleHandle<T> GetAsync<T>(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Get<T>(url, data, header);
 
         /// <summary>
@@ -453,7 +453,7 @@ public sealed class Engine
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static INetworkRequestExecuteHandle<string> Post(string url, object data, Dictionary<string, object> header = default)
+        public static INetworkRequestExecuteAsyncHandleHandle<string> Post(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Post(url, data, header);
 
         /// <summary>
@@ -464,7 +464,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static INetworkRequestExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+        public static INetworkRequestExecuteAsyncHandleHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Post<T>(url, data, header);
     }
 }

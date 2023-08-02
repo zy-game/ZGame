@@ -52,7 +52,7 @@ namespace ZEngine.VFS
             FileStream stream = VFSManager.instance.GetFileStream(vfs);
             if (stream is null)
             {
-                Engine.Console.Error(GameEngineException.Create(new FileNotFoundException(vfs)));
+                Engine.Console.Error(EngineException.Create(new FileNotFoundException(vfs)));
                 return;
             }
 
@@ -70,13 +70,13 @@ namespace ZEngine.VFS
             FileStream stream = VFSManager.instance.GetFileStream(vfs);
             if (stream is null)
             {
-                Engine.Console.Error(GameEngineException.Create(new FileNotFoundException(vfs)));
+                Engine.Console.Error(EngineException.Create(new FileNotFoundException(vfs)));
                 return;
             }
 
             if (bytes.Length < offset + length)
             {
-                Engine.Console.Error(GameEngineException.Create(new IndexOutOfRangeException()));
+                Engine.Console.Error(EngineException.Create(new IndexOutOfRangeException()));
                 return;
             }
 

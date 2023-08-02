@@ -39,6 +39,6 @@ namespace ZEngine.Resource
         /// <summary>
         /// 补丁包列表
         /// </summary>
-        public List<BundlePatchManifest> patchs;
+        public List<PatchManifest> patchs;
     }
 }

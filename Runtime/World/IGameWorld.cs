@@ -12,10 +12,10 @@ namespace ZEngine.World
         void OnDisable();
         void OnEnable();
         void LoadLogicSystem(Type systemType);
-        void LoadLogicSystem<T>() where T : ILogicSystem;
+        void LoadLogicSystem<T>() where T : ILogicSystemExecuteHandle;
         void UnloadLogicSystem(Type systemType);
-        void UnloadLogicSystem<T>() where T : ILogicSystem;
-        ILogicSystemHandle SwitchSystem<T>(params object[] paramsList) where T : ILogicSystem;
+        void UnloadLogicSystem<T>() where T : ILogicSystemExecuteHandle;
+        ILogicSystemExecuteHandle SwitchSystem<T>(params object[] paramsList) where T : ILogicSystemExecuteHandle;
     }
 
     public interface IGameWorldOptions : IReference
@@ -23,6 +23,5 @@ namespace ZEngine.World
         string name { get; }
         Camera camera { get; }
         string sceneName { get; }
-        
     }
 }

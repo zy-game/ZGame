@@ -10,21 +10,19 @@ public class Startup : MonoBehaviour
         Engine.Game.LaunchLogicSystem<LaunchLogicSystem>();
     }
 
-    class LaunchLogicSystem : ILogicSystem
+    class LaunchLogicSystem : ILogicSystemExecuteHandle
     {
         private Status _status;
-
-        Status IExecute.status
-        {
-            get => _status;
-            set => _status = value;
-        }
 
         public void Release()
         {
             throw new NotImplementedException();
         }
 
+        public bool EnsureExecuteSuccessfuly()
+        {
+            throw new NotImplementedException();
+        }
 
         public void Execute(params object[] args)
         {

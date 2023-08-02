@@ -25,6 +25,12 @@ public static class Extension
         EnsureContentInstance();
         return _content.StartCoroutine(enumerator);
     }
+    
+    public static void Stoping(this IEnumerator coroutine)
+    {
+        EnsureContentInstance();
+        _content.StopCoroutine(coroutine);
+    }
 
     public static void Stoping(this Coroutine coroutine)
     {

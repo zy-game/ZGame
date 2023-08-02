@@ -18,7 +18,7 @@
         {
         }
 
-        public ILogicSystemHandle LaunchLogicSystem<T>(params object[] paramsList)
+        public ILogicSystemExecuteHandle LaunchLogicSystem<T>(params object[] paramsList)
         {
             return default;
         }

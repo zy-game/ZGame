@@ -24,7 +24,7 @@ namespace ZEngine
 
             if (index < 0 || index >= dataList.Length)
             {
-                Engine.Console.Error(GameEngineException.Create(new IndexOutOfRangeException()));
+                Engine.Console.Error(EngineException.Create(new IndexOutOfRangeException()));
             }
 
             return (T)dataList[index];
@@ -64,7 +64,7 @@ namespace ZEngine
         {
             T eventArgs = Engine.Class.Loader<T>();
             eventArgs.dataList = paramsList;
-            ISubscribe[] subscribes = SubscribeManager.instance.GetSubscribes<T>();
+            ISubscribe[] subscribes = EventManager.instance.GetSubscribes<T>();
             GameEventExecuteHandle defaultGameEventExecuteHandle = Engine.Class.Loader<GameEventExecuteHandle>();
             defaultGameEventExecuteHandle.Execute(eventArgs, subscribes);
             return defaultGameEventExecuteHandle;
@@ -77,8 +77,8 @@ namespace ZEngine
         /// <returns>取消事件订阅令牌</returns>
         public static void Subscribe(Action<T> callback)
         {
-            SubscribeMethodHandle<T> internalGameEventSubscribeMethod = SubscribeMethodHandle<T>.Create(callback);
-            Subscribe(internalGameEventSubscribeMethod);
+            Method<T> internalGameEventMethodSubscribeMethod = Method<T>.Create(callback);
+            Subscribe(internalGameEventMethodSubscribeMethod);
         }
 
 
@@ -89,7 +89,7 @@ namespace ZEngine
         /// <returns>取消事件订阅令牌</returns>
         public static void Subscribe(ISubscribe<T> subscribe)
         {
-            SubscribeManager.instance.Add<T>(subscribe);
+            EventManager.instance.Add<T>(subscribe);
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace ZEngine
         /// <param name="callback">事件回调</param>
         public static void Unsubscribe(Action<T> callback)
         {
-            SubscribeManager.instance.Remove<T>(callback);
+            EventManager.instance.Remove<T>(callback);
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace ZEngine
         /// <param name="subscribe">事件订阅器</param>
         public static void Unsubscribe(ISubscribe<T> subscribe)
         {
-            SubscribeManager.instance.Remove<T>(subscribe);
+            EventManager.instance.Remove<T>(subscribe);
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace ZEngine
         /// </summary>
         public static void Clear()
         {
-            SubscribeManager.instance.Clear<T>();
+            EventManager.instance.Clear<T>();
         }
     }
 }
