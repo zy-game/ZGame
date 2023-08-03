@@ -6,7 +6,7 @@ namespace ZEngine.Resource
     /// 资源数据
     /// </summary>
     [Serializable]
-    public sealed class AssetManifest
+    public sealed class RuntimeAssetManifest
     {
         /// <summary>
         /// 文件名

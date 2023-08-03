@@ -9,7 +9,7 @@ namespace ZEngine.Resource
     /// 模块数据
     /// </summary>
     [Serializable]
-    public sealed class ModuleManifest
+    public sealed class RuntimeModuleManifest
     {
         /// <summary>
         /// 模块名
@@ -24,14 +24,14 @@ namespace ZEngine.Resource
         /// <summary>
         /// 资源包列表
         /// </summary>
-        public List<BundleManifest> bundleList;
+        public List<RuntimeBundleManifest> bundleList;
 
-        public BundleManifest GetBundleManifest(string bundleName)
+        public RuntimeBundleManifest GetBundleManifest(string bundleName)
         {
             return bundleList.Find(x => x.name == bundleName);
         }
 
-        public BundleManifest GetBundleManifestWithAsset(string assetPath)
+        public RuntimeBundleManifest GetBundleManifestWithAsset(string assetPath)
         {
             foreach (var bundle in bundleList)
             {
@@ -44,7 +44,7 @@ namespace ZEngine.Resource
             return default;
         }
 
-        public BundleManifest GetBundleManifestWithAssetGUID(string guid)
+        public RuntimeBundleManifest GetBundleManifestWithAssetGUID(string guid)
         {
             foreach (var bundle in bundleList)
             {
@@ -57,7 +57,7 @@ namespace ZEngine.Resource
             return default;
         }
 
-        public BundleManifest GetBundleManifestWithAssetName(string assetName)
+        public RuntimeBundleManifest GetBundleManifestWithAssetName(string assetName)
         {
             foreach (var bundle in bundleList)
             {

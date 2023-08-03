@@ -12,7 +12,7 @@ namespace ZEngine.Resource
     /// </summary>
     internal class ResourceManager : Single<ResourceManager>
     {
-        private List<ModuleManifest> moduleList = new List<ModuleManifest>();
+        private List<RuntimeModuleManifest> moduleList = new List<RuntimeModuleManifest>();
         private List<CacheTokenHandle> cacheList = new List<CacheTokenHandle>();
         private List<IRuntimeBundleManifest> _bundleLists = new List<IRuntimeBundleManifest>();
         private Dictionary<string, IReference> loadAssetHandles = new Dictionary<string, IReference>();
@@ -26,7 +26,13 @@ namespace ZEngine.Resource
                 return;
             }
 
-            moduleList = Engine.Json.Parse<List<ModuleManifest>>(Encoding.UTF8.GetString(readFileExecute.bytes));
+            moduleList = Engine.Json.Parse<List<RuntimeModuleManifest>>(Encoding.UTF8.GetString(readFileExecute.bytes));
+        }
+
+        internal void SaveModuleData()
+        {
+            string str = Engine.Json.ToJson(moduleList);
+            Engine.FileSystem.WriteFile("module", Encoding.UTF8.GetBytes(str), VersionOptions.None);
         }
 
         internal void AddAssetBundleHandle(IRuntimeBundleManifest bundleHandle)
@@ -59,7 +65,7 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
-        public ModuleManifest GetModuleManifest(string moduleName)
+        public RuntimeModuleManifest GetModuleManifest(string moduleName)
         {
             return moduleList.Find(x => x.name == moduleName);
         }
@@ -70,9 +76,9 @@ namespace ZEngine.Resource
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public BundleManifest GetResourceBundleManifest(string moduleName, string bundleName)
+        public RuntimeBundleManifest GetResourceBundleManifest(string moduleName, string bundleName)
         {
-            ModuleManifest moduleManifest = GetModuleManifest(moduleName);
+            RuntimeModuleManifest moduleManifest = GetModuleManifest(moduleName);
             if (moduleManifest is null || moduleManifest.bundleList is null)
             {
                 return default;
@@ -86,11 +92,11 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public BundleManifest GetResourceBundleManifest(string assetPath)
+        public RuntimeBundleManifest GetResourceBundleManifest(string assetPath)
         {
             foreach (var module in moduleList)
             {
-                BundleManifest bundleManifest = module.GetBundleManifestWithAsset(assetPath);
+                RuntimeBundleManifest bundleManifest = module.GetBundleManifestWithAsset(assetPath);
                 if (bundleManifest is null)
                 {
                     continue;

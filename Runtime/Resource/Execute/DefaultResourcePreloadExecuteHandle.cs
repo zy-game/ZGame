@@ -17,7 +17,7 @@ namespace ZEngine.Resource
             throw new System.NotImplementedException();
         }
 
-        public void ObserverPorgress(ISubscribeExecuteHandle<float> subscribe)
+        public void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe)
         {
             throw new System.NotImplementedException();
         }

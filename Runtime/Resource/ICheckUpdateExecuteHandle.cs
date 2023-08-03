@@ -5,6 +5,14 @@
     /// </summary>
     public interface ICheckUpdateExecuteHandle : IExecuteHandle<ICheckUpdateExecuteHandle>
     {
-        void ObserverPorgress(ISubscribeExecuteHandle<float> subscribe);
+        ulong length { get; }
+        string[] files { get; }
+        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
+        void OnUpdateDialog(IUpdateResourceDialogExecuteHandle dialogExecuteHandle);
+    }
+
+    public interface IUpdateResourceDialogExecuteHandle : IExecuteHandle<IUpdateResourceDialogExecuteHandle>
+    {
+        Switch isUpdate { get; }
     }
 }

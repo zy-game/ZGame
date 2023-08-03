@@ -15,19 +15,19 @@ namespace ZEngine.Resource
 
         public IRuntimeBundleManifest Execute(params object[] args)
         {
-            BundleManifest manifest = (BundleManifest)args[0];
+            RuntimeBundleManifest manifest = (RuntimeBundleManifest)args[0];
             name = manifest.name;
             module = manifest.owner;
             version = manifest.version;
             path = VFSManager.GetLocalFilePath(name);
-            BundleManifest[] manifests = GetDependenciesList(manifest);
+            RuntimeBundleManifest[] manifests = GetDependenciesList(manifest);
             if (manifests is null || manifests.Length is 0)
             {
                 return default;
             }
 
             bool success = true;
-            Dictionary<BundleManifest, AssetBundle> map = new Dictionary<BundleManifest, AssetBundle>();
+            Dictionary<RuntimeBundleManifest, AssetBundle> map = new Dictionary<RuntimeBundleManifest, AssetBundle>();
             for (int i = 0; i < manifests.Length; i++)
             {
                 if (ResourceManager.instance.HasLoadAssetBundle(manifests[i].name))
@@ -75,9 +75,9 @@ namespace ZEngine.Resource
         {
         }
 
-        private BundleManifest[] GetDependenciesList(BundleManifest manifest)
+        private RuntimeBundleManifest[] GetDependenciesList(RuntimeBundleManifest manifest)
         {
-            List<BundleManifest> list = new List<BundleManifest>() { manifest };
+            List<RuntimeBundleManifest> list = new List<RuntimeBundleManifest>() { manifest };
             if (manifest.dependencies is null || manifest.dependencies.Count is 0)
             {
                 return list.ToArray();
@@ -85,14 +85,14 @@ namespace ZEngine.Resource
 
             for (int i = 0; i < manifest.dependencies.Count; i++)
             {
-                BundleManifest bundleManifest = ResourceManager.instance.GetResourceBundleManifest(manifest.dependencies[i]);
+                RuntimeBundleManifest bundleManifest = ResourceManager.instance.GetResourceBundleManifest(manifest.dependencies[i]);
                 if (bundleManifest is null)
                 {
                     Engine.Console.Error("Not Find AssetBundle Dependencies:" + manifest.dependencies[i]);
                     return default;
                 }
 
-                BundleManifest[] manifests = GetDependenciesList(bundleManifest);
+                RuntimeBundleManifest[] manifests = GetDependenciesList(bundleManifest);
                 foreach (var target in manifests)
                 {
                     if (list.Contains(target))

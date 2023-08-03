@@ -26,7 +26,7 @@ namespace ZEngine.Resource
         class LoadItem
         {
             public Status status;
-            public BundleManifest manifest;
+            public RuntimeBundleManifest manifest;
             public AssetBundle assetBundle;
         }
 
@@ -42,12 +42,12 @@ namespace ZEngine.Resource
 
         public void Execute(params object[] paramsList)
         {
-            BundleManifest manifest = (BundleManifest)paramsList[0];
+            RuntimeBundleManifest manifest = (RuntimeBundleManifest)paramsList[0];
             name = manifest.name;
             module = manifest.owner;
             version = manifest.version;
             path = VFSManager.GetLocalFilePath(name);
-            List<BundleManifest> manifests = GetDependenciesList(manifest);
+            List<RuntimeBundleManifest> manifests = GetDependenciesList(manifest);
             count = manifests.Count;
             if (manifests is null || manifests.Count is 0)
             {
@@ -59,7 +59,7 @@ namespace ZEngine.Resource
             OnStartLoadBundle(manifest, manifests.ToArray()).StartCoroutine();
         }
 
-        private IEnumerator OnStartLoadBundle(BundleManifest main, BundleManifest[] manifests)
+        private IEnumerator OnStartLoadBundle(RuntimeBundleManifest main, RuntimeBundleManifest[] manifests)
         {
             LoadItem[] items = new LoadItem[manifests.Length];
             for (int i = 0; i < manifests.Length; i++)
@@ -118,9 +118,9 @@ namespace ZEngine.Resource
             item.status = Status.Success;
         }
 
-        private List<BundleManifest> GetDependenciesList(BundleManifest manifest)
+        private List<RuntimeBundleManifest> GetDependenciesList(RuntimeBundleManifest manifest)
         {
-            List<BundleManifest> list = new List<BundleManifest>() { manifest };
+            List<RuntimeBundleManifest> list = new List<RuntimeBundleManifest>() { manifest };
             if (manifest.dependencies is null || manifest.dependencies.Count is 0)
             {
                 return list;
@@ -128,14 +128,14 @@ namespace ZEngine.Resource
 
             for (int i = 0; i < manifest.dependencies.Count; i++)
             {
-                BundleManifest bundleManifest = ResourceManager.instance.GetResourceBundleManifest(manifest.dependencies[i]);
+                RuntimeBundleManifest bundleManifest = ResourceManager.instance.GetResourceBundleManifest(manifest.dependencies[i]);
                 if (bundleManifest is null)
                 {
                     Engine.Console.Error("Not Find AssetBundle Dependencies:" + manifest.dependencies[i]);
                     return default;
                 }
 
-                List<BundleManifest> manifests = GetDependenciesList(bundleManifest);
+                List<RuntimeBundleManifest> manifests = GetDependenciesList(bundleManifest);
                 foreach (var target in manifests)
                 {
                     if (list.Contains(target))
@@ -155,7 +155,7 @@ namespace ZEngine.Resource
             subscribeExecuteHandles.Add(subscribe);
         }
 
-        public void ObserverPorgress(ISubscribeExecuteHandle<float> subscribe)
+        public void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe)
         {
             progresListener.Add(subscribe);
         }

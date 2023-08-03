@@ -56,7 +56,7 @@ namespace ZEngine.Resource
             refCount--;
         }
 
-        public static RuntimeAssetBundleHandle Create(BundleManifest manifest, AssetBundle bundle)
+        public static RuntimeAssetBundleHandle Create(RuntimeBundleManifest manifest, AssetBundle bundle)
         {
             RuntimeAssetBundleHandle runtimeAssetBundleHandle = Engine.Class.Loader<RuntimeAssetBundleHandle>();
             runtimeAssetBundleHandle.bundle = bundle;

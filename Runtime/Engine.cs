@@ -233,7 +233,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
-        public static ModuleManifest GetModuleManifest(string moduleName)
+        public static RuntimeModuleManifest GetModuleManifest(string moduleName)
             => ResourceManager.instance.GetModuleManifest(moduleName);
 
         /// <summary>
@@ -242,7 +242,7 @@ public sealed class Engine
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public static BundleManifest GetResourceBundleManifest(string assetPath)
+        public static RuntimeBundleManifest GetResourceBundleManifest(string assetPath)
             => ResourceManager.instance.GetResourceBundleManifest(assetPath);
 
         /// <summary>
@@ -251,7 +251,7 @@ public sealed class Engine
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public static BundleManifest GetResourceBundleManifest(string moduleName, string bundleName)
+        public static RuntimeBundleManifest GetResourceBundleManifest(string moduleName, string bundleName)
             => ResourceManager.instance.GetResourceBundleManifest(moduleName, bundleName);
 
         /// <summary>

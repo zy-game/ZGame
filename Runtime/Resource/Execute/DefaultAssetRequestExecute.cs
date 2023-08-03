@@ -19,7 +19,7 @@ namespace ZEngine.Resource
         public T Execute(params object[] args)
         {
             path = args[0].ToString();
-            BundleManifest manifest = ResourceManager.instance.GetResourceBundleManifest(path);
+            RuntimeBundleManifest manifest = ResourceManager.instance.GetResourceBundleManifest(path);
             if (manifest is null)
             {
                 Engine.Console.Error("Not Find The Asset Bundle Manifest");

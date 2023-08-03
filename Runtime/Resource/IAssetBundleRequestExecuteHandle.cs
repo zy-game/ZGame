@@ -5,6 +5,6 @@
     /// </summary>
     public interface IAssetBundleRequestExecuteHandle : IExecuteHandle<IAssetBundleRequestExecuteHandle>, IAssetBundleRequestResult<IRuntimeBundleManifest>
     {
-        void ObserverPorgress(ISubscribeExecuteHandle<float> subscribe);
+        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
     }
 }

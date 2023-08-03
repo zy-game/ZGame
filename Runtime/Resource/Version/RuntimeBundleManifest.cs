@@ -9,7 +9,7 @@ namespace ZEngine.Resource
     /// 资源包数据
     /// </summary>
     [Serializable]
-    public sealed class BundleManifest
+    public sealed class RuntimeBundleManifest
     {
         /// <summary>
         /// 资源包名
@@ -20,6 +20,11 @@ namespace ZEngine.Resource
         /// 所属模块
         /// </summary>
         public string owner;
+
+        /// <summary>
+        /// 资源包大小
+        /// </summary>
+        public int length;
 
         /// <summary>
         /// 版本号哦
@@ -34,6 +39,16 @@ namespace ZEngine.Resource
         /// <summary>
         /// 文件列表
         /// </summary>
-        public List<AssetManifest> files;
+        public List<RuntimeAssetManifest> files;
+
+        public static bool operator ==(RuntimeBundleManifest l, RuntimeBundleManifest r)
+        {
+            return l.name == r.name && l.version == r.version;
+        }
+
+        public static bool operator !=(RuntimeBundleManifest l, RuntimeBundleManifest r)
+        {
+            return l.name != r.name || l.version != r.version;
+        }
     }
 }

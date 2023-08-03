@@ -32,7 +32,7 @@ namespace ZEngine.Resource
 
         private IEnumerator OnStartLoadAsset()
         {
-            BundleManifest manifest = ResourceManager.instance.GetResourceBundleManifest(path);
+            RuntimeBundleManifest manifest = ResourceManager.instance.GetResourceBundleManifest(path);
             if (manifest is null)
             {
                 Engine.Console.Error("Not Find The Asset Bundle Manifest");
