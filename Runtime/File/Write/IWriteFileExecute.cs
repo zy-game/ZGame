@@ -34,11 +34,6 @@ namespace ZEngine.VFS
         public byte[] bytes { get; set; }
         public VersionOptions version { get; set; }
 
-        public bool EnsureExecuteSuccessfuly()
-        {
-            return _status == Status.Success;
-        }
-
         public void Release()
         {
             _status = Status.None;
@@ -47,7 +42,7 @@ namespace ZEngine.VFS
             name = String.Empty;
         }
 
-        public void Execute(params object[] args)
+        public IWriteFileExecute Execute(params object[] args)
         {
             name = (string)args[0];
             bytes = (byte[])args[1];
@@ -61,11 +56,11 @@ namespace ZEngine.VFS
                 if (vfsData is null)
                 {
                     _status = Status.Failed;
-                    return;
+                    return this;
                 }
 
                 vfsData.Write(bytes, 0, bytes.Length, version);
-                return;
+                return this;
             }
 
             int count = bytes.Length.SpiltCount(VFSOptions.instance.sgementLenght);
@@ -78,7 +73,7 @@ namespace ZEngine.VFS
                 if (vfsData is null)
                 {
                     _status = Status.Failed;
-                    return;
+                    return this;
                 }
 
                 offset += i * length;
@@ -87,6 +82,7 @@ namespace ZEngine.VFS
             }
 
             VFSManager.instance.SaveVFSData();
+            return this;
         }
     }
 }

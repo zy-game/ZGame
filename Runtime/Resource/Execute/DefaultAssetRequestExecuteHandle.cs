@@ -6,14 +6,14 @@ namespace ZEngine.Resource
 {
     class DefaultAssetRequestExecuteHandle<T> : IAssetRequestExecuteHandle<T> where T : Object
     {
-        private Status status;
         private IEnumerator _enumerator;
         private bool isBindObject = false;
-        private List<ISubscribe> _subscribes = new List<ISubscribe>();
-
-        public T result { get; set; }
+        private List<ISubscribeExecuteHandle> _subscribes = new List<ISubscribeExecuteHandle>();
         public string path { get; set; }
+        public Status status { get; set; }
         public float progress { get; set; }
+        public T result { get; private set; }
+
 
         public void Release()
         {
@@ -22,12 +22,16 @@ namespace ZEngine.Resource
             _subscribes.Clear();
             status = Status.None;
             progress = 0;
-            result = default;
         }
 
-        public IEnumerator Execute(params object[] args)
+        public void Execute(params object[] args)
         {
             path = args[0].ToString();
+            OnStartLoadAsset().StartCoroutine();
+        }
+
+        private IEnumerator OnStartLoadAsset()
+        {
             BundleManifest manifest = ResourceManager.instance.GetResourceBundleManifest(path);
             if (manifest is null)
             {
@@ -36,23 +40,24 @@ namespace ZEngine.Resource
                 yield break;
             }
 
-            RuntimeAssetBundleHandle runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
+            IRuntimeBundleManifest runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
             if (runtimeAssetBundleHandle is null)
             {
-                DefaultAssetBundleRequestExecuteHandle defaultLoadAssetBundleAsyncExecuteHandle = Engine.Class.Loader<DefaultAssetBundleRequestExecuteHandle>();
-                yield return defaultLoadAssetBundleAsyncExecuteHandle.Execute(manifest);
-                runtimeAssetBundleHandle = RuntimeAssetBundleHandle.Create(manifest, defaultLoadAssetBundleAsyncExecuteHandle.result);
+                IAssetBundleRequestExecuteHandle assetBundleRequestExecuteHandle = Engine.Class.Loader<DefaultAssetBundleRequestExecuteHandle>();
+                assetBundleRequestExecuteHandle.Execute(manifest);
+                yield return assetBundleRequestExecuteHandle.Complete();
+                runtimeAssetBundleHandle = assetBundleRequestExecuteHandle.result;
             }
 
-            yield return runtimeAssetBundleHandle.LoadAsync<T>(path, Method<T>.Create(args => { result = args; }));
+            yield return runtimeAssetBundleHandle.LoadAsync<T>(path, ISubscribeExecuteHandle<T>.Create(args => { result = args; }));
+            _subscribes.ForEach(x => x.Execute(this));
             status = result == null ? Status.Failed : Status.Success;
         }
 
-        public void Subscribe(ISubscribe subscribe)
+        public void Subscribe(ISubscribeExecuteHandle subscribe)
         {
             _subscribes.Add(subscribe);
         }
-
 
         public void LinkObject(GameObject gameObject)
         {

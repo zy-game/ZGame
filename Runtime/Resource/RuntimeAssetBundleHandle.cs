@@ -6,11 +6,22 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    internal class RuntimeAssetBundleHandle : IReference
+    public interface IRuntimeBundleManifest : IReference
     {
-        public string name;
-        public int refCount;
-        public string module;
+        string name { get; }
+        uint refCount { get; }
+        string module { get; }
+        void Unload(Object obj);
+        bool Contains(Object target);
+        T Load<T>(string path) where T : Object;
+        IEnumerator LoadAsync<T>(string path, ISubscribeExecuteHandle<T> subscribe) where T : Object;
+    }
+
+    internal class RuntimeAssetBundleHandle : IRuntimeBundleManifest
+    {
+        public string name { get; private set; }
+        public uint refCount { get; private set; }
+        public string module { get; private set; }
 
         private AssetBundle bundle;
         private HashSet<Object> _handles;
@@ -35,17 +46,14 @@ namespace ZEngine.Resource
             return default;
         }
 
-        public IEnumerator LoadAsync<T>(string path, ISubscribe<T> subscribe) where T : Object
+        public IEnumerator LoadAsync<T>(string path, ISubscribeExecuteHandle<T> subscribe) where T : Object
         {
             yield break;
         }
 
         public void Unload(Object obj)
         {
-            if (refCount == 0)
-            {
-                ResourceManager.instance.RemoveAssetBundleHandle(this);
-            }
+            refCount--;
         }
 
         public static RuntimeAssetBundleHandle Create(BundleManifest manifest, AssetBundle bundle)
@@ -56,7 +64,6 @@ namespace ZEngine.Resource
             runtimeAssetBundleHandle.module = manifest.owner;
             runtimeAssetBundleHandle.refCount = 0;
             runtimeAssetBundleHandle._handles = new HashSet<Object>();
-            ResourceManager.instance.AddAssetBundleHandle(runtimeAssetBundleHandle);
             return runtimeAssetBundleHandle;
         }
     }

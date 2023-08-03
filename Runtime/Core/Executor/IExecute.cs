@@ -10,15 +10,22 @@ namespace ZEngine
     public interface IExecute : IReference
     {
         /// <summary>
-        /// 确保执行成功
-        /// </summary>
-        /// <returns></returns>
-        bool EnsureExecuteSuccessfuly();
-
-        /// <summary>
         /// 开始执行
         /// </summary>
         /// <param name="args"></param>
         void Execute(params object[] args);
+    }
+
+    /// <summary>
+    /// 执行器
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface IExecute<T> : IReference
+    {
+        /// <summary>
+        /// 开始执行
+        /// </summary>
+        /// <param name="args"></param>
+        T Execute(params object[] paramsList);
     }
 }

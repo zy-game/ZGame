@@ -5,6 +5,6 @@
     /// </summary>
     public interface IResourcePreloadExecuteHandle : IExecuteHandle<IResourcePreloadExecuteHandle>
     {
-        void ObserverPorgress(ISubscribe<float> subscribe);
+        void ObserverPorgress(ISubscribeExecuteHandle<float> subscribe);
     }
 }

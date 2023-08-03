@@ -5,6 +5,6 @@
     /// </summary>
     public interface ISceneRequestExecuteHandle : IExecuteHandle
     {
-        void ObserverPorgress(ISubscribe<float> subscribe);
+        void ObserverPorgress(ISubscribeExecuteHandle<float> subscribe);
     }
 }

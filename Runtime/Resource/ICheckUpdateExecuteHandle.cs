@@ -5,6 +5,6 @@
     /// </summary>
     public interface ICheckUpdateExecuteHandle : IExecuteHandle<ICheckUpdateExecuteHandle>
     {
-        void ObserverPorgress(ISubscribe<float> subscribe);
+        void ObserverPorgress(ISubscribeExecuteHandle<float> subscribe);
     }
 }

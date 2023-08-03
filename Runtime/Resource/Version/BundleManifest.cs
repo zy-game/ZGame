@@ -35,10 +35,5 @@ namespace ZEngine.Resource
         /// 文件列表
         /// </summary>
         public List<AssetManifest> files;
-
-        /// <summary>
-        /// 补丁包列表
-        /// </summary>
-        public List<PatchManifest> patchs;
     }
 }

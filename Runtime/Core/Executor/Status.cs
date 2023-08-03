@@ -13,11 +13,6 @@
         Execute,
 
         /// <summary>
-        /// 暂停中
-        /// </summary>
-        Paused,
-
-        /// <summary>
         /// 执行成功
         /// </summary>
         Success,
@@ -26,10 +21,5 @@
         /// 执行失败
         /// </summary>
         Failed,
-
-        /// <summary>
-        /// 已取消
-        /// </summary>
-        Canceled
     }
 }

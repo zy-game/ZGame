@@ -6,7 +6,7 @@ namespace ZEngine.Resource
     /// 资源加载
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IAssetRequestExecute<T> : IAssetRequestResult<T>, IExecute<IAssetRequestExecute<T>> where T : Object
+    public interface IAssetRequestExecute<T> : IAssetRequestResult<T>, IExecute<T> where T : Object
     {
     }
 }

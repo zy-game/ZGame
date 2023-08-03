@@ -30,16 +30,18 @@ namespace ZEngine.VFS
 
     class DefaultWriteFileAsyncExecuteHandle : IWriteFileExecuteHandle
     {
-        private Status _status;
-        private List<ISubscribe> _subscribes = new List<ISubscribe>();
+        private List<ISubscribeExecuteHandle> _subscribes = new List<ISubscribeExecuteHandle>();
+
+
         public string name { get; set; }
         public byte[] bytes { get; set; }
+        public Status status { get; set; }
         public VersionOptions version { get; set; }
         public float progress { get; private set; }
 
         public void Release()
         {
-            _status = Status.None;
+            status = Status.None;
             _subscribes.ForEach(Engine.Class.Release);
             _subscribes.Clear();
             name = String.Empty;
@@ -48,24 +50,29 @@ namespace ZEngine.VFS
             progress = 0;
         }
 
-        public void Subscribe(ISubscribe subscribe)
+        public void Subscribe(ISubscribeExecuteHandle subscribe)
         {
             _subscribes.Add(subscribe);
         }
 
-        public IEnumerator Execute(params object[] args)
+        public void Execute(params object[] args)
         {
             if (args is null || args.Length is 0)
             {
-                _status = Status.Failed;
+                status = Status.Failed;
                 Engine.Console.Error("Not Find Write File Patg or fileData");
-                this.Completion();
-                yield break;
+                ExecuteSubscribe();
+                return;
             }
 
             name = (string)args[0];
             bytes = (byte[])args[1];
             version = (VersionOptions)args[2];
+            OnStartWriteFile().StartCoroutine();
+        }
+
+        private IEnumerator OnStartWriteFile()
+        {
             VFSData vfsData = default;
             //todo 根据vfs布局写入文件
             if (VFSOptions.instance.layout == VFSLayout.ReadWritePriority || VFSOptions.instance.vfsState == Switch.Off)
@@ -74,14 +81,15 @@ namespace ZEngine.VFS
                 vfsData = VFSManager.instance.GetVFSData(Mathf.Max(VFSOptions.instance.sgementLenght, bytes.Length));
                 if (vfsData is null)
                 {
-                    _status = Status.Failed;
-                    this.Completion();
+                    status = Status.Failed;
+                    ExecuteSubscribe();
                     yield break;
                 }
 
                 progress = 1f;
                 vfsData.Write(bytes, 0, bytes.Length, version);
-                this.Completion();
+                ExecuteSubscribe();
+                status = Status.Success;
                 yield break;
             }
 
@@ -94,8 +102,8 @@ namespace ZEngine.VFS
                 vfsData = VFSManager.instance.GetVFSData();
                 if (vfsData is null)
                 {
-                    _status = Status.Failed;
-                    this.Completion();
+                    status = Status.Failed;
+                    ExecuteSubscribe();
                     yield break;
                 }
 
@@ -105,21 +113,15 @@ namespace ZEngine.VFS
                 vfsData.Write(bytes, offset, length, version);
             }
 
-            this.Completion();
+            ExecuteSubscribe();
+            status = Status.Success;
         }
 
-        private void Completion()
+        private void ExecuteSubscribe()
         {
             foreach (var VARIABLE in _subscribes)
             {
-                if (VARIABLE is ISubscribe<IWriteFileExecuteHandle> write)
-                {
-                    write.Execute(this);
-                }
-                else
-                {
-                    VARIABLE.Execute(this);
-                }
+                VARIABLE.Execute(this);
             }
         }
     }

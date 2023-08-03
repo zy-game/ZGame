@@ -32,7 +32,6 @@ namespace ZEngine.VFS
 
     class DefaultReadFileExecuteHandleHandle : IReadFileExecute
     {
-        private Status _status;
         public string name { get; set; }
         public long time { get; set; }
         public byte[] bytes { get; set; }
@@ -41,26 +40,20 @@ namespace ZEngine.VFS
         public void Release()
         {
             version = null;
-            _status = Status.None;
             bytes = Array.Empty<byte>();
             time = 0;
             name = String.Empty;
             GC.SuppressFinalize(this);
         }
 
-        public bool EnsureExecuteSuccessfuly()
-        {
-            return _status == Status.Success;
-        }
 
-        public void Execute(params object[] args)
+        public IReadFileExecute Execute(params object[] args)
         {
             name = args[0].ToString();
             VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
             if (vfsDatas is null || vfsDatas.Length is 0)
             {
-                _status = Status.Failed;
-                return;
+                return this;
             }
 
             bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
@@ -73,7 +66,7 @@ namespace ZEngine.VFS
                 offset += vfsDatas[i].fileLenght;
             }
 
-            _status = Status.Success;
+            return this;
         }
     }
 }

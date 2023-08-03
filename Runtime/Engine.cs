@@ -431,30 +431,10 @@ public sealed class Engine
         /// <param name="url"></param>
         /// <param name="data"></param>
         /// <param name="header"></param>
-        /// <returns></returns>
-        public static INetworkRequestExecuteAsyncHandleHandle<string> Get(string url, object data, Dictionary<string, object> header = default)
-            => NetworkManager.instance.Get<string>(url, data, header);
-
-        /// <summary>
-        /// 请求数据
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="data"></param>
-        /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static INetworkRequestExecuteAsyncHandleHandle<T> GetAsync<T>(string url, object data, Dictionary<string, object> header = default)
-            => NetworkManager.instance.Get<T>(url, data, header);
-
-        /// <summary>
-        /// 提交数据
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="data"></param>
-        /// <param name="header"></param>
-        /// <returns></returns>
-        public static INetworkRequestExecuteAsyncHandleHandle<string> Post(string url, object data, Dictionary<string, object> header = default)
-            => NetworkManager.instance.Post(url, data, header);
+        public static INetworkRequestExecuteHandle<T> Get<T>(string url, object data = default, Dictionary<string, object> header = default)
+            => NetworkManager.instance.Request<T>(url, data, NetworkRequestMethod.GET, header);
 
         /// <summary>
         /// 提交数据
@@ -464,7 +444,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static INetworkRequestExecuteAsyncHandleHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
-            => NetworkManager.instance.Post<T>(url, data, header);
+        public static INetworkRequestExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+            => NetworkManager.instance.Request<T>(url, data, NetworkRequestMethod.POST, header);
     }
 }

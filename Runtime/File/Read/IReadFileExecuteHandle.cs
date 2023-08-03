@@ -35,13 +35,13 @@ namespace ZEngine.VFS
 
     class DefaultReadFileAsyncExecuteHandle : IReadFileExecuteHandle
     {
-        private Status _status;
         public long time { get; set; }
         public string name { get; set; }
         public byte[] bytes { get; set; }
+        public Status status { get; set; }
         public float progress { get; private set; }
         public VersionOptions version { get; set; }
-        private List<ISubscribe> _subscribes = new List<ISubscribe>();
+        private List<ISubscribeExecuteHandle> _subscribes = new List<ISubscribeExecuteHandle>();
 
         public void Release()
         {
@@ -54,13 +54,19 @@ namespace ZEngine.VFS
             _subscribes.Clear();
         }
 
-        public IEnumerator Execute(params object[] paramsList)
+        public void Execute(params object[] paramsList)
+        {
+            name = paramsList[0].ToString();
+            status = Status.Execute;
+            StartReadFile().StartCoroutine();
+        }
+
+        private IEnumerator StartReadFile()
         {
             VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
             if (vfsDatas is null || vfsDatas.Length is 0)
             {
-                _status = Status.Failed;
-                Completion();
+                status = Status.Failed;
                 yield break;
             }
 
@@ -75,33 +81,17 @@ namespace ZEngine.VFS
                 yield return new WaitForEndOfFrame();
             }
 
-            _status = Status.Success;
-            Completion();
-        }
-
-        public void Subscribe(ISubscribe subscribe)
-        {
-            _subscribes.Add(subscribe);
-        }
-
-        public bool EnsureExecuteSuccessfuly()
-        {
-            return _status == Status.Success;
-        }
-
-        void Completion()
-        {
             foreach (var VARIABLE in _subscribes)
             {
-                if (VARIABLE is ISubscribe<IReadFileExecuteHandle> read)
-                {
-                    read.Execute(this);
-                }
-                else
-                {
-                    VARIABLE.Execute(this);
-                }
+                VARIABLE.Execute(this);
             }
+
+            status = Status.Success;
+        }
+
+        public void Subscribe(ISubscribeExecuteHandle subscribe)
+        {
+            _subscribes.Add(subscribe);
         }
     }
 }

@@ -11,30 +11,9 @@ namespace ZEngine
     {
         private bool isFree = false;
 
-        private object[] dataList;
-
-        public object this[int index] => GetData<object>(index);
-
-        public T GetData<T>(int index)
-        {
-            if (dataList is null || dataList.Length == 0)
-            {
-                return default;
-            }
-
-            if (index < 0 || index >= dataList.Length)
-            {
-                Engine.Console.Error(EngineException.Create(new IndexOutOfRangeException()));
-            }
-
-            return (T)dataList[index];
-        }
-
-
         public virtual void Release()
         {
             isFree = false;
-            dataList = Array.Empty<object>();
         }
 
         /// <summary>
@@ -54,20 +33,22 @@ namespace ZEngine
             return isFree;
         }
 
+
+        private static List<GameEventSubscrbe<T>> subscribes = new List<GameEventSubscrbe<T>>();
+
         /// <summary>
         /// 执行分发事件
         /// </summary>
         /// <param name="executeCancelToken">执行取消令牌</param>
         /// <param name="paramsList">事件参数</param>
         /// <returns></returns>
-        public static IExecute Execute(params object[] paramsList)
+        public static void Execute(T args)
         {
-            T eventArgs = Engine.Class.Loader<T>();
-            eventArgs.dataList = paramsList;
-            ISubscribe[] subscribes = EventManager.instance.GetSubscribes<T>();
-            GameEventExecuteHandle defaultGameEventExecuteHandle = Engine.Class.Loader<GameEventExecuteHandle>();
-            defaultGameEventExecuteHandle.Execute(eventArgs, subscribes);
-            return defaultGameEventExecuteHandle;
+            Engine.Console.Log("subscribe count:" + subscribes.Count);
+            for (int i = subscribes.Count - 1; i >= 0; i--)
+            {
+                subscribes[i].Execute(args);
+            }
         }
 
         /// <summary>
@@ -77,8 +58,7 @@ namespace ZEngine
         /// <returns>取消事件订阅令牌</returns>
         public static void Subscribe(Action<T> callback)
         {
-            Method<T> internalGameEventMethodSubscribeMethod = Method<T>.Create(callback);
-            Subscribe(internalGameEventMethodSubscribeMethod);
+            Subscribe(GameEventSubscrbe<T>.Create(callback));
         }
 
 
@@ -87,9 +67,14 @@ namespace ZEngine
         /// </summary>
         /// <param name="subscribe">事件订阅器</param>
         /// <returns>取消事件订阅令牌</returns>
-        public static void Subscribe(ISubscribe<T> subscribe)
+        public static void Subscribe(GameEventSubscrbe<T> subscribe)
         {
-            EventManager.instance.Add<T>(subscribe);
+            subscribes.Add(subscribe);
+        }
+
+        public static void Subscribe<T2>() where T2 : GameEventSubscrbe<T>
+        {
+            Subscribe(Engine.Class.Loader<T2>());
         }
 
         /// <summary>
@@ -98,16 +83,28 @@ namespace ZEngine
         /// <param name="callback">事件回调</param>
         public static void Unsubscribe(Action<T> callback)
         {
-            EventManager.instance.Remove<T>(callback);
+            GameEventSubscrbe<T> subscribeExecuteHandle = subscribes.Find(x => x.Equals(callback));
+            Unsubscribe(subscribeExecuteHandle);
         }
 
         /// <summary>
         /// 取消事件订阅
         /// </summary>
         /// <param name="subscribe">事件订阅器</param>
-        public static void Unsubscribe(ISubscribe<T> subscribe)
+        public static void Unsubscribe(GameEventSubscrbe<T> subscribe)
         {
-            EventManager.instance.Remove<T>(subscribe);
+            if (subscribe is null)
+            {
+                return;
+            }
+
+            subscribes.Remove(subscribe);
+        }
+
+        public static void Unsubscribe<T2>() where T2 : GameEventSubscrbe<T>
+        {
+            GameEventSubscrbe<T> subscribeExecuteHandle = subscribes.Find(x => x.GetType() == typeof(T2));
+            Unsubscribe(subscribeExecuteHandle);
         }
 
         /// <summary>
@@ -115,7 +112,7 @@ namespace ZEngine
         /// </summary>
         public static void Clear()
         {
-            EventManager.instance.Clear<T>();
+            subscribes.Clear();
         }
     }
 }

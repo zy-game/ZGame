@@ -4,26 +4,25 @@ namespace ZEngine.Resource
 {
     class DefaultResourcePreloadExecuteHandle : IResourcePreloadExecuteHandle
     {
-        private Status status;
+        public float progress { get; }
+        public Status status { get; set; }
+
+        public void Execute(params object[] paramsList)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Subscribe(ISubscribeExecuteHandle subscribe)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void ObserverPorgress(ISubscribeExecuteHandle<float> subscribe)
+        {
+            throw new System.NotImplementedException();
+        }
 
         public void Release()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public float progress { get; }
-
-        public IEnumerator Execute(params object[] paramsList)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Subscribe(ISubscribe subscribe)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void ObserverPorgress(ISubscribe<float> subscribe)
         {
             throw new System.NotImplementedException();
         }

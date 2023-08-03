@@ -14,41 +14,40 @@ namespace ZEngine.Resource
     {
         private List<ModuleManifest> moduleList = new List<ModuleManifest>();
         private List<CacheTokenHandle> cacheList = new List<CacheTokenHandle>();
-        private List<RuntimeAssetBundleHandle> _bundleLists = new List<RuntimeAssetBundleHandle>();
-        private Dictionary<string, IExecuteHandle> loadAssetHandles = new Dictionary<string, IExecuteHandle>();
+        private List<IRuntimeBundleManifest> _bundleLists = new List<IRuntimeBundleManifest>();
+        private Dictionary<string, IReference> loadAssetHandles = new Dictionary<string, IReference>();
 
 
         public ResourceManager()
         {
-            IReadFileExecute readFileExecuteHandleHandle = Engine.FileSystem.ReadFile("module");
-            if (readFileExecuteHandleHandle.EnsureExecuteSuccessfuly() is false)
+            IReadFileExecute readFileExecute = Engine.FileSystem.ReadFile("module");
+            if (readFileExecute.bytes is null || readFileExecute.bytes.Length is 0)
             {
                 return;
             }
 
-            moduleList = Engine.Json.Parse<List<ModuleManifest>>(Encoding.UTF8.GetString(readFileExecuteHandleHandle.bytes));
+            moduleList = Engine.Json.Parse<List<ModuleManifest>>(Encoding.UTF8.GetString(readFileExecute.bytes));
         }
 
-        internal void AddAssetBundleHandle(RuntimeAssetBundleHandle bundleHandle)
+        internal void AddAssetBundleHandle(IRuntimeBundleManifest bundleHandle)
         {
-            _bundleLists.Add(bundleHandle);
         }
 
-        internal void RemoveAssetBundleHandle(RuntimeAssetBundleHandle bundleHandle)
+        public bool HasLoadAssetBundle(string name)
         {
-            _bundleLists.Remove(bundleHandle);
-            cacheList.Add(Engine.Cache.Enqueue(bundleHandle));
+            return GetRuntimeAssetBundleHandle(name) is not null;
         }
 
-        internal RuntimeAssetBundleHandle GetRuntimeAssetBundleHandle(string bundleName)
+        internal IRuntimeBundleManifest GetRuntimeAssetBundleHandle(string bundleName)
         {
-            RuntimeAssetBundleHandle runtimeAssetBundleHandle = _bundleLists.Find(x => x.name == bundleName);
+            IRuntimeBundleManifest runtimeAssetBundleHandle = _bundleLists.Find(x => x.name == bundleName);
             if (runtimeAssetBundleHandle is null)
             {
                 CacheTokenHandle cacheTokenHandle = cacheList.Find(x => x.name == bundleName);
                 if (cacheTokenHandle is not null)
                 {
-                    runtimeAssetBundleHandle = Engine.Cache.Dequeue<RuntimeAssetBundleHandle>(cacheTokenHandle);
+                    runtimeAssetBundleHandle = Engine.Cache.Dequeue<IRuntimeBundleManifest>(cacheTokenHandle);
+                    _bundleLists.Add(runtimeAssetBundleHandle);
                 }
             }
 
@@ -133,6 +132,7 @@ namespace ZEngine.Resource
         /// <returns></returns>
         public IAssetRequestExecute<T> LoadAsset<T>(string assetPath) where T : Object
         {
+            //todo 如果在编辑器并且没有启用热更，那么直接用编辑器的api加载资源
             DefaultAssetRequestExecute<T> defaultLoadAssetExecuteHandle = Engine.Class.Loader<DefaultAssetRequestExecute<T>>();
             defaultLoadAssetExecuteHandle.Execute(assetPath);
             return defaultLoadAssetExecuteHandle;
@@ -145,13 +145,14 @@ namespace ZEngine.Resource
         /// <returns></returns>
         public IAssetRequestExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
         {
-            if (loadAssetHandles.TryGetValue(assetPath, out IExecuteHandle handle))
+            //todo 如果在编辑器并且没有启用热更，那么直接用编辑器的api加载资源
+            if (loadAssetHandles.TryGetValue(assetPath, out IReference handle))
             {
                 return (IAssetRequestExecuteHandle<T>)handle;
             }
 
             DefaultAssetRequestExecuteHandle<T> asyncAssetRequestExecuteHandle = Engine.Class.Loader<DefaultAssetRequestExecuteHandle<T>>();
-            asyncAssetRequestExecuteHandle.Subscribe(Method.Create(() => { loadAssetHandles.Remove(assetPath); }));
+            asyncAssetRequestExecuteHandle.Subscribe(ISubscribeExecuteHandle<T>.Create(args => { loadAssetHandles.Remove(assetPath); }));
             loadAssetHandles.Add(assetPath, asyncAssetRequestExecuteHandle);
             asyncAssetRequestExecuteHandle.Execute(assetPath);
             return asyncAssetRequestExecuteHandle;
@@ -163,13 +164,20 @@ namespace ZEngine.Resource
         /// <param name="target">资源句柄</param>
         public void Release(Object target)
         {
-            RuntimeAssetBundleHandle runtimeAssetObjectHandle = _bundleLists.Find(x => x.Contains(target));
+            IRuntimeBundleManifest runtimeAssetObjectHandle = _bundleLists.Find(x => x.Contains(target));
             if (runtimeAssetObjectHandle is null)
             {
                 return;
             }
 
             runtimeAssetObjectHandle.Unload(target);
+            if (runtimeAssetObjectHandle.refCount is not 0)
+            {
+                return;
+            }
+
+            _bundleLists.Remove(runtimeAssetObjectHandle);
+            cacheList.Add(Engine.Cache.Enqueue(runtimeAssetObjectHandle));
         }
     }
 }

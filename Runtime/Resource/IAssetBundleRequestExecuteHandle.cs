@@ -3,8 +3,8 @@
     /// <summary>
     /// 资源包加载
     /// </summary>
-    public interface IAssetBundleRequestExecuteHandle : IExecuteHandle<IAssetBundleRequestExecuteHandle>, IAssetBundleRequestResult
+    public interface IAssetBundleRequestExecuteHandle : IExecuteHandle<IAssetBundleRequestExecuteHandle>, IAssetBundleRequestResult<IRuntimeBundleManifest>
     {
-        void ObserverPorgress(ISubscribe<float> subscribe);
+        void ObserverPorgress(ISubscribeExecuteHandle<float> subscribe);
     }
 }

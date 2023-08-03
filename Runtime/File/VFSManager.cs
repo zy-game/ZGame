@@ -34,7 +34,7 @@ namespace ZEngine.VFS
                 return;
             }
 
-            Method.Create(CheckFileStreamTimeout).Timer(VFSOptions.instance.time);
+            ISubscribeExecuteHandle.Create(CheckFileStreamTimeout).Timer(VFSOptions.instance.time);
             dataList = Engine.Json.Parse<List<VFSData>>(File.ReadAllText(filePath));
         }
 
@@ -188,8 +188,8 @@ namespace ZEngine.VFS
         {
             Delete(fileName);
             DefaultWriteFileAsyncExecuteHandle defaultWriteFileAsyncExecuteHandle = Engine.Class.Loader<DefaultWriteFileAsyncExecuteHandle>();
-            defaultWriteFileAsyncExecuteHandle.Subscribe(Method.Create(SaveVFSData));
-            defaultWriteFileAsyncExecuteHandle.Execute(fileName, bytes, version).Startup();
+            defaultWriteFileAsyncExecuteHandle.Subscribe(ISubscribeExecuteHandle<IWriteFileExecuteHandle>.Create(args => SaveVFSData()));
+            defaultWriteFileAsyncExecuteHandle.Execute(fileName, bytes, version);
             return defaultWriteFileAsyncExecuteHandle;
         }
 
@@ -213,7 +213,7 @@ namespace ZEngine.VFS
             }
 
             DefaultReadFileAsyncExecuteHandle defaultReadFileAsyncExecuteHandle = Engine.Class.Loader<DefaultReadFileAsyncExecuteHandle>();
-            defaultReadFileAsyncExecuteHandle.Execute(fileName).Startup();
+            defaultReadFileAsyncExecuteHandle.Execute(fileName);
             return defaultReadFileAsyncExecuteHandle;
         }
     }
