@@ -13,13 +13,18 @@
         Execute,
 
         /// <summary>
-        /// 执行成功
+        /// 成功
         /// </summary>
         Success,
 
         /// <summary>
-        /// 执行失败
+        /// 失败
         /// </summary>
         Failed,
+
+        /// <summary>
+        /// 取消
+        /// </summary>
+        Cancel,
     }
 }

@@ -19,25 +19,37 @@ namespace ZEngine.Resource
         public T Execute(params object[] args)
         {
             path = args[0].ToString();
-            RuntimeBundleManifest manifest = ResourceManager.instance.GetResourceBundleManifest(path);
+            RuntimeBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
             if (manifest is null)
             {
                 Engine.Console.Error("Not Find The Asset Bundle Manifest");
                 return default;
             }
 
-            IRuntimeBundleManifest runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
-            if (runtimeAssetBundleHandle is null)
+            IRuntimeBundleHandle runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
+            if (runtimeAssetBundleHandle is null && HotfixOptions.instance.autoLoad == Switch.On)
             {
                 DefaultAssetBundleRequestExecute defaultLoadAssetBundleExecuteHandle = Engine.Class.Loader<DefaultAssetBundleRequestExecute>();
-                runtimeAssetBundleHandle = defaultLoadAssetBundleExecuteHandle.Execute(manifest);
+                IAssetBundleRequestResult assetBundleRequestResult = defaultLoadAssetBundleExecuteHandle.Execute(manifest);
+                if (assetBundleRequestResult is null || assetBundleRequestResult.bundle is null)
+                {
+                    return default;
+                }
+
+                runtimeAssetBundleHandle = assetBundleRequestResult.bundle;
+            }
+
+            if (runtimeAssetBundleHandle is null)
+            {
+                Engine.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
+                return default;
             }
 
             return result = runtimeAssetBundleHandle.Load<T>(path);
         }
 
 
-        public void LinkObject(GameObject gameObject)
+        public void Link(GameObject gameObject)
         {
             ObserverGameObjectDestroy observerGameObjectDestroy = gameObject.GetComponent<ObserverGameObjectDestroy>();
             if (observerGameObjectDestroy is null)
@@ -49,7 +61,7 @@ namespace ZEngine.Resource
             observerGameObjectDestroy.subscribe.AddListener(() => { ResourceManager.instance.Release(result); });
         }
 
-        public void FreeAsset()
+        public void Free()
         {
             if (isBindObject)
             {

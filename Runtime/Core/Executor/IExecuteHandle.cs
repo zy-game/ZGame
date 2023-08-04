@@ -28,21 +28,15 @@ namespace ZEngine
     public interface IExecuteHandle : IReference
     {
         /// <summary>
-        /// 异步执行器执行进度
-        /// </summary>
-        float progress { get; }
-
-        /// <summary>
         /// 执行器状态
         /// </summary>
         Status status { get; }
-
 
         /// <summary>
         /// 获取异步对象
         /// </summary>
         /// <returns></returns>
-        void Execute(params object[] paramsList);
+        IEnumerator Execute(params object[] paramsList);
 
         /// <summary>
         /// 订阅执行器完成回调
@@ -54,9 +48,6 @@ namespace ZEngine
         /// 等待完成
         /// </summary>
         /// <returns></returns>
-        public IEnumerator Complete()
-        {
-            yield return new WaitUntil(() => status == Status.Failed || status == Status.Success);
-        }
+        IEnumerator Complete();
     }
 }

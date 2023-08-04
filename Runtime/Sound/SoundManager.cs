@@ -1,25 +1,22 @@
-﻿using UnityEngine.Internal;
-
-namespace ZEngine.Sound
+﻿namespace ZEngine.Sound
 {
-    public class SoundManager:Single<SoundManager>
+    public class SoundManager : Single<SoundManager>
     {
-        public void SetPlayOptions(ISoundPlayOptions options)
+        public void SetPlayOptions(SoundOptions options)
         {
-            
         }
 
-        public ISoundPlayHandle PlaySound(string soundName, [DefaultValue("default")] string optionsName)
-        {
-            return default;
-        }
-
-        public ISoundPlayHandle PlayEffectSound(string soundName, [DefaultValue("default")] string optionsName)
+        public IAudioPlayExecuteHandle PlaySound(string soundName, string optionsName = "default")
         {
             return default;
         }
 
-        public ISoundPlayOptions GetSoundPlayOptions(string optionsName)
+        public IAudioPlayExecuteHandle PlayEffectSound(string soundName, string optionsName = "default")
+        {
+            return default;
+        }
+
+        public SoundOptions GetSoundPlayOptions(string optionsName)
         {
             return default;
         }

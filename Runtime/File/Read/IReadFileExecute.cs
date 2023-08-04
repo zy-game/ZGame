@@ -30,7 +30,7 @@ namespace ZEngine.VFS
         VersionOptions version { get; }
     }
 
-    class DefaultReadFileExecuteHandleHandle : IReadFileExecute
+    class DefaultReadFileExecute : IReadFileExecute
     {
         public string name { get; set; }
         public long time { get; set; }

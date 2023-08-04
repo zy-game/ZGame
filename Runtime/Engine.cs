@@ -16,11 +16,40 @@ using Object = UnityEngine.Object;
 
 public sealed class Engine
 {
+    public sealed class Custom
+    {
+        public static string GetPlatfrom()
+        {
+#if UNITY_ANDROID
+            return "android";
+#elif UNITY_IPHONE
+            return "ios";
+#else
+            return "windows";
+#endif
+        }
+    }
+
+    /// <summary>
+    /// 缓存池
+    /// </summary>
     public sealed class Cache
     {
+        /// <summary>
+        /// 将对象存入缓存池
+        /// </summary>
+        /// <param name="value"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static CacheTokenHandle Enqueue<T>(T value)
             => RuntimeCacheing.instance.Enqueue(value);
 
+        /// <summary>
+        /// 从缓存池中取出对象
+        /// </summary>
+        /// <param name="tokenHandle"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Dequeue<T>(CacheTokenHandle tokenHandle)
             => RuntimeCacheing.instance.Dequeue<T>(tokenHandle);
     }
@@ -242,8 +271,8 @@ public sealed class Engine
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public static RuntimeBundleManifest GetResourceBundleManifest(string assetPath)
-            => ResourceManager.instance.GetResourceBundleManifest(assetPath);
+        public static RuntimeBundleManifest GetBundleManifestWithAssetPath(string assetPath)
+            => ResourceManager.instance.GetBundleManifestWithAssetPath(assetPath);
 
         /// <summary>
         /// 获取资源包版本
@@ -251,8 +280,8 @@ public sealed class Engine
         /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public static RuntimeBundleManifest GetResourceBundleManifest(string moduleName, string bundleName)
-            => ResourceManager.instance.GetResourceBundleManifest(moduleName, bundleName);
+        public static RuntimeBundleManifest GetResourceBundleManifest(string bundleName)
+            => ResourceManager.instance.GetResourceBundleManifest(bundleName);
 
         /// <summary>
         /// 加载资源
@@ -302,16 +331,15 @@ public sealed class Engine
         /// <summary>
         /// 预加载资源模块
         /// </summary>
-        /// <param name="options">预加载资源选项</param>
-        public static IResourcePreloadExecuteHandle PreLoadResourceModule(ResourcePreloadOptions options)
-            => ResourceManager.instance.PreLoadResourceModule(options);
+        public static IResourcePreloadExecuteHandle PreLoadResourceModule()
+            => ResourceManager.instance.PreLoadResourceModule();
 
         /// <summary>
         /// 检查资源是否需要更新
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ICheckUpdateExecuteHandle CheckUpdateResource(ResourceUpdateOptions options)
+        public static ICheckUpdateExecuteHandle CheckUpdateResource(UpdateOptions options)
             => ResourceManager.instance.CheckUpdateResource(options);
     }
 
@@ -324,7 +352,7 @@ public sealed class Engine
         /// 设置默认播放器选项
         /// </summary>
         /// <param name="options"></param>
-        public static void SetPlayOptions(ISoundPlayOptions options)
+        public static void SetPlayOptions(SoundOptions options)
             => SoundManager.instance.SetPlayOptions(options);
 
         /// <summary>
@@ -332,7 +360,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="soundName"></param>
         /// <returns></returns>
-        public static ISoundPlayHandle PlaySound(string soundName, [DefaultValue("default")] string optionsName)
+        public static IAudioPlayExecuteHandle PlaySound(string soundName, string optionsName = "default")
             => SoundManager.instance.PlaySound(soundName, optionsName);
 
         /// <summary>
@@ -340,7 +368,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="soundName"></param>
         /// <returns></returns>
-        public static ISoundPlayHandle PlayEffectSound(string soundName, [DefaultValue("default")] string optionsName)
+        public static IAudioPlayExecuteHandle PlayEffectSound(string soundName, string optionsName = "default")
             => SoundManager.instance.PlayEffectSound(soundName, optionsName);
 
         /// <summary>
@@ -348,7 +376,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="optionsName"></param>
         /// <returns></returns>
-        public static ISoundPlayOptions GetSoundPlayOptions(string optionsName)
+        public static SoundOptions GetSoundPlayOptions(string optionsName)
             => SoundManager.instance.GetSoundPlayOptions(optionsName);
     }
 

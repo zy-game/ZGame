@@ -11,7 +11,6 @@ namespace ZEngine.Resource
         private List<ISubscribeExecuteHandle> _subscribes = new List<ISubscribeExecuteHandle>();
         public string path { get; set; }
         public Status status { get; set; }
-        public float progress { get; set; }
         public T result { get; private set; }
 
 
@@ -21,37 +20,11 @@ namespace ZEngine.Resource
             _subscribes.ForEach(Engine.Class.Release);
             _subscribes.Clear();
             status = Status.None;
-            progress = 0;
         }
 
-        public void Execute(params object[] args)
+        public IEnumerator Complete()
         {
-            path = args[0].ToString();
-            OnStartLoadAsset().StartCoroutine();
-        }
-
-        private IEnumerator OnStartLoadAsset()
-        {
-            RuntimeBundleManifest manifest = ResourceManager.instance.GetResourceBundleManifest(path);
-            if (manifest is null)
-            {
-                Engine.Console.Error("Not Find The Asset Bundle Manifest");
-                status = Status.Failed;
-                yield break;
-            }
-
-            IRuntimeBundleManifest runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
-            if (runtimeAssetBundleHandle is null)
-            {
-                IAssetBundleRequestExecuteHandle assetBundleRequestExecuteHandle = Engine.Class.Loader<DefaultAssetBundleRequestExecuteHandle>();
-                assetBundleRequestExecuteHandle.Execute(manifest);
-                yield return assetBundleRequestExecuteHandle.Complete();
-                runtimeAssetBundleHandle = assetBundleRequestExecuteHandle.result;
-            }
-
-            yield return runtimeAssetBundleHandle.LoadAsync<T>(path, ISubscribeExecuteHandle<T>.Create(args => { result = args; }));
-            _subscribes.ForEach(x => x.Execute(this));
-            status = result == null ? Status.Failed : Status.Success;
+            return new WaitUntil(() => status == Status.Failed || status == Status.Success);
         }
 
         public void Subscribe(ISubscribeExecuteHandle subscribe)
@@ -59,7 +32,47 @@ namespace ZEngine.Resource
             _subscribes.Add(subscribe);
         }
 
-        public void LinkObject(GameObject gameObject)
+        public IEnumerator Execute(params object[] args)
+        {
+            status = Status.Execute;
+            path = args[0].ToString();
+            RuntimeBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
+            if (manifest is null)
+            {
+                Engine.Console.Error("Not Find The Asset Bundle Manifest");
+                status = Status.Failed;
+                yield break;
+            }
+
+            IRuntimeBundleHandle runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
+            if (runtimeAssetBundleHandle is null && HotfixOptions.instance.autoLoad == Switch.On)
+            {
+                IAssetBundleRequestExecuteHandle assetBundleRequestExecuteHandle = Engine.Class.Loader<DefaultAssetBundleRequestExecuteHandle>();
+                yield return assetBundleRequestExecuteHandle.Execute(manifest);
+                if (assetBundleRequestExecuteHandle is null || assetBundleRequestExecuteHandle.bundle is null)
+                {
+                    status = Status.Failed;
+                    _subscribes.ForEach(x => x.Execute(this));
+                    yield break;
+                }
+
+                runtimeAssetBundleHandle = assetBundleRequestExecuteHandle.bundle;
+            }
+
+            if (runtimeAssetBundleHandle is null)
+            {
+                Engine.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
+                status = Status.Failed;
+                yield break;
+            }
+
+            yield return runtimeAssetBundleHandle.LoadAsync<T>(path, ISubscribeExecuteHandle<T>.Create(args => { result = args; }));
+            _subscribes.ForEach(x => x.Execute(this));
+            status = result == null ? Status.Failed : Status.Success;
+            status = Status.Success;
+        }
+
+        public void Link(GameObject gameObject)
         {
             ObserverGameObjectDestroy observerGameObjectDestroy = gameObject.GetComponent<ObserverGameObjectDestroy>();
             if (observerGameObjectDestroy is null)
@@ -71,7 +84,7 @@ namespace ZEngine.Resource
             observerGameObjectDestroy.subscribe.AddListener(() => { ResourceManager.instance.Release(result); });
         }
 
-        public void FreeAsset()
+        public void Free()
         {
             if (isBindObject)
             {

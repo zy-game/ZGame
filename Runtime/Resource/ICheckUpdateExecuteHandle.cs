@@ -5,14 +5,24 @@
     /// </summary>
     public interface ICheckUpdateExecuteHandle : IExecuteHandle<ICheckUpdateExecuteHandle>
     {
-        ulong length { get; }
-        string[] files { get; }
+        float progress { get; }
+        RuntimeBundleManifest[] bundles { get; }
         void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
-        void OnUpdateDialog(IUpdateResourceDialogExecuteHandle dialogExecuteHandle);
     }
 
-    public interface IUpdateResourceDialogExecuteHandle : IExecuteHandle<IUpdateResourceDialogExecuteHandle>
+    public interface IUpdateResourceExecuteHandle : IExecuteHandle<IUpdateResourceExecuteHandle>
     {
-        Switch isUpdate { get; }
+        float progress { get; }
+        RuntimeBundleManifest[] bundles { get; }
+        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
+    }
+
+    /// <summary>
+    /// 资源预加载
+    /// </summary>
+    public interface IResourcePreloadExecuteHandle : IExecuteHandle<IResourcePreloadExecuteHandle>
+    {
+        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
+        void OnDialog(IDialogHandle<Switch> dialog);
     }
 }

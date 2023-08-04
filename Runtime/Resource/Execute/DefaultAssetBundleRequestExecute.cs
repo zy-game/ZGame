@@ -5,22 +5,32 @@ using ZEngine.VFS;
 
 namespace ZEngine.Resource
 {
-    class DefaultAssetBundleRequestExecute : IAssetBundleRequestExecute
+    class DefaultAssetBundleRequestExecute : IAssetBundleRequestExecute, IAssetBundleRequestResult
     {
         public string name { get; set; }
         public string path { get; set; }
         public string module { get; set; }
         public VersionOptions version { get; set; }
-        public IRuntimeBundleManifest result { get; set; }
+        public IRuntimeBundleHandle bundle { get; set; }
 
-        public IRuntimeBundleManifest Execute(params object[] args)
+
+        public void Release()
+        {
+            bundle = null;
+            name = String.Empty;
+            path = String.Empty;
+            module = String.Empty;
+            version = null;
+        }
+
+        public IAssetBundleRequestResult Execute(params object[] args)
         {
             RuntimeBundleManifest manifest = (RuntimeBundleManifest)args[0];
             name = manifest.name;
             module = manifest.owner;
             version = manifest.version;
             path = VFSManager.GetLocalFilePath(name);
-            RuntimeBundleManifest[] manifests = GetDependenciesList(manifest);
+            RuntimeBundleManifest[] manifests = ResourceManager.instance.GetBundleDependenciesList(manifest);
             if (manifests is null || manifests.Length is 0)
             {
                 return default;
@@ -60,60 +70,15 @@ namespace ZEngine.Resource
                     continue;
                 }
 
-                IRuntimeBundleManifest runtimeBundleManifest = RuntimeAssetBundleHandle.Create(VARIABLE.Key, VARIABLE.Value);
+                IRuntimeBundleHandle runtimeBundleManifest = RuntimeAssetBundleHandle.Create(VARIABLE.Key, VARIABLE.Value);
                 ResourceManager.instance.AddAssetBundleHandle(runtimeBundleManifest);
                 if (manifest == VARIABLE.Key)
                 {
-                    result = runtimeBundleManifest;
+                    bundle = runtimeBundleManifest;
                 }
             }
 
-            return result;
-        }
-
-        private void LoadDependenciesBundle(string[] dependencies)
-        {
-        }
-
-        private RuntimeBundleManifest[] GetDependenciesList(RuntimeBundleManifest manifest)
-        {
-            List<RuntimeBundleManifest> list = new List<RuntimeBundleManifest>() { manifest };
-            if (manifest.dependencies is null || manifest.dependencies.Count is 0)
-            {
-                return list.ToArray();
-            }
-
-            for (int i = 0; i < manifest.dependencies.Count; i++)
-            {
-                RuntimeBundleManifest bundleManifest = ResourceManager.instance.GetResourceBundleManifest(manifest.dependencies[i]);
-                if (bundleManifest is null)
-                {
-                    Engine.Console.Error("Not Find AssetBundle Dependencies:" + manifest.dependencies[i]);
-                    return default;
-                }
-
-                RuntimeBundleManifest[] manifests = GetDependenciesList(bundleManifest);
-                foreach (var target in manifests)
-                {
-                    if (list.Contains(target))
-                    {
-                        continue;
-                    }
-
-                    list.Add(target);
-                }
-            }
-
-            return list.ToArray();
-        }
-
-        public void Release()
-        {
-            result = null;
-            name = String.Empty;
-            path = String.Empty;
-            module = String.Empty;
-            version = null;
+            return this;
         }
     }
 }

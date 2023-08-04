@@ -27,16 +27,14 @@ namespace ZEngine.VFS
         VersionOptions version { get; }
     }
 
-    class DefaultWriteFileExecuteHandleHandle : IWriteFileExecute
+    class DefaultWriteFileExecute : IWriteFileExecute
     {
-        private Status _status;
         public string name { get; set; }
         public byte[] bytes { get; set; }
         public VersionOptions version { get; set; }
 
         public void Release()
         {
-            _status = Status.None;
             version = VersionOptions.None;
             bytes = Array.Empty<byte>();
             name = String.Empty;
@@ -55,7 +53,6 @@ namespace ZEngine.VFS
                 vfsData = VFSManager.instance.GetVFSData(Mathf.Max(VFSOptions.instance.sgementLenght, bytes.Length));
                 if (vfsData is null)
                 {
-                    _status = Status.Failed;
                     return this;
                 }
 
@@ -72,7 +69,6 @@ namespace ZEngine.VFS
                 vfsData = VFSManager.instance.GetVFSData();
                 if (vfsData is null)
                 {
-                    _status = Status.Failed;
                     return this;
                 }
 

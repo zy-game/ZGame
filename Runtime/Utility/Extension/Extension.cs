@@ -8,6 +8,12 @@ public static class Extension
 {
     private static UniContent _content;
 
+    class Template
+    {
+        public Coroutine coroutine;
+        public IEnumerator enumerator;
+    }
+
     public static int SpiltCount(this int lenght, int l)
     {
         int count = lenght / l;
@@ -17,14 +23,16 @@ public static class Extension
     public static Coroutine StartCoroutine(this IEnumerator enumerator)
     {
         EnsureContentInstance();
-        return _content.StartCoroutine(enumerator);
+
+        IEnumerator Running()
+        {
+            yield return new WaitForEndOfFrame();
+            yield return enumerator;
+        }
+
+        return _content.StartCoroutine(Running());
     }
 
-    public static void StopCoroutine(this IEnumerator coroutine)
-    {
-        EnsureContentInstance();
-        _content.StopCoroutine(coroutine);
-    }
 
     public static void StopCoroutine(this Coroutine coroutine)
     {
@@ -166,9 +174,9 @@ public static class Extension
                 subscribe.Execute(exception);
             }
 
-            public IEnumerator Wait(float timeout = 0)
+            public IEnumerator ExecuteComplete(float timeout = 0)
             {
-                yield return subscribe.Wait(timeout);
+                yield return subscribe.ExecuteComplete(timeout);
             }
         }
     }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ZEngine.Resource
 {
-    public class ResourceUpdateOptions : IReference
+    public class UpdateOptions : IReference
     {
         internal URLOptions url;
         internal string moduleName;
@@ -16,9 +16,9 @@ namespace ZEngine.Resource
             moduleName = String.Empty;
         }
 
-        public static ResourceUpdateOptions Create(string moduleName, URLOptions url, VersionOptions version)
+        public static UpdateOptions Create(string moduleName, URLOptions url, VersionOptions version)
         {
-            ResourceUpdateOptions resourceUpdateOptions = Engine.Class.Loader<ResourceUpdateOptions>();
+            UpdateOptions resourceUpdateOptions = Engine.Class.Loader<UpdateOptions>();
             resourceUpdateOptions.url = url;
             resourceUpdateOptions.version = version;
             resourceUpdateOptions.moduleName = moduleName;

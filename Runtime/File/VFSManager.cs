@@ -179,18 +179,18 @@ namespace ZEngine.VFS
         public IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
         {
             Delete(fileName);
-            DefaultWriteFileExecuteHandleHandle defaultWriteFileAsyncExecuteHandle = Engine.Class.Loader<DefaultWriteFileExecuteHandleHandle>();
-            defaultWriteFileAsyncExecuteHandle.Execute(fileName, bytes, version);
-            return defaultWriteFileAsyncExecuteHandle;
+            DefaultWriteFileExecute defaultWriteFileExecute = Engine.Class.Loader<DefaultWriteFileExecute>();
+            defaultWriteFileExecute.Execute(fileName, bytes, version);
+            return defaultWriteFileExecute;
         }
 
         public IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
         {
             Delete(fileName);
-            DefaultWriteFileAsyncExecuteHandle defaultWriteFileAsyncExecuteHandle = Engine.Class.Loader<DefaultWriteFileAsyncExecuteHandle>();
-            defaultWriteFileAsyncExecuteHandle.Subscribe(ISubscribeExecuteHandle<IWriteFileExecuteHandle>.Create(args => SaveVFSData()));
-            defaultWriteFileAsyncExecuteHandle.Execute(fileName, bytes, version);
-            return defaultWriteFileAsyncExecuteHandle;
+            DefaultWriteFileExecuteHandle defaultWriteFileExecuteHandle = Engine.Class.Loader<DefaultWriteFileExecuteHandle>();
+            defaultWriteFileExecuteHandle.Subscribe(ISubscribeExecuteHandle<IWriteFileExecuteHandle>.Create(args => SaveVFSData()));
+            defaultWriteFileExecuteHandle.Execute(fileName, bytes, version).StartCoroutine();
+            return defaultWriteFileExecuteHandle;
         }
 
         public IReadFileExecute ReadFile(string fileName)
@@ -200,9 +200,9 @@ namespace ZEngine.VFS
                 return default;
             }
 
-            DefaultReadFileExecuteHandleHandle defaultReadFileExecuteHandle = Engine.Class.Loader<DefaultReadFileExecuteHandleHandle>();
-            defaultReadFileExecuteHandle.Execute(fileName);
-            return defaultReadFileExecuteHandle;
+            DefaultReadFileExecute defaultReadFileExecute = Engine.Class.Loader<DefaultReadFileExecute>();
+            defaultReadFileExecute.Execute(fileName);
+            return defaultReadFileExecute;
         }
 
         public IReadFileExecuteHandle ReadFileAsync(string fileName)
@@ -212,9 +212,9 @@ namespace ZEngine.VFS
                 return default;
             }
 
-            DefaultReadFileAsyncExecuteHandle defaultReadFileAsyncExecuteHandle = Engine.Class.Loader<DefaultReadFileAsyncExecuteHandle>();
-            defaultReadFileAsyncExecuteHandle.Execute(fileName);
-            return defaultReadFileAsyncExecuteHandle;
+            DefaultReadFileExecuteHandle defaultReadFileExecuteHandle = Engine.Class.Loader<DefaultReadFileExecuteHandle>();
+            defaultReadFileExecuteHandle.Execute(fileName).StartCoroutine();
+            return defaultReadFileExecuteHandle;
         }
     }
 }

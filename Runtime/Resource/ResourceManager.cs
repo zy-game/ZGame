@@ -14,7 +14,7 @@ namespace ZEngine.Resource
     {
         private List<RuntimeModuleManifest> moduleList = new List<RuntimeModuleManifest>();
         private List<CacheTokenHandle> cacheList = new List<CacheTokenHandle>();
-        private List<IRuntimeBundleManifest> _bundleLists = new List<IRuntimeBundleManifest>();
+        private List<IRuntimeBundleHandle> _bundleLists = new List<IRuntimeBundleHandle>();
         private Dictionary<string, IReference> loadAssetHandles = new Dictionary<string, IReference>();
 
 
@@ -29,30 +29,48 @@ namespace ZEngine.Resource
             moduleList = Engine.Json.Parse<List<RuntimeModuleManifest>>(Encoding.UTF8.GetString(readFileExecute.bytes));
         }
 
+        /// <summary>
+        /// 保存资源信息
+        /// </summary>
         internal void SaveModuleData()
         {
             string str = Engine.Json.ToJson(moduleList);
             Engine.FileSystem.WriteFile("module", Encoding.UTF8.GetBytes(str), VersionOptions.None);
         }
 
-        internal void AddAssetBundleHandle(IRuntimeBundleManifest bundleHandle)
+        /// <summary>
+        /// 添加资源包
+        /// </summary>
+        /// <param name="bundleHandle"></param>
+        internal void AddAssetBundleHandle(IRuntimeBundleHandle bundleHandle)
         {
+            _bundleLists.Add(bundleHandle);
         }
 
-        public bool HasLoadAssetBundle(string name)
+        /// <summary>
+        /// 是否已加载指定的资源包
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        internal bool HasLoadAssetBundle(string name)
         {
             return GetRuntimeAssetBundleHandle(name) is not null;
         }
 
-        internal IRuntimeBundleManifest GetRuntimeAssetBundleHandle(string bundleName)
+        /// <summary>
+        /// 获取已加载的资源包
+        /// </summary>
+        /// <param name="bundleName"></param>
+        /// <returns></returns>
+        internal IRuntimeBundleHandle GetRuntimeAssetBundleHandle(string bundleName)
         {
-            IRuntimeBundleManifest runtimeAssetBundleHandle = _bundleLists.Find(x => x.name == bundleName);
+            IRuntimeBundleHandle runtimeAssetBundleHandle = _bundleLists.Find(x => x.name == bundleName);
             if (runtimeAssetBundleHandle is null)
             {
                 CacheTokenHandle cacheTokenHandle = cacheList.Find(x => x.name == bundleName);
                 if (cacheTokenHandle is not null)
                 {
-                    runtimeAssetBundleHandle = Engine.Cache.Dequeue<IRuntimeBundleManifest>(cacheTokenHandle);
+                    runtimeAssetBundleHandle = Engine.Cache.Dequeue<IRuntimeBundleHandle>(cacheTokenHandle);
                     _bundleLists.Add(runtimeAssetBundleHandle);
                 }
             }
@@ -73,18 +91,45 @@ namespace ZEngine.Resource
         /// <summary>
         /// 获取资源包版本数据
         /// </summary>
-        /// <param name="moduleName">模块名</param>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public RuntimeBundleManifest GetResourceBundleManifest(string moduleName, string bundleName)
+        public RuntimeBundleManifest GetResourceBundleManifest(string bundleName)
         {
-            RuntimeModuleManifest moduleManifest = GetModuleManifest(moduleName);
-            if (moduleManifest is null || moduleManifest.bundleList is null)
+            RuntimeBundleManifest runtimeBundleManifest = default;
+            foreach (var module in moduleList)
             {
-                return default;
+                runtimeBundleManifest = module.bundleList.Find(x => x.name == bundleName);
+                if (runtimeBundleManifest is not null)
+                {
+                    break;
+                }
             }
 
-            return moduleManifest.bundleList.Find(x => x.name == bundleName);
+            return runtimeBundleManifest;
+        }
+
+        public RuntimeBundleManifest[] GetDifferenceBundleManifest(RuntimeModuleManifest runtimeModuleManifest, RuntimeModuleManifest compers)
+        {
+            List<RuntimeBundleManifest> differenceList = new List<RuntimeBundleManifest>();
+            if (compers is null || compers.version != runtimeModuleManifest.version)
+            {
+                differenceList.AddRange(runtimeModuleManifest.bundleList);
+            }
+            else
+            {
+                for (int i = 0; i < runtimeModuleManifest.bundleList.Count; i++)
+                {
+                    RuntimeBundleManifest manifest = compers.bundleList.Find(x => x.Equals(runtimeModuleManifest.bundleList[i]));
+                    if (manifest is not null)
+                    {
+                        continue;
+                    }
+
+                    differenceList.Add(manifest);
+                }
+            }
+
+            return differenceList.ToArray();
         }
 
         /// <summary>
@@ -92,7 +137,7 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public RuntimeBundleManifest GetResourceBundleManifest(string assetPath)
+        public RuntimeBundleManifest GetBundleManifestWithAssetPath(string assetPath)
         {
             foreach (var module in moduleList)
             {
@@ -109,13 +154,55 @@ namespace ZEngine.Resource
         }
 
         /// <summary>
+        /// 获取资源包依赖信息
+        /// </summary>
+        /// <param name="manifest"></param>
+        /// <returns></returns>
+        public RuntimeBundleManifest[] GetBundleDependenciesList(RuntimeBundleManifest manifest)
+        {
+            List<RuntimeBundleManifest> runtimeBundleManifests = new List<RuntimeBundleManifest>() { manifest };
+            if (manifest.dependencies is null || manifest.dependencies.Count is 0)
+            {
+                return runtimeBundleManifests.ToArray();
+            }
+
+            for (int i = 0; i < manifest.dependencies.Count; i++)
+            {
+                RuntimeBundleManifest bundleManifest = ResourceManager.instance.GetBundleManifestWithAssetPath(manifest.dependencies[i]);
+                if (bundleManifest is null)
+                {
+                    Engine.Console.Error("Not Find AssetBundle Dependencies:" + manifest.dependencies[i]);
+                    return default;
+                }
+
+                RuntimeBundleManifest[] runtimeBundleManifestList = GetBundleDependenciesList(bundleManifest);
+                if (runtimeBundleManifestList is null)
+                {
+                    return default;
+                }
+
+                foreach (var target in runtimeBundleManifestList)
+                {
+                    if (runtimeBundleManifests.Contains(target))
+                    {
+                        continue;
+                    }
+
+                    runtimeBundleManifests.Add(target);
+                }
+            }
+
+            return runtimeBundleManifests.ToArray();
+        }
+
+        /// <summary>
         /// 预加载资源模块
         /// </summary>
         /// <param name="options">预加载配置</param>
-        public IResourcePreloadExecuteHandle PreLoadResourceModule(ResourcePreloadOptions options)
+        public IResourcePreloadExecuteHandle PreLoadResourceModule()
         {
             DefaultResourcePreloadExecuteHandle defaultResourcePreloadExecuteHandle = Engine.Class.Loader<DefaultResourcePreloadExecuteHandle>();
-            defaultResourcePreloadExecuteHandle.Execute(options);
+            defaultResourcePreloadExecuteHandle.Execute().StartCoroutine();
             return defaultResourcePreloadExecuteHandle;
         }
 
@@ -124,10 +211,10 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="options">资源更新检查配置</param>
         /// <returns></returns>
-        public ICheckUpdateExecuteHandle CheckUpdateResource(ResourceUpdateOptions options)
+        public ICheckUpdateExecuteHandle CheckUpdateResource(UpdateOptions options)
         {
             DefaultCheckUpdateExecuteHandle defaultCheckUpdateExecuteHandle = Engine.Class.Loader<DefaultCheckUpdateExecuteHandle>();
-            defaultCheckUpdateExecuteHandle.Execute(options);
+            defaultCheckUpdateExecuteHandle.Execute(options).StartCoroutine();
             return defaultCheckUpdateExecuteHandle;
         }
 
@@ -160,7 +247,7 @@ namespace ZEngine.Resource
             DefaultAssetRequestExecuteHandle<T> asyncAssetRequestExecuteHandle = Engine.Class.Loader<DefaultAssetRequestExecuteHandle<T>>();
             asyncAssetRequestExecuteHandle.Subscribe(ISubscribeExecuteHandle<T>.Create(args => { loadAssetHandles.Remove(assetPath); }));
             loadAssetHandles.Add(assetPath, asyncAssetRequestExecuteHandle);
-            asyncAssetRequestExecuteHandle.Execute(assetPath);
+            asyncAssetRequestExecuteHandle.Execute(assetPath).StartCoroutine();
             return asyncAssetRequestExecuteHandle;
         }
 
@@ -170,7 +257,7 @@ namespace ZEngine.Resource
         /// <param name="target">资源句柄</param>
         public void Release(Object target)
         {
-            IRuntimeBundleManifest runtimeAssetObjectHandle = _bundleLists.Find(x => x.Contains(target));
+            IRuntimeBundleHandle runtimeAssetObjectHandle = _bundleLists.Find(x => x.Contains(target));
             if (runtimeAssetObjectHandle is null)
             {
                 return;

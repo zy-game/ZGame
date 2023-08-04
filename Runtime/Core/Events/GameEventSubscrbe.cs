@@ -25,7 +25,6 @@ namespace ZEngine
             OnTrigger(value);
         }
 
-        object ISubscribeExecuteHandle.result { get; }
 
         public void Execute(object value)
         {
@@ -37,7 +36,7 @@ namespace ZEngine
             this.exception = exception;
         }
 
-        public IEnumerator Wait(float timeout = 0)
+        public IEnumerator ExecuteComplete(float timeout = 0)
         {
             throw new NotImplementedException();
         }

@@ -50,5 +50,8 @@ namespace ZEngine.Resource
         {
             return l.name != r.name || l.version != r.version;
         }
+
+
+        
     }
 }

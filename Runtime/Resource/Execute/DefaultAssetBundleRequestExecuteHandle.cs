@@ -7,23 +7,22 @@ using ZEngine.VFS;
 
 namespace ZEngine.Resource
 {
-    class DefaultAssetBundleRequestExecuteHandle : IAssetBundleRequestExecuteHandle
+    class DefaultAssetBundleRequestExecuteHandle : IAssetBundleRequestExecuteHandle, IAssetBundleRequestResult
     {
         public string name { get; set; }
         public string path { get; set; }
         public Status status { get; set; }
         public string module { get; set; }
-        public IRuntimeBundleManifest result { get; set; }
         public VersionOptions version { get; set; }
+        public IRuntimeBundleHandle bundle { get; set; }
         public float progress => loadCount / count;
-
 
         private float count;
         private float loadCount;
         private List<ISubscribeExecuteHandle> subscribeExecuteHandles = new List<ISubscribeExecuteHandle>();
         private List<ISubscribeExecuteHandle<float>> progresListener = new List<ISubscribeExecuteHandle<float>>();
 
-        class LoadItem
+        class LoadBundleData
         {
             public Status status;
             public RuntimeBundleManifest manifest;
@@ -32,7 +31,7 @@ namespace ZEngine.Resource
 
         public void Release()
         {
-            result = null;
+            bundle = null;
             name = String.Empty;
             path = String.Empty;
             module = String.Empty;
@@ -40,59 +39,69 @@ namespace ZEngine.Resource
             status = Status.None;
         }
 
-        public void Execute(params object[] paramsList)
+        public IEnumerator Complete()
+        {
+            return new WaitUntil(() => status == Status.Failed || status == Status.Success);
+        }
+
+        public void Subscribe(ISubscribeExecuteHandle subscribe)
+        {
+            subscribeExecuteHandles.Add(subscribe);
+        }
+
+        public void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe)
+        {
+            progresListener.Add(subscribe);
+        }
+
+        public IEnumerator Execute(params object[] paramsList)
         {
             RuntimeBundleManifest manifest = (RuntimeBundleManifest)paramsList[0];
             name = manifest.name;
             module = manifest.owner;
             version = manifest.version;
             path = VFSManager.GetLocalFilePath(name);
-            List<RuntimeBundleManifest> manifests = GetDependenciesList(manifest);
-            count = manifests.Count;
-            if (manifests is null || manifests.Count is 0)
+            RuntimeBundleManifest[] manifests = ResourceManager.instance.GetBundleDependenciesList(manifest);
+            count = manifests.Length;
+            if (manifests is null || manifests.Length is 0)
             {
                 status = Status.Failed;
                 subscribeExecuteHandles.ForEach(x => x.Execute(this));
-                return;
+                yield break;
             }
 
-            OnStartLoadBundle(manifest, manifests.ToArray()).StartCoroutine();
-        }
-
-        private IEnumerator OnStartLoadBundle(RuntimeBundleManifest main, RuntimeBundleManifest[] manifests)
-        {
-            LoadItem[] items = new LoadItem[manifests.Length];
+            LoadBundleData[] loadBundleDatas = new LoadBundleData[manifests.Length];
             for (int i = 0; i < manifests.Length; i++)
             {
-                items[i] = new LoadItem()
+                loadBundleDatas[i] = new LoadBundleData()
                 {
                     manifest = manifests[i],
                     status = Status.None
                 };
-                LoadBundleAsync(items[i]).StartCoroutine();
+                LoadBundleAsync(loadBundleDatas[i]).StartCoroutine();
             }
 
             bool CheckComplete()
             {
                 progresListener.ForEach(x => x.Execute(progress));
-                return items.Where(x => x.status == Status.Execute).Count() == 0;
+                return loadBundleDatas.Where(x => x.status == Status.Execute).Count() == 0;
             }
 
             yield return new WaitUntil(CheckComplete);
-            bool success = items.Where(x => x.status == Status.Failed).Count() == 0;
-            for (int i = 0; i < items.Length; i++)
+            bool success = loadBundleDatas.Where(x => x.status == Status.Failed).Count() == 0;
+            for (int i = 0; i < loadBundleDatas.Length; i++)
             {
                 if (success is false)
                 {
-                    items[i].assetBundle.Unload(true);
+                    loadBundleDatas[i].assetBundle.Unload(true);
                     continue;
                 }
 
-                IRuntimeBundleManifest runtimeBundleManifest = RuntimeAssetBundleHandle.Create(items[i].manifest, items[i].assetBundle);
+                IRuntimeBundleHandle runtimeBundleManifest = RuntimeAssetBundleHandle.Create(loadBundleDatas[i].manifest, loadBundleDatas[i].assetBundle);
                 ResourceManager.instance.AddAssetBundleHandle(runtimeBundleManifest);
-                if (main == items[i].manifest)
+                if (manifest == loadBundleDatas[i].manifest)
                 {
-                    result = runtimeBundleManifest;
+                    bundle = runtimeBundleManifest;
                 }
             }
 
@@ -100,7 +109,7 @@ namespace ZEngine.Resource
             status = success ? Status.Success : Status.Failed;
         }
 
-        private IEnumerator LoadBundleAsync(LoadItem item)
+        private IEnumerator LoadBundleAsync(LoadBundleData item)
         {
             item.status = Status.Execute;
             IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFileAsync(item.manifest.name);
@@ -116,48 +125,6 @@ namespace ZEngine.Resource
             item.assetBundle = createRequest.assetBundle;
             loadCount++;
             item.status = Status.Success;
-        }
-
-        private List<RuntimeBundleManifest> GetDependenciesList(RuntimeBundleManifest manifest)
-        {
-            List<RuntimeBundleManifest> list = new List<RuntimeBundleManifest>() { manifest };
-            if (manifest.dependencies is null || manifest.dependencies.Count is 0)
-            {
-                return list;
-            }
-
-            for (int i = 0; i < manifest.dependencies.Count; i++)
-            {
-                RuntimeBundleManifest bundleManifest = ResourceManager.instance.GetResourceBundleManifest(manifest.dependencies[i]);
-                if (bundleManifest is null)
-                {
-                    Engine.Console.Error("Not Find AssetBundle Dependencies:" + manifest.dependencies[i]);
-                    return default;
-                }
-
-                List<RuntimeBundleManifest> manifests = GetDependenciesList(bundleManifest);
-                foreach (var target in manifests)
-                {
-                    if (list.Contains(target))
-                    {
-                        continue;
-                    }
-
-                    list.Add(target);
-                }
-            }
-
-            return list;
-        }
-
-        public void Subscribe(ISubscribeExecuteHandle subscribe)
-        {
-            subscribeExecuteHandles.Add(subscribe);
-        }
-
-        public void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe)
-        {
-            progresListener.Add(subscribe);
         }
     }
 }

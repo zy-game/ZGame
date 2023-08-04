@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    public interface IRuntimeBundleManifest : IReference
+    public interface IRuntimeBundleHandle : IReference
     {
         string name { get; }
         uint refCount { get; }
@@ -17,7 +17,7 @@ namespace ZEngine.Resource
         IEnumerator LoadAsync<T>(string path, ISubscribeExecuteHandle<T> subscribe) where T : Object;
     }
 
-    internal class RuntimeAssetBundleHandle : IRuntimeBundleManifest
+    internal class RuntimeAssetBundleHandle : IRuntimeBundleHandle
     {
         public string name { get; private set; }
         public uint refCount { get; private set; }
