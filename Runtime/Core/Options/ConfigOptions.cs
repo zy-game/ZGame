@@ -21,10 +21,12 @@ public sealed class ConfigOptions : Attribute
         Packaged,
     }
 
+    internal string path;
     internal Localtion localtion;
 
-    public ConfigOptions(Localtion localtion)
+    public ConfigOptions(Localtion localtion, string path = "")
     {
+        this.path = path;
         this.localtion = localtion;
     }
 }

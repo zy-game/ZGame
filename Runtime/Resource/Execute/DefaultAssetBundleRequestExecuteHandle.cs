@@ -19,8 +19,8 @@ namespace ZEngine.Resource
 
         private float count;
         private float loadCount;
+        private ISubscribeExecuteHandle<float> progresListener;
         private List<ISubscribeExecuteHandle> subscribeExecuteHandles = new List<ISubscribeExecuteHandle>();
-        private List<ISubscribeExecuteHandle<float>> progresListener = new List<ISubscribeExecuteHandle<float>>();
 
         class LoadBundleData
         {
@@ -41,7 +41,7 @@ namespace ZEngine.Resource
 
         public IEnumerator Complete()
         {
-            return new WaitUntil(() => status == Status.Failed || status == Status.Success);
+            return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
         }
 
         public void Subscribe(ISubscribeExecuteHandle subscribe)
@@ -51,7 +51,7 @@ namespace ZEngine.Resource
 
         public void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe)
         {
-            progresListener.Add(subscribe);
+            progresListener = subscribe;
         }
 
         public IEnumerator Execute(params object[] paramsList)
@@ -66,6 +66,7 @@ namespace ZEngine.Resource
             if (manifests is null || manifests.Length is 0)
             {
                 status = Status.Failed;
+                progresListener.Execute(1);
                 subscribeExecuteHandles.ForEach(x => x.Execute(this));
                 yield break;
             }
@@ -83,11 +84,11 @@ namespace ZEngine.Resource
 
             bool CheckComplete()
             {
-                progresListener.ForEach(x => x.Execute(progress));
+                progresListener.Execute(progress);
                 return loadBundleDatas.Where(x => x.status == Status.Execute).Count() == 0;
             }
 
-            yield return new WaitUntil(CheckComplete);
+            yield return WaitFor.Create(CheckComplete);
             bool success = loadBundleDatas.Where(x => x.status == Status.Failed).Count() == 0;
             for (int i = 0; i < loadBundleDatas.Length; i++)
             {

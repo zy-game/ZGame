@@ -4,6 +4,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using ZEngine;
 
+public class WaitFor : CustomYieldInstruction, IReference
+{
+    private Func<bool> m_Predicate;
+    public override bool keepWaiting => !this.m_Predicate();
+
+    public static WaitFor Create(Func<bool> func)
+    {
+        WaitFor wait = Engine.Class.Loader<WaitFor>();
+        wait.m_Predicate = func;
+        return wait;
+    }
+
+    public void Release()
+    {
+        m_Predicate = null;
+    }
+}
+
 public static class Extension
 {
     private static UniContent _content;

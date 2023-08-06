@@ -85,7 +85,7 @@ namespace ZEngine.VFS
 
         public IEnumerator Complete()
         {
-            return new WaitUntil(() => status == Status.Failed || status == Status.Success);
+            return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
         }
 
         public void Subscribe(ISubscribeExecuteHandle subscribe)

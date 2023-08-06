@@ -26,11 +26,18 @@ namespace ZEngine.Resource
 
         public IEnumerator Complete()
         {
-            return new WaitUntil(() => status == Status.Failed || status == Status.Success);
+            return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
         }
 
         public void Release()
         {
+            status = Status.None;
+            progress = 0;
+            Engine.Class.Release(progressListener);
+            completeSubscribe.ForEach(Engine.Class.Release);
+            completeSubscribe.Clear();
+            progressListener = null;
+            bundles = null;
         }
 
         public IEnumerator Execute(params object[] paramsList)
@@ -51,8 +58,6 @@ namespace ZEngine.Resource
             yield return networkRequestExecuteHandle.Complete();
             RuntimeModuleManifest compers = ResourceManager.instance.GetModuleManifest(networkRequestExecuteHandle.name);
             bundles = ResourceManager.instance.GetDifferenceBundleManifest(networkRequestExecuteHandle.result, compers);
-
-
             completeSubscribe.ForEach(x => x.Execute(this));
             status = Status.Success;
         }

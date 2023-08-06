@@ -51,7 +51,14 @@ namespace ZEngine.Resource
             return l.name != r.name || l.version != r.version;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj is RuntimeBundleManifest target)
+            {
+                return target.name == name && target.owner == owner && target.version == version;
+            }
 
-        
+            return base.Equals(obj);
+        }
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ZEngine.Sound
 {
-    [ConfigOptions(ConfigOptions.Localtion.Packaged)]
+    [ConfigOptions(ConfigOptions.Localtion.Internal)]
     public sealed class SoundPlayOptions : SingleScript<SoundPlayOptions>
     {
         [Header("音效播放设置")] public List<SoundOptions> optionsList;

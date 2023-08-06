@@ -9,6 +9,11 @@ namespace ZEngine
         public uint subVersion;
         public uint buildVersion;
 
+        public override string ToString()
+        {
+            return $"{mainVersion}.{subVersion}.{buildVersion}";
+        }
+
         public static VersionOptions None { get; } = new VersionOptions() { mainVersion = 0, subVersion = 0, buildVersion = 0 };
 
         public static bool operator ==(VersionOptions l, VersionOptions r)

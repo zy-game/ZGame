@@ -56,7 +56,7 @@ namespace ZEngine
         public IEnumerator ExecuteComplete(float timeout = 0)
         {
             time = timeout == 0 ? float.MaxValue : Time.realtimeSinceStartup + timeout;
-            yield return new WaitUntil(CheckCompletion);
+            yield return WaitFor.Create(CheckCompletion);
         }
 
         public override bool Equals(object obj)
@@ -106,7 +106,7 @@ namespace ZEngine
         public IEnumerator ExecuteComplete(float timeout = 0)
         {
             time = timeout == 0 ? float.MaxValue : Time.realtimeSinceStartup + timeout;
-            yield return new WaitUntil(CheckCompletion);
+            yield return WaitFor.Create(CheckCompletion);
         }
 
         private bool CheckCompletion()

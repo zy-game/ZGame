@@ -108,24 +108,24 @@ namespace ZEngine.Resource
             return runtimeBundleManifest;
         }
 
-        public RuntimeBundleManifest[] GetDifferenceBundleManifest(RuntimeModuleManifest runtimeModuleManifest, RuntimeModuleManifest compers)
+        public RuntimeBundleManifest[] GetDifferenceBundleManifest(RuntimeModuleManifest remoteModuleManifest, RuntimeModuleManifest compers)
         {
             List<RuntimeBundleManifest> differenceList = new List<RuntimeBundleManifest>();
-            if (compers is null || compers.version != runtimeModuleManifest.version)
+            if (compers is null || compers.version != remoteModuleManifest.version)
             {
-                differenceList.AddRange(runtimeModuleManifest.bundleList);
+                differenceList.AddRange(remoteModuleManifest.bundleList);
             }
             else
             {
-                for (int i = 0; i < runtimeModuleManifest.bundleList.Count; i++)
+                for (int i = 0; i < remoteModuleManifest.bundleList.Count; i++)
                 {
-                    RuntimeBundleManifest manifest = compers.bundleList.Find(x => x.Equals(runtimeModuleManifest.bundleList[i]));
+                    RuntimeBundleManifest manifest = compers.bundleList.Find(x => x.Equals(remoteModuleManifest.bundleList[i]));
                     if (manifest is not null)
                     {
                         continue;
                     }
 
-                    differenceList.Add(manifest);
+                    differenceList.Add(remoteModuleManifest.bundleList[i]);
                 }
             }
 

@@ -2,7 +2,7 @@
 {
     public enum Switch : byte
     {
-        On,
         Off,
+        On,
     }
 }
