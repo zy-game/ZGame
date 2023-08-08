@@ -77,6 +77,8 @@ namespace ZEngine.Editor.ResourceBuilder
         private Vector2 listScroll = Vector2.zero;
         private Vector2 optionsScroll = Vector2.zero;
         private Vector2 manifestScroll = Vector2.zero;
+        private Color inColor = new Color(1f, 0.92f, 0.01f, .8f);
+        private Color outColor = new Color(0, 0, 0, 0.2f);
 
         public void OnEnable()
         {
@@ -86,6 +88,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 return;
             }
 
+            selection = null;
             foreach (var module in ResourceModuleOptions.instance.modules)
             {
                 if (module.folder == null)
@@ -245,50 +248,42 @@ namespace ZEngine.Editor.ResourceBuilder
                     continue;
                 }
 
-                GUILayout.BeginVertical();
+                Rect contains = EditorGUILayout.BeginVertical();
                 {
-                    Color back = GUI.color;
-                    GUI.color = moduleManifest == selection ? Color.cyan : back;
-                    GUILayout.BeginHorizontal();
+                    this.BeginColor(moduleManifest == selection ? Color.cyan : GUI.color);
                     {
-                        if (GUILayout.Button(moduleManifest.title, "LargeBoldLabel", GUILayout.Width(260)))
-                        {
-                            selection = moduleManifest;
-                            this.Repaint();
-                        }
-
-                        GUILayout.FlexibleSpace();
-                        GUILayout.BeginVertical();
-                        {
-                            GUILayout.Space(5);
-                            if (GUILayout.Button("", "PaneOptions"))
-                            {
-                                GenericMenu menu = new GenericMenu();
-                                menu.AddItem(new GUIContent("Build"), false, () => { OnBuild(moduleManifest.bundles.ToArray()); });
-                                menu.AddItem(new GUIContent("Delete"), false, () =>
-                                {
-                                    ResourceModuleOptions.instance.modules.Remove(moduleManifest);
-                                    ResourceModuleOptions.instance.Saved();
-                                    this.Repaint();
-                                });
-                                menu.ShowAsContext();
-                            }
-
-                            GUILayout.EndVertical();
-                        }
-
-                        GUILayout.EndHorizontal();
+                        GUILayout.Label($"{moduleManifest.title} ({moduleManifest.version})", "LargeBoldLabel");
+                        this.EndColor();
                     }
-                    GUI.color = back;
-                    GUILayout.Space(5);
-                    Color color = GUI.color;
-                    GUI.color = moduleManifest == selection ? new Color(1f, 0.92156863f, 0.015686275f, .5f) : new Color(0, 0, 0, .2f);
-                    GUILayout.Box("", "WhiteBackground", GUILayout.Width(300), GUILayout.Height(1));
-                    GUI.color = color;
-                }
 
-                GUILayout.EndVertical();
-                GUILayout.Space(5);
+                    GUILayout.Space(5);
+                    this.BeginColor(moduleManifest == selection ? inColor : outColor);
+                    {
+                        GUILayout.Box("", "WhiteBackground", GUILayout.Width(300), GUILayout.Height(1));
+                        this.EndColor();
+                    }
+                    if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
+                    {
+                        selection = moduleManifest;
+                        this.Repaint();
+                    }
+
+                    if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 1)
+                    {
+                        GenericMenu menu = new GenericMenu();
+                        menu.AddItem(new GUIContent("Build"), false, () => { OnBuild(moduleManifest.bundles.ToArray()); });
+                        menu.AddItem(new GUIContent("Delete"), false, () =>
+                        {
+                            ResourceModuleOptions.instance.modules.Remove(moduleManifest);
+                            ResourceModuleOptions.instance.Saved();
+                            this.Repaint();
+                        });
+                        menu.ShowAsContext();
+                    }
+
+                    GUILayout.EndVertical();
+                    GUILayout.Space(5);
+                }
             }
         }
 
@@ -313,7 +308,7 @@ namespace ZEngine.Editor.ResourceBuilder
                     continue;
                 }
 
-                GUILayout.BeginVertical();
+                Rect contains = EditorGUILayout.BeginVertical();
                 {
                     GUILayout.BeginHorizontal();
                     {
@@ -323,41 +318,38 @@ namespace ZEngine.Editor.ResourceBuilder
                             manifest.isOn = GUILayout.Toggle(manifest.isOn, "");
                             GUILayout.EndVertical();
                             string name = (manifest.name.IsNullOrEmpty() ? $"Empty" : manifest.name) + $"({AssetDatabase.GetAssetPath(manifest.folder)}) ver:{manifest.version.ToString()}";
-                            if (GUILayout.Button(name, "LargeBoldLabel", GUILayout.Width(position.width - 370)))
-                            {
-                                manifest.foldout = !manifest.foldout;
-                                this.Repaint();
-                            }
-
+                            GUILayout.Label(name, "LargeBoldLabel");
                             GUILayout.FlexibleSpace();
-                            GUILayout.BeginVertical();
-                            {
-                                GUILayout.Space(5);
-                                if (GUILayout.Button("", "PaneOptions"))
-                                {
-                                    GenericMenu menu = new GenericMenu();
-                                    menu.AddItem(new GUIContent("Build"), false, () => { OnBuild(manifest); });
-                                    menu.AddItem(new GUIContent("Delete"), false, () =>
-                                    {
-                                        selection.bundles.Remove(manifest);
-                                        ResourceModuleOptions.instance.Saved();
-                                    });
-                                    menu.ShowAsContext();
-                                }
-
-                                GUILayout.EndVertical();
-                            }
                         }
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.Space(5);
-                    Color color = GUI.color;
-                    GUI.color = new Color(0, 0, 0, .2f);
-                    GUILayout.Box("", "WhiteBackground", GUILayout.Height(1));
-                    GUI.color = color;
+                    this.BeginColor(new Color(0, 0, 0, .2f));
+                    {
+                        GUILayout.Box("", "WhiteBackground", GUILayout.Height(1));
+                        this.EndColor();
+                    }
+                    if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
+                    {
+                        manifest.foldout = !manifest.foldout;
+                        this.Repaint();
+                    }
+
+                    if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 1)
+                    {
+                        GenericMenu menu = new GenericMenu();
+                        menu.AddItem(new GUIContent("Build"), false, () => { OnBuild(manifest); });
+                        menu.AddItem(new GUIContent("Delete"), false, () =>
+                        {
+                            selection.bundles.Remove(manifest);
+                            ResourceModuleOptions.instance.Saved();
+                        });
+                        menu.ShowAsContext();
+                    }
+
                     GUILayout.EndVertical();
                 }
-
+                GUI.enabled = false;
                 if (manifest.foldout && manifest.files is not null && manifest.files.Count > 0)
                 {
                     foreach (var VARIABLE in manifest.files)
@@ -376,13 +368,14 @@ namespace ZEngine.Editor.ResourceBuilder
                     }
                 }
 
+                GUI.enabled = true;
                 GUILayout.Space(5);
             }
         }
 
         private void OnBuild(params ResourceBundleManifest[] manifests)
         {
-            AssetBundleBuild[] builds = new AssetBundleBuild[manifests.Length];
+            List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
             for (int i = 0; i < manifests.Length; i++)
             {
                 if (manifests[i].folder == null || manifests[i].files is null || manifests[i].files.Count is 0)
@@ -390,11 +383,11 @@ namespace ZEngine.Editor.ResourceBuilder
                     continue;
                 }
 
-                builds[i] = new AssetBundleBuild()
+                builds.Add(new AssetBundleBuild()
                 {
                     assetBundleName = manifests[i].name.IsNullOrEmpty() ? manifests[i].folder.name : manifests[i].name,
                     assetNames = manifests[i].files.Select(x => AssetDatabase.GetAssetPath(x)).ToArray()
-                };
+                });
             }
 
             string output = Application.dataPath + "/../output/assets/" + Engine.Custom.GetPlatfrom();
@@ -405,7 +398,7 @@ namespace ZEngine.Editor.ResourceBuilder
 
             try
             {
-                AssetBundleManifest bundleManifest = BuildPipeline.BuildAssetBundles(output, builds, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
+                AssetBundleManifest bundleManifest = BuildPipeline.BuildAssetBundles(output, builds.ToArray(), BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
                 List<RuntimeModuleManifest> runtimeModuleManifests = new List<RuntimeModuleManifest>();
                 if (File.Exists(output + "/module.ini"))
                 {
@@ -424,7 +417,6 @@ namespace ZEngine.Editor.ResourceBuilder
                         runtimeModuleManifest.version = new VersionOptions();
                         runtimeModuleManifest.bundleList = new List<RuntimeBundleManifest>();
                     }
-                    
                 }
 
                 ResourceModuleOptions.instance.Saved();
