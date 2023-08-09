@@ -18,26 +18,6 @@ namespace ZEngine.Resource
         private Dictionary<string, IReference> loadAssetHandles = new Dictionary<string, IReference>();
 
 
-        public ResourceManager()
-        {
-            IReadFileExecute readFileExecute = Engine.FileSystem.ReadFile("module");
-            if (readFileExecute.bytes is null || readFileExecute.bytes.Length is 0)
-            {
-                return;
-            }
-
-            moduleList = Engine.Json.Parse<List<RuntimeModuleManifest>>(Encoding.UTF8.GetString(readFileExecute.bytes));
-        }
-
-        /// <summary>
-        /// 保存资源信息
-        /// </summary>
-        internal void SaveModuleData()
-        {
-            string str = Engine.Json.ToJson(moduleList);
-            Engine.FileSystem.WriteFile("module", Encoding.UTF8.GetBytes(str), VersionOptions.None);
-        }
-
         /// <summary>
         /// 添加资源包
         /// </summary>
@@ -83,9 +63,45 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
-        public RuntimeModuleManifest GetModuleManifest(string moduleName)
+        public RuntimeModuleManifest GetRuntimeModuleManifest(string moduleName)
         {
-            return moduleList.Find(x => x.name == moduleName);
+            RuntimeModuleManifest manifest = moduleList.Find(x => x.name == moduleName);
+            if (manifest is null)
+            {
+                if (!Engine.FileSystem.Exist(moduleName + ".ini"))
+                {
+                    return default;
+                }
+
+                IReadFileExecute readFileExecute = Engine.FileSystem.ReadFile(moduleName + ".ini");
+                if (readFileExecute.bytes is null || readFileExecute.bytes.Length is 0)
+                {
+                    return default;
+                }
+
+                manifest = Engine.Json.Parse<RuntimeModuleManifest>(Encoding.UTF8.GetString(readFileExecute.bytes));
+                moduleList.Add(manifest);
+            }
+
+            return manifest;
+        }
+
+        /// <summary>
+        /// 添加资源模块数据
+        /// </summary>
+        /// <param name="manifest"></param>
+        public void AddModuleManifest(RuntimeModuleManifest manifest)
+        {
+            moduleList.Add(manifest);
+        }
+
+        /// <summary>
+        /// 移除资源模块数据
+        /// </summary>
+        /// <param name="manifest"></param>
+        public void RemoveModuleManifest(RuntimeModuleManifest manifest)
+        {
+            moduleList.Remove(manifest);
         }
 
         /// <summary>
@@ -93,7 +109,7 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public RuntimeBundleManifest GetResourceBundleManifest(string bundleName)
+        public RuntimeBundleManifest GetRuntimeBundleManifest(string bundleName)
         {
             RuntimeBundleManifest runtimeBundleManifest = default;
             foreach (var module in moduleList)
@@ -108,9 +124,16 @@ namespace ZEngine.Resource
             return runtimeBundleManifest;
         }
 
-        public RuntimeBundleManifest[] GetDifferenceBundleManifest(RuntimeModuleManifest remoteModuleManifest, RuntimeModuleManifest compers)
+        /// <summary>
+        /// 获取差异内容
+        /// </summary>
+        /// <param name="remoteModuleManifest"></param>
+        /// <param name="compers"></param>
+        /// <returns></returns>
+        public RuntimeBundleManifest[] GetDifferenceBundleManifest(RuntimeModuleManifest remoteModuleManifest)
         {
             List<RuntimeBundleManifest> differenceList = new List<RuntimeBundleManifest>();
+            RuntimeModuleManifest compers = GetRuntimeModuleManifest(remoteModuleManifest.name);
             if (compers is null || compers.version != remoteModuleManifest.version)
             {
                 differenceList.AddRange(remoteModuleManifest.bundleList);
@@ -199,10 +222,10 @@ namespace ZEngine.Resource
         /// 预加载资源模块
         /// </summary>
         /// <param name="options">预加载配置</param>
-        public IResourcePreloadExecuteHandle PreLoadResourceModule()
+        public IResourcePreloadExecuteHandle PreLoadResourceModule(params PreloadOptions[] options)
         {
             DefaultResourcePreloadExecuteHandle defaultResourcePreloadExecuteHandle = Engine.Class.Loader<DefaultResourcePreloadExecuteHandle>();
-            defaultResourcePreloadExecuteHandle.Execute().StartCoroutine();
+            defaultResourcePreloadExecuteHandle.Execute(options);
             return defaultResourcePreloadExecuteHandle;
         }
 
@@ -211,11 +234,16 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="options">资源更新检查配置</param>
         /// <returns></returns>
-        public ICheckUpdateExecuteHandle CheckUpdateResource(UpdateOptions options)
+        public ICheckUpdateExecuteHandle CheckUpdateResource(params UpdateOptions[] options)
         {
             DefaultCheckUpdateExecuteHandle defaultCheckUpdateExecuteHandle = Engine.Class.Loader<DefaultCheckUpdateExecuteHandle>();
-            defaultCheckUpdateExecuteHandle.Execute(options).StartCoroutine();
+            defaultCheckUpdateExecuteHandle.Execute(options);
             return defaultCheckUpdateExecuteHandle;
+        }
+
+        public IUpdateResourceExecuteHandle UpdateResourceBundle(params RuntimeBundleManifest[] options)
+        {
+            return default;
         }
 
         /// <summary>
@@ -245,9 +273,9 @@ namespace ZEngine.Resource
             }
 
             DefaultAssetRequestExecuteHandle<T> asyncAssetRequestExecuteHandle = Engine.Class.Loader<DefaultAssetRequestExecuteHandle<T>>();
-            asyncAssetRequestExecuteHandle.Subscribe(ISubscribeExecuteHandle<T>.Create(args => { loadAssetHandles.Remove(assetPath); }));
+            asyncAssetRequestExecuteHandle.Subscribe(ISubscribeHandle.Create<T>(args => { loadAssetHandles.Remove(assetPath); }));
             loadAssetHandles.Add(assetPath, asyncAssetRequestExecuteHandle);
-            asyncAssetRequestExecuteHandle.Execute(assetPath).StartCoroutine();
+            asyncAssetRequestExecuteHandle.Execute(assetPath);
             return asyncAssetRequestExecuteHandle;
         }
 

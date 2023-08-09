@@ -1,4 +1,4 @@
-﻿namespace ZEngine.Resource
+﻿namespace ZEngine.Editor.ResourceBuilder
 {
     public enum OSSService : byte
     {

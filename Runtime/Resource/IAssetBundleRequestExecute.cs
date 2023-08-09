@@ -24,6 +24,6 @@
     /// </summary>
     public interface IAssetBundleRequestExecuteHandle : IExecuteHandle<IAssetBundleRequestResult>, IAssetBundleRequestResult
     {
-        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
+        void OnPorgressChange(ISubscribeHandle<float> subscribe);
     }
 }

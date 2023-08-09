@@ -30,7 +30,7 @@ namespace ZEngine.VFS
 
     class DefaultWriteFileExecuteHandle : IWriteFileExecuteHandle
     {
-        private List<ISubscribeExecuteHandle> _subscribes = new List<ISubscribeExecuteHandle>();
+        private List<ISubscribeHandle> _subscribes = new List<ISubscribeHandle>();
 
         public string name { get; set; }
         public byte[] result { get; set; }
@@ -47,24 +47,30 @@ namespace ZEngine.VFS
             version = VersionOptions.None;
         }
 
-        public void Subscribe(ISubscribeExecuteHandle subscribe)
+        public void Subscribe(ISubscribeHandle subscribe)
         {
             _subscribes.Add(subscribe);
         }
 
-        public IEnumerator Execute(params object[] args)
+        public void Execute(params object[] args)
         {
+            status = Status.Execute;
             if (args is null || args.Length is 0)
             {
                 Engine.Console.Error("Not Find Write File Patg or fileData");
                 _subscribes.ForEach(x => x.Execute(this));
                 status = Status.Failed;
-                yield break;
+                return;
             }
 
             name = (string)args[0];
             result = (byte[])args[1];
             version = (VersionOptions)args[2];
+            OnStart().StartCoroutine();
+        }
+
+        IEnumerator OnStart()
+        {
             VFSData vfsData = default;
             //todo 根据vfs布局写入文件
             if (VFSOptions.instance.layout == VFSLayout.ReadWritePriority || VFSOptions.instance.vfsState == Switch.Off)
@@ -79,8 +85,8 @@ namespace ZEngine.VFS
                 }
 
                 vfsData.Write(result, 0, result.Length, version);
-                _subscribes.ForEach(x => x.Execute(this));
                 status = Status.Success;
+                _subscribes.ForEach(x => x.Execute(this));
                 yield break;
             }
 
@@ -93,8 +99,8 @@ namespace ZEngine.VFS
                 vfsData = VFSManager.instance.GetVFSData();
                 if (vfsData is null)
                 {
-                    _subscribes.ForEach(x => x.Execute(this));
                     status = Status.Failed;
+                    _subscribes.ForEach(x => x.Execute(this));
                     yield break;
                 }
 
@@ -103,11 +109,11 @@ namespace ZEngine.VFS
                 vfsData.Write(result, offset, length, version);
             }
 
-            _subscribes.ForEach(x => x.Execute(this));
             status = Status.Success;
+            _subscribes.ForEach(x => x.Execute(this));
         }
 
-        public IEnumerator Complete()
+        public IEnumerator ExecuteComplete()
         {
             return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
         }

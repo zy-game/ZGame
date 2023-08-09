@@ -41,7 +41,7 @@ namespace ZEngine.VFS
         public Status status { get; set; }
         public VersionOptions version { get; set; }
 
-        private List<ISubscribeExecuteHandle> _subscribes = new List<ISubscribeExecuteHandle>();
+        private List<ISubscribeHandle> _subscribes = new List<ISubscribeHandle>();
 
         public void Release()
         {
@@ -53,14 +53,21 @@ namespace ZEngine.VFS
             _subscribes.Clear();
         }
 
-        public IEnumerator Execute(params object[] paramsList)
+        public void Execute(params object[] paramsList)
         {
+            status = Status.Execute;
             name = paramsList[0].ToString();
+            OnStart().StartCoroutine();
+        }
+
+        IEnumerator OnStart()
+        {
             status = Status.Execute;
             VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
             if (vfsDatas is null || vfsDatas.Length is 0)
             {
                 status = Status.Failed;
+                _subscribes.ForEach(x => x.Execute(this));
                 yield break;
             }
 
@@ -81,14 +88,15 @@ namespace ZEngine.VFS
             }
 
             status = Status.Success;
+            _subscribes.ForEach(x => x.Execute(this));
         }
 
-        public IEnumerator Complete()
+        public IEnumerator ExecuteComplete()
         {
             return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
         }
 
-        public void Subscribe(ISubscribeExecuteHandle subscribe)
+        public void Subscribe(ISubscribeHandle subscribe)
         {
             _subscribes.Add(subscribe);
         }

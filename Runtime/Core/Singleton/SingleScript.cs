@@ -26,7 +26,7 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
 
     private static void CreateScriptObject()
     {
-        ConfigOptions options = typeof(T).GetCustomAttribute<ConfigOptions>();
+        ConfigAttribute options = typeof(T).GetCustomAttribute<ConfigAttribute>();
         if (options is null)
         {
             throw new ArgumentNullException("options");
@@ -35,8 +35,8 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
 
         switch (options.localtion)
         {
-            case ConfigOptions.Localtion.Internal:
-            case ConfigOptions.Localtion.Project:
+            case Localtion.Internal:
+            case Localtion.Project:
 #if UNITY_EDITOR
                 if (options.path.IsNullOrEmpty())
                 {
@@ -53,7 +53,7 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
                 _instance = Resources.Load<T>(Path.GetFileNameWithoutExtension(options.path));
 #endif
                 break;
-            case ConfigOptions.Localtion.Packaged:
+            case Localtion.Packaged:
                 if (options.path.EndsWith("asset"))
                 {
                     IAssetRequestExecute<T> execute = Engine.Resource.LoadAsset<T>(options.path);
@@ -71,10 +71,10 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
 
     public void Saved()
     {
-        ConfigOptions options = typeof(T).GetCustomAttribute<ConfigOptions>();
+        ConfigAttribute options = typeof(T).GetCustomAttribute<ConfigAttribute>();
         if (options is null)
         {
-            throw new NullReferenceException(nameof(ConfigOptions));
+            throw new NullReferenceException(nameof(ConfigAttribute));
         }
 
         if (_instance is null)
@@ -84,8 +84,8 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
 
         switch (options.localtion)
         {
-            case ConfigOptions.Localtion.Project:
-            case ConfigOptions.Localtion.Internal:
+            case Localtion.Project:
+            case Localtion.Internal:
 #if UNITY_EDITOR
                 if (options.path.IsNullOrEmpty())
                 {
@@ -95,7 +95,7 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
                 UnityEditorInternal.InternalEditorUtility.SaveToSerializedFileAndForget(new Object[1] { _instance }, options.path, true);
 #endif
                 break;
-            case ConfigOptions.Localtion.Packaged:
+            case Localtion.Packaged:
                 if (options.path.EndsWith("asset"))
                 {
 #if UNITY_EDITOR

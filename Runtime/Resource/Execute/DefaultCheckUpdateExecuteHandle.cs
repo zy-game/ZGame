@@ -9,22 +9,24 @@ namespace ZEngine.Resource
     {
         public Status status { get; set; }
         public float progress { get; set; }
+        public RuntimeModuleManifest manifest { get; set; }
         public RuntimeBundleManifest[] bundles { get; private set; }
 
-        private ISubscribeExecuteHandle<float> progressListener;
-        private List<ISubscribeExecuteHandle> completeSubscribe = new List<ISubscribeExecuteHandle>();
+        private UpdateOptions options;
+        private ISubscribeHandle<float> progressListener;
+        private List<ISubscribeHandle> completeSubscribe = new List<ISubscribeHandle>();
 
-        public void Subscribe(ISubscribeExecuteHandle subscribe)
+        public void Subscribe(ISubscribeHandle subscribe)
         {
             completeSubscribe.Add(subscribe);
         }
 
-        public void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe)
+        public void OnPorgressChange(ISubscribeHandle<float> subscribe)
         {
             progressListener = subscribe;
         }
 
-        public IEnumerator Complete()
+        public IEnumerator ExecuteComplete()
         {
             return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
         }
@@ -40,11 +42,16 @@ namespace ZEngine.Resource
             bundles = null;
         }
 
-        public IEnumerator Execute(params object[] paramsList)
+        public void Execute(params object[] paramsList)
+        {
+            status = Status.Execute;
+            options = (UpdateOptions)paramsList[0];
+            OnStart().StartCoroutine();
+        }
+
+        IEnumerator OnStart()
         {
             //todo 如果在编辑器模式下，并且未使用热更模式，直接跳过
-            status = Status.Execute;
-            UpdateOptions options = (UpdateOptions)paramsList[0];
             if (options is null || options.url is null || options.url.state == Switch.Off)
             {
                 status = Status.Failed;
@@ -53,13 +60,14 @@ namespace ZEngine.Resource
                 yield break;
             }
 
-            string moduleFilePath = $"{options.url.address}/{Engine.Custom.GetPlatfrom()}/{options.moduleName}";
+            string moduleFilePath = Engine.Custom.GetHotfixPath(options.url.address, options.moduleName + ".ini");
             INetworkRequestExecuteHandle<RuntimeModuleManifest> networkRequestExecuteHandle = Engine.Network.Get<RuntimeModuleManifest>(moduleFilePath);
-            yield return networkRequestExecuteHandle.Complete();
-            RuntimeModuleManifest compers = ResourceManager.instance.GetModuleManifest(networkRequestExecuteHandle.name);
-            bundles = ResourceManager.instance.GetDifferenceBundleManifest(networkRequestExecuteHandle.result, compers);
-            completeSubscribe.ForEach(x => x.Execute(this));
+            yield return networkRequestExecuteHandle.ExecuteComplete();
+            Engine.Console.Log(Engine.Json.ToJson(networkRequestExecuteHandle.result));
+            manifest = networkRequestExecuteHandle.result;
+            bundles = ResourceManager.instance.GetDifferenceBundleManifest(manifest);
             status = Status.Success;
+            completeSubscribe.ForEach(x => x.Execute(this));
         }
     }
 }

@@ -6,15 +6,16 @@
     public interface ICheckUpdateExecuteHandle : IExecuteHandle<ICheckUpdateExecuteHandle>
     {
         float progress { get; }
+        RuntimeModuleManifest manifest { get; }
         RuntimeBundleManifest[] bundles { get; }
-        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
+        void OnPorgressChange(ISubscribeHandle<float> subscribe);
     }
 
     public interface IUpdateResourceExecuteHandle : IExecuteHandle<IUpdateResourceExecuteHandle>
     {
         float progress { get; }
         RuntimeBundleManifest[] bundles { get; }
-        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
+        void OnPorgressChange(ISubscribeHandle<float> subscribe);
     }
 
     /// <summary>
@@ -22,7 +23,7 @@
     /// </summary>
     public interface IResourcePreloadExecuteHandle : IExecuteHandle<IResourcePreloadExecuteHandle>
     {
-        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
+        void OnPorgressChange(ISubscribeHandle<float> subscribe);
         void OnDialog(IDialogHandle<Switch> dialog);
     }
 }

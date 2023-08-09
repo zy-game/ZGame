@@ -5,7 +5,7 @@ using ZEngine.Options;
 
 namespace ZEngine.Resource
 {
-    [ConfigOptions(ConfigOptions.Localtion.Internal)]
+    [Config(Localtion.Internal)]
     public class HotfixOptions : SingleScript<HotfixOptions>
     {
         [Header("编辑器启用热更")] public Switch useHotfix;
@@ -14,5 +14,17 @@ namespace ZEngine.Resource
         [Header("自动加载资源包")] public Switch autoLoad;
         [Header("资源地址")] public List<URLOptions> address;
         [Header("预加载模块")] public List<PreloadOptions> preloads;
+
+        public UpdateOptions[] GetPreloadOptions()
+        {
+            List<UpdateOptions> optionsList = new List<UpdateOptions>();
+            URLOptions urlOptions = HotfixOptions.instance.address.Find(x => x.state == Switch.On);
+            foreach (var VARIABLE in HotfixOptions.instance.preloads)
+            {
+                optionsList.Add(UpdateOptions.Create(VARIABLE.moduleName, urlOptions));
+            }
+
+            return optionsList.ToArray();
+        }
     }
 }

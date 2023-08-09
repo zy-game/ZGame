@@ -76,7 +76,6 @@ namespace ZEngine.Editor.OptionsEditorWindow
             EditorGUILayout.PropertyField(hotfix.FindProperty("useScript"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("useAsset"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("autoLoad"), true);
-            EditorGUILayout.PropertyField(hotfix.FindProperty("service"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("address"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("preloads"), true);
             GUILayout.EndVertical();

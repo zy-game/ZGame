@@ -38,6 +38,16 @@ public static class Extension
         return count * l < lenght ? count + 1 : count;
     }
 
+    public static T TryGetValue<T>(this object[] arr, int index, T def)
+    {
+        if (arr.Length > index)
+        {
+            return (T)arr[index];
+        }
+
+        return def;
+    }
+
     public static Coroutine StartCoroutine(this IEnumerator enumerator)
     {
         EnsureContentInstance();
@@ -58,13 +68,13 @@ public static class Extension
         _content.StopCoroutine(coroutine);
     }
 
-    public static void Timer(this ISubscribeExecuteHandle subscribe, float interval)
+    public static void Timer(this ISubscribeHandle subscribe, float interval)
     {
         EnsureContentInstance();
         _content.AddTimer(subscribe, interval);
     }
 
-    public static void Stoping(this ISubscribeExecuteHandle subscribe)
+    public static void Stoping(this ISubscribeHandle subscribe)
     {
         EnsureContentInstance();
         _content.RemoveCallback(subscribe);
@@ -82,9 +92,9 @@ public static class Extension
 
     class UniContent : MonoBehaviour
     {
-        private List<ISubscribeExecuteHandle> _update = new List<ISubscribeExecuteHandle>();
-        private List<ISubscribeExecuteHandle> _lateUpdate = new List<ISubscribeExecuteHandle>();
-        private List<ISubscribeExecuteHandle> _fixedUpdate = new List<ISubscribeExecuteHandle>();
+        private List<ISubscribeHandle> _update = new List<ISubscribeHandle>();
+        private List<ISubscribeHandle> _lateUpdate = new List<ISubscribeHandle>();
+        private List<ISubscribeHandle> _fixedUpdate = new List<ISubscribeHandle>();
         private List<Timer> timer = new List<Timer>();
 
         private void Update()
@@ -102,7 +112,7 @@ public static class Extension
             Execute(_lateUpdate);
         }
 
-        private void Execute(List<ISubscribeExecuteHandle> subscribes)
+        private void Execute(List<ISubscribeHandle> subscribes)
         {
             if (subscribes.Count is 0)
             {
@@ -115,7 +125,7 @@ public static class Extension
             }
         }
 
-        public void AddUpdate(ISubscribeExecuteHandle subscribe)
+        public void AddUpdate(ISubscribeHandle subscribe)
         {
             _update.Add(subscribe);
             if (timer.Count is 0)
@@ -134,22 +144,22 @@ public static class Extension
             }
         }
 
-        public void AddFixedUpdate(ISubscribeExecuteHandle subscribe)
+        public void AddFixedUpdate(ISubscribeHandle subscribe)
         {
             _fixedUpdate.Add(subscribe);
         }
 
-        public void AddLateUpdate(ISubscribeExecuteHandle subscribe)
+        public void AddLateUpdate(ISubscribeHandle subscribe)
         {
             _lateUpdate.Add(subscribe);
         }
 
-        public void AddTimer(ISubscribeExecuteHandle subscribe, float interval)
+        public void AddTimer(ISubscribeHandle subscribe, float interval)
         {
             timer.Add(new Timer(subscribe, interval));
         }
 
-        public void RemoveCallback(ISubscribeExecuteHandle subscribe)
+        public void RemoveCallback(ISubscribeHandle subscribe)
         {
             _update.Remove(subscribe);
             _lateUpdate.Remove(subscribe);
@@ -161,13 +171,13 @@ public static class Extension
             }
         }
 
-        struct Timer : ISubscribeExecuteHandle
+        struct Timer : ISubscribeHandle
         {
             public float time;
-            public ISubscribeExecuteHandle subscribe;
+            public ISubscribeHandle subscribe;
             public object result { get; }
 
-            public Timer(ISubscribeExecuteHandle subscribe, float time)
+            public Timer(ISubscribeHandle subscribe, float time)
             {
                 this.result = default;
                 this.time = Time.realtimeSinceStartup + time;

@@ -21,10 +21,5 @@
         /// 失败
         /// </summary>
         Failed,
-
-        /// <summary>
-        /// 取消
-        /// </summary>
-        Cancel,
     }
 }

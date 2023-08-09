@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Editor.ResourceBuilder
 {
-    [ConfigOptions(ConfigOptions.Localtion.Project)]
+    [Config(Localtion.Project)]
     public class ResourceModuleOptions : SingleScript<ResourceModuleOptions>
     {
         [Header("云存储")] public List<OSSOptions> options;
@@ -24,6 +24,7 @@ namespace ZEngine.Editor.ResourceBuilder
         [Header("Bucket")] public string bucket;
         [Header("密钥ID")] public string keyID;
         [Header("密钥")] public string key;
+        [Header("节点地址")] public string url;
     }
 
     [Serializable]

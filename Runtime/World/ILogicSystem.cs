@@ -1,6 +1,6 @@
 ﻿namespace ZEngine.World
 {
-    public interface ILogicSystemExecuteHandle : IExecute
+    public interface ILogicSystemExecuteHandle : IExecuteHandle
     {
     }
 

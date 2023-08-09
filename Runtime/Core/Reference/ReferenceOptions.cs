@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ZEngine
 {
-    [ConfigOptions(ConfigOptions.Localtion.Internal)]
+    [Config(Localtion.Internal)]
     public class ReferenceOptions : SingleScript<ReferenceOptions>
     {
         [Header("默认大小")] public uint DefaultCount = 1000;

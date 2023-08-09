@@ -28,6 +28,11 @@ public sealed class Engine
             return "windows";
 #endif
         }
+
+        public static string GetHotfixPath(string url, string name)
+        {
+            return $"{url}/{Engine.Custom.GetPlatfrom()}/{name}";
+        }
     }
 
     /// <summary>
@@ -67,6 +72,13 @@ public sealed class Engine
             => Debug.Log($"[INFO]{message}");
 
         /// <summary>
+        /// 在控制台输出一条日志
+        /// </summary>
+        /// <param name="message"></param>
+        public static void Log(params object[] message)
+            => Debug.Log($"[INFO]{string.Join("\n", message)}");
+
+        /// <summary>
         /// 输出警告信息
         /// </summary>
         /// <param name="message"></param>
@@ -74,11 +86,25 @@ public sealed class Engine
             => Debug.LogWarning($"[WARNING]{message}");
 
         /// <summary>
+        /// 输出警告信息
+        /// </summary>
+        /// <param name="message"></param>
+        public static void Warning(params object[] message)
+            => Debug.LogWarning($"[WARNING]{string.Join("\n", message)}");
+
+        /// <summary>
         /// 输出错误信息
         /// </summary>
         /// <param name="message"></param>
         public static void Error(object message)
             => Debug.LogError($"[ERROR]{message}");
+
+        /// <summary>
+        /// 输出错误信息
+        /// </summary>
+        /// <param name="message"></param>
+        public static void Error(params object[] message)
+            => Debug.LogError($"[ERROR]{string.Join("\n", message)}");
     }
 
     /// <summary>
@@ -263,7 +289,7 @@ public sealed class Engine
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
         public static RuntimeModuleManifest GetModuleManifest(string moduleName)
-            => ResourceManager.instance.GetModuleManifest(moduleName);
+            => ResourceManager.instance.GetRuntimeModuleManifest(moduleName);
 
         /// <summary>
         /// 获取资源包版本
@@ -281,7 +307,7 @@ public sealed class Engine
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
         public static RuntimeBundleManifest GetResourceBundleManifest(string bundleName)
-            => ResourceManager.instance.GetResourceBundleManifest(bundleName);
+            => ResourceManager.instance.GetRuntimeBundleManifest(bundleName);
 
         /// <summary>
         /// 加载资源
@@ -331,7 +357,7 @@ public sealed class Engine
         /// <summary>
         /// 预加载资源模块
         /// </summary>
-        public static IResourcePreloadExecuteHandle PreLoadResourceModule()
+        public static IResourcePreloadExecuteHandle PreLoadResourceModule(params PreloadOptions[] options)
             => ResourceManager.instance.PreLoadResourceModule();
 
         /// <summary>
@@ -339,8 +365,16 @@ public sealed class Engine
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ICheckUpdateExecuteHandle CheckUpdateResource(UpdateOptions options)
+        public static ICheckUpdateExecuteHandle CheckUpdateResource(params UpdateOptions[] options)
             => ResourceManager.instance.CheckUpdateResource(options);
+
+        /// <summary>
+        /// 更新资源
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static IUpdateResourceExecuteHandle UpdateResourceBundle(params RuntimeBundleManifest[] options)
+            => ResourceManager.instance.UpdateResourceBundle(options);
     }
 
     /// <summary>
@@ -385,6 +419,15 @@ public sealed class Engine
     /// </summary>
     public sealed class Window
     {
+        public static IToastWindowHandle Toast(string test)
+            => default;
+
+        public static IMessageBoxWindowHandle MsgBox(string text, Action ok, Action cancel = null)
+            => default;
+
+        public static IWaitWindowHandle Wait(string text, float time = 0)
+            => default;
+
         /// <summary>
         /// 打开指定类型的窗口
         /// </summary>

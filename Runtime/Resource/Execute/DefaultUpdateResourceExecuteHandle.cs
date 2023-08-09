@@ -12,34 +12,40 @@ namespace ZEngine.Resource
         public Status status { get; set; }
         public float progress { get; set; }
         public RuntimeBundleManifest[] bundles { get; set; }
-        private ISubscribeExecuteHandle<float> progressHandle;
-        private List<ISubscribeExecuteHandle> _subscribeExecuteHandles = new List<ISubscribeExecuteHandle>();
+
+        private UpdateOptions options;
+        private ISubscribeHandle<float> progressHandle;
+        private List<ISubscribeHandle> _subscribeExecuteHandles = new List<ISubscribeHandle>();
 
         public void Release()
         {
         }
 
-        public void Subscribe(ISubscribeExecuteHandle subscribe)
+        public void Subscribe(ISubscribeHandle subscribe)
         {
             _subscribeExecuteHandles.Add(subscribe);
         }
 
-        public IEnumerator Complete()
+        public IEnumerator ExecuteComplete()
         {
-            yield return WaitFor.Create(() => status == Status.Cancel || status == Status.Success);
+            yield return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
         }
 
-        public void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe)
+        public void OnPorgressChange(ISubscribeHandle<float> subscribe)
         {
             progressHandle = subscribe;
         }
 
-        public IEnumerator Execute(params object[] paramsList)
+        public void Execute(params object[] paramsList)
         {
             status = Status.Execute;
-            UpdateOptions options = (UpdateOptions)paramsList[0];
+            options = (UpdateOptions)paramsList[0];
             bundles = (RuntimeBundleManifest[])paramsList[1];
+            OnStart().StartCoroutine();
+        }
 
+        private IEnumerator OnStart()
+        {
             INetworkRequestExecuteHandle<byte[]>[] fileDownloadList = new INetworkRequestExecuteHandle<byte[]>[bundles.Length];
             string bundleFilePath = string.Empty;
             for (int i = 0; i < bundles.Length; i++)

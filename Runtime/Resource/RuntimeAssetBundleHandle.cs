@@ -14,7 +14,7 @@ namespace ZEngine.Resource
         void Unload(Object obj);
         bool Contains(Object target);
         T Load<T>(string path) where T : Object;
-        IEnumerator LoadAsync<T>(string path, ISubscribeExecuteHandle<T> subscribe) where T : Object;
+        IEnumerator LoadAsync<T>(string path, ISubscribeHandle<T> subscribe) where T : Object;
     }
 
     internal class RuntimeAssetBundleHandle : IRuntimeBundleHandle
@@ -46,7 +46,7 @@ namespace ZEngine.Resource
             return default;
         }
 
-        public IEnumerator LoadAsync<T>(string path, ISubscribeExecuteHandle<T> subscribe) where T : Object
+        public IEnumerator LoadAsync<T>(string path, ISubscribeHandle<T> subscribe) where T : Object
         {
             yield break;
         }

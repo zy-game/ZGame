@@ -27,6 +27,16 @@ namespace ZEngine.Resource
         public int length;
 
         /// <summary>
+        /// 资源包唯一码
+        /// </summary>
+        public uint crc;
+
+        /// <summary>
+        /// 资源包哈希
+        /// </summary>
+        public string hash;
+
+        /// <summary>
         /// 版本号哦
         /// </summary>
         public VersionOptions version;

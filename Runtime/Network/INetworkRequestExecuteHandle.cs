@@ -25,7 +25,7 @@ namespace ZEngine.Network
         float progress { get; }
         NetworkRequestMethod method { get; }
 
-        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
+        void OnPorgressChange(ISubscribeHandle<float> subscribe);
     }
 
     class DefaultNetworkRequestExecuteHandle<T> : INetworkRequestExecuteHandle<T>
@@ -38,20 +38,22 @@ namespace ZEngine.Network
         public NetworkRequestMethod method { get; set; }
 
         private object _data;
-        private ISubscribeExecuteHandle<float> progressListener;
-        private List<ISubscribeExecuteHandle> completeSubscribe = new List<ISubscribeExecuteHandle>();
+        private object upload;
+        private Dictionary<string, object> header;
+        private ISubscribeHandle<float> progressListener;
+        private List<ISubscribeHandle> completeSubscribe = new List<ISubscribeHandle>();
 
-        public void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe)
+        public void OnPorgressChange(ISubscribeHandle<float> subscribe)
         {
             progressListener = subscribe;
         }
 
-        public IEnumerator Complete()
+        public IEnumerator ExecuteComplete()
         {
             return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
         }
 
-        public void Subscribe(ISubscribeExecuteHandle subscribe)
+        public void Subscribe(ISubscribeHandle subscribe)
         {
             completeSubscribe.Add(subscribe);
         }
@@ -67,14 +69,27 @@ namespace ZEngine.Network
         }
 
 
-        public IEnumerator Execute(params object[] paramsList)
+        public void Execute(params object[] paramsList)
         {
             status = Status.Execute;
-            url = paramsList[0].ToString();
+            RequestOptions requestOptions = paramsList.TryGetValue<RequestOptions>(0, default);
+            if (requestOptions is null)
+            {
+                status = Status.Failed;
+                completeSubscribe.ForEach(x => x.Execute(this));
+                return;
+            }
+
+            url = requestOptions.url;
             name = Path.GetFileName(url);
-            object upload = paramsList[1];
-            Dictionary<string, object> header = paramsList[2] is null ? default : (Dictionary<string, object>)paramsList[2];
-            method = (NetworkRequestMethod)paramsList[3];
+            upload = requestOptions.data;
+            header = requestOptions.header;
+            method = requestOptions.method;
+            OnStart().StartCoroutine();
+        }
+
+        IEnumerator OnStart()
+        {
             UnityWebRequest request = method switch
             {
                 NetworkRequestMethod.GET => UnityWebRequest.Get(url),
@@ -99,6 +114,7 @@ namespace ZEngine.Network
                 }
             }
 
+            Engine.Console.Log(request.url);
             request.SendWebRequest();
             while (request.isDone is false)
             {
@@ -106,7 +122,8 @@ namespace ZEngine.Network
                 yield return new WaitForSeconds(0.01f);
             }
 
-            if (request.isDone is false || request.result is not UnityWebRequest.Result.Success)
+            Engine.Console.Log(request.url, request.isDone, request.result);
+            if (request.result is not UnityWebRequest.Result.Success)
             {
                 Engine.Console.Error(request.error);
                 completeSubscribe.ForEach(x => x.Execute(this));

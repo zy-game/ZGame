@@ -31,6 +31,6 @@ namespace ZEngine.Resource
     /// </summary>
     public interface ISceneRequestExecuteHandle : IExecuteHandle
     {
-        void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe);
+        void OnPorgressChange(ISubscribeHandle<float> subscribe);
     }
 }

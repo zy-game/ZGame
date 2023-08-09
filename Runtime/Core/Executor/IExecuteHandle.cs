@@ -16,9 +16,9 @@ namespace ZEngine
         /// 订阅执行器完成回调
         /// </summary>
         /// <param name="subscribe">订阅器</param>
-        public void Subscribe(ISubscribeExecuteHandle<T> subscribe)
+        public void Subscribe(ISubscribeHandle<T> subscribe)
         {
-            Subscribe((ISubscribeExecuteHandle)subscribe);
+            Subscribe((ISubscribeHandle)subscribe);
         }
     }
 
@@ -36,18 +36,18 @@ namespace ZEngine
         /// 获取异步对象
         /// </summary>
         /// <returns></returns>
-        IEnumerator Execute(params object[] paramsList);
+        void Execute(params object[] paramsList);
 
         /// <summary>
         /// 订阅执行器完成回调
         /// </summary>
         /// <param name="subscribe">订阅器</param>
-        void Subscribe(ISubscribeExecuteHandle subscribe);
+        void Subscribe(ISubscribeHandle subscribe);
 
         /// <summary>
         /// 等待完成
         /// </summary>
         /// <returns></returns>
-        IEnumerator Complete();
+        IEnumerator ExecuteComplete();
     }
 }

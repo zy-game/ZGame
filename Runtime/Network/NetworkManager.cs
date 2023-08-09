@@ -34,7 +34,7 @@ namespace ZEngine.Network
         public INetworkRequestExecuteHandle<T> Request<T>(string url, object data, NetworkRequestMethod method, Dictionary<string, object> header = default)
         {
             DefaultNetworkRequestExecuteHandle<T> defaultNetworkRequestExecuteHandle = Engine.Class.Loader<DefaultNetworkRequestExecuteHandle<T>>();
-            defaultNetworkRequestExecuteHandle.Execute(RequestOptions.Create(url, data, header, method)).StartCoroutine();
+            defaultNetworkRequestExecuteHandle.Execute(RequestOptions.Create(url, data, header, method));
             return defaultNetworkRequestExecuteHandle;
         }
     }

@@ -1,101 +1,101 @@
 ﻿using System;
+using UnityEngine.Serialization;
 
 namespace ZEngine
 {
     [Serializable]
     public class VersionOptions
     {
-        public byte mainVersion;
-        public byte subVersion;
-        public byte buildVersion;
+        public byte major;
+        public byte minor;
+        public byte build;
         private byte max = byte.MaxValue;
-
         public void Up()
         {
-            if (buildVersion >= max)
+            if (build >= max)
             {
-                buildVersion = 0;
-                if (subVersion >= max)
+                build = 0;
+                if (minor >= max)
                 {
-                    subVersion = 0;
-                    if (mainVersion >= max)
+                    minor = 0;
+                    if (major >= max)
                     {
                         throw new ArgumentOutOfRangeException();
                     }
                     else
                     {
-                        mainVersion++;
+                        major++;
                     }
                 }
                 else
                 {
-                    subVersion++;
+                    minor++;
                 }
             }
             else
             {
-                buildVersion++;
+                build++;
             }
         }
 
         public void Down()
         {
-            if (buildVersion == 0)
+            if (build == 0)
             {
-                if (subVersion == 0)
+                if (minor == 0)
                 {
-                    if (mainVersion == 0)
+                    if (major == 0)
                     {
-                        mainVersion = 0;
-                        buildVersion = 0;
-                        subVersion = 0;
+                        major = 0;
+                        build = 0;
+                        minor = 0;
                     }
                     else
                     {
-                        mainVersion--;
-                        subVersion = max;
+                        major--;
+                        minor = max;
                     }
                 }
                 else
                 {
-                    buildVersion = max;
-                    subVersion--;
+                    build = max;
+                    minor--;
                 }
             }
             else
             {
-                buildVersion--;
+                build--;
             }
         }
 
         public override string ToString()
         {
-            return $"{mainVersion}.{subVersion}.{buildVersion}";
+            return $"{major}.{minor}.{build}";
         }
 
-        public static VersionOptions None { get; } = new VersionOptions() { mainVersion = 0, subVersion = 0, buildVersion = 0 };
+        public static VersionOptions None { get; } = new VersionOptions() { major = 0, minor = 0, build = 0 };
 
         public static bool operator ==(VersionOptions l, VersionOptions r)
         {
-            return l.mainVersion == r.mainVersion && l.subVersion == r.subVersion && l.buildVersion == r.buildVersion;
+            return l.major == r.major && l.minor == r.minor && l.build == r.build;
         }
 
         public static bool operator !=(VersionOptions l, VersionOptions r)
         {
-            return l.mainVersion != r.mainVersion || l.subVersion != r.subVersion || l.buildVersion != r.buildVersion;
+            return l.major != r.major || l.minor != r.minor || l.build != r.build;
         }
 
         public static bool operator >(VersionOptions l, VersionOptions r)
         {
-            uint a = (uint)l.mainVersion + l.subVersion + l.buildVersion;
-            uint b = (uint)r.mainVersion + r.subVersion + r.buildVersion;
+            uint a = (uint)l.major + l.minor + l.build;
+            uint b = (uint)r.major + r.minor + r.build;
             return a > b;
         }
 
         public static bool operator <(VersionOptions l, VersionOptions r)
         {
-            uint a = (uint)l.mainVersion + l.subVersion + l.buildVersion;
-            uint b = (uint)r.mainVersion + r.subVersion + r.buildVersion;
+            uint a = (uint)l.major + l.minor + l.build;
+            uint b = (uint)r.major + r.minor + r.build;
             return a < b;
         }
     }

@@ -7,7 +7,84 @@ using ZEngine.VFS;
 
 namespace ZEngine.Resource
 {
-    class DefaultAssetBundleRequestExecuteHandle : IAssetBundleRequestExecuteHandle, IAssetBundleRequestResult
+    class DefaultBundleRequestExecute : IAssetBundleRequestExecute, IAssetBundleRequestResult
+    {
+        public string name { get; set; }
+        public string path { get; set; }
+        public string module { get; set; }
+        public VersionOptions version { get; set; }
+        public IRuntimeBundleHandle bundle { get; set; }
+
+
+        public void Release()
+        {
+            bundle = null;
+            name = String.Empty;
+            path = String.Empty;
+            module = String.Empty;
+            version = null;
+        }
+
+        public IAssetBundleRequestResult Execute(params object[] args)
+        {
+            RuntimeBundleManifest manifest = (RuntimeBundleManifest)args[0];
+            name = manifest.name;
+            module = manifest.owner;
+            version = manifest.version;
+            path = VFSManager.GetLocalFilePath(name);
+            RuntimeBundleManifest[] manifests = ResourceManager.instance.GetBundleDependenciesList(manifest);
+            if (manifests is null || manifests.Length is 0)
+            {
+                return default;
+            }
+
+            bool success = true;
+            Dictionary<RuntimeBundleManifest, AssetBundle> map = new Dictionary<RuntimeBundleManifest, AssetBundle>();
+            for (int i = 0; i < manifests.Length; i++)
+            {
+                if (ResourceManager.instance.HasLoadAssetBundle(manifests[i].name))
+                {
+                    continue;
+                }
+
+                IReadFileExecute readFileExecute = Engine.FileSystem.ReadFile(manifests[i].name);
+                if (readFileExecute.bytes is null || readFileExecute.bytes.Length is 0)
+                {
+                    success = false;
+                    break;
+                }
+
+                AssetBundle assetBundle = AssetBundle.LoadFromMemory(readFileExecute.bytes);
+                if (assetBundle is null)
+                {
+                    success = false;
+                    break;
+                }
+
+                map.Add(manifests[i], assetBundle);
+            }
+
+            foreach (var VARIABLE in map)
+            {
+                if (success is false)
+                {
+                    VARIABLE.Value.Unload(true);
+                    continue;
+                }
+
+                IRuntimeBundleHandle runtimeBundleManifest = RuntimeAssetBundleHandle.Create(VARIABLE.Key, VARIABLE.Value);
+                ResourceManager.instance.AddAssetBundleHandle(runtimeBundleManifest);
+                if (manifest == VARIABLE.Key)
+                {
+                    bundle = runtimeBundleManifest;
+                }
+            }
+
+            return this;
+        }
+    }
+
+    class DefaultBundleRequestExecuteHandle : IAssetBundleRequestExecuteHandle, IAssetBundleRequestResult
     {
         public string name { get; set; }
         public string path { get; set; }
@@ -19,8 +96,9 @@ namespace ZEngine.Resource
 
         private float count;
         private float loadCount;
-        private ISubscribeExecuteHandle<float> progresListener;
-        private List<ISubscribeExecuteHandle> subscribeExecuteHandles = new List<ISubscribeExecuteHandle>();
+        private RuntimeBundleManifest manifest;
+        private ISubscribeHandle<float> progresListener;
+        private List<ISubscribeHandle> subscribeExecuteHandles = new List<ISubscribeHandle>();
 
         class LoadBundleData
         {
@@ -39,28 +117,34 @@ namespace ZEngine.Resource
             status = Status.None;
         }
 
-        public IEnumerator Complete()
+        public IEnumerator ExecuteComplete()
         {
             return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
         }
 
-        public void Subscribe(ISubscribeExecuteHandle subscribe)
+        public void Subscribe(ISubscribeHandle subscribe)
         {
             subscribeExecuteHandles.Add(subscribe);
         }
 
-        public void OnPorgressChange(ISubscribeExecuteHandle<float> subscribe)
+        public void OnPorgressChange(ISubscribeHandle<float> subscribe)
         {
             progresListener = subscribe;
         }
 
-        public IEnumerator Execute(params object[] paramsList)
+        public void Execute(params object[] paramsList)
         {
-            RuntimeBundleManifest manifest = (RuntimeBundleManifest)paramsList[0];
+            status = Status.Execute;
+            manifest = (RuntimeBundleManifest)paramsList[0];
             name = manifest.name;
             module = manifest.owner;
             version = manifest.version;
             path = VFSManager.GetLocalFilePath(name);
+            OnStart().StartCoroutine();
+        }
+
+        IEnumerator OnStart()
+        {
             RuntimeBundleManifest[] manifests = ResourceManager.instance.GetBundleDependenciesList(manifest);
             count = manifests.Length;
             if (manifests is null || manifests.Length is 0)
@@ -106,15 +190,15 @@ namespace ZEngine.Resource
                 }
             }
 
-            subscribeExecuteHandles.ForEach(x => x.Execute(this));
             status = success ? Status.Success : Status.Failed;
+            subscribeExecuteHandles.ForEach(x => x.Execute(this));
         }
 
         private IEnumerator LoadBundleAsync(LoadBundleData item)
         {
             item.status = Status.Execute;
             IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFileAsync(item.manifest.name);
-            yield return readFileExecuteHandle.Complete();
+            yield return readFileExecuteHandle.ExecuteComplete();
             AssetBundleCreateRequest createRequest = AssetBundle.LoadFromMemoryAsync(readFileExecuteHandle.bytes);
             yield return createRequest;
             if (createRequest.isDone is false || createRequest.assetBundle is null)

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ZEngine
 {
-    public class GameEventSubscrbe<T> : ISubscribeExecuteHandle<T> where T : GameEventArgs<T>
+    public class GameEventSubscrbe<T> : ISubscribeHandle<T> where T : GameEventArgs<T>
     {
         private Action<T> method;
         public T result { get; private set; }
