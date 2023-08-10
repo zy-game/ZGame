@@ -419,21 +419,39 @@ public sealed class Engine
     /// </summary>
     public sealed class Window
     {
-        public static IToastWindowHandle Toast(string test)
-            => default;
+        /// <summary>
+        /// 小提示窗口
+        /// </summary>
+        /// <param name="test"></param>
+        /// <returns></returns>
+        public static UI_Toast Toast(string test)
+            => OpenWindow<UI_Toast>().SetToast(test);
 
-        public static IMessageBoxWindowHandle MsgBox(string text, Action ok, Action cancel = null)
-            => default;
+        /// <summary>
+        /// 提示消息窗口
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="ok"></param>
+        /// <param name="cancel"></param>
+        /// <returns></returns>
+        public static UI_MsgBox MsgBox(string text, Action ok, Action cancel = null)
+            => OpenWindow<UI_MsgBox>().SetBox("Tips", text, ok, cancel);
 
-        public static IWaitWindowHandle Wait(string text, float time = 0)
-            => default;
+        /// <summary>
+        /// 等待窗口
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static UI_Wait Wait(string text, float time = 0)
+            => OpenWindow<UI_Wait>().SetWait(text, time);
 
         /// <summary>
         /// 打开指定类型的窗口
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T OpenWindow<T>() where T : IWindowHandle
+        public static T OpenWindow<T>() where T : UIWindow
             => (T)OpenWindow(typeof(T));
 
         /// <summary>
@@ -441,31 +459,15 @@ public sealed class Engine
         /// </summary>
         /// <param name="windowType"></param>
         /// <returns></returns>
-        public static IWindowHandle OpenWindow(Type windowType)
+        public static UIWindow OpenWindow(Type windowType)
             => WindowManager.instance.OpenWindow(windowType);
-
-        /// <summary>
-        /// 打开指定类型的窗口
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static IOpenedWindowExecuteAsyncHandleHandle<T> OpenWindowAsync<T>() where T : IWindowHandle
-            => WindowManager.instance.OpenWindowAsync<T>();
-
-        /// <summary>
-        /// 打开指定类型的窗口
-        /// </summary>
-        /// <param name="windowType"></param>
-        /// <returns></returns>
-        public static IOpenedWindowExecuteAsyncHandleHandle<IWindowHandle> OpenWindowAsync(Type windowType)
-            => WindowManager.instance.OpenWindowAsync(windowType);
 
         /// <summary>
         /// 获取指定类型的窗口
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T GetWindow<T>() where T : IWindowHandle
+        public static T GetWindow<T>() where T : UIWindow
             => (T)GetWindow(typeof(T));
 
         /// <summary>
@@ -473,22 +475,22 @@ public sealed class Engine
         /// </summary>
         /// <param name="windowType"></param>
         /// <returns></returns>
-        public static IWindowHandle GetWindow(Type windowType)
+        public static UIWindow GetWindow(Type windowType)
             => WindowManager.instance.GetWindow(windowType);
 
         /// <summary>
         /// 关闭指定窗口
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void Close<T>() where T : IWindowHandle
-            => Close(typeof(T));
+        public static void Close<T>(bool isCache = false) where T : UIWindow
+            => Close(typeof(T), isCache);
 
         /// <summary>
         /// 关闭指定的窗口
         /// </summary>
         /// <param name="windowType"></param>
-        public static void Close(Type windowType)
-            => WindowManager.instance.Close(windowType);
+        public static void Close(Type windowType, bool isCache = false)
+            => WindowManager.instance.Close(windowType, isCache);
     }
 
     /// <summary>

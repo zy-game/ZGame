@@ -444,9 +444,7 @@ namespace ZEngine.Editor.ResourceBuilder
 
                 if (runtimeModuleManifest is null)
                 {
-                    runtimeModuleManifest = new RuntimeModuleManifest();
-                    runtimeModuleManifest.name = VARIABLE.Key.title.ToLower();
-                    runtimeModuleManifest.bundleList = new List<RuntimeBundleManifest>();
+                    runtimeModuleManifest = RuntimeModuleManifest.Create(VARIABLE.Key.title.ToLower());
                 }
 
                 runtimeModuleManifest.version = VARIABLE.Key.version;
@@ -457,29 +455,19 @@ namespace ZEngine.Editor.ResourceBuilder
                     RuntimeBundleManifest runtimeBundleManifest = runtimeModuleManifest.bundleList.Find(x => x.name == bundleName);
                     if (runtimeBundleManifest is null)
                     {
-                        runtimeBundleManifest = new RuntimeBundleManifest();
-                        runtimeBundleManifest.files = new List<RuntimeAssetManifest>();
-                        runtimeBundleManifest.dependencies = new List<string>();
-                        runtimeModuleManifest.bundleList.Add(runtimeBundleManifest);
-                        runtimeBundleManifest.owner = runtimeModuleManifest.name;
-                        runtimeBundleManifest.name = bundleName;
+                        runtimeBundleManifest = RuntimeBundleManifest.Create(runtimeModuleManifest.name, bundleName);
                     }
 
-                    runtimeBundleManifest.version = manifest.version;
-                    runtimeBundleManifest.files.Clear();
-                    runtimeBundleManifest.dependencies.Clear();
-                    runtimeBundleManifest.length = (int)new FileInfo(output + "/" + runtimeBundleManifest.name).Length;
-                    runtimeBundleManifest.dependencies.AddRange(bundleManifest.GetAllDependencies(runtimeBundleManifest.name));
-                    runtimeBundleManifest.hash = bundleManifest.GetAssetBundleHash(runtimeBundleManifest.name).ToString();
-                    BuildPipeline.GetCRCForAssetBundle(output + "/" + runtimeBundleManifest.name, out uint crc);
-                    runtimeBundleManifest.crc = crc;
+                    string filePath = output + "/" + runtimeBundleManifest.name;
+                    string hash = bundleManifest.GetAssetBundleHash(runtimeBundleManifest.name).ToString();
+                    int length = (int)new FileInfo(filePath).Length;
+                    string[] dependencies = bundleManifest.GetAllDependencies(runtimeBundleManifest.name);
+                    BuildPipeline.GetCRCForAssetBundle(filePath, out uint crc);
+                    runtimeBundleManifest.Refersh(manifest.version, length, dependencies, hash, crc);
                     foreach (var file in manifest.files)
                     {
-                        RuntimeAssetManifest runtimeAssetManifest = new RuntimeAssetManifest();
-                        runtimeAssetManifest.name = file.name;
-                        runtimeAssetManifest.path = AssetDatabase.GetAssetPath(file);
-                        runtimeAssetManifest.guid = AssetDatabase.AssetPathToGUID(runtimeAssetManifest.path);
-                        runtimeBundleManifest.files.Add(runtimeAssetManifest);
+                        string path = AssetDatabase.GetAssetPath(file);
+                        runtimeBundleManifest.files.Add(RuntimeAssetManifest.Create(file.name, path, AssetDatabase.AssetPathToGUID(path)));
                     }
                 }
 

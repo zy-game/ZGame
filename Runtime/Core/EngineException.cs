@@ -10,4 +10,9 @@ public class EngineException : Exception
     {
         return new EngineException(message);
     }
+
+    public static EngineException Create<T>(object message) where T : Exception
+    {
+        return new EngineException(Activator.CreateInstance(typeof(T), new object[] { message }));
+    }
 }

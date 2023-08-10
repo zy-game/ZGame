@@ -26,6 +26,14 @@ namespace ZEngine.Resource
         /// </summary>
         public List<RuntimeBundleManifest> bundleList;
 
+        public static RuntimeModuleManifest Create(string name)
+        {
+            RuntimeModuleManifest runtimeModuleManifest = new RuntimeModuleManifest();
+            runtimeModuleManifest.name = name.ToLower();
+            runtimeModuleManifest.bundleList = new List<RuntimeBundleManifest>();
+            return runtimeModuleManifest;
+        }
+
         public RuntimeBundleManifest GetBundleManifest(string bundleName)
         {
             return bundleList.Find(x => x.name == bundleName);

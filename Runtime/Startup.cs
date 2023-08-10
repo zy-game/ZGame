@@ -5,12 +5,15 @@ using UnityEngine;
 using ZEngine;
 using ZEngine.Options;
 using ZEngine.Resource;
+using ZEngine.Window;
 using ZEngine.World;
 
 public class Startup : MonoBehaviour
 {
     private void Start()
     {
+        UI_Loading loading = Engine.Window.OpenWindow<UI_Loading>();
+        loading.SetText("text", "检车资源更新");
         ICheckUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckUpdateResource(HotfixOptions.instance.GetPreloadOptions());
         checkUpdateExecuteHandle.Subscribe(ISubscribeHandle.Create<ICheckUpdateExecuteHandle>(CheckUpdateComplete));
     }

@@ -9,6 +9,12 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Editor.ResourceBuilder
 {
+    public enum OSSService : byte
+    {
+        OSS,
+        COS
+    }
+
     [Config(Localtion.Project)]
     public class ResourceModuleOptions : SingleScript<ResourceModuleOptions>
     {

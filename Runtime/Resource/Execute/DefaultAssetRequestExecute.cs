@@ -20,33 +20,47 @@ namespace ZEngine.Resource
         public T Execute(params object[] args)
         {
             path = args[0].ToString();
-            RuntimeBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
-            if (manifest is null)
+            if (path.StartsWith("Resources"))
             {
-                Engine.Console.Error("Not Find The Asset Bundle Manifest");
-                return default;
+                string temp = path.Substring("Resources/".Length);
+                return result = Resources.Load<T>(temp);
             }
-
-            IRuntimeBundleHandle runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
-            if (runtimeAssetBundleHandle is null && HotfixOptions.instance.autoLoad == Switch.On)
+            else
             {
-                DefaultBundleRequestExecute defaultLoadAssetBundleExecuteHandle = Engine.Class.Loader<DefaultBundleRequestExecute>();
-                IAssetBundleRequestResult assetBundleRequestResult = defaultLoadAssetBundleExecuteHandle.Execute(manifest);
-                if (assetBundleRequestResult is null || assetBundleRequestResult.bundle is null)
+#if UNITY_EDITOR
+                if (HotfixOptions.instance.useHotfix is Switch.On && HotfixOptions.instance.useAsset == Switch.On)
                 {
+                    return result = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
+                }
+#endif
+                RuntimeBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
+                if (manifest is null)
+                {
+                    Engine.Console.Error("Not Find The Asset Bundle Manifest");
                     return default;
                 }
 
-                runtimeAssetBundleHandle = assetBundleRequestResult.bundle;
-            }
+                IRuntimeBundleHandle runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
+                if (runtimeAssetBundleHandle is null && HotfixOptions.instance.autoLoad == Switch.On)
+                {
+                    DefaultBundleRequestExecute defaultLoadAssetBundleExecuteHandle = Engine.Class.Loader<DefaultBundleRequestExecute>();
+                    IAssetBundleRequestResult assetBundleRequestResult = defaultLoadAssetBundleExecuteHandle.Execute(manifest);
+                    if (assetBundleRequestResult is null || assetBundleRequestResult.bundle is null)
+                    {
+                        return default;
+                    }
 
-            if (runtimeAssetBundleHandle is null)
-            {
-                Engine.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
-                return default;
-            }
+                    runtimeAssetBundleHandle = assetBundleRequestResult.bundle;
+                }
 
-            return result = runtimeAssetBundleHandle.Load<T>(path);
+                if (runtimeAssetBundleHandle is null)
+                {
+                    Engine.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
+                    return default;
+                }
+
+                return result = runtimeAssetBundleHandle.Load<T>(path);
+            }
         }
 
 

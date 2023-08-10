@@ -51,6 +51,16 @@ namespace ZEngine.Resource
         /// </summary>
         public List<RuntimeAssetManifest> files;
 
+        public static RuntimeBundleManifest Create(string owner, string bundleName)
+        {
+            RuntimeBundleManifest runtimeBundleManifest = new RuntimeBundleManifest();
+            runtimeBundleManifest.files = new List<RuntimeAssetManifest>();
+            runtimeBundleManifest.dependencies = new List<string>();
+            runtimeBundleManifest.owner = owner;
+            runtimeBundleManifest.name = bundleName;
+            return runtimeBundleManifest;
+        }
+
         public static bool operator ==(RuntimeBundleManifest l, RuntimeBundleManifest r)
         {
             return l.name == r.name && l.version == r.version;
@@ -69,6 +79,15 @@ namespace ZEngine.Resource
             }
 
             return base.Equals(obj);
+        }
+
+        public void Refersh(VersionOptions manifestVersion, int lenght, string[] dependencies, string hash, uint u)
+        {
+            this.version = manifestVersion;
+            this.length = length;
+            this.dependencies = this.dependencies;
+            this.hash = hash;
+            this.crc = u;
         }
     }
 }
