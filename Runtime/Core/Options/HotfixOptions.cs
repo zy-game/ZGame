@@ -12,6 +12,7 @@ namespace ZEngine.Resource
         [Header("编辑器加载热更脚本")] public Switch useScript;
         [Header("编辑器加载热更资源")] public Switch useAsset;
         [Header("自动加载资源包")] public Switch autoLoad;
+        [Header("缓存时间")] public float cachetime;
         [Header("资源地址")] public List<URLOptions> address;
         [Header("预加载模块")] public List<PreloadOptions> preloads;
 

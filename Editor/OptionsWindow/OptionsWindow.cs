@@ -31,12 +31,10 @@ namespace ZEngine.Editor.OptionsEditorWindow
         private SerializedObject audio;
         private SerializedObject vfs;
         private SerializedObject reference;
-        private SerializedObject cache;
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
             base.OnActivate(searchContext, rootElement);
-            cache = new SerializedObject(ZEngine.CacheOptions.instance);
             reference = new SerializedObject(ZEngine.ReferenceOptions.instance);
             vfs = new SerializedObject(ZEngine.VFS.VFSOptions.instance);
             hotfix = new SerializedObject(ZEngine.Resource.HotfixOptions.instance);
@@ -47,12 +45,6 @@ namespace ZEngine.Editor.OptionsEditorWindow
         public override void OnGUI(string searchContext)
         {
             base.OnGUI(searchContext);
-            EditorGUI.BeginChangeCheck();
-            GUILayout.BeginVertical("Cache Options", EditorStyles.helpBox);
-            GUILayout.Space(10);
-            EditorGUILayout.PropertyField(cache.FindProperty("time"), true);
-            GUILayout.EndVertical();
-
             GUILayout.BeginVertical("Cache Options", EditorStyles.helpBox);
             GUILayout.Space(10);
             EditorGUILayout.PropertyField(reference.FindProperty("DefaultCount"), true);
@@ -62,7 +54,6 @@ namespace ZEngine.Editor.OptionsEditorWindow
             GUILayout.BeginVertical("File System Options", EditorStyles.helpBox);
             GUILayout.Space(10);
             EditorGUILayout.PropertyField(vfs.FindProperty("vfsState"), true);
-            EditorGUILayout.PropertyField(vfs.FindProperty("extension"), true);
             EditorGUILayout.PropertyField(vfs.FindProperty("layout"), true);
             EditorGUILayout.PropertyField(vfs.FindProperty("sgementLenght"), true);
             EditorGUILayout.PropertyField(vfs.FindProperty("sgementCount"), true);
@@ -75,6 +66,7 @@ namespace ZEngine.Editor.OptionsEditorWindow
             EditorGUILayout.PropertyField(hotfix.FindProperty("useHotfix"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("useScript"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("useAsset"), true);
+            EditorGUILayout.PropertyField(hotfix.FindProperty("cachetime"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("autoLoad"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("address"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("preloads"), true);
@@ -86,12 +78,10 @@ namespace ZEngine.Editor.OptionsEditorWindow
             GUILayout.EndVertical();
             if (EditorGUI.EndChangeCheck())
             {
-                cache.ApplyModifiedProperties();
                 reference.ApplyModifiedProperties();
                 vfs.ApplyModifiedProperties();
                 hotfix.ApplyModifiedProperties();
                 audio.ApplyModifiedProperties();
-                ZEngine.CacheOptions.instance.Saved();
                 ZEngine.Resource.HotfixOptions.instance.Saved();
                 ZEngine.VFS.VFSOptions.instance.Saved();
                 ZEngine.ReferenceOptions.instance.Saved();

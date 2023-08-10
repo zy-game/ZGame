@@ -40,7 +40,7 @@ namespace ZEngine.Resource
                     return default;
                 }
 
-                IRuntimeBundleHandle runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
+                IRuntimeBundleHandle runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.owner, manifest.name);
                 if (runtimeAssetBundleHandle is null && HotfixOptions.instance.autoLoad == Switch.On)
                 {
                     DefaultBundleRequestExecute defaultLoadAssetBundleExecuteHandle = Engine.Class.Loader<DefaultBundleRequestExecute>();
@@ -132,7 +132,7 @@ namespace ZEngine.Resource
                 yield break;
             }
 
-            IRuntimeBundleHandle runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.name);
+            IRuntimeBundleHandle runtimeAssetBundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.owner, manifest.name);
             if (runtimeAssetBundleHandle is null && HotfixOptions.instance.autoLoad == Switch.On)
             {
                 IAssetBundleRequestExecuteHandle assetBundleRequestExecuteHandle = Engine.Class.Loader<DefaultBundleRequestExecuteHandle>();

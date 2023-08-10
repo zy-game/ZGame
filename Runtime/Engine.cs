@@ -36,30 +36,6 @@ public sealed class Engine
     }
 
     /// <summary>
-    /// 缓存池
-    /// </summary>
-    public sealed class Cache
-    {
-        /// <summary>
-        /// 将对象存入缓存池
-        /// </summary>
-        /// <param name="value"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static CacheTokenHandle Enqueue<T>(T value)
-            => RuntimeCacheing.instance.Enqueue(value);
-
-        /// <summary>
-        /// 从缓存池中取出对象
-        /// </summary>
-        /// <param name="tokenHandle"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T Dequeue<T>(CacheTokenHandle tokenHandle)
-            => RuntimeCacheing.instance.Dequeue<T>(tokenHandle);
-    }
-
-    /// <summary>
     /// 控制台
     /// </summary>
     public sealed class Console

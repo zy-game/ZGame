@@ -42,7 +42,7 @@ namespace ZEngine.Resource
             Dictionary<RuntimeBundleManifest, AssetBundle> map = new Dictionary<RuntimeBundleManifest, AssetBundle>();
             for (int i = 0; i < manifests.Length; i++)
             {
-                if (ResourceManager.instance.HasLoadAssetBundle(manifests[i].name))
+                if (ResourceManager.instance.HasLoadAssetBundle(module, manifests[i].name))
                 {
                     continue;
                 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 using UnityEngine.Events;
 using ZEngine.Options;
 using ZEngine.VFS;
@@ -12,11 +13,17 @@ namespace ZEngine.Resource
     /// </summary>
     internal class ResourceManager : Single<ResourceManager>
     {
+        private List<CacheData> cacheList = new List<CacheData>();
         private List<RuntimeModuleManifest> moduleList = new List<RuntimeModuleManifest>();
-        private List<CacheTokenHandle> cacheList = new List<CacheTokenHandle>();
-        private List<IRuntimeBundleHandle> _bundleLists = new List<IRuntimeBundleHandle>();
+        private List<IRuntimeBundleHandle> bundleLists = new List<IRuntimeBundleHandle>();
         private Dictionary<string, IReference> loadAssetHandles = new Dictionary<string, IReference>();
 
+
+        class CacheData
+        {
+            public float timeout;
+            public IRuntimeBundleHandle bundle;
+        }
 
         /// <summary>
         /// 添加资源包
@@ -24,7 +31,7 @@ namespace ZEngine.Resource
         /// <param name="bundleHandle"></param>
         internal void AddAssetBundleHandle(IRuntimeBundleHandle bundleHandle)
         {
-            _bundleLists.Add(bundleHandle);
+            bundleLists.Add(bundleHandle);
         }
 
         /// <summary>
@@ -32,9 +39,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        internal bool HasLoadAssetBundle(string name)
+        internal bool HasLoadAssetBundle(string module, string name)
         {
-            return GetRuntimeAssetBundleHandle(name) is not null;
+            return GetRuntimeAssetBundleHandle(module, name) is not null;
         }
 
         /// <summary>
@@ -42,16 +49,17 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="bundleName"></param>
         /// <returns></returns>
-        internal IRuntimeBundleHandle GetRuntimeAssetBundleHandle(string bundleName)
+        internal IRuntimeBundleHandle GetRuntimeAssetBundleHandle(string module, string bundleName)
         {
-            IRuntimeBundleHandle runtimeAssetBundleHandle = _bundleLists.Find(x => x.name == bundleName);
+            IRuntimeBundleHandle runtimeAssetBundleHandle = bundleLists.Find(x => x.name == bundleName && x.module == module);
             if (runtimeAssetBundleHandle is null)
             {
-                CacheTokenHandle cacheTokenHandle = cacheList.Find(x => x.name == bundleName);
-                if (cacheTokenHandle is not null)
+                CacheData cacheData = cacheList.Find(x => x.bundle.name == bundleName && x.bundle.module == module);
+                if (cacheData is not null)
                 {
-                    runtimeAssetBundleHandle = Engine.Cache.Dequeue<IRuntimeBundleHandle>(cacheTokenHandle);
-                    _bundleLists.Add(runtimeAssetBundleHandle);
+                    runtimeAssetBundleHandle = cacheData.bundle;
+                    cacheList.Remove(cacheData);
+                    bundleLists.Add(runtimeAssetBundleHandle);
                 }
             }
 
@@ -285,7 +293,7 @@ namespace ZEngine.Resource
         /// <param name="target">资源句柄</param>
         public void Release(Object target)
         {
-            IRuntimeBundleHandle runtimeAssetObjectHandle = _bundleLists.Find(x => x.Contains(target));
+            IRuntimeBundleHandle runtimeAssetObjectHandle = bundleLists.Find(x => x.Contains(target));
             if (runtimeAssetObjectHandle is null)
             {
                 return;
@@ -297,8 +305,12 @@ namespace ZEngine.Resource
                 return;
             }
 
-            _bundleLists.Remove(runtimeAssetObjectHandle);
-            cacheList.Add(Engine.Cache.Enqueue(runtimeAssetObjectHandle));
+            bundleLists.Remove(runtimeAssetObjectHandle);
+            cacheList.Add(new CacheData()
+            {
+                timeout = Time.realtimeSinceStartup + HotfixOptions.instance.cachetime,
+                bundle = runtimeAssetObjectHandle,
+            });
         }
     }
 }

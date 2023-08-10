@@ -13,13 +13,42 @@ namespace ZEngine.Window
 
     public class WindowManager : Single<WindowManager>
     {
-        private Dictionary<Type, UIWindow> cache = new Dictionary<Type, UIWindow>();
+        private List<CacheData> cacheList = new List<CacheData>();
         private Dictionary<Type, UIWindow> windows = new Dictionary<Type, UIWindow>();
+
+        class CacheData : IReference
+        {
+            public float time;
+            public UIWindow handle;
+
+
+            public void Release()
+            {
+                throw new NotImplementedException();
+            }
+
+            public static CacheData Create(UIWindow handle)
+            {
+                CacheData cacheData = new CacheData();
+                cacheData.handle = handle;
+                cacheData.time = Time.realtimeSinceStartup + HotfixOptions.instance.cachetime;
+                return cacheData;
+            }
+        }
 
         public UIWindow OpenWindow(Type windowType)
         {
             if (windows.TryGetValue(windowType, out UIWindow window))
             {
+                return window;
+            }
+
+            CacheData cacheData = cacheList.Find(x => x.handle.GetType() == windowType);
+            if (cacheData is not null)
+            {
+                cacheList.Remove(cacheData);
+                window = cacheData.handle;
+                window.OnEnable();
                 return window;
             }
 
@@ -62,10 +91,11 @@ namespace ZEngine.Window
                 return;
             }
 
+            windows.Remove(windowType);
             if (isCache)
             {
                 window.OnDiable();
-                cache.Add(windowType, window);
+                cacheList.Add(CacheData.Create(window));
             }
             else
             {
