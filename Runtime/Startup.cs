@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using ZEngine;
 using ZEngine.Options;
@@ -13,7 +14,7 @@ public class Startup : MonoBehaviour
     private void Start()
     {
         UI_Loading loading = Engine.Window.OpenWindow<UI_Loading>();
-        loading.SetText("text", "检车资源更新");
+        loading.GetChild("Text (TMP)").GetComponent<TMP_Text>().text = "检车资源更新";
         ICheckUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckUpdateResource(HotfixOptions.instance.GetPreloadOptions());
         checkUpdateExecuteHandle.Subscribe(ISubscribeHandle.Create<ICheckUpdateExecuteHandle>(CheckUpdateComplete));
     }
