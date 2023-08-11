@@ -31,7 +31,7 @@ namespace ZEngine.Resource
             name = manifest.name;
             module = manifest.owner;
             version = manifest.version;
-            path = VFSManager.GetLocalFilePath(name);
+            path = Engine.Custom.GetLocalFilePath(name);
             RuntimeBundleManifest[] manifests = ResourceManager.instance.GetBundleDependenciesList(manifest);
             if (manifests is null || manifests.Length is 0)
             {
@@ -139,7 +139,7 @@ namespace ZEngine.Resource
             name = manifest.name;
             module = manifest.owner;
             version = manifest.version;
-            path = VFSManager.GetLocalFilePath(name);
+            path = Engine.Custom.GetLocalFilePath(name);
             OnStart().StartCoroutine();
         }
 

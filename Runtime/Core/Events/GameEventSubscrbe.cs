@@ -4,11 +4,12 @@ using UnityEngine;
 
 namespace ZEngine
 {
-    public class GameEventSubscrbe<T> : ISubscribeHandle<T> where T : GameEventArgs<T>
+    public class GameEventSubscrbe<T> : ISubscribeHandle where T : GameEventArgs<T>
     {
         private Action<T> method;
         public T result { get; private set; }
         public Exception exception { get; private set; }
+        public GameEventArgs<T>.EventType type { get; private set; }
 
         public GameEventSubscrbe()
         {
@@ -29,11 +30,13 @@ namespace ZEngine
         public void Execute(object value)
         {
             result = (T)value;
+            OnTrigger(result);
         }
 
         public void Execute(Exception exception)
         {
             this.exception = exception;
+            OnTrigger(result);
         }
 
         public IEnumerator ExecuteComplete(float timeout = 0)
@@ -46,10 +49,23 @@ namespace ZEngine
             method?.Invoke(evtArgs);
         }
 
+        public override bool Equals(object obj)
+        {
+            return method.Equals(obj);
+        }
+
         public static GameEventSubscrbe<T> Create(Action<T> callback)
         {
             GameEventSubscrbe<T> gameEventSubscrbe = Engine.Class.Loader<GameEventSubscrbe<T>>();
             gameEventSubscrbe.method = callback;
+            return gameEventSubscrbe;
+        }
+
+        public static GameEventSubscrbe<T> Create(GameEventArgs<T>.EventType type, Action<T> callback)
+        {
+            GameEventSubscrbe<T> gameEventSubscrbe = Engine.Class.Loader<GameEventSubscrbe<T>>();
+            gameEventSubscrbe.method = callback;
+            gameEventSubscrbe.type = type;
             return gameEventSubscrbe;
         }
     }

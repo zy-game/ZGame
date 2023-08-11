@@ -45,7 +45,7 @@ namespace ZEngine.Editor.OptionsEditorWindow
         public override void OnGUI(string searchContext)
         {
             base.OnGUI(searchContext);
-            GUILayout.BeginVertical("Cache Options", EditorStyles.helpBox);
+            GUILayout.BeginVertical("Reference Options", EditorStyles.helpBox);
             GUILayout.Space(10);
             EditorGUILayout.PropertyField(reference.FindProperty("DefaultCount"), true);
             EditorGUILayout.PropertyField(reference.FindProperty("MaxCount"), true);
@@ -55,9 +55,8 @@ namespace ZEngine.Editor.OptionsEditorWindow
             GUILayout.Space(10);
             EditorGUILayout.PropertyField(vfs.FindProperty("vfsState"), true);
             EditorGUILayout.PropertyField(vfs.FindProperty("layout"), true);
-            EditorGUILayout.PropertyField(vfs.FindProperty("sgementLenght"), true);
-            EditorGUILayout.PropertyField(vfs.FindProperty("sgementCount"), true);
-            EditorGUILayout.PropertyField(vfs.FindProperty("mulitThreads"), true);
+            EditorGUILayout.PropertyField(vfs.FindProperty("Lenght"), true);
+            EditorGUILayout.PropertyField(vfs.FindProperty("Count"), true);
             EditorGUILayout.PropertyField(vfs.FindProperty("time"), true);
             GUILayout.EndVertical();
 

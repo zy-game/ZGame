@@ -29,9 +29,24 @@ public sealed class Engine
 #endif
         }
 
+        public static string RandomName()
+        {
+            return Guid.NewGuid().ToString().Replace("-", "");
+        }
+
         public static string GetHotfixPath(string url, string name)
         {
             return $"{url}/{Engine.Custom.GetPlatfrom()}/{name}";
+        }
+
+        /// <summary>
+        /// 获取本地缓存文件路径
+        /// </summary>
+        /// <param name="fileName">文件名，不包含扩展名</param>
+        /// <returns></returns>
+        public static string GetLocalFilePath(string fileName)
+        {
+            return $"{Application.persistentDataPath}/{fileName}";
         }
     }
 
@@ -52,7 +67,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="message"></param>
         public static void Log(params object[] message)
-            => Debug.Log($"[INFO]{string.Join("\n", message)}");
+            => Debug.Log($"[INFO]{string.Join(" ", message)}");
 
         /// <summary>
         /// 输出警告信息
@@ -164,22 +179,6 @@ public sealed class Engine
         /// <returns></returns>
         public static VersionOptions GetFileVersion(string fileName)
             => VFSManager.instance.GetFileVersion(fileName);
-
-        /// <summary>
-        /// 获取本地缓存文件地址
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static string GetLocalFilePath(string fileName)
-            => VFSManager.GetLocalFilePath(fileName);
-
-        /// <summary>
-        /// 获取热更文件地址
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static string GetHotfixFilePath(string fileName)
-            => fileName;
 
         /// <summary>
         /// 写入文件数据
@@ -349,8 +348,8 @@ public sealed class Engine
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IUpdateResourceExecuteHandle UpdateResourceBundle(params RuntimeBundleManifest[] options)
-            => ResourceManager.instance.UpdateResourceBundle(options);
+        public static IUpdateResourceExecuteHandle UpdateResourceBundle(URLOptions url, params RuntimeBundleManifest[] bundles)
+            => ResourceManager.instance.UpdateResourceBundle(url, bundles);
     }
 
     /// <summary>
@@ -411,7 +410,17 @@ public sealed class Engine
         /// <param name="cancel"></param>
         /// <returns></returns>
         public static UI_MsgBox MsgBox(string text, Action ok, Action cancel = null)
-            => OpenWindow<UI_MsgBox>().SetBox("Tips", text, ok, cancel);
+            => MsgBox("Tips", text, ok, cancel);
+
+        /// <summary>
+        /// 提示消息窗口
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="ok"></param>
+        /// <param name="cancel"></param>
+        /// <returns></returns>
+        public static UI_MsgBox MsgBox(string tips, string text, Action ok, Action cancel = null)
+            => OpenWindow<UI_MsgBox>().SetBox(tips, text, ok, cancel);
 
         /// <summary>
         /// 等待窗口
@@ -419,8 +428,8 @@ public sealed class Engine
         /// <param name="text"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public static UI_Wait Wait(string text, float time = 0)
-            => OpenWindow<UI_Wait>().SetWait(text, time);
+        public static UI_Wait Wait(string text, float time = 0, ISubscribeHandle subscribe = null)
+            => OpenWindow<UI_Wait>().SetWait(text, time, subscribe);
 
         /// <summary>
         /// 打开指定类型的窗口
@@ -495,5 +504,13 @@ public sealed class Engine
         /// <returns></returns>
         public static INetworkRequestExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Request<T>(url, data, NetworkRequestMethod.POST, header);
+
+        /// <summary>
+        /// 多文件下载
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static INetworkMultiDownloadExecuteHandle MultiDownload(MultiDownloadOptions options)
+            => NetworkManager.instance.MultiDownload(options);
     }
 }

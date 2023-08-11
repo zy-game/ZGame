@@ -70,6 +70,7 @@ namespace ZEngine.Window
             window.SetGameObject(GameObject.Instantiate(request.result));
             window.OnAwake();
             window.OnEnable();
+            windows.Add(windowType, window);
             return window;
         }
 

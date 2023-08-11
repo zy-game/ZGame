@@ -249,9 +249,11 @@ namespace ZEngine.Resource
             return defaultCheckUpdateExecuteHandle;
         }
 
-        public IUpdateResourceExecuteHandle UpdateResourceBundle(params RuntimeBundleManifest[] options)
+        public IUpdateResourceExecuteHandle UpdateResourceBundle(URLOptions options, params RuntimeBundleManifest[] bundles)
         {
-            return default;
+            DefaultUpdateResourceExecuteHandle defaultUpdateResourceExecuteHandle = Engine.Class.Loader<DefaultUpdateResourceExecuteHandle>();
+            defaultUpdateResourceExecuteHandle.Execute(options, bundles);
+            return defaultUpdateResourceExecuteHandle;
         }
 
         /// <summary>

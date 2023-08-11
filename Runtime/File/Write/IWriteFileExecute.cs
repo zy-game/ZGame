@@ -44,37 +44,17 @@ namespace ZEngine.VFS
         {
             name = (string)args[0];
             bytes = (byte[])args[1];
-            VersionOptions version = (VersionOptions)args[2];
-            VFSData vfsData = default;
-            //todo 根据vfs布局写入文件
-            if (VFSOptions.instance.layout == VFSLayout.ReadWritePriority || VFSOptions.instance.vfsState == Switch.Off)
-            {
-                //todo 如果单个文件小于等于一个VFS数据块，则写入VFS，如果大于单个VFS数据块，则写入单独的VFS中
-                vfsData = VFSManager.instance.GetVFSData(Mathf.Max(VFSOptions.instance.sgementLenght, bytes.Length));
-                if (vfsData is null)
-                {
-                    return this;
-                }
-
-                vfsData.Write(bytes, 0, bytes.Length, version);
-                return this;
-            }
-
-            int count = bytes.Length.SpiltCount(VFSOptions.instance.sgementLenght);
+            version = (VersionOptions)args[2];
+            VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
             int offset = 0;
-            int length = 0;
-            for (int i = 0; i < count; i++)
+            int index = 0;
+            foreach (var VARIABLE in vfsDataList)
             {
-                //todo 不用理会文件是否连续
-                vfsData = VFSManager.instance.GetVFSData();
-                if (vfsData is null)
-                {
-                    return this;
-                }
-
-                offset += i * length;
-                length = Mathf.Min(VFSOptions.instance.sgementLenght, bytes.Length - offset);
-                vfsData.Write(bytes, offset, length, version);
+                int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
+                VARIABLE.Write(bytes, offset, length, version, index);
+                offset += VARIABLE.length;
+                VARIABLE.name = name;
+                index++;
             }
 
             VFSManager.instance.SaveVFSData();

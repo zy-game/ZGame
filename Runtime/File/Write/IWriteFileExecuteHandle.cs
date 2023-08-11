@@ -20,7 +20,7 @@ namespace ZEngine.VFS
         /// <summary>
         /// 文件数据
         /// </summary>
-        byte[] result { get; }
+        byte[] bytes { get; }
 
         /// <summary>
         /// 文件版本
@@ -33,7 +33,7 @@ namespace ZEngine.VFS
         private List<ISubscribeHandle> _subscribes = new List<ISubscribeHandle>();
 
         public string name { get; set; }
-        public byte[] result { get; set; }
+        public byte[] bytes { get; set; }
         public Status status { get; set; }
         public VersionOptions version { get; set; }
 
@@ -43,7 +43,7 @@ namespace ZEngine.VFS
             _subscribes.ForEach(Engine.Class.Release);
             _subscribes.Clear();
             name = String.Empty;
-            result = Array.Empty<byte>();
+            bytes = Array.Empty<byte>();
             version = VersionOptions.None;
         }
 
@@ -64,51 +64,27 @@ namespace ZEngine.VFS
             }
 
             name = (string)args[0];
-            result = (byte[])args[1];
+            bytes = (byte[])args[1];
             version = (VersionOptions)args[2];
             OnStart().StartCoroutine();
         }
 
         IEnumerator OnStart()
         {
-            VFSData vfsData = default;
-            //todo 根据vfs布局写入文件
-            if (VFSOptions.instance.layout == VFSLayout.ReadWritePriority || VFSOptions.instance.vfsState == Switch.Off)
-            {
-                //todo 如果单个文件小于等于一个VFS数据块，则写入VFS，如果大于单个VFS数据块，则写入单独的VFS中
-                vfsData = VFSManager.instance.GetVFSData(Mathf.Max(VFSOptions.instance.sgementLenght, result.Length));
-                if (vfsData is null)
-                {
-                    _subscribes.ForEach(x => x.Execute(this));
-                    status = Status.Failed;
-                    yield break;
-                }
-
-                vfsData.Write(result, 0, result.Length, version);
-                status = Status.Success;
-                _subscribes.ForEach(x => x.Execute(this));
-                yield break;
-            }
-
-            int count = result.Length.SpiltCount(VFSOptions.instance.sgementLenght);
+            VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
             int offset = 0;
-            int length = 0;
-            for (int i = 0; i < count; i++)
+            int index = 0;
+            foreach (var VARIABLE in vfsDataList)
             {
-                //todo 不用理会文件是否连续
-                vfsData = VFSManager.instance.GetVFSData();
-                if (vfsData is null)
-                {
-                    status = Status.Failed;
-                    _subscribes.ForEach(x => x.Execute(this));
-                    yield break;
-                }
-
-                offset += i * length;
-                length = Mathf.Min(VFSOptions.instance.sgementLenght, result.Length - offset);
-                vfsData.Write(result, offset, length, version);
+                int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
+                VARIABLE.Write(bytes, offset, length, version, index);
+                offset += VARIABLE.length;
+                index++;
+                VARIABLE.name = name;
+                yield return Timeout.Create(0.01f);
             }
 
+            VFSManager.instance.SaveVFSData();
             status = Status.Success;
             _subscribes.ForEach(x => x.Execute(this));
         }

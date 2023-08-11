@@ -13,9 +13,9 @@ public class Startup : MonoBehaviour
 {
     private void Start()
     {
-        UI_Loading loading = Engine.Window.OpenWindow<UI_Loading>();
-        loading.GetChild("Text (TMP)").GetComponent<TMP_Text>().text = "检车资源更新";
+        UI_Loading loading = Engine.Window.OpenWindow<UI_Loading>().SetInfo("检查资源更新");
         ICheckUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckUpdateResource(HotfixOptions.instance.GetPreloadOptions());
+        checkUpdateExecuteHandle.OnPorgressChange(loading.GetProgressSubscribe());
         checkUpdateExecuteHandle.Subscribe(ISubscribeHandle.Create<ICheckUpdateExecuteHandle>(CheckUpdateComplete));
     }
 
@@ -37,7 +37,8 @@ public class Startup : MonoBehaviour
         Engine.Console.Log("需要更新资源:", Engine.Json.ToJson(checkUpdateExecuteHandle.bundles));
         Engine.Window.MsgBox("是否更新资源？", () =>
         {
-            IUpdateResourceExecuteHandle updateResourceExecuteHandle = Engine.Resource.UpdateResourceBundle(checkUpdateExecuteHandle.bundles);
+            IUpdateResourceExecuteHandle updateResourceExecuteHandle = Engine.Resource.UpdateResourceBundle(checkUpdateExecuteHandle.options.url, checkUpdateExecuteHandle.bundles);
+            updateResourceExecuteHandle.OnPorgressChange(Engine.Window.OpenWindow<UI_Loading>().GetProgressSubscribe());
             updateResourceExecuteHandle.Subscribe(ISubscribeHandle.Create<IUpdateResourceExecuteHandle>(UpdateResourceBundleComplete));
         }, Application.Quit);
     }
@@ -50,6 +51,7 @@ public class Startup : MonoBehaviour
             return;
         }
 
+        Engine.Console.Log("开始加载预加载资源");
         IResourcePreloadExecuteHandle resourcePreloadExecuteHandle = Engine.Resource.PreLoadResourceModule();
         resourcePreloadExecuteHandle.Subscribe(ISubscribeHandle.Create<IResourcePreloadExecuteHandle>(ResourcePreloadComplete));
     }

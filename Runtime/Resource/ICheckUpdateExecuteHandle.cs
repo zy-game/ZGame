@@ -1,4 +1,6 @@
-﻿namespace ZEngine.Resource
+﻿using UnityEngine.PlayerLoop;
+
+namespace ZEngine.Resource
 {
     /// <summary>
     /// 检查资源更新
@@ -6,6 +8,7 @@
     public interface ICheckUpdateExecuteHandle : IExecuteHandle<ICheckUpdateExecuteHandle>
     {
         float progress { get; }
+        UpdateOptions options { get; }
         RuntimeModuleManifest manifest { get; }
         RuntimeBundleManifest[] bundles { get; }
         void OnPorgressChange(ISubscribeHandle<float> subscribe);

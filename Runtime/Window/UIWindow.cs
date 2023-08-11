@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using TMPro;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace ZEngine.Window
 {
-    public interface ITimwout
-    {
-        ITimwout Timeout(float time);
-    }
+  
 
 
     public abstract class UIWindow : IReference
@@ -30,16 +25,21 @@ namespace ZEngine.Window
             }
         }
 
-        public virtual void OnAwake()
+        public void OnAwake()
         {
+            Awake();
         }
 
-        public virtual void OnEnable()
+        public void OnEnable()
         {
+            gameObject.SetActive(true);
+            Enable();
         }
 
-        public virtual void OnDiable()
+        public void OnDiable()
         {
+            gameObject.SetActive(false);
+            Disable();
         }
 
         public GameObject GetChild(string name)
@@ -54,45 +54,25 @@ namespace ZEngine.Window
 
         public void Release()
         {
+            Destroy();
+            GameObject.DestroyImmediate(gameObject);
+            childList.Clear();
         }
-    }
 
-    [UIOptions("Resources/Toast", UIOptions.Layer.Pop)]
-    public class UI_Toast : UIWindow
-    {
-        public UI_Toast SetToast(string text)
+        protected virtual void Awake()
         {
-            return this;
         }
-    }
 
-    [UIOptions("Resources/Wait", UIOptions.Layer.Pop)]
-    public class UI_Wait : UIWindow, ITimwout
-    {
-        public ITimwout Timeout(float time)
+        protected virtual void Enable()
         {
-            return this;
         }
 
-        public UI_Wait SetWait(string text, float timeout)
+        protected virtual void Disable()
         {
-            return this;
         }
-    }
 
-    [UIOptions("Resources/Msgbox", UIOptions.Layer.Pop)]
-    public class UI_MsgBox : UIWindow
-    {
-        public UI_MsgBox SetBox(string tips, string text, Action ok, Action cancel)
+        protected virtual void Destroy()
         {
-            this.GetChild("text").GetComponent<TMP_Text>().text = text;
-            this.GetChild("Tips").GetComponent<TMP_Text>().text = tips;
-            return this;
         }
-    }
-
-    [UIOptions("Resources/Loading", UIOptions.Layer.Pop)]
-    public class UI_Loading : UIWindow
-    {
     }
 }

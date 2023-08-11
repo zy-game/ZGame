@@ -9,10 +9,10 @@ namespace ZEngine.Resource
     {
         public Status status { get; set; }
         public float progress { get; set; }
+        public UpdateOptions options { get; set; }
         public RuntimeModuleManifest manifest { get; set; }
         public RuntimeBundleManifest[] bundles { get; private set; }
 
-        private UpdateOptions options;
         private ISubscribeHandle<float> progressListener;
         private List<ISubscribeHandle> completeSubscribe = new List<ISubscribeHandle>();
 

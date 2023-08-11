@@ -9,7 +9,6 @@ namespace ZEngine
     {
         void Execute(object value);
         void Execute(Exception exception);
-        IEnumerator ExecuteComplete(float timeout = 0);
 
         public static ISubscribeHandle Create(Action action)
         {

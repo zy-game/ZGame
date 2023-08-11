@@ -22,6 +22,19 @@ namespace ZEngine
         }
     }
 
+    public abstract class ExecuteHandle : IExecuteHandle
+    {
+        public abstract void Release();
+        public abstract Status status { get; }
+        public abstract void Execute(params object[] paramsList);
+        public abstract void Subscribe(ISubscribeHandle subscribe);
+        public abstract IEnumerator ExecuteComplete();
+    }
+
+    public abstract class ExecuteHandle<T> : ExecuteHandle, IExecuteHandle<T>
+    {
+    }
+
     /// <summary>
     /// 异步执行器
     /// </summary>

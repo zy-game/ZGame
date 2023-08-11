@@ -144,8 +144,8 @@ namespace ZEngine.Network
                 _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
             }
 
-            completeSubscribe.ForEach(x => x.Execute(this));
             status = Status.Success;
+            completeSubscribe.ForEach(x => x.Execute(this));
         }
     }
 }

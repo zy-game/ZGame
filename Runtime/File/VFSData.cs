@@ -46,20 +46,25 @@ namespace ZEngine.VFS
         /// </summary>
         public VersionOptions version;
 
+        /// <summary>
+        /// 是否在使用
+        /// </summary>
+        public Switch use { get; private set; }
 
         public void Write(byte[] bytes, int offset, int lenght, VersionOptions version, int sort = 0)
         {
-            FileStream stream = VFSManager.instance.GetFileStream(vfs);
-            if (stream is null)
+            VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
+            if (handle is null)
             {
                 Engine.Console.Error(EngineException.Create(new FileNotFoundException(vfs)));
                 return;
             }
 
-            stream.Seek(this.offset, SeekOrigin.Begin);
-            stream.Write(bytes, offset, lenght);
+            use = Switch.On;
+            handle.fileStream.Seek(this.offset, SeekOrigin.Begin);
+            handle.fileStream.Write(bytes, offset, lenght);
             time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            fileLenght = bytes.Length;
+            fileLenght = lenght;
             this.sort = sort;
             this.version = version;
         }
@@ -67,8 +72,8 @@ namespace ZEngine.VFS
 
         public void Read(byte[] bytes, int offset, int lenght)
         {
-            FileStream stream = VFSManager.instance.GetFileStream(vfs);
-            if (stream is null)
+            VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
+            if (handle is null)
             {
                 Engine.Console.Error(EngineException.Create(new FileNotFoundException(vfs)));
                 return;
@@ -80,8 +85,8 @@ namespace ZEngine.VFS
                 return;
             }
 
-            stream.Seek(this.offset, SeekOrigin.Begin);
-            stream.Read(bytes, this.offset, lenght);
+            handle.fileStream.Seek(this.offset, SeekOrigin.Begin);
+            handle.fileStream.Read(bytes, this.offset, lenght);
             time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
 
@@ -89,6 +94,7 @@ namespace ZEngine.VFS
         {
             sort = 0;
             time = 0;
+            use = Switch.Off;
             fileLenght = 0;
             name = String.Empty;
             version = VersionOptions.None;

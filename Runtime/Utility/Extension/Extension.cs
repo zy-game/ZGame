@@ -22,6 +22,30 @@ public class WaitFor : CustomYieldInstruction, IReference
     }
 }
 
+
+public sealed class Timeout : CustomYieldInstruction
+{
+    private float end;
+    public override bool keepWaiting => UnityEngine.Time.realtimeSinceStartup > end;
+
+
+    public Timeout Time(float time)
+    {
+        end = time;
+        return this;
+    }
+
+
+    public static Timeout Create(float time)
+    {
+        return new Timeout()
+        {
+            end = UnityEngine.Time.realtimeSinceStartup + time
+        };
+    }
+}
+
+
 public static class Extension
 {
     private static UniContent _content;
@@ -200,11 +224,6 @@ public static class Extension
             public void Execute(Exception exception)
             {
                 subscribe.Execute(exception);
-            }
-
-            public IEnumerator ExecuteComplete(float timeout = 0)
-            {
-                yield return subscribe.ExecuteComplete(timeout);
             }
         }
     }

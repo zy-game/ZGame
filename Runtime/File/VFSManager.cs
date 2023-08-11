@@ -11,7 +11,7 @@ namespace ZEngine.VFS
         private List<VFSData> dataList = new List<VFSData>();
         private List<VFSHandle> vfsList = new List<VFSHandle>();
 
-        class VFSHandle : IReference
+        internal class VFSHandle : IReference
         {
             public float time;
             public string name;
@@ -20,21 +20,27 @@ namespace ZEngine.VFS
             public void Release()
             {
                 time = 0;
+                Engine.Console.Log("Dispose File: " + name);
                 name = String.Empty;
                 fileStream.Close();
                 fileStream.Dispose();
             }
         }
 
+        public override void Dispose()
+        {
+            base.Dispose();
+            vfsList.ForEach(x => x.Release());
+        }
+
         public VFSManager()
         {
-            string filePath = GetLocalFilePath("vfs");
+            string filePath = Engine.Custom.GetLocalFilePath("vfs");
             if (!File.Exists(filePath))
             {
                 return;
             }
 
-            ISubscribeHandle.Create(CheckFileStreamTimeout).Timer(VFSOptions.instance.time);
             dataList = Engine.Json.Parse<List<VFSData>>(File.ReadAllText(filePath));
         }
 
@@ -56,22 +62,29 @@ namespace ZEngine.VFS
             }
         }
 
-        /// <summary>
-        /// 获取本地缓存文件路径
-        /// </summary>
-        /// <param name="fileName">文件名，不包含扩展名</param>
-        /// <returns></returns>
-        public static string GetLocalFilePath(string fileName)
+        internal VFSHandle GetVFSHandle(string vfs)
         {
-            return $"{Application.persistentDataPath}/{fileName}";
+            VFSHandle handle = vfsList.Find(x => x.name == vfs);
+            if (handle is not null)
+            {
+                return handle;
+            }
+
+            vfsList.Add(handle = new VFSHandle()
+            {
+                name = vfs,
+                time = Time.realtimeSinceStartup,
+                fileStream = new FileStream(Engine.Custom.GetLocalFilePath(vfs), FileMode.OpenOrCreate, FileAccess.ReadWrite)
+            });
+            return handle;
         }
 
         /// <summary>
         /// 保存VFS数据
         /// </summary>
-        public void SaveVFSData()
+        internal void SaveVFSData()
         {
-            string filePath = GetLocalFilePath("vfs");
+            string filePath = Engine.Custom.GetLocalFilePath("vfs");
             File.WriteAllText(filePath, Engine.Json.ToJson(dataList));
         }
 
@@ -80,62 +93,67 @@ namespace ZEngine.VFS
         /// </summary>
         /// <param name="lenght">指定VFS数据块大小，如果不指定则使用配置大小</param>
         /// <returns></returns>
-        public VFSData GetVFSData(int lenght = 0)
+        public VFSData[] GetVFSData(int lenght)
         {
-            VFSData vfsData = dataList.Find(x => x.name.IsNullOrEmpty() && x.fileLenght >= lenght);
-            if (vfsData is null)
+            List<VFSData> result = new List<VFSData>();
+            switch (VFSOptions.instance.layout)
             {
-                int count = lenght > VFSOptions.instance.sgementLenght ? 1 : VFSOptions.instance.sgementCount;
-                CreateVFSystem(count, lenght);
-                return GetVFSData(lenght);
+                case VFSLayout.Speed:
+                    VFSData data = dataList.Find(x => x.use == Switch.Off && x.length >= lenght);
+                    if (data is null)
+                    {
+                        VFSHandle handle = GetVFSHandle(Engine.Custom.RandomName());
+                        data = new VFSData()
+                        {
+                            vfs = handle.name,
+                            length = lenght,
+                            offset = 0,
+                            time = DateTimeOffset.Now.ToUnixTimeSeconds()
+                        };
+                        dataList.Add(data);
+                        SaveVFSData();
+                    }
+
+                    result.Add(data);
+                    break;
+                case VFSLayout.Szie:
+                    int count = lenght / VFSOptions.instance.Lenght;
+                    count = lenght > count * VFSOptions.instance.Lenght ? count + 1 : count;
+                    IEnumerable<VFSData> temp = dataList.Where(x => x.use == Switch.Off);
+
+                    if (temp is null || temp.Count() < count)
+                    {
+                        VFSHandle handle = GetVFSHandle(Engine.Custom.RandomName());
+                        for (int i = 0; i < VFSOptions.instance.Count; i++)
+                        {
+                            dataList.Add(new VFSData()
+                            {
+                                vfs = handle.name,
+                                length = VFSOptions.instance.Lenght,
+                                offset = i * VFSOptions.instance.Lenght,
+                                time = DateTimeOffset.Now.ToUnixTimeSeconds()
+                            });
+                        }
+
+                        SaveVFSData();
+                        Engine.Console.Log(dataList.Count);
+                        temp = dataList.Where(x => x.use is Switch.Off);
+                    }
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        result.Add(temp.ElementAt(i));
+                    }
+
+                    break;
             }
 
-            return vfsData;
+            return result.ToArray();
         }
 
-        /// <summary>
-        /// 创建VFS
-        /// </summary>
-        /// <param name="count">数据块数量</param>
-        /// <param name="lenght">每个数据块的长度，默认为VFSOptions.sgementLenght</param>
-        /// <returns></returns>
-        public VFSData[] CreateVFSystem(int count, int lenght = 0)
+        public VFSData[] GetFileData(string fileName)
         {
-            List<VFSData> list = new List<VFSData>();
-            string vfsName = Guid.NewGuid().ToString().Replace("-", String.Empty);
-            string vfsPath = GetLocalFilePath(vfsName);
-            if (File.Exists(vfsPath))
-            {
-                File.Delete(vfsPath);
-            }
-
-            FileStream fileStream = GetFileStream(vfsName);
-            for (int i = 0; i < count; i++)
-            {
-                list.Add(new VFSData() { vfs = vfsName, length = Mathf.Max(lenght, VFSOptions.instance.sgementLenght) });
-            }
-
-            dataList.AddRange(list);
-            SaveVFSData();
-            return list.ToArray();
-        }
-
-
-        public FileStream GetFileStream(string vfsName)
-        {
-            VFSHandle handle = vfsList.Find(x => x.name == vfsName);
-            if (handle.fileStream is not null)
-            {
-                handle.time = Time.realtimeSinceStartup + VFSOptions.instance.time;
-                return handle.fileStream;
-            }
-
-            handle = Engine.Class.Loader<VFSHandle>();
-            handle.name = vfsName;
-            handle.time = Time.realtimeSinceStartup + VFSOptions.instance.time;
-            handle.fileStream = new FileStream(GetLocalFilePath(vfsName), FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            vfsList.Add(handle);
-            return handle.fileStream;
+            return dataList.Where(x => x.name == fileName).ToArray();
         }
 
         public bool Exist(string fileName)
@@ -145,7 +163,7 @@ namespace ZEngine.VFS
                 return dataList.Find(x => x.name == fileName) is not null;
             }
 
-            return File.Exists(GetLocalFilePath(fileName));
+            return File.Exists(Engine.Custom.GetLocalFilePath(fileName));
         }
 
         public bool Delete(string fileName)
@@ -171,11 +189,6 @@ namespace ZEngine.VFS
             return vfsData.version;
         }
 
-        public VFSData[] GetFileData(string fileName)
-        {
-            return dataList.Where(x => x.name == fileName).ToArray();
-        }
-
         public IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
         {
             Delete(fileName);
@@ -188,7 +201,6 @@ namespace ZEngine.VFS
         {
             Delete(fileName);
             DefaultWriteFileExecuteHandle defaultWriteFileExecuteHandle = Engine.Class.Loader<DefaultWriteFileExecuteHandle>();
-            defaultWriteFileExecuteHandle.Subscribe(ISubscribeHandle.Create<IWriteFileExecuteHandle>(args => SaveVFSData()));
             defaultWriteFileExecuteHandle.Execute(fileName, bytes, version);
             return defaultWriteFileExecuteHandle;
         }
