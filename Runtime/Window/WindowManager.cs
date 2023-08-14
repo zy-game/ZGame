@@ -59,7 +59,7 @@ namespace ZEngine.Window
                 return default;
             }
 
-            IAssetRequestExecute<GameObject> request = Engine.Resource.LoadAsset<GameObject>(options.path);
+            RequestAssetResult<GameObject> request = Engine.Resource.LoadAsset<GameObject>(options.path);
             if (request.result == null)
             {
                 Engine.Console.Error(EngineException.Create<NullReferenceException>(options.path));
@@ -67,10 +67,11 @@ namespace ZEngine.Window
             }
 
             window = (UIWindow)Activator.CreateInstance(windowType);
+            Engine.Console.Log("Create Window:", windowType.Name);
+            windows.Add(windowType, window);
             window.SetGameObject(GameObject.Instantiate(request.result));
             window.OnAwake();
             window.OnEnable();
-            windows.Add(windowType, window);
             return window;
         }
 
@@ -89,13 +90,14 @@ namespace ZEngine.Window
             UIWindow window = GetWindow(windowType);
             if (window is null)
             {
+                Engine.Console.Log("Not Find Window Type:", windowType.Name);
                 return;
             }
 
             windows.Remove(windowType);
+            window.OnDiable();
             if (isCache)
             {
-                window.OnDiable();
                 cacheList.Add(CacheData.Create(window));
             }
             else

@@ -15,7 +15,7 @@ public class Single<T> : IDisposable where T : Single<T>, new()
             if (_instance is null)
             {
                 _instance = new T();
-                UnityEventArgs.Subscribe(UnityEventArgs.EventType.OnApplicationQuit, args => _instance.Dispose());
+                UnityEventArgs.Subscribe(GameEventType.OnApplicationQuit, args => _instance.Dispose());
             }
 
             return _instance;

@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace ZEngine
 {
-    public sealed class UnityEventArgs : GameEventArgs<UnityEventArgs>
-    {
-    }
-
     /// <summary>
     /// 游戏事件参数
     /// </summary>
@@ -16,7 +11,7 @@ namespace ZEngine
     public abstract class GameEventArgs<T> : IReference where T : GameEventArgs<T>
     {
         private static GameObject UnityEventListener;
-        private static List<GameEventSubscrbe<T>> subscribes = new List<GameEventSubscrbe<T>>();
+        internal static List<GameEventSubscrbe<T>> subscribes = new List<GameEventSubscrbe<T>>();
         private bool isFree = false;
 
         public virtual void Release()
@@ -56,7 +51,7 @@ namespace ZEngine
             }
         }
 
-        public static void Subscribe(EventType eventType, Action<T> subscribe)
+        public static void Subscribe(GameEventType eventType, Action<T> subscribe)
         {
             if (UnityEventListener == null)
             {
@@ -129,223 +124,6 @@ namespace ZEngine
         public static void Clear()
         {
             subscribes.Clear();
-        }
-
-        public enum EventType
-        {
-            Awake,
-            Reset,
-            Start,
-            Update,
-            FixedUpdate,
-            LateUpdate,
-            OnEnable,
-            OnDisable,
-            OnDestroy,
-            OnGUI,
-            OnApplicationFocus,
-            OnApplicationPause,
-            OnAudioFilterRead,
-            OnBecameInvisible,
-            OnBecameVisible,
-            OnCollisionEnter,
-            OnCollisionEnter2D,
-            OnCollisionExit,
-            OnCollisionExit2D,
-            OnCollisionStay,
-            OnCollisionStay2D,
-            OnControllerColliderHit,
-            OnDrawGizmos,
-            OnDrawGizmosSelected,
-            OnJointBreak,
-            OnJointBreak2D,
-            OnMouseDown,
-            OnMouseDrag,
-            OnMouseEnter,
-            OnMouseExit,
-            OnMouseOver,
-            OnMouseUp,
-            OnMouseUpAsButton,
-            OnTriggerEnter,
-            OnTriggerEnter2D,
-            OnTriggerExit,
-            OnTriggerExit2D,
-            OnTriggerStay,
-            OnTriggerStay2D,
-            OnValidate,
-            OnWillRenderObject,
-            OnApplicationQuit
-        }
-
-        class MonoEventListener : MonoBehaviour
-        {
-            private void Awake()
-            {
-            }
-
-            private void Start()
-            {
-            }
-
-            private void Update()
-            {
-            }
-
-            private void FixedUpdate()
-            {
-            }
-
-            private void LateUpdate()
-            {
-            }
-
-            private void OnEnable()
-            {
-            }
-
-            private void OnDisable()
-            {
-            }
-
-            private void OnDestroy()
-            {
-            }
-
-            private void OnGUI()
-            {
-            }
-
-            private void OnApplicationFocus(bool hasFocus)
-            {
-            }
-
-            private void OnApplicationPause(bool pauseStatus)
-            {
-            }
-
-            private void OnBecameInvisible()
-            {
-            }
-
-            private void OnBecameVisible()
-            {
-            }
-
-
-            private void OnCollisionEnter(Collision other)
-            {
-            }
-
-            private void OnCollisionEnter2D(Collision2D other)
-            {
-            }
-
-            private void OnCollisionExit(Collision other)
-            {
-            }
-
-            private void OnCollisionExit2D(Collision2D other)
-            {
-            }
-
-            private void OnCollisionStay(Collision other)
-            {
-            }
-
-            private void OnCollisionStay2D(Collision2D other)
-            {
-            }
-
-
-            private void OnControllerColliderHit(ControllerColliderHit hit)
-            {
-            }
-
-            private void OnDrawGizmos()
-            {
-            }
-
-            private void OnDrawGizmosSelected()
-            {
-            }
-
-            private void OnJointBreak(float breakForce)
-            {
-            }
-
-            private void OnJointBreak2D(Joint2D brokenJoint)
-            {
-            }
-
-            private void OnMouseDown()
-            {
-            }
-
-            private void OnMouseDrag()
-            {
-            }
-
-            private void OnMouseEnter()
-            {
-            }
-
-            private void OnMouseExit()
-            {
-            }
-
-            private void OnMouseOver()
-            {
-            }
-
-            private void OnMouseUp()
-            {
-            }
-
-            private void OnMouseUpAsButton()
-            {
-            }
-
-            private void OnTriggerEnter(Collider other)
-            {
-            }
-
-            private void OnTriggerEnter2D(Collider2D other)
-            {
-            }
-
-            private void OnTriggerExit(Collider other)
-            {
-            }
-
-            private void OnTriggerExit2D(Collider2D other)
-            {
-            }
-
-            private void OnTriggerStay(Collider other)
-            {
-            }
-
-            private void OnTriggerStay2D(Collider2D other)
-            {
-            }
-
-            private void OnValidate()
-            {
-            }
-
-            private void OnWillRenderObject()
-            {
-            }
-
-
-            public void OnApplicationQuit()
-            {
-                IEnumerable<GameEventSubscrbe<T>> list = subscribes.Where(x => x.type == EventType.OnApplicationQuit);
-                foreach (var VARIABLE in list)
-                {
-                    VARIABLE.Execute(new UnityEventArgs());
-                }
-            }
         }
     }
 }

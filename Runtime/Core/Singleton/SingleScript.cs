@@ -56,12 +56,12 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
             case Localtion.Packaged:
                 if (options.path.EndsWith("asset"))
                 {
-                    IAssetRequestExecute<T> execute = Engine.Resource.LoadAsset<T>(options.path);
+                    RequestAssetResult<T> execute = Engine.Resource.LoadAsset<T>(options.path);
                     _instance = execute.result;
                 }
                 else if (options.path.EndsWith("json"))
                 {
-                    IAssetRequestExecute<TextAsset> execute = Engine.Resource.LoadAsset<TextAsset>(options.path);
+                    RequestAssetResult<TextAsset> execute = Engine.Resource.LoadAsset<TextAsset>(options.path);
                     _instance = Engine.Json.Parse<T>(execute.result.text);
                 }
 

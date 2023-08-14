@@ -6,59 +6,49 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-    /// <summary>
-    /// 文件写入句柄
-    /// </summary>
-    public interface IWriteFileExecute : IExecute<IWriteFileExecute>
-    {
-        /// <summary>
-        /// 文件名
-        /// </summary>
-        string name { get; }
-
-        /// <summary>
-        /// 文件数据
-        /// </summary>
-        byte[] bytes { get; }
-
-        /// <summary>
-        /// 文件版本
-        /// </summary>
-        VersionOptions version { get; }
-    }
-
-    class DefaultWriteFileExecute : IWriteFileExecute
+    public struct WriteFileExecuteResult
     {
         public string name { get; set; }
         public byte[] bytes { get; set; }
         public VersionOptions version { get; set; }
 
+        public static WriteFileExecuteResult Create(string name, byte[] bytes, VersionOptions version)
+        {
+            return new WriteFileExecuteResult()
+            {
+                name = name,
+                bytes = bytes,
+                version = version
+            };
+        }
+    }
+
+    class DefaultWriteFileExecute : IExecute<WriteFileExecuteResult>
+    {
+        public WriteFileExecuteResult result { get; set; }
+
         public void Release()
         {
-            version = VersionOptions.None;
-            bytes = Array.Empty<byte>();
-            name = String.Empty;
+            result = default;
         }
 
-        public IWriteFileExecute Execute(params object[] args)
+        public void Execute(params object[] args)
         {
-            name = (string)args[0];
-            bytes = (byte[])args[1];
-            version = (VersionOptions)args[2];
-            VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
+            result = WriteFileExecuteResult.Create((string)args[0], (byte[])args[1], (VersionOptions)args[2]);
+            VFSData[] vfsDataList = VFSManager.instance.GetVFSData(result.bytes.Length);
             int offset = 0;
             int index = 0;
             foreach (var VARIABLE in vfsDataList)
             {
-                int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
-                VARIABLE.Write(bytes, offset, length, version, index);
+                int length = result.bytes.Length - offset > VARIABLE.length ? VARIABLE.length : result.bytes.Length - offset;
+                VARIABLE.Write(result.bytes, offset, length, result.version, index);
                 offset += VARIABLE.length;
-                VARIABLE.name = name;
+                VARIABLE.name = result.name;
                 index++;
             }
 
             VFSManager.instance.SaveVFSData();
-            return this;
+            return;
         }
     }
 }

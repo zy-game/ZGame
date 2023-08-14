@@ -6,18 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    public interface IRuntimeBundleHandle : IReference
-    {
-        string name { get; }
-        uint refCount { get; }
-        string module { get; }
-        void Unload(Object obj);
-        bool Contains(Object target);
-        T Load<T>(string path) where T : Object;
-        IEnumerator LoadAsync<T>(string path, ISubscribeHandle<T> subscribe) where T : Object;
-    }
-
-    internal class RuntimeAssetBundleHandle : IRuntimeBundleHandle
+    internal sealed class InternalRuntimeBundleHandle : IReference
     {
         public string name { get; private set; }
         public uint refCount { get; private set; }
@@ -56,9 +45,9 @@ namespace ZEngine.Resource
             refCount--;
         }
 
-        public static RuntimeAssetBundleHandle Create(RuntimeBundleManifest manifest, AssetBundle bundle)
+        public static InternalRuntimeBundleHandle Create(RuntimeBundleManifest manifest, AssetBundle bundle)
         {
-            RuntimeAssetBundleHandle runtimeAssetBundleHandle = Engine.Class.Loader<RuntimeAssetBundleHandle>();
+            InternalRuntimeBundleHandle runtimeAssetBundleHandle = Engine.Class.Loader<InternalRuntimeBundleHandle>();
             runtimeAssetBundleHandle.bundle = bundle;
             runtimeAssetBundleHandle.name = manifest.name;
             runtimeAssetBundleHandle.module = manifest.owner;

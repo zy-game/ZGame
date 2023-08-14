@@ -21,17 +21,18 @@ namespace ZEngine.Window
 
         public ISubscribeHandle<float> GetProgressSubscribe()
         {
-            return ISubscribeHandle.Create<float>(SetProgress);
+            return ISubscribeHandle.Create<float>(args => SetProgress(args));
         }
 
-        public void SetProgress(float progress)
+        public UI_Loading SetProgress(float progress)
         {
             if (slider == null)
             {
-                return;
+                return this;
             }
 
             slider.value = progress;
+            return this;
         }
     }
 }

@@ -10,6 +10,7 @@ namespace ZEngine
         public byte minor;
         public byte build;
         private byte max = byte.MaxValue;
+
         public void Up()
         {
             if (build >= max)
@@ -77,12 +78,16 @@ namespace ZEngine
 
         public static bool operator ==(VersionOptions l, VersionOptions r)
         {
-            return l.major == r.major && l.minor == r.minor && l.build == r.build;
+            uint a = (uint)l.major + l.minor + l.build;
+            uint b = (uint)r.major + r.minor + r.build;
+            return a == b;
         }
 
         public static bool operator !=(VersionOptions l, VersionOptions r)
         {
-            return l.major != r.major || l.minor != r.minor || l.build != r.build;
+            uint a = (uint)l.major + l.minor + l.build;
+            uint b = (uint)r.major + r.minor + r.build;
+            return a != b;
         }
 
         public static bool operator >(VersionOptions l, VersionOptions r)

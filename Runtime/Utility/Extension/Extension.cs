@@ -56,12 +56,6 @@ public static class Extension
         public IEnumerator enumerator;
     }
 
-    public static int SpiltCount(this int lenght, int l)
-    {
-        int count = lenght / l;
-        return count * l < lenght ? count + 1 : count;
-    }
-
     public static T TryGetValue<T>(this object[] arr, int index, T def)
     {
         if (arr.Length > index)
@@ -72,17 +66,27 @@ public static class Extension
         return def;
     }
 
+    public static Coroutine StartCoroutine(this IReference reference, IEnumerator enumerator)
+    {
+        return StartCoroutine(enumerator);
+    }
+
     public static Coroutine StartCoroutine(this IEnumerator enumerator)
     {
         EnsureContentInstance();
 
         IEnumerator Running()
         {
-            yield return new WaitForEndOfFrame();
+            yield return new WaitForSeconds(0.1f);
             yield return enumerator;
         }
 
         return _content.StartCoroutine(Running());
+    }
+
+    public static void StopAll()
+    {
+        _content.StopAllCoroutines();
     }
 
 

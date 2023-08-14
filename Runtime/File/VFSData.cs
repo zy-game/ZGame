@@ -79,7 +79,7 @@ namespace ZEngine.VFS
                 return;
             }
 
-            if (bytes.Length < offset + length)
+            if (bytes.Length < offset + lenght)
             {
                 Engine.Console.Error(EngineException.Create(new IndexOutOfRangeException()));
                 return;

@@ -8,16 +8,7 @@ using UnityEngine.Networking;
 
 namespace ZEngine.Network
 {
-    public enum NetworkRequestMethod : byte
-    {
-        NONE,
-        POST,
-        GET,
-        DELETE,
-        PUT,
-    }
-
-    public interface INetworkRequestExecuteHandle<T> : IExecuteHandle<T>
+    public interface IWebRequestExecuteHandle<T> : IExecuteHandle<T>
     {
         T result { get; }
         string url { get; }
@@ -28,55 +19,36 @@ namespace ZEngine.Network
         void OnPorgressChange(ISubscribeHandle<float> subscribe);
     }
 
-    class DefaultNetworkRequestExecuteHandle<T> : INetworkRequestExecuteHandle<T>
+    class DefaultWebRequestExecuteHandle<T> : ExecuteHandle<T>, IWebRequestExecuteHandle<T>
     {
         public T result => (T)_data;
         public string url { get; set; }
         public string name { get; set; }
-        public Status status { get; set; }
         public float progress { get; set; }
         public NetworkRequestMethod method { get; set; }
 
         private object _data;
         private object upload;
         private Dictionary<string, object> header;
-        private ISubscribeHandle<float> progressListener;
-        private List<ISubscribeHandle> completeSubscribe = new List<ISubscribeHandle>();
 
-        public void OnPorgressChange(ISubscribeHandle<float> subscribe)
-        {
-            progressListener = subscribe;
-        }
-
-        public IEnumerator ExecuteComplete()
-        {
-            return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
-        }
-
-        public void Subscribe(ISubscribeHandle subscribe)
-        {
-            completeSubscribe.Add(subscribe);
-        }
-
-        public void Release()
+        public override void Release()
         {
             method = NetworkRequestMethod.NONE;
-            progressListener = null;
-            status = Status.None;
             url = String.Empty;
             _data = default;
             progress = 0;
+            base.Release();
         }
 
 
-        public void Execute(params object[] paramsList)
+        public override void Execute(params object[] paramsList)
         {
             status = Status.Execute;
             RequestOptions requestOptions = paramsList.TryGetValue<RequestOptions>(0, default);
             if (requestOptions is null)
             {
                 status = Status.Failed;
-                completeSubscribe.ForEach(x => x.Execute(this));
+                OnComplete();
                 return;
             }
 
@@ -101,7 +73,7 @@ namespace ZEngine.Network
             if (request is null)
             {
                 Engine.Console.Error(new NotSupportedException(method.ToString()));
-                completeSubscribe.ForEach(x => x.Execute(this));
+                OnComplete();
                 status = Status.Failed;
                 yield break;
             }
@@ -118,7 +90,7 @@ namespace ZEngine.Network
             request.SendWebRequest();
             while (request.isDone is false)
             {
-                progressListener?.Execute(request.downloadProgress);
+                OnProgress(request.downloadProgress);
                 yield return new WaitForSeconds(0.01f);
             }
 
@@ -126,7 +98,7 @@ namespace ZEngine.Network
             if (request.result is not UnityWebRequest.Result.Success)
             {
                 Engine.Console.Error(request.error);
-                completeSubscribe.ForEach(x => x.Execute(this));
+                OnComplete();
                 status = Status.Failed;
                 yield break;
             }
@@ -145,7 +117,7 @@ namespace ZEngine.Network
             }
 
             status = Status.Success;
-            completeSubscribe.ForEach(x => x.Execute(this));
+            OnComplete();
         }
     }
 }

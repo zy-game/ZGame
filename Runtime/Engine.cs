@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Internal;
 using ZEngine;
@@ -18,6 +19,16 @@ public sealed class Engine
 {
     public sealed class Custom
     {
+        public static void Quit()
+        {
+            Extension.StopAll();
+#if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
         public static string GetPlatfrom()
         {
 #if UNITY_ANDROID
@@ -60,42 +71,42 @@ public sealed class Engine
         /// </summary>
         /// <param name="message"></param>
         public static void Log(object message)
-            => Debug.Log($"[INFO]{message}");
+            => Debug.Log($"[INFO] {message}");
 
         /// <summary>
         /// 在控制台输出一条日志
         /// </summary>
         /// <param name="message"></param>
         public static void Log(params object[] message)
-            => Debug.Log($"[INFO]{string.Join(" ", message)}");
+            => Debug.Log($"[INFO] {string.Join(" ", message)}");
 
         /// <summary>
         /// 输出警告信息
         /// </summary>
         /// <param name="message"></param>
         public static void Warning(object message)
-            => Debug.LogWarning($"[WARNING]{message}");
+            => Debug.LogWarning($"[WARNING] {message}");
 
         /// <summary>
         /// 输出警告信息
         /// </summary>
         /// <param name="message"></param>
         public static void Warning(params object[] message)
-            => Debug.LogWarning($"[WARNING]{string.Join("\n", message)}");
+            => Debug.LogWarning($"[WARNING] {string.Join("\n", message)}");
 
         /// <summary>
         /// 输出错误信息
         /// </summary>
         /// <param name="message"></param>
         public static void Error(object message)
-            => Debug.LogError($"[ERROR]{message}");
+            => Debug.LogError($"[ERROR] {message}");
 
         /// <summary>
         /// 输出错误信息
         /// </summary>
         /// <param name="message"></param>
         public static void Error(params object[] message)
-            => Debug.LogError($"[ERROR]{string.Join("\n", message)}");
+            => Debug.LogError($"[ERROR] {string.Join("\n", message)}");
     }
 
     /// <summary>
@@ -185,7 +196,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public static WriteFileExecuteResult WriteFile(string fileName, byte[] bytes, VersionOptions version)
             => VFSManager.instance.WriteFile(fileName, bytes, version);
 
         /// <summary>
@@ -193,7 +204,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
+        public static IExecuteHandle<WriteFileExecuteResult> WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
             => VFSManager.instance.WriteFileAsync(fileName, bytes, version);
 
         /// <summary>
@@ -201,16 +212,16 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileExecute ReadFile(string fileName)
-            => VFSManager.instance.ReadFile(fileName);
+        public static ReadFileExecuteResult ReadFile(string fileName, VersionOptions version = null)
+            => VFSManager.instance.ReadFile(fileName, version);
 
         /// <summary>
         /// 读取文件数据
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileExecuteHandle ReadFileAsync(string fileName)
-            => VFSManager.instance.ReadFileAsync(fileName);
+        public static IReadFileExecuteHandle ReadFileAsync(string fileName, VersionOptions version = null)
+            => VFSManager.instance.ReadFileAsync(fileName, version);
     }
 
     /// <summary>
@@ -259,14 +270,6 @@ public sealed class Engine
     public sealed class Resource
     {
         /// <summary>
-        /// 获取资源模块版本
-        /// </summary>
-        /// <param name="moduleName">模块名</param>
-        /// <returns></returns>
-        public static RuntimeModuleManifest GetModuleManifest(string moduleName)
-            => ResourceManager.instance.GetRuntimeModuleManifest(moduleName);
-
-        /// <summary>
         /// 获取资源包版本
         /// </summary>
         /// <param name="moduleName">模块名</param>
@@ -289,7 +292,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static IAssetRequestExecute<T> LoadAsset<T>(string assetPath) where T : Object
+        public static RequestAssetResult<T> LoadAsset<T>(string assetPath) where T : Object
             => ResourceManager.instance.LoadAsset<T>(assetPath);
 
         /// <summary>
@@ -300,7 +303,7 @@ public sealed class Engine
         /// <param name="assetName">资源名</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IAssetRequestExecute<T> LoadAsset<T>(string module, string bundle, string assetName) where T : Object
+        public static RequestAssetResult<T> LoadAsset<T>(string module, string bundle, string assetName) where T : Object
             => ResourceManager.instance.LoadAsset<T>($"{module}/{bundle}/{assetName}");
 
         /// <summary>
@@ -308,7 +311,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static IAssetRequestExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
+        public static IRequestAssetExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
             => ResourceManager.instance.LoadAssetAsync<T>(assetPath);
 
         /// <summary>
@@ -319,7 +322,7 @@ public sealed class Engine
         /// <param name="assetName">资源名</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IAssetRequestExecuteHandle<T> LoadAssetAsync<T>(string module, string bundle, string assetName) where T : Object
+        public static IRequestAssetExecuteHandle<T> LoadAssetAsync<T>(string module, string bundle, string assetName) where T : Object
             => ResourceManager.instance.LoadAssetAsync<T>($"{module}/{bundle}/{assetName}");
 
         /// <summary>
@@ -332,7 +335,7 @@ public sealed class Engine
         /// <summary>
         /// 预加载资源模块
         /// </summary>
-        public static IResourcePreloadExecuteHandle PreLoadResourceModule(params PreloadOptions[] options)
+        public static IResourceModuleLoaderExecuteHandle PreLoadResourceModule(params PreloadOptions[] options)
             => ResourceManager.instance.PreLoadResourceModule();
 
         /// <summary>
@@ -340,16 +343,8 @@ public sealed class Engine
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ICheckUpdateExecuteHandle CheckUpdateResource(params UpdateOptions[] options)
+        public static ICheckResourceUpdateExecuteHandle CheckUpdateResource(params UpdateOptions[] options)
             => ResourceManager.instance.CheckUpdateResource(options);
-
-        /// <summary>
-        /// 更新资源
-        /// </summary>
-        /// <param name="options"></param>
-        /// <returns></returns>
-        public static IUpdateResourceExecuteHandle UpdateResourceBundle(URLOptions url, params RuntimeBundleManifest[] bundles)
-            => ResourceManager.instance.UpdateResourceBundle(url, bundles);
     }
 
     /// <summary>
@@ -409,7 +404,7 @@ public sealed class Engine
         /// <param name="ok"></param>
         /// <param name="cancel"></param>
         /// <returns></returns>
-        public static UI_MsgBox MsgBox(string text, Action ok, Action cancel = null)
+        public static UI_MsgBox MsgBox(string text, Action ok = null, Action cancel = null)
             => MsgBox("Tips", text, ok, cancel);
 
         /// <summary>
@@ -419,7 +414,7 @@ public sealed class Engine
         /// <param name="ok"></param>
         /// <param name="cancel"></param>
         /// <returns></returns>
-        public static UI_MsgBox MsgBox(string tips, string text, Action ok, Action cancel = null)
+        public static UI_MsgBox MsgBox(string tips, string text, Action ok = null, Action cancel = null)
             => OpenWindow<UI_MsgBox>().SetBox(tips, text, ok, cancel);
 
         /// <summary>
@@ -491,7 +486,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static INetworkRequestExecuteHandle<T> Get<T>(string url, object data = default, Dictionary<string, object> header = default)
+        public static IWebRequestExecuteHandle<T> Get<T>(string url, object data = default, Dictionary<string, object> header = default)
             => NetworkManager.instance.Request<T>(url, data, NetworkRequestMethod.GET, header);
 
         /// <summary>
@@ -502,7 +497,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static INetworkRequestExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+        public static IWebRequestExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Request<T>(url, data, NetworkRequestMethod.POST, header);
 
         /// <summary>
@@ -510,7 +505,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static INetworkMultiDownloadExecuteHandle MultiDownload(MultiDownloadOptions options)
-            => NetworkManager.instance.MultiDownload(options);
+        public static IDownloadExecuteHandle Download(params DownloadOptions[] urlList)
+            => NetworkManager.instance.Download(urlList);
     }
 }

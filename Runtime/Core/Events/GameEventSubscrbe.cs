@@ -9,7 +9,7 @@ namespace ZEngine
         private Action<T> method;
         public T result { get; private set; }
         public Exception exception { get; private set; }
-        public GameEventArgs<T>.EventType type { get; private set; }
+        public GameEventType type { get; private set; }
 
         public GameEventSubscrbe()
         {
@@ -61,7 +61,7 @@ namespace ZEngine
             return gameEventSubscrbe;
         }
 
-        public static GameEventSubscrbe<T> Create(GameEventArgs<T>.EventType type, Action<T> callback)
+        public static GameEventSubscrbe<T> Create(GameEventType type, Action<T> callback)
         {
             GameEventSubscrbe<T> gameEventSubscrbe = Engine.Class.Loader<GameEventSubscrbe<T>>();
             gameEventSubscrbe.method = callback;

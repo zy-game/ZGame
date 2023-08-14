@@ -158,12 +158,7 @@ namespace ZEngine.VFS
 
         public bool Exist(string fileName)
         {
-            if (VFSOptions.instance.vfsState == Switch.On)
-            {
-                return dataList.Find(x => x.name == fileName) is not null;
-            }
-
-            return File.Exists(Engine.Custom.GetLocalFilePath(fileName));
+            return dataList.Find(x => x.name == fileName) is not null;
         }
 
         public bool Delete(string fileName)
@@ -189,12 +184,12 @@ namespace ZEngine.VFS
             return vfsData.version;
         }
 
-        public IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public WriteFileExecuteResult WriteFile(string fileName, byte[] bytes, VersionOptions version)
         {
             Delete(fileName);
             DefaultWriteFileExecute defaultWriteFileExecute = Engine.Class.Loader<DefaultWriteFileExecute>();
             defaultWriteFileExecute.Execute(fileName, bytes, version);
-            return defaultWriteFileExecute;
+            return defaultWriteFileExecute.result;
         }
 
         public IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
@@ -205,7 +200,7 @@ namespace ZEngine.VFS
             return defaultWriteFileExecuteHandle;
         }
 
-        public IReadFileExecute ReadFile(string fileName)
+        public ReadFileExecuteResult ReadFile(string fileName, VersionOptions versionOptions = null)
         {
             if (Exist(fileName) is false)
             {
@@ -213,11 +208,11 @@ namespace ZEngine.VFS
             }
 
             DefaultReadFileExecute defaultReadFileExecute = Engine.Class.Loader<DefaultReadFileExecute>();
-            defaultReadFileExecute.Execute(fileName);
-            return defaultReadFileExecute;
+            defaultReadFileExecute.Execute(fileName, versionOptions);
+            return defaultReadFileExecute.result;
         }
 
-        public IReadFileExecuteHandle ReadFileAsync(string fileName)
+        public IReadFileExecuteHandle ReadFileAsync(string fileName, VersionOptions versionOptions = null)
         {
             if (Exist(fileName) is false)
             {
@@ -225,7 +220,7 @@ namespace ZEngine.VFS
             }
 
             DefaultReadFileExecuteHandle defaultReadFileExecuteHandle = Engine.Class.Loader<DefaultReadFileExecuteHandle>();
-            defaultReadFileExecuteHandle.Execute(fileName);
+            defaultReadFileExecuteHandle.Execute(fileName, versionOptions);
             return defaultReadFileExecuteHandle;
         }
     }

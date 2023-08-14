@@ -20,12 +20,8 @@ namespace ZEngine
     /// 执行器
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IExecute<T> : IReference
+    public interface IExecute<T> : IExecute
     {
-        /// <summary>
-        /// 开始执行
-        /// </summary>
-        /// <param name="args"></param>
-        T Execute(params object[] paramsList);
+        T result { get; }
     }
 }

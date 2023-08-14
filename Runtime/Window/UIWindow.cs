@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ZEngine.Window
 {
-  
-
+    public interface IAsyncWindow : IReference
+    {
+        object result { get; }
+        IEnumerator GetCoroutine();
+    }
 
     public abstract class UIWindow : IReference
     {
