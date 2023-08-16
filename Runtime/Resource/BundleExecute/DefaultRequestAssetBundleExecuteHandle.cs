@@ -7,11 +7,25 @@ using ZEngine.VFS;
 
 namespace ZEngine.Resource
 {
-    class DefaultRequestAssetBundleExecuteHandle : ExecuteHandle<RequestAssetBundleResult>
+    internal interface IRequestAssetBundleExecuteHandle : IExecuteHandle<IRequestAssetBundleExecuteHandle>
+    {
+        string name { get; }
+        string module { get; }
+        VersionOptions version { get; }
+        InternalRuntimeBundleHandle bundle { get; }
+    }
+
+    class DefaultRequestAssetBundleExecuteHandle : ExecuteHandle, IExecuteHandle<DefaultRequestAssetBundleExecuteHandle>, IRequestAssetBundleExecuteHandle
     {
         private float count;
         private float loadCount;
         private RuntimeBundleManifest manifest;
+
+
+        public string name { get; set; }
+        public string module { get; set; }
+        public VersionOptions version { get; set; }
+        public InternalRuntimeBundleHandle bundle { get; set; }
 
         class LoadBundleData
         {
@@ -25,87 +39,30 @@ namespace ZEngine.Resource
         {
             status = Status.Execute;
             manifest = (RuntimeBundleManifest)paramsList[0];
-            string name = manifest.name;
-            string module = manifest.owner;
-            VersionOptions version = manifest.version;
-            string path = Engine.Custom.GetLocalFilePath(name);
-            OnStart(name, path, module, version).StartCoroutine();
+            module = manifest.owner;
+            name = manifest.name;
+            version = manifest.version;
+            this.StartCoroutine(OnStart(name, version));
         }
 
-        IEnumerator OnStart(string name, string path, string module, VersionOptions ver)
+        IEnumerator OnStart(string name, VersionOptions ver)
         {
-            RuntimeBundleManifest[] manifests = ResourceManager.instance.GetBundleDependenciesList(manifest);
-            count = manifests.Length;
-            if (manifests is null || manifests.Length is 0)
-            {
-                status = Status.Failed;
-                OnProgress(1);
-                OnComplete();
-                yield break;
-            }
+            status = Status.Execute;
+            IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFileAsync(name, ver);
 
-            List<LoadBundleData> loadBundleDatas = new List<LoadBundleData>();
-            for (int i = 0; i < manifests.Length; i++)
-            {
-                if (ResourceManager.instance.HasLoadAssetBundle(manifests[i].owner, manifests[i].name))
-                {
-                    continue;
-                }
-
-                loadBundleDatas.Add(new LoadBundleData()
-                {
-                    manifest = manifests[i],
-                    status = Status.None
-                });
-                LoadBundleAsync(loadBundleDatas[i]).StartCoroutine();
-            }
-
-            bool CheckComplete()
-            {
-                OnProgress(loadCount / count);
-                return loadBundleDatas.Where(x => x.status == Status.Execute).Count() == 0;
-            }
-
-            yield return WaitFor.Create(CheckComplete);
-            bool success = loadBundleDatas.Where(x => x.status == Status.Failed).Count() == 0;
-            InternalRuntimeBundleHandle mainBundle = default;
-            for (int i = 0; i < loadBundleDatas.Count; i++)
-            {
-                if (success is false)
-                {
-                    loadBundleDatas[i].assetBundle.Unload(true);
-                    continue;
-                }
-
-                InternalRuntimeBundleHandle runtimeBundleManifest = InternalRuntimeBundleHandle.Create(loadBundleDatas[i].manifest, loadBundleDatas[i].assetBundle);
-                ResourceManager.instance.AddAssetBundleHandle(runtimeBundleManifest);
-                if (manifest == loadBundleDatas[i].manifest)
-                {
-                    mainBundle = runtimeBundleManifest;
-                }
-            }
-
-            result = RequestAssetBundleResult.Create(name, path, module, ver, mainBundle);
-            status = success ? Status.Success : Status.Failed;
-            OnComplete();
-        }
-
-        private IEnumerator LoadBundleAsync(LoadBundleData item)
-        {
-            item.status = Status.Execute;
-            IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFileAsync(item.manifest.name, item.manifest.version);
-            yield return readFileExecuteHandle.ExecuteComplete();
-            AssetBundleCreateRequest createRequest = AssetBundle.LoadFromMemoryAsync(readFileExecuteHandle.result.bytes);
+            yield return WaitFor.Create(() => readFileExecuteHandle.status == Status.Success || readFileExecuteHandle.status == Status.Failed);
+            AssetBundleCreateRequest createRequest = AssetBundle.LoadFromMemoryAsync(readFileExecuteHandle.bytes);
             yield return createRequest;
             if (createRequest.isDone is false || createRequest.assetBundle is null)
             {
-                item.status = Status.Failed;
+                status = Status.Failed;
                 yield break;
             }
 
-            item.assetBundle = createRequest.assetBundle;
-            loadCount++;
-            item.status = Status.Success;
+            bundle = InternalRuntimeBundleHandle.Create(manifest, createRequest.assetBundle);
+            ResourceManager.instance.AddAssetBundleHandle(bundle);
+            status = Status.Success;
+            OnComplete();
         }
     }
 }

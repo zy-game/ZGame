@@ -7,18 +7,23 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-    public interface IReadFileExecuteHandle : IExecuteHandle<ReadFileExecuteResult>
+    public interface IReadFileExecuteHandle : IExecuteHandle<IReadFileExecuteHandle>
     {
+        string name { get; }
+        long time { get; }
+        byte[] bytes { get; }
+        VersionOptions version { get; }
     }
 
-    class DefaultReadFileExecuteHandle : ExecuteHandle<ReadFileExecuteResult>, IReadFileExecuteHandle
+    class DefaultReadFileExecuteHandle : ExecuteHandle, IExecuteHandle<IReadFileExecuteHandle>, IReadFileExecuteHandle
     {
-        private string name;
-        private VersionOptions version;
+        public string name { get; set; }
+        public long time { get; set; }
+        public byte[] bytes { get; set; }
+        public VersionOptions version { get; set; }
 
         public override void Release()
         {
-            result = default;
             base.Release();
         }
 
@@ -40,7 +45,7 @@ namespace ZEngine.VFS
                 yield break;
             }
 
-            byte[] bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
+            bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
             version = vfsDatas[0].version;
             long time = vfsDatas[0].time;
             int offset = 0;
@@ -51,7 +56,6 @@ namespace ZEngine.VFS
                 yield return new WaitForEndOfFrame();
             }
 
-            result = ReadFileExecuteResult.Create(name, time, bytes, version);
             status = Status.Success;
             OnComplete();
         }

@@ -7,15 +7,18 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-    public interface IWriteFileExecuteHandle : IExecuteHandle<WriteFileExecuteResult>
+    public interface IWriteFileExecuteHandle : IExecuteHandle<IWriteFileExecuteHandle>
     {
+        string name { get; }
+        byte[] bytes { get; }
+        VersionOptions version { get; }
     }
 
-    class DefaultWriteFileExecuteHandle : ExecuteHandle<WriteFileExecuteResult>, IWriteFileExecuteHandle
+    class DefaultWriteFileExecuteHandle : ExecuteHandle, IExecuteHandle<IWriteFileExecuteHandle>, IWriteFileExecuteHandle
     {
-        private string name;
-        private byte[] bytes;
-        private VersionOptions version;
+        public string name { get; set; }
+        public byte[] bytes { get; set; }
+        public VersionOptions version { get; set; }
 
         public void Release()
         {
@@ -55,7 +58,7 @@ namespace ZEngine.VFS
                 offset += VARIABLE.length;
                 index++;
                 VARIABLE.name = name;
-                yield return Timeout.Create(0.01f);
+                yield return WaitFor.Create(0.01f);
             }
 
             VFSManager.instance.SaveVFSData();

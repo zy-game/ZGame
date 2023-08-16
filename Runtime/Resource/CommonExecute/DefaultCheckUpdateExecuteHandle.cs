@@ -7,32 +7,35 @@ using ZEngine.Window;
 
 namespace ZEngine.Resource
 {
-    /// <summary>
-    /// 检查资源更新
-    /// </summary>
-    public sealed class CheckUpdateResult
+    public interface ICheckResourceUpdateExecuteHandle : IExecuteHandle<ICheckResourceUpdateExecuteHandle>
     {
-        public UpdateOptions options;
-        public RuntimeBundleManifest[] bundles;
+        ModuleOptions[] options { get; }
+        RuntimeBundleManifest[] bundles { get; }
     }
 
-    public interface ICheckResourceUpdateExecuteHandle : IExecuteHandle<CheckUpdateResult>
+    class DefaultCheckResourceUpdateExecuteHandle : ExecuteHandle, IExecuteHandle<ICheckResourceUpdateExecuteHandle>, ICheckResourceUpdateExecuteHandle
     {
-    }
+        public ModuleOptions[] options { get; set; }
+        public RuntimeBundleManifest[] bundles { get; set; }
 
-    class DefaultCheckResourceUpdateExecuteHandle : ExecuteHandle<CheckUpdateResult>, ICheckResourceUpdateExecuteHandle
-    {
+        class UpdateItem
+        {
+            public URLOptions options;
+            public RuntimeModuleManifest module;
+            public RuntimeBundleManifest bundle;
+        }
+
         public override void Execute(params object[] paramsList)
         {
             status = Status.Execute;
-            UpdateOptions options = (UpdateOptions)paramsList[0];
-            OnStart(options).StartCoroutine();
+            options = paramsList.Cast<ModuleOptions>().ToArray();
+            OnStart().StartCoroutine();
         }
 
-        IEnumerator OnStart(UpdateOptions options)
+        IEnumerator OnStart()
         {
             //todo 如果在编辑器模式下，并且未使用热更模式，直接跳过
-            if (options is null || options.url is null || options.url.state == Switch.Off)
+            if (options is null || options.Length is 0)
             {
                 status = Status.Failed;
                 OnProgress(1);
@@ -40,37 +43,46 @@ namespace ZEngine.Resource
                 yield break;
             }
 
-            string moduleFilePath = Engine.Custom.GetHotfixPath(options.url.address, options.moduleName + ".ini");
-            IWebRequestExecuteHandle<RuntimeModuleManifest> webRequestExecuteHandle = Engine.Network.Get<RuntimeModuleManifest>(moduleFilePath);
-            yield return webRequestExecuteHandle.ExecuteComplete();
-            List<RuntimeBundleManifest> updateBundleList = new List<RuntimeBundleManifest>();
-            foreach (var VARIABLE in webRequestExecuteHandle.result.bundleList)
+            List<UpdateItem> updateBundleList = new List<UpdateItem>();
+            List<RuntimeModuleManifest> moduleManifests = new List<RuntimeModuleManifest>();
+            for (int i = 0; i < options.Length; i++)
             {
-                VersionOptions localVersion = Engine.FileSystem.GetFileVersion(VARIABLE.name);
-                if (localVersion is not null && localVersion == VARIABLE.version)
+                string moduleFilePath = Engine.Custom.GetHotfixPath(options[i].url.address, options[i].moduleName + ".ini");
+                IWebRequestExecuteHandle<RuntimeModuleManifest> webRequestExecuteHandle = Engine.Network.Get<RuntimeModuleManifest>(moduleFilePath);
+
+                yield return WaitFor.Create(() => webRequestExecuteHandle.status == Status.Success || webRequestExecuteHandle.status == Status.Failed);
+
+                foreach (var VARIABLE in webRequestExecuteHandle.result.bundleList)
                 {
-                    continue;
+                    VersionOptions localVersion = Engine.FileSystem.GetFileVersion(VARIABLE.name);
+                    if (localVersion is not null && localVersion == VARIABLE.version)
+                    {
+                        continue;
+                    }
+
+                    updateBundleList.Add(new UpdateItem()
+                    {
+                        options = options[i].url,
+                        bundle = VARIABLE,
+                        module = webRequestExecuteHandle.result
+                    });
                 }
 
-                updateBundleList.Add(VARIABLE);
+                moduleManifests.Add(webRequestExecuteHandle.result);
             }
 
-            result = new CheckUpdateResult()
-            {
-                options = options,
-                bundles = updateBundleList.ToArray()
-            };
-
+            bundles = updateBundleList.Select(x => x.bundle).ToArray();
             if (updateBundleList.Count is 0)
             {
-                ResourceManager.instance.AddModuleManifest(webRequestExecuteHandle.result);
+                moduleManifests.ForEach(ResourceManager.instance.AddModuleManifest);
                 status = Status.Success;
                 OnComplete();
                 yield break;
             }
 
-            string message = $"检测到有{(updateBundleList.Sum(x => x.length) / 1024f / 1024f).ToString("N")} MB资源更新，是否更新资源";
-            UI_MsgBox msgBox = Engine.Window.MsgBox(message, () => { }, Engine.Custom.Quit);
+
+            string message = $"检测到有{(updateBundleList.Sum(x => x.bundle.length) / 1024f / 1024f).ToString("N")} MB资源更新，是否更新资源";
+            MsgBox msgBox = Engine.Window.MsgBox(message, () => { }, Engine.Custom.Quit);
             yield return msgBox.GetCoroutine();
             if (msgBox.result.Equals(false))
             {
@@ -81,22 +93,22 @@ namespace ZEngine.Resource
 
             IEnumerable<DownloadOptions> optionsList = updateBundleList.Select(x => new DownloadOptions()
             {
-                url = $"{options.url.address}/{Engine.Custom.GetPlatfrom()}/{x.name}",
+                url = $"{x.options.address}/{Engine.Custom.GetPlatfrom()}/{x.bundle.name}",
                 userData = x,
-                version = x.version
+                version = x.bundle.version
             });
             IDownloadExecuteHandle downloadExecuteHandle = Engine.Network.Download(optionsList.ToArray());
-            downloadExecuteHandle.OnPorgressChange(ISubscribeHandle.Create<float>(OnProgress));
-            yield return downloadExecuteHandle.ExecuteComplete();
+            downloadExecuteHandle.OnPorgressChange(ISubscribeHandle<float>.Create(OnProgress));
+            yield return WaitFor.Create(() => downloadExecuteHandle.status == Status.Success || downloadExecuteHandle.status == Status.Failed);
 
-            if (downloadExecuteHandle.status is not Status.Success || downloadExecuteHandle.result is null || downloadExecuteHandle.result.Length is 0)
+            if (downloadExecuteHandle.status is not Status.Success || downloadExecuteHandle.Handles is null || downloadExecuteHandle.Handles.Length is 0)
             {
                 status = Status.Failed;
                 OnComplete();
                 yield break;
             }
 
-            ResourceManager.instance.AddModuleManifest(webRequestExecuteHandle.result);
+            moduleManifests.ForEach(ResourceManager.instance.AddModuleManifest);
             status = Status.Success;
             OnComplete();
         }

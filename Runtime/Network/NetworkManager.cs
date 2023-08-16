@@ -4,12 +4,14 @@ using System.Collections.Generic;
 
 namespace ZEngine.Network
 {
-    
-
-   
-
     public class NetworkManager : Single<NetworkManager>
     {
+        public override void Dispose()
+        {
+            base.Dispose();
+            Engine.Console.Log("关闭所有网络链接");
+        }
+
         public IWebRequestExecuteHandle<T> Request<T>(string url, object data, NetworkRequestMethod method, Dictionary<string, object> header = default)
         {
             DefaultWebRequestExecuteHandle<T> defaultWebRequestExecuteHandle = Engine.Class.Loader<DefaultWebRequestExecuteHandle<T>>();

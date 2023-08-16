@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Events;
-using ZEngine.Options;
 using ZEngine.VFS;
 using Object = UnityEngine.Object;
 
@@ -19,10 +18,34 @@ namespace ZEngine.Resource
         private Dictionary<string, IReference> loadAssetHandles = new Dictionary<string, IReference>();
 
 
-        class CacheData
+        class CacheData : IReference
         {
             public float timeout;
             public InternalRuntimeBundleHandle bundle;
+
+            public void Release()
+            {
+                timeout = 0;
+                Engine.Class.Release(bundle);
+                bundle = null;
+            }
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            cacheList.ForEach(Engine.Class.Release);
+            cacheList.Clear();
+            moduleList.Clear();
+            bundleLists.ForEach(Engine.Class.Release);
+            bundleLists.Clear();
+            foreach (KeyValuePair<string, IReference> loadAssetHandle in loadAssetHandles)
+            {
+                Engine.Class.Release(loadAssetHandle.Value);
+            }
+
+            loadAssetHandles.Clear();
+            Engine.Console.Log("释放所有资源");
         }
 
         /// <summary>
@@ -88,6 +111,11 @@ namespace ZEngine.Resource
         /// <param name="manifest"></param>
         public void AddModuleManifest(RuntimeModuleManifest manifest)
         {
+            if (moduleList.Find(x => x.name == manifest.name) is not null)
+            {
+                return;
+            }
+
             moduleList.Add(manifest);
         }
 
@@ -97,6 +125,11 @@ namespace ZEngine.Resource
         /// <param name="manifest"></param>
         public void RemoveModuleManifest(RuntimeModuleManifest manifest)
         {
+            if (moduleList.Find(x => x.name == manifest.name) is null)
+            {
+                return;
+            }
+
             moduleList.Remove(manifest);
         }
 
@@ -142,52 +175,10 @@ namespace ZEngine.Resource
         }
 
         /// <summary>
-        /// 获取资源包依赖信息
-        /// </summary>
-        /// <param name="manifest"></param>
-        /// <returns></returns>
-        public RuntimeBundleManifest[] GetBundleDependenciesList(RuntimeBundleManifest manifest)
-        {
-            List<RuntimeBundleManifest> runtimeBundleManifests = new List<RuntimeBundleManifest>() { manifest };
-            if (manifest.dependencies is null || manifest.dependencies.Count is 0)
-            {
-                return runtimeBundleManifests.ToArray();
-            }
-
-            for (int i = 0; i < manifest.dependencies.Count; i++)
-            {
-                RuntimeBundleManifest bundleManifest = ResourceManager.instance.GetBundleManifestWithAssetPath(manifest.dependencies[i]);
-                if (bundleManifest is null)
-                {
-                    Engine.Console.Error("Not Find AssetBundle Dependencies:" + manifest.dependencies[i]);
-                    return default;
-                }
-
-                RuntimeBundleManifest[] runtimeBundleManifestList = GetBundleDependenciesList(bundleManifest);
-                if (runtimeBundleManifestList is null)
-                {
-                    return default;
-                }
-
-                foreach (var target in runtimeBundleManifestList)
-                {
-                    if (runtimeBundleManifests.Contains(target))
-                    {
-                        continue;
-                    }
-
-                    runtimeBundleManifests.Add(target);
-                }
-            }
-
-            return runtimeBundleManifests.ToArray();
-        }
-
-        /// <summary>
         /// 预加载资源模块
         /// </summary>
         /// <param name="options">预加载配置</param>
-        public IResourceModuleLoaderExecuteHandle PreLoadResourceModule(params PreloadOptions[] options)
+        public IResourceModuleLoaderExecuteHandle LoaderResourceModule(params ModuleOptions[] options)
         {
             DefaultResourceModuleLoaderExecuteHandle resourceModuleLoaderExecuteHandle = Engine.Class.Loader<DefaultResourceModuleLoaderExecuteHandle>();
             resourceModuleLoaderExecuteHandle.Execute(options);
@@ -199,7 +190,7 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="options">资源更新检查配置</param>
         /// <returns></returns>
-        public ICheckResourceUpdateExecuteHandle CheckUpdateResource(params UpdateOptions[] options)
+        public ICheckResourceUpdateExecuteHandle CheckModuleResourceUpdate(params ModuleOptions[] options)
         {
             DefaultCheckResourceUpdateExecuteHandle defaultCheckResourceUpdateExecuteHandle = Engine.Class.Loader<DefaultCheckResourceUpdateExecuteHandle>();
             defaultCheckResourceUpdateExecuteHandle.Execute(options);
@@ -211,12 +202,14 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public RequestAssetResult<T> LoadAsset<T>(string assetPath) where T : Object
+        public IRequestAssetExecuteResult<T> LoadAsset<T>(string assetPath) where T : Object
         {
             //todo 如果在编辑器并且没有启用热更，那么直接用编辑器的api加载资源
             DefaultRequestAssetExecute<T> defaultLoadAssetExecuteHandle = Engine.Class.Loader<DefaultRequestAssetExecute<T>>();
             defaultLoadAssetExecuteHandle.Execute(assetPath);
-            return defaultLoadAssetExecuteHandle.result;
+            IRequestAssetExecuteResult<T> requestAssetExecuteResult = defaultLoadAssetExecuteHandle.result;
+            Engine.Class.Release(defaultLoadAssetExecuteHandle);
+            return requestAssetExecuteResult;
         }
 
         /// <summary>
@@ -232,9 +225,9 @@ namespace ZEngine.Resource
                 return (IRequestAssetExecuteHandle<T>)handle;
             }
 
-            DefaultRequestAssetExecuteHandle<T> defaultRequestAssetExecuteHandle = Engine.Class.Loader<DefaultRequestAssetExecuteHandle<T>>();
-            defaultRequestAssetExecuteHandle.Subscribe(ISubscribeHandle.Create<T>(args => { loadAssetHandles.Remove(assetPath); }));
-            loadAssetHandles.Add(assetPath, defaultRequestAssetExecuteHandle);
+            loadAssetHandles.Add(assetPath, handle = Engine.Class.Loader<DefaultRequestAssetExecuteHandle<T>>());
+            IRequestAssetExecuteHandle<T> defaultRequestAssetExecuteHandle = (IRequestAssetExecuteHandle<T>)handle;
+            defaultRequestAssetExecuteHandle.Subscribe(ISubscribeHandle<IRequestAssetExecuteHandle<T>>.Create(args => { loadAssetHandles.Remove(assetPath); }));
             defaultRequestAssetExecuteHandle.Execute(assetPath);
             return defaultRequestAssetExecuteHandle;
         }

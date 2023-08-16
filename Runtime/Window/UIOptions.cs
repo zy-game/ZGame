@@ -6,21 +6,15 @@ namespace ZEngine.Window
     {
         public enum Layer
         {
-            Background,
             Low,
             Middle,
             Top,
-            Pop,
         }
 
-        internal int layer;
+        internal Layer layer;
         internal string path;
 
-        public UIOptions(string path, Layer layer) : this(path, (int)layer)
-        {
-        }
-
-        public UIOptions(string path, int layer)
+        public UIOptions(string path, Layer layer)
         {
             this.path = path;
             this.layer = layer;

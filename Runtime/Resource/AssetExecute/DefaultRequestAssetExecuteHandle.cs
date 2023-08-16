@@ -7,22 +7,27 @@ namespace ZEngine.Resource
     /// 资源加载
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IRequestAssetExecuteHandle<T> : IExecuteHandle<RequestAssetResult<T>> where T : Object
+    public interface IRequestAssetExecuteHandle<T> : IRequestAssetExecuteResult<T>, IExecuteHandle<IRequestAssetExecuteHandle<T>> where T : Object
     {
     }
 
-    class DefaultRequestAssetExecuteHandle<T> : ExecuteHandle<RequestAssetResult<T>>, IRequestAssetExecuteHandle<T> where T : Object
+    class DefaultRequestAssetExecuteHandle<T> :ExecuteHandle, IExecuteHandle<IRequestAssetExecuteHandle<T>>, IRequestAssetExecuteResult<T>, IRequestAssetExecuteHandle<T> where T : Object
     {
+        public T asset => result.asset;
+        public string path => result.path;
+        private InternalRequestAssetExecuteResult<T> result { get; set; }
+
         public override void Execute(params object[] args)
         {
             status = Status.Execute;
-            string path = args[0].ToString();
-            OnStart(path).StartCoroutine();
+            result = Engine.Class.Loader<InternalRequestAssetExecuteResult<T>>();
+            result.path = args[0].ToString();
+            OnStart().StartCoroutine();
         }
 
-        IEnumerator OnStart(string path)
+        IEnumerator OnStart()
         {
-            RuntimeBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
+            RuntimeBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(result.path);
             if (manifest is null)
             {
                 Engine.Console.Error("Not Find The Asset Bundle Manifest");
@@ -40,9 +45,19 @@ namespace ZEngine.Resource
                 yield break;
             }
 
-            yield return runtimeAssetBundleHandle.LoadAsync<T>(path, ISubscribeHandle.Create<T>(args => { result = RequestAssetResult<T>.Create(path, args); }));
+            yield return runtimeAssetBundleHandle.LoadAsync<T>(result.path, ISubscribeHandle<T>.Create(args => result.asset = args));
             status = Status.Success;
             OnComplete();
+        }
+
+        public void BindTo(GameObject gameObject)
+        {
+            result.BindTo(gameObject);
+        }
+
+        public void Free()
+        {
+            result.Free();
         }
     }
 }

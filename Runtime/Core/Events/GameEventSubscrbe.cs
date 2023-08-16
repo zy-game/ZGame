@@ -11,13 +11,12 @@ namespace ZEngine
         public Exception exception { get; private set; }
         public GameEventType type { get; private set; }
 
-        public GameEventSubscrbe()
-        {
-        }
-
         public virtual void Release()
         {
             result = null;
+            method = null;
+            exception = null;
+            GC.SuppressFinalize(this);
         }
 
         public void Execute(T value)
@@ -63,10 +62,33 @@ namespace ZEngine
 
         public static GameEventSubscrbe<T> Create(GameEventType type, Action<T> callback)
         {
-            GameEventSubscrbe<T> gameEventSubscrbe = Engine.Class.Loader<GameEventSubscrbe<T>>();
-            gameEventSubscrbe.method = callback;
+            GameEventSubscrbe<T> gameEventSubscrbe = Create(callback);
             gameEventSubscrbe.type = type;
             return gameEventSubscrbe;
+        }
+
+        public static GameEventSubscrbe<T> operator +(GameEventSubscrbe<T> l, Action<T> callback)
+        {
+            l.method += callback;
+            return l;
+        }
+
+        public static GameEventSubscrbe<T> operator -(GameEventSubscrbe<T> l, Action<T> callback)
+        {
+            l.method -= callback;
+            return l;
+        }
+
+        public static GameEventSubscrbe<T> operator +(GameEventSubscrbe<T> l, GameEventSubscrbe<T> callback)
+        {
+            l.method += callback.method;
+            return l;
+        }
+
+        public static GameEventSubscrbe<T> operator -(GameEventSubscrbe<T> l, GameEventSubscrbe<T> callback)
+        {
+            l.method -= callback.method;
+            return l;
         }
     }
 }

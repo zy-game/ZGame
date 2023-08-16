@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
-using ZEngine.Options;
 
-namespace ZEngine.Resource
+namespace ZEngine
 {
     [Config(Localtion.Internal)]
     public class HotfixOptions : SingleScript<HotfixOptions>
@@ -13,18 +13,22 @@ namespace ZEngine.Resource
         [Header("编辑器加载热更资源")] public Switch useAsset;
         [Header("缓存时间"), Range(60, 60 * 60)] public float cachetime;
         [Header("资源地址")] public List<URLOptions> address;
-        [Header("预加载模块")] public List<PreloadOptions> preloads;
+        [Header("预加载模块")] public List<ModuleOptions> preloads;
+    }
 
-        public UpdateOptions[] GetPreloadOptions()
-        {
-            List<UpdateOptions> optionsList = new List<UpdateOptions>();
-            URLOptions urlOptions = HotfixOptions.instance.address.Find(x => x.state == Switch.On);
-            foreach (var VARIABLE in HotfixOptions.instance.preloads)
-            {
-                optionsList.Add(UpdateOptions.Create(VARIABLE.moduleName, urlOptions));
-            }
+    [Serializable]
+    public class ModuleOptions
+    {
+        public Switch isOn;
+        public string moduleName;
+        [NonSerialized] public URLOptions url;
+    }
 
-            return optionsList.ToArray();
-        }
+    [Serializable]
+    public sealed class URLOptions
+    {
+        [Header("是否启用")] public Switch state;
+        [Header("别称")] public string name;
+        [Header("地址")] public string address;
     }
 }

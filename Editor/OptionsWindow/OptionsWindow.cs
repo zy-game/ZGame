@@ -37,7 +37,7 @@ namespace ZEngine.Editor.OptionsEditorWindow
             base.OnActivate(searchContext, rootElement);
             reference = new SerializedObject(ZEngine.ReferenceOptions.instance);
             vfs = new SerializedObject(ZEngine.VFS.VFSOptions.instance);
-            hotfix = new SerializedObject(ZEngine.Resource.HotfixOptions.instance);
+            hotfix = new SerializedObject(ZEngine.HotfixOptions.instance);
             audio = new SerializedObject(ZEngine.Sound.SoundPlayOptions.instance);
         }
 
@@ -66,7 +66,6 @@ namespace ZEngine.Editor.OptionsEditorWindow
             EditorGUILayout.PropertyField(hotfix.FindProperty("useScript"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("useAsset"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("cachetime"), true);
-            EditorGUILayout.PropertyField(hotfix.FindProperty("autoLoad"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("address"), true);
             EditorGUILayout.PropertyField(hotfix.FindProperty("preloads"), true);
             GUILayout.EndVertical();
@@ -81,7 +80,7 @@ namespace ZEngine.Editor.OptionsEditorWindow
                 vfs.ApplyModifiedProperties();
                 hotfix.ApplyModifiedProperties();
                 audio.ApplyModifiedProperties();
-                ZEngine.Resource.HotfixOptions.instance.Saved();
+                ZEngine.HotfixOptions.instance.Saved();
                 ZEngine.VFS.VFSOptions.instance.Saved();
                 ZEngine.ReferenceOptions.instance.Saved();
                 ZEngine.Sound.SoundPlayOptions.instance.Saved();

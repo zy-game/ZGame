@@ -2,6 +2,12 @@
 {
     public class SoundManager : Single<SoundManager>
     {
+        public override void Dispose()
+        {
+            base.Dispose();
+            Engine.Console.Log("关闭音效管理器");
+        }
+
         public void SetPlayOptions(SoundOptions options)
         {
         }

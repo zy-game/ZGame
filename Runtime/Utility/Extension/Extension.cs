@@ -7,6 +7,7 @@ using ZEngine;
 public class WaitFor : CustomYieldInstruction, IReference
 {
     private Func<bool> m_Predicate;
+    private float end;
     public override bool keepWaiting => !this.m_Predicate();
 
     public static WaitFor Create(Func<bool> func)
@@ -16,35 +17,41 @@ public class WaitFor : CustomYieldInstruction, IReference
         return wait;
     }
 
+    public static WaitFor Create(float time)
+    {
+        WaitFor wait = Engine.Class.Loader<WaitFor>();
+        wait.end = UnityEngine.Time.realtimeSinceStartup + time;
+        wait.m_Predicate = () => UnityEngine.Time.realtimeSinceStartup > wait.end;
+        return wait;
+    }
+
+    public static void Create(float time, Action callback)
+    {
+        IEnumerator Start()
+        {
+            yield return WaitFor.Create(time);
+            callback?.Invoke();
+        }
+
+        Start().StartCoroutine();
+    }
+
+    public static void WaitFormFrameEnd(Action callback)
+    {
+        IEnumerator Start()
+        {
+            yield return new WaitForEndOfFrame();
+            callback?.Invoke();
+        }
+
+        Start().StartCoroutine();
+    }
+
     public void Release()
     {
         m_Predicate = null;
     }
 }
-
-
-public sealed class Timeout : CustomYieldInstruction
-{
-    private float end;
-    public override bool keepWaiting => UnityEngine.Time.realtimeSinceStartup > end;
-
-
-    public Timeout Time(float time)
-    {
-        end = time;
-        return this;
-    }
-
-
-    public static Timeout Create(float time)
-    {
-        return new Timeout()
-        {
-            end = UnityEngine.Time.realtimeSinceStartup + time
-        };
-    }
-}
-
 
 public static class Extension
 {

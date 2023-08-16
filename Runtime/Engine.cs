@@ -8,7 +8,6 @@ using UnityEngine.Internal;
 using ZEngine;
 using ZEngine.VFS;
 using ZEngine.Network;
-using ZEngine.Options;
 using ZEngine.Resource;
 using ZEngine.Sound;
 using ZEngine.Window;
@@ -196,7 +195,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static WriteFileExecuteResult WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public static IWriteFileExecuteResult WriteFile(string fileName, byte[] bytes, VersionOptions version)
             => VFSManager.instance.WriteFile(fileName, bytes, version);
 
         /// <summary>
@@ -204,7 +203,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IExecuteHandle<WriteFileExecuteResult> WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
+        public static IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
             => VFSManager.instance.WriteFileAsync(fileName, bytes, version);
 
         /// <summary>
@@ -212,7 +211,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static ReadFileExecuteResult ReadFile(string fileName, VersionOptions version = null)
+        public static IReadFileExecuteResult ReadFile(string fileName, VersionOptions version = null)
             => VFSManager.instance.ReadFile(fileName, version);
 
         /// <summary>
@@ -292,7 +291,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static RequestAssetResult<T> LoadAsset<T>(string assetPath) where T : Object
+        public static IRequestAssetExecuteResult<T> LoadAsset<T>(string assetPath) where T : Object
             => ResourceManager.instance.LoadAsset<T>(assetPath);
 
         /// <summary>
@@ -303,7 +302,7 @@ public sealed class Engine
         /// <param name="assetName">资源名</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static RequestAssetResult<T> LoadAsset<T>(string module, string bundle, string assetName) where T : Object
+        public static IRequestAssetExecuteResult<T> LoadAsset<T>(string module, string bundle, string assetName) where T : Object
             => ResourceManager.instance.LoadAsset<T>($"{module}/{bundle}/{assetName}");
 
         /// <summary>
@@ -335,16 +334,16 @@ public sealed class Engine
         /// <summary>
         /// 预加载资源模块
         /// </summary>
-        public static IResourceModuleLoaderExecuteHandle PreLoadResourceModule(params PreloadOptions[] options)
-            => ResourceManager.instance.PreLoadResourceModule();
+        public static IResourceModuleLoaderExecuteHandle LoaderResourceModule(params ModuleOptions[] options)
+            => ResourceManager.instance.LoaderResourceModule(options);
 
         /// <summary>
         /// 检查资源是否需要更新
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ICheckResourceUpdateExecuteHandle CheckUpdateResource(params UpdateOptions[] options)
-            => ResourceManager.instance.CheckUpdateResource(options);
+        public static ICheckResourceUpdateExecuteHandle CheckModuleResourceUpdate(params ModuleOptions[] options)
+            => ResourceManager.instance.CheckModuleResourceUpdate(options);
     }
 
     /// <summary>
@@ -394,8 +393,8 @@ public sealed class Engine
         /// </summary>
         /// <param name="test"></param>
         /// <returns></returns>
-        public static UI_Toast Toast(string test)
-            => OpenWindow<UI_Toast>().SetToast(test);
+        public static Toast Toast(string test)
+            => OpenWindow<Toast>().SetToast(test);
 
         /// <summary>
         /// 提示消息窗口
@@ -404,7 +403,7 @@ public sealed class Engine
         /// <param name="ok"></param>
         /// <param name="cancel"></param>
         /// <returns></returns>
-        public static UI_MsgBox MsgBox(string text, Action ok = null, Action cancel = null)
+        public static MsgBox MsgBox(string text, Action ok = null, Action cancel = null)
             => MsgBox("Tips", text, ok, cancel);
 
         /// <summary>
@@ -414,8 +413,8 @@ public sealed class Engine
         /// <param name="ok"></param>
         /// <param name="cancel"></param>
         /// <returns></returns>
-        public static UI_MsgBox MsgBox(string tips, string text, Action ok = null, Action cancel = null)
-            => OpenWindow<UI_MsgBox>().SetBox(tips, text, ok, cancel);
+        public static MsgBox MsgBox(string tips, string text, Action ok = null, Action cancel = null)
+            => OpenWindow<MsgBox>().SetBox(tips, text, ok, cancel);
 
         /// <summary>
         /// 等待窗口
@@ -423,8 +422,8 @@ public sealed class Engine
         /// <param name="text"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public static UI_Wait Wait(string text, float time = 0, ISubscribeHandle subscribe = null)
-            => OpenWindow<UI_Wait>().SetWait(text, time, subscribe);
+        public static Waiting Wait(string text, float time = 0, ISubscribeHandle subscribe = null)
+            => OpenWindow<Waiting>().SetWait(text, time, subscribe);
 
         /// <summary>
         /// 打开指定类型的窗口

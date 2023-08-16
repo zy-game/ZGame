@@ -1,25 +1,27 @@
+using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    class DefaultRequestAssetExecute<T> : IExecute<RequestAssetResult<T>> where T : Object
+    class DefaultRequestAssetExecute<T> : IExecute where T : Object
     {
-        private bool isBindObject = false;
-        public string path { get; set; }
-        public RequestAssetResult<T> result { get; private set; }
+        public InternalRequestAssetExecuteResult<T> result { get; set; }
 
         public void Release()
         {
-            isBindObject = false;
+            result = null;
+            GC.SuppressFinalize(this);
         }
 
         public void Execute(params object[] args)
         {
-            path = args[0].ToString();
-            if (path.StartsWith("Resources"))
+            result = Engine.Class.Loader<InternalRequestAssetExecuteResult<T>>();
+            result.path = args[0].ToString();
+            if (result.path.StartsWith("Resources"))
             {
-                string temp = path.Substring("Resources/".Length);
-                result = RequestAssetResult<T>.Create(path, Resources.Load<T>(temp));
+                string temp = result.path.Substring("Resources/".Length);
+                result.asset = Resources.Load<T>(temp);
                 return;
             }
             else
@@ -27,11 +29,11 @@ namespace ZEngine.Resource
 #if UNITY_EDITOR
                 if (HotfixOptions.instance.useHotfix is Switch.On && HotfixOptions.instance.useAsset == Switch.On)
                 {
-                    result = RequestAssetResult<T>.Create(path, UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path));
+                    result.asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(result.path);
                     return;
                 }
 #endif
-                RuntimeBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
+                RuntimeBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(result.path);
                 if (manifest is null)
                 {
                     Engine.Console.Error("Not Find The Asset Bundle Manifest");
@@ -45,7 +47,7 @@ namespace ZEngine.Resource
                     return;
                 }
 
-                result = RequestAssetResult<T>.Create(path, runtimeAssetBundleHandle.Load<T>(path));
+                result.asset = runtimeAssetBundleHandle.Load<T>(result.path);
             }
         }
     }

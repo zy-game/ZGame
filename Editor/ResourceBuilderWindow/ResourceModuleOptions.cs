@@ -37,23 +37,12 @@ namespace ZEngine.Editor.ResourceBuilder
     public class ResourceModuleManifest
     {
         public string title;
-        public Object folder;
         public VersionOptions version;
         public List<ResourceBundleManifest> bundles;
 
         public bool Search(string search)
         {
             if (title.IsNullOrEmpty() is false && title.Contains(search))
-            {
-                return true;
-            }
-
-            if (folder is null)
-            {
-                return false;
-            }
-
-            if (folder.name.Contains(search))
             {
                 return true;
             }

@@ -4,40 +4,62 @@ using System.Linq;
 
 namespace ZEngine.VFS
 {
-    class DefaultReadFileExecute : IExecute<ReadFileExecuteResult>
+    public interface IReadFileExecuteResult : IReference
     {
-        public VersionOptions version { get; set; }
-        public ReadFileExecuteResult result { get; set; } = new ReadFileExecuteResult();
+        string name { get; }
+        long time { get; }
+        byte[] bytes { get; }
+        VersionOptions version { get; }
+    }
 
+    class ReadFileExecuteResult : IReadFileExecuteResult
+    {
         public void Release()
         {
             version = null;
-            result = default;
+            name = String.Empty;
+            bytes = Array.Empty<byte>();
+            time = 0;
+            GC.SuppressFinalize(this);
+        }
+
+        public string name { get; set; }
+        public long time { get; set; }
+        public byte[] bytes { get; set; }
+        public VersionOptions version { get; set; }
+    }
+
+    class DefaultReadFileExecute : IExecute
+    {
+        public ReadFileExecuteResult result { get; set; }
+
+        public void Release()
+        {
+            result = null;
             GC.SuppressFinalize(this);
         }
 
 
         public void Execute(params object[] args)
         {
-            string name = args[0].ToString();
-            VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
-            VersionOptions version = args[1] is null ? VersionOptions.None : (VersionOptions)args[1];
-            if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != version)
+            result = Engine.Class.Loader<ReadFileExecuteResult>();
+            result.name = args[0].ToString();
+            result.version = args[1] is null ? VersionOptions.None : (VersionOptions)args[1];
+            VFSData[] vfsDatas = VFSManager.instance.GetFileData(result.name);
+            if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != result.version)
             {
                 return;
             }
 
-            byte[] bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
-            version = vfsDatas[0].version;
+            result.bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
+            result.version = vfsDatas[0].version;
             long time = vfsDatas[0].time;
             int offset = 0;
             for (int i = 0; i < vfsDatas.Length; i++)
             {
-                vfsDatas[i].Read(bytes, offset, vfsDatas[i].fileLenght);
+                vfsDatas[i].Read(result.bytes, offset, vfsDatas[i].fileLenght);
                 offset += vfsDatas[i].fileLenght;
             }
-
-            result = ReadFileExecuteResult.Create(name, time, bytes, version);
         }
     }
 }

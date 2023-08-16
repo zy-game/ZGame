@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using ZEngine;
-using ZEngine.Options;
 using ZEngine.Resource;
 using ZEngine.Window;
 using ZEngine.World;
@@ -13,18 +13,20 @@ public class Startup : MonoBehaviour
 {
     private void Start()
     {
-        UI_Loading loading = Engine.Window.OpenWindow<UI_Loading>().SetInfo("检查资源更新").SetProgress(0);
-        ICheckResourceUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckUpdateResource(HotfixOptions.instance.GetPreloadOptions());
+        Engine.Window.Toast("Tips");
+        Loading loading = Engine.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
+        HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
+        ICheckResourceUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckModuleResourceUpdate(HotfixOptions.instance.preloads.ToArray());
         checkUpdateExecuteHandle.OnPorgressChange(loading.GetProgressSubscribe());
         checkUpdateExecuteHandle.Subscribe(ISubscribeHandle.Create(ResourceChekcUpdateComplete));
     }
 
     private void ResourceChekcUpdateComplete()
     {
-        Engine.Window.GetWindow<UI_Loading>().SetInfo("初始化默认资源").SetProgress(0);
-        IResourceModuleLoaderExecuteHandle resourceModuleLoaderExecuteHandle = Engine.Resource.PreLoadResourceModule(HotfixOptions.instance.preloads.ToArray());
-        resourceModuleLoaderExecuteHandle.OnPorgressChange(Engine.Window.GetWindow<UI_Loading>().GetProgressSubscribe());
-        resourceModuleLoaderExecuteHandle.Subscribe(ISubscribeHandle.Create<IResourceModuleLoaderExecuteHandle>(ResourcePreloadComplete));
+        Engine.Window.GetWindow<Loading>().SetInfo("初始化默认资源").SetProgress(0);
+        IResourceModuleLoaderExecuteHandle resourceModuleLoaderExecuteHandle = Engine.Resource.LoaderResourceModule(HotfixOptions.instance.preloads.ToArray());
+        resourceModuleLoaderExecuteHandle.OnPorgressChange(Engine.Window.GetWindow<Loading>().GetProgressSubscribe());
+        resourceModuleLoaderExecuteHandle.Subscribe(ISubscribeHandle<IResourceModuleLoaderExecuteHandle>.Create(ResourcePreloadComplete));
     }
 
     private void ResourcePreloadComplete(IResourceModuleLoaderExecuteHandle resourcePreloadExecuteHandle)
@@ -36,6 +38,5 @@ public class Startup : MonoBehaviour
         }
 
         Engine.Console.Log("进入游戏");
-        //todo 进入游戏
     }
 }

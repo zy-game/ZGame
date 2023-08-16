@@ -18,7 +18,8 @@ namespace ZEngine.Resource
         public void Release()
         {
             _handles.Clear();
-            bundle.Unload(true);
+            bundle?.Unload(true);
+            bundle = null;
             name = String.Empty;
             refCount = 0;
             module = String.Empty;
@@ -32,17 +33,38 @@ namespace ZEngine.Resource
 
         public T Load<T>(string path) where T : Object
         {
-            return default;
+            if (bundle is null)
+            {
+                return default;
+            }
+
+            return bundle.LoadAsset<T>(path);
         }
 
         public IEnumerator LoadAsync<T>(string path, ISubscribeHandle<T> subscribe) where T : Object
         {
-            yield break;
+            if (bundle is null)
+            {
+                subscribe.Execute(default);
+                yield break;
+            }
+
+            AssetBundleRequest request = bundle.LoadAssetAsync<T>(path);
+            yield return request;
+            if (request.isDone is false || request.asset is null)
+            {
+                subscribe.Execute(default);
+                yield break;
+            }
+
+            subscribe.Execute(request.asset);
+            _handles.Add(request.asset);
         }
 
         public void Unload(Object obj)
         {
             refCount--;
+            _handles.Remove(obj);
         }
 
         public static InternalRuntimeBundleHandle Create(RuntimeBundleManifest manifest, AssetBundle bundle)
@@ -53,6 +75,7 @@ namespace ZEngine.Resource
             runtimeAssetBundleHandle.module = manifest.owner;
             runtimeAssetBundleHandle.refCount = 0;
             runtimeAssetBundleHandle._handles = new HashSet<Object>();
+            
             return runtimeAssetBundleHandle;
         }
     }

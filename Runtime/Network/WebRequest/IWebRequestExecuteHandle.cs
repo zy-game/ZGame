@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 
 namespace ZEngine.Network
 {
-    public interface IWebRequestExecuteHandle<T> : IExecuteHandle<T>
+    public interface IWebRequestExecuteHandle<T> : IExecuteHandle<IWebRequestExecuteHandle<T>>
     {
         T result { get; }
         string url { get; }
@@ -19,7 +19,7 @@ namespace ZEngine.Network
         void OnPorgressChange(ISubscribeHandle<float> subscribe);
     }
 
-    class DefaultWebRequestExecuteHandle<T> : ExecuteHandle<T>, IWebRequestExecuteHandle<T>
+    class DefaultWebRequestExecuteHandle<T> : ExecuteHandle, IExecuteHandle<IWebRequestExecuteHandle<T>>, IWebRequestExecuteHandle<T>
     {
         public T result => (T)_data;
         public string url { get; set; }
@@ -86,7 +86,6 @@ namespace ZEngine.Network
                 }
             }
 
-            Engine.Console.Log(request.url);
             request.SendWebRequest();
             while (request.isDone is false)
             {
@@ -94,7 +93,7 @@ namespace ZEngine.Network
                 yield return new WaitForSeconds(0.01f);
             }
 
-            Engine.Console.Log(request.url, request.isDone, request.result);
+            Engine.Console.Log(request.url, request.result);
             if (request.result is not UnityWebRequest.Result.Success)
             {
                 Engine.Console.Error(request.error);

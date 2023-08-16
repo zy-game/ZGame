@@ -6,7 +6,7 @@ using ZEngine.VFS;
 
 namespace ZEngine.Network
 {
-    class DownloadHandle : IReference
+    public class DownloadHandle : IReference
     {
         public string name;
         public string url;
@@ -43,19 +43,13 @@ namespace ZEngine.Network
             }
 
             Engine.Console.Log(request.url, version, request.result, "time:" + useTime.Seconds);
-            IExecuteHandle<WriteFileExecuteResult> writeFileExecuteHandle = Engine.FileSystem.WriteFileAsync(name, request.downloadHandler.data, version);
-            yield return writeFileExecuteHandle.ExecuteComplete();
-            status = Status.Success;
+            IWriteFileExecuteHandle writeFileExecuteHandle = Engine.FileSystem.WriteFileAsync(name, request.downloadHandler.data, version);
+            writeFileExecuteHandle.Subscribe(() => { status = Status.Success; });
         }
 
         public bool IsComplete()
         {
             return status == Status.Failed || status == Status.Success;
-        }
-
-        public DownloadHandleResult GetDownloadResult()
-        {
-            return DownloadHandleResult.Create(url, startTime, useTime.Milliseconds, bytes, status);
         }
 
         public void Release()

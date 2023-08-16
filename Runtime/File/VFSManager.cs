@@ -31,6 +31,7 @@ namespace ZEngine.VFS
         {
             base.Dispose();
             vfsList.ForEach(x => x.Release());
+            Engine.Console.Log("释放所有文件句柄");
         }
 
         public VFSManager()
@@ -184,12 +185,14 @@ namespace ZEngine.VFS
             return vfsData.version;
         }
 
-        public WriteFileExecuteResult WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public IWriteFileExecuteResult WriteFile(string fileName, byte[] bytes, VersionOptions version)
         {
             Delete(fileName);
             DefaultWriteFileExecute defaultWriteFileExecute = Engine.Class.Loader<DefaultWriteFileExecute>();
             defaultWriteFileExecute.Execute(fileName, bytes, version);
-            return defaultWriteFileExecute.result;
+            IWriteFileExecuteResult writeFileExecuteResult = defaultWriteFileExecute.result;
+            Engine.Class.Release(defaultWriteFileExecute);
+            return writeFileExecuteResult;
         }
 
         public IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
@@ -200,7 +203,7 @@ namespace ZEngine.VFS
             return defaultWriteFileExecuteHandle;
         }
 
-        public ReadFileExecuteResult ReadFile(string fileName, VersionOptions versionOptions = null)
+        public IReadFileExecuteResult ReadFile(string fileName, VersionOptions versionOptions = null)
         {
             if (Exist(fileName) is false)
             {
@@ -209,7 +212,9 @@ namespace ZEngine.VFS
 
             DefaultReadFileExecute defaultReadFileExecute = Engine.Class.Loader<DefaultReadFileExecute>();
             defaultReadFileExecute.Execute(fileName, versionOptions);
-            return defaultReadFileExecute.result;
+            IReadFileExecuteResult readFileExecuteResult = defaultReadFileExecute.result;
+            Engine.Class.Release(defaultReadFileExecute);
+            return readFileExecuteResult;
         }
 
         public IReadFileExecuteHandle ReadFileAsync(string fileName, VersionOptions versionOptions = null)

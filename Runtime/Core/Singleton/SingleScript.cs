@@ -40,7 +40,7 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
 #if UNITY_EDITOR
                 if (options.path.IsNullOrEmpty())
                 {
-                    options.path = $"ProjectSettings/{typeof(T).Name}.asset";
+                    options.path = $"UserSettings/{typeof(T).Name}.asset";
                 }
 
                 _instance = UnityEditorInternal.InternalEditorUtility.LoadSerializedFileAndForget(options.path).FirstOrDefault() as T;
@@ -56,13 +56,13 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
             case Localtion.Packaged:
                 if (options.path.EndsWith("asset"))
                 {
-                    RequestAssetResult<T> execute = Engine.Resource.LoadAsset<T>(options.path);
-                    _instance = execute.result;
+                    IRequestAssetExecuteResult<T> execute = Engine.Resource.LoadAsset<T>(options.path);
+                    _instance = execute.asset;
                 }
                 else if (options.path.EndsWith("json"))
                 {
-                    RequestAssetResult<TextAsset> execute = Engine.Resource.LoadAsset<TextAsset>(options.path);
-                    _instance = Engine.Json.Parse<T>(execute.result.text);
+                    IRequestAssetExecuteResult<TextAsset> execute = Engine.Resource.LoadAsset<TextAsset>(options.path);
+                    _instance = Engine.Json.Parse<T>(execute.asset.text);
                 }
 
                 break;
@@ -89,7 +89,7 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
 #if UNITY_EDITOR
                 if (options.path.IsNullOrEmpty())
                 {
-                    options.path = $"ProjectSettings/{typeof(T).Name}.asset";
+                    options.path = $"UserSettings/{typeof(T).Name}.asset";
                 }
 
                 UnityEditorInternal.InternalEditorUtility.SaveToSerializedFileAndForget(new Object[1] { _instance }, options.path, true);

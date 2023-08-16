@@ -10,13 +10,13 @@ namespace ZEngine
     /// <typeparam name="T"></typeparam>
     public abstract class GameEventArgs<T> : IReference where T : GameEventArgs<T>
     {
-        private static GameObject UnityEventListener;
         internal static List<GameEventSubscrbe<T>> subscribes = new List<GameEventSubscrbe<T>>();
         private bool isFree = false;
 
         public virtual void Release()
         {
             isFree = false;
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -28,15 +28,6 @@ namespace ZEngine
         }
 
         /// <summary>
-        /// 事件是否被释放
-        /// </summary>
-        /// <returns></returns>
-        public bool HasFree()
-        {
-            return isFree;
-        }
-
-        /// <summary>
         /// 执行分发事件
         /// </summary>
         /// <param name="executeCancelToken">执行取消令牌</param>
@@ -44,23 +35,22 @@ namespace ZEngine
         /// <returns></returns>
         public static void Execute(T args)
         {
-            Engine.Console.Log("subscribe count:" + subscribes.Count);
+            if (args.isFree)
+            {
+                Engine.Console.Log("the event is use");
+                return;
+            }
+
             for (int i = subscribes.Count - 1; i >= 0; i--)
             {
                 subscribes[i].Execute(args);
-            }
-        }
-
-        public static void Subscribe(GameEventType eventType, Action<T> subscribe)
-        {
-            if (UnityEventListener == null)
-            {
-                UnityEventListener = new GameObject("UnityEventListener");
-                UnityEventListener.AddComponent<MonoEventListener>();
-                GameObject.DontDestroyOnLoad(UnityEventListener);
+                if (args.isFree)
+                {
+                    break;
+                }
             }
 
-            subscribes.Add(GameEventSubscrbe<T>.Create(eventType, subscribe));
+            Engine.Class.Release(args);
         }
 
         /// <summary>
@@ -104,6 +94,7 @@ namespace ZEngine
                 return;
             }
 
+            Engine.Class.Release(subscribe);
             subscribes.Remove(subscribe);
         }
 

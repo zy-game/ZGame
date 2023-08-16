@@ -17,6 +17,7 @@ namespace ZEngine
         /// </summary>
         Status status { get; }
 
+
         /// <summary>
         /// 订阅执行器完成回调
         /// </summary>
@@ -30,31 +31,43 @@ namespace ZEngine
         void OnPorgressChange(ISubscribeHandle<float> subscribe);
 
         /// <summary>
-        /// 等待完成
+        /// 订阅执行完成回调
         /// </summary>
-        /// <returns></returns>
-        IEnumerator ExecuteComplete();
+        /// <param name="callback">回调对象</param>
+        void Subscribe(Action callback)
+        {
+            this.Subscribe(ISubscribeHandle.Create(callback));
+        }
     }
 
     /// <summary>
     /// 异步执行器
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IExecuteHandle<T> : IExecuteHandle, IExecute<T>
+    public interface IExecuteHandle<T> : IExecuteHandle, IExecute
     {
         /// <summary>
         /// 订阅执行器完成回调
         /// </summary>
         /// <param name="subscribe">订阅器</param>
-        public void Subscribe(ISubscribeHandle<T> subscribe)
+        void Subscribe(ISubscribeHandle<T> subscribe)
         {
             Subscribe((ISubscribeHandle)subscribe);
+        }
+
+        /// <summary>
+        /// 订阅执行器完成回调
+        /// </summary>
+        /// <param name="callback">订阅对象</param>
+        void Subscribe(Action<T> callback)
+        {
+            this.Subscribe(ISubscribeHandle<T>.Create(callback));
         }
     }
 
     public abstract class ExecuteHandle : IExecuteHandle
     {
-        private Queue<ISubscribeHandle> handles;
+        protected Queue<ISubscribeHandle> handles;
         protected ISubscribeHandle<float> progresSubsceibe;
         public Status status { get; protected set; }
 
@@ -64,6 +77,21 @@ namespace ZEngine
         }
 
         public abstract void Execute(params object[] paramsList);
+
+        public void Subscribe(ISubscribeHandle subscribe)
+        {
+            handles.Enqueue(subscribe);
+        }
+
+        public void OnPorgressChange(ISubscribeHandle<float> subscribe)
+        {
+            progresSubsceibe = subscribe;
+        }
+
+        protected void OnProgress(float progress)
+        {
+            progresSubsceibe?.Execute(progress);
+        }
 
         public virtual void Release()
         {
@@ -78,50 +106,17 @@ namespace ZEngine
             Engine.Class.Release(progresSubsceibe);
             progresSubsceibe = null;
             status = Status.None;
+            GC.SuppressFinalize(this);
         }
 
-        public virtual IEnumerator ExecuteComplete()
-        {
-            return WaitFor.Create(() => status == Status.Failed || status == Status.Success);
-        }
-
-        public void Subscribe(ISubscribeHandle subscribe)
-        {
-            handles.Enqueue(subscribe);
-        }
-
-        public void OnPorgressChange(ISubscribeHandle<float> subscribe)
-        {
-            progresSubsceibe = subscribe;
-        }
-
-        protected void OnComplete()
+        protected virtual void OnComplete()
         {
             while (handles.TryDequeue(out ISubscribeHandle subscribe))
             {
                 subscribe.Execute(this);
             }
-        }
 
-        protected void OnProgress(float progress)
-        {
-            progresSubsceibe?.Execute(progress);
-        }
-    }
-
-    public abstract class ExecuteHandle<T> : ExecuteHandle, IExecuteHandle<T>
-    {
-        public T result { get; protected set; }
-
-        public override void Release()
-        {
-            base.Release();
-            if (result is IReference reference)
-            {
-                Engine.Class.Release(reference);
-            }
-
-            result = default;
+            WaitFor.WaitFormFrameEnd(() => { Engine.Class.Release(this); });
         }
     }
 }

@@ -40,6 +40,11 @@ namespace ZEngine
 
         public void Enqueue(IReference refresh)
         {
+            if (refresh is null)
+            {
+                return;
+            }
+
             Type type = refresh.GetType();
             if (!_dic.TryGetValue(type, out Stack<IReference> stack))
             {

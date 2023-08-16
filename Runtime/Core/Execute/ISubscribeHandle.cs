@@ -14,16 +14,14 @@ namespace ZEngine
         {
             return DefaultMethodSubscribeHandle<object>.Create(args => action());
         }
-
-        public static ISubscribeHandle<T> Create<T>(Action<T> callback)
-        {
-            return DefaultMethodSubscribeHandle<T>.Create(callback);
-        }
     }
 
     public interface ISubscribeHandle<T> : ISubscribeHandle
     {
-        void Execute(T value);
+        public static ISubscribeHandle<T> Create(Action<T> callback)
+        {
+            return DefaultMethodSubscribeHandle<T>.Create(callback);
+        }
     }
 
     class DefaultMethodSubscribeHandle<T> : ISubscribeHandle<T>
@@ -35,13 +33,7 @@ namespace ZEngine
 
         public void Execute(object value)
         {
-            Execute((T)value);
-        }
-
-        public void Execute(T value)
-        {
-            method?.Invoke((T)value);
-            isComplete = true;
+            method((T)value);
         }
 
         public void Execute(Exception exception)
@@ -70,6 +62,10 @@ namespace ZEngine
         public void Release()
         {
             method = null;
+            time = 0;
+            isComplete = false;
+            exception = null;
+            GC.SuppressFinalize(this);
         }
 
         public static DefaultMethodSubscribeHandle<T> Create(Action<T> callback)

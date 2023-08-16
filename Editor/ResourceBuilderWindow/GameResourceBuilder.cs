@@ -92,7 +92,7 @@ namespace ZEngine.Editor.ResourceBuilder
             selection = null;
             foreach (var module in ResourceModuleOptions.instance.modules)
             {
-                if (module.folder == null)
+                if (module.bundles == null || module.bundles.Count == 0)
                 {
                     continue;
                 }
@@ -301,7 +301,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 return;
             }
 
-            if (selection.folder == null || selection.bundles == null || selection.bundles.Count == 0)
+            if (selection.bundles == null || selection.bundles.Count == 0)
             {
                 return;
             }

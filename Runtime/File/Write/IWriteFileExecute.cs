@@ -6,35 +6,43 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-    public struct WriteFileExecuteResult
+    public interface IWriteFileExecuteResult : IReference
     {
+        string name { get; }
+        byte[] bytes { get; }
+        VersionOptions version { get; }
+    }
+
+    class WriteFileExecuteResult : IWriteFileExecuteResult
+    {
+        public void Release()
+        {
+            name = String.Empty;
+            bytes = Array.Empty<byte>();
+            version = null;
+        }
+
         public string name { get; set; }
         public byte[] bytes { get; set; }
         public VersionOptions version { get; set; }
-
-        public static WriteFileExecuteResult Create(string name, byte[] bytes, VersionOptions version)
-        {
-            return new WriteFileExecuteResult()
-            {
-                name = name,
-                bytes = bytes,
-                version = version
-            };
-        }
     }
 
-    class DefaultWriteFileExecute : IExecute<WriteFileExecuteResult>
+    class DefaultWriteFileExecute : IExecute
     {
         public WriteFileExecuteResult result { get; set; }
 
         public void Release()
         {
-            result = default;
+            result = null;
+            GC.SuppressFinalize(this);
         }
 
         public void Execute(params object[] args)
         {
-            result = WriteFileExecuteResult.Create((string)args[0], (byte[])args[1], (VersionOptions)args[2]);
+            result = Engine.Class.Loader<WriteFileExecuteResult>();
+            result.name = (string)args[0];
+            result.bytes = (byte[])args[1];
+            result.version = (VersionOptions)args[2];
             VFSData[] vfsDataList = VFSManager.instance.GetVFSData(result.bytes.Length);
             int offset = 0;
             int index = 0;
@@ -48,7 +56,6 @@ namespace ZEngine.VFS
             }
 
             VFSManager.instance.SaveVFSData();
-            return;
         }
     }
 }
