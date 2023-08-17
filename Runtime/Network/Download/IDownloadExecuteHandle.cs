@@ -17,7 +17,7 @@ namespace ZEngine.Network
 
         public override void Release()
         {
-            handles = null;
+            subscribes = null;
         }
 
         public override void Execute(params object[] paramsList)

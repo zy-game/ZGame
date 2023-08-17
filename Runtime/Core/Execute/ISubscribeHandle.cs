@@ -12,68 +12,64 @@ namespace ZEngine
 
         public static ISubscribeHandle Create(Action action)
         {
-            return DefaultMethodSubscribeHandle<object>.Create(args => action());
+            return ISubscribeHandle<object>.DefaultMethodSubscribeHandle.Create(args => action(), action);
+        }
+
+        public static ISubscribeHandle<T> Create<T>(Action<T> callback)
+        {
+            return ISubscribeHandle<T>.DefaultMethodSubscribeHandle.Create(callback, callback);
         }
     }
 
     public interface ISubscribeHandle<T> : ISubscribeHandle
     {
-        public static ISubscribeHandle<T> Create(Action<T> callback)
+        class DefaultMethodSubscribeHandle : ISubscribeHandle<T>
         {
-            return DefaultMethodSubscribeHandle<T>.Create(callback);
-        }
-    }
+            private bool isComplete;
+            private Action<T> method;
+            private Exception exception;
+            private object handle;
 
-    class DefaultMethodSubscribeHandle<T> : ISubscribeHandle<T>
-    {
-        private float time;
-        private bool isComplete;
-        private Action<T> method;
-        private Exception exception;
+            public void Execute(object value)
+            {
+                method((T)value);
+            }
 
-        public void Execute(object value)
-        {
-            method((T)value);
-        }
+            public void Execute(Exception exception)
+            {
+                this.exception = exception;
+                Engine.Console.Error(this.exception);
+                isComplete = true;
+            }
 
-        public void Execute(Exception exception)
-        {
-            this.exception = exception;
-            Engine.Console.Error(this.exception);
-            isComplete = true;
-        }
+            public override bool Equals(object obj)
+            {
+                if (obj is DefaultMethodSubscribeHandle temp)
+                {
+                    return handle.Equals(temp.handle);
+                }
 
-        public IEnumerator ExecuteComplete(float timeout = 0)
-        {
-            time = timeout == 0 ? float.MaxValue : Time.realtimeSinceStartup + timeout;
-            yield return WaitFor.Create(CheckCompletion);
-        }
+                return method.Equals(obj);
+            }
 
-        private bool CheckCompletion()
-        {
-            return isComplete || Time.realtimeSinceStartup > time;
-        }
+            public void Release()
+            {
+                isComplete = false;
+                exception = null;
+                method = null;
+                handle = null;
+                GC.SuppressFinalize(this);
+            }
 
-        public override bool Equals(object obj)
-        {
-            return method.Equals(obj);
-        }
 
-        public void Release()
-        {
-            method = null;
-            time = 0;
-            isComplete = false;
-            exception = null;
-            GC.SuppressFinalize(this);
-        }
-
-        public static DefaultMethodSubscribeHandle<T> Create(Action<T> callback)
-        {
-            DefaultMethodSubscribeHandle<T> defaultMethodSubscribeHandle = Engine.Class.Loader<DefaultMethodSubscribeHandle<T>>();
-            defaultMethodSubscribeHandle.method = callback;
-            defaultMethodSubscribeHandle.isComplete = false;
-            return defaultMethodSubscribeHandle;
+            public static DefaultMethodSubscribeHandle Create(Action<T> callback, object handle)
+            {
+                DefaultMethodSubscribeHandle defaultMethodSubscribeHandle = Engine.Class.Loader<DefaultMethodSubscribeHandle>();
+                defaultMethodSubscribeHandle.method = callback;
+                defaultMethodSubscribeHandle.handle = handle;
+                defaultMethodSubscribeHandle.isComplete = false;
+                return defaultMethodSubscribeHandle;
+            }
         }
     }
 }

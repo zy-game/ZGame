@@ -98,7 +98,7 @@ namespace ZEngine.Resource
                 version = x.bundle.version
             });
             IDownloadExecuteHandle downloadExecuteHandle = Engine.Network.Download(optionsList.ToArray());
-            downloadExecuteHandle.OnPorgressChange(ISubscribeHandle<float>.Create(OnProgress));
+            downloadExecuteHandle.OnPorgressChange(ISubscribeHandle.Create<float>(OnProgress));
             yield return WaitFor.Create(() => downloadExecuteHandle.status == Status.Success || downloadExecuteHandle.status == Status.Failed);
 
             if (downloadExecuteHandle.status is not Status.Success || downloadExecuteHandle.Handles is null || downloadExecuteHandle.Handles.Length is 0)

@@ -56,11 +56,25 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
             case Localtion.Packaged:
                 if (options.path.EndsWith("asset"))
                 {
+#if UNITY_EDITOR
+                    _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(options.path);
+                    if (_instance == null)
+                    {
+                        UnityEditor.AssetDatabase.CreateAsset(_instance = CreateInstance<T>(), options.path);
+                    }
+
+                    return;
+#endif
                     IRequestAssetExecuteResult<T> execute = Engine.Resource.LoadAsset<T>(options.path);
                     _instance = execute.asset;
                 }
                 else if (options.path.EndsWith("json"))
                 {
+#if UNITY_EDITOR
+                    string json = File.ReadAllText(options.path);
+                    _instance = Engine.Json.Parse<T>(json);
+                    return;
+#endif
                     IRequestAssetExecuteResult<TextAsset> execute = Engine.Resource.LoadAsset<TextAsset>(options.path);
                     _instance = Engine.Json.Parse<T>(execute.asset.text);
                 }

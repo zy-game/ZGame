@@ -234,11 +234,11 @@ public sealed class Engine
         public static IGameWorld current => WorldManager.instance.current;
 
         /// <summary>
-        /// 加载游戏
+        /// 创建World
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IGameWorld LoadGameWorld(IGameWorldOptions options) => WorldManager.instance.LoadGameWorld(options);
+        public static IGameWorld CreateWorld(string name, Camera camera) => WorldManager.instance.CreateWorld(name, camera);
 
         /// <summary>
         /// 获取指定名称且已加载的游戏
@@ -254,13 +254,12 @@ public sealed class Engine
         public static void CloseWorld(string worldName) => WorldManager.instance.CloseWorld(worldName);
 
         /// <summary>
-        /// 启动一个逻辑系统
+        /// 加载游戏模块
         /// </summary>
-        /// <param name="paramsList">运行逻辑系统所需要的参数</param>
-        /// <typeparam name="T"></typeparam>
+        /// <param name="gameEntryOptions">游戏入口设置</param>
         /// <returns></returns>
-        public static ILogicSystemExecuteHandle LaunchLogicSystem<T>(params object[] paramsList) where T : ILogicSystemExecuteHandle
-            => WorldManager.instance.LaunchLogicSystem<T>(paramsList);
+        public static ILoaderGameLogicModuleExecuteHandle LaunchGameLogicModule(GameEntryOptions gameEntryOptions)
+            => WorldManager.instance.LoaderGameLogicModule(gameEntryOptions);
     }
 
     /// <summary>
@@ -268,24 +267,6 @@ public sealed class Engine
     /// </summary>
     public sealed class Resource
     {
-        /// <summary>
-        /// 获取资源包版本
-        /// </summary>
-        /// <param name="moduleName">模块名</param>
-        /// <param name="bundleName">资源包名</param>
-        /// <returns></returns>
-        public static RuntimeBundleManifest GetBundleManifestWithAssetPath(string assetPath)
-            => ResourceManager.instance.GetBundleManifestWithAssetPath(assetPath);
-
-        /// <summary>
-        /// 获取资源包版本
-        /// </summary>
-        /// <param name="moduleName">模块名</param>
-        /// <param name="bundleName">资源包名</param>
-        /// <returns></returns>
-        public static RuntimeBundleManifest GetResourceBundleManifest(string bundleName)
-            => ResourceManager.instance.GetRuntimeBundleManifest(bundleName);
-
         /// <summary>
         /// 加载资源
         /// </summary>
@@ -295,34 +276,12 @@ public sealed class Engine
             => ResourceManager.instance.LoadAsset<T>(assetPath);
 
         /// <summary>
-        /// 加载资源
-        /// </summary>
-        /// <param name="module">资源所在模块</param>
-        /// <param name="bundle">资源所在包</param>
-        /// <param name="assetName">资源名</param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static IRequestAssetExecuteResult<T> LoadAsset<T>(string module, string bundle, string assetName) where T : Object
-            => ResourceManager.instance.LoadAsset<T>($"{module}/{bundle}/{assetName}");
-
-        /// <summary>
         /// 异步加载资源
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
         public static IRequestAssetExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
             => ResourceManager.instance.LoadAssetAsync<T>(assetPath);
-
-        /// <summary>
-        /// 加载资源
-        /// </summary>
-        /// <param name="module">资源所在模块</param>
-        /// <param name="bundle">资源所在包</param>
-        /// <param name="assetName">资源名</param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static IRequestAssetExecuteHandle<T> LoadAssetAsync<T>(string module, string bundle, string assetName) where T : Object
-            => ResourceManager.instance.LoadAssetAsync<T>($"{module}/{bundle}/{assetName}");
 
         /// <summary>
         /// 回收资源
@@ -354,30 +313,43 @@ public sealed class Engine
         /// <summary>
         /// 设置默认播放器选项
         /// </summary>
-        /// <param name="options"></param>
+        /// <param name="options">音效配置</param>
         public static void SetPlayOptions(SoundOptions options)
             => SoundManager.instance.SetPlayOptions(options);
 
         /// <summary>
         /// 播放音乐
         /// </summary>
-        /// <param name="soundName"></param>
+        /// <param name="soundName">音效名</param>
         /// <returns></returns>
-        public static IAudioPlayExecuteHandle PlaySound(string soundName, string optionsName = "default")
+        public static void PlaySound(string soundName, string optionsName = "default")
             => SoundManager.instance.PlaySound(soundName, optionsName);
 
         /// <summary>
-        /// 播放音效
+        /// 暂停播放音效
         /// </summary>
-        /// <param name="soundName"></param>
-        /// <returns></returns>
-        public static IAudioPlayExecuteHandle PlayEffectSound(string soundName, string optionsName = "default")
-            => SoundManager.instance.PlayEffectSound(soundName, optionsName);
+        /// <param name="soundName">音效名</param>
+        public static void PauseSound(string soundName)
+            => SoundManager.instance.PauseSound(soundName);
+
+        /// <summary>
+        /// 继续播放音效
+        /// </summary>
+        /// <param name="soundName">音效名</param>
+        public static void ResumeSound(string soundName)
+            => SoundManager.instance.ResumeSound(soundName);
+
+        /// <summary>
+        /// 停止音效播放
+        /// </summary>
+        /// <param name="soundName">音效名</param>
+        public static void StopSound(string soundName)
+            => SoundManager.instance.StopSound(soundName);
 
         /// <summary>
         /// 获取播放器设置
         /// </summary>
-        /// <param name="optionsName"></param>
+        /// <param name="optionsName">配置名</param>
         /// <returns></returns>
         public static SoundOptions GetSoundPlayOptions(string optionsName)
             => SoundManager.instance.GetSoundPlayOptions(optionsName);
@@ -506,5 +478,105 @@ public sealed class Engine
         /// <returns></returns>
         public static IDownloadExecuteHandle Download(params DownloadOptions[] urlList)
             => NetworkManager.instance.Download(urlList);
+
+        /// <summary>
+        /// 连接远程地址
+        /// </summary>
+        /// <param name="address">远程地址</param>
+        /// <returns></returns>
+        public static INetworkConnectExecuteHandle Connect(string address)
+            => NetworkManager.instance.Connect(address);
+
+        /// <summary>
+        /// 写入网络消息，如果网络未连接则自动尝试链接，并在链接成功后写入消息
+        /// </summary>
+        /// <param name="address">远程地址</param>
+        /// <param name="messagePackage">需要写入的消息</param>
+        /// <returns></returns>
+        public static IWriteMessageExecuteHandle WriteAndFlush(string address, IMessagePackage messagePackage)
+            => NetworkManager.instance.WriteAndFlush(address, messagePackage);
+
+        /// <summary>
+        /// 写入网络消息,并等待响应
+        /// </summary>
+        /// <param name="address">远程地址</param>
+        /// <param name="messagePackage">需要写入的消息</param>
+        /// <typeparam name="T">等待响应的消息类型</typeparam>
+        /// <returns></returns>
+        public static IWriteMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessagePackage messagePackage) where T : IMessagePackage
+            => NetworkManager.instance.WriteAndFlush<T>(address, messagePackage);
+
+        /// <summary>
+        /// 关闭网络连接
+        /// </summary>
+        /// <param name="address">远程地址</param>
+        /// <returns></returns>
+        public static INetworkClosedExecuteHandle Close(string address)
+            => NetworkManager.instance.Close(address);
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="meesageType"></param>
+        /// <param name="callback"></param>
+        public static void SubscribeMessagePackage(Type meesageType, Action<IRecviedMessagePackageExecuteHandle> callback)
+            => SubscribeMessagePackage(meesageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle>.Create(callback));
+
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void SubscribeMessagePackage<T>(Action<IRecviedMessagePackageExecuteHandle> callback) where T : IMessagePackage
+            => SubscribeMessagePackage(typeof(T), ISubscribeHandle<IRecviedMessagePackageExecuteHandle>.Create(callback));
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void SubscribeMessagePackage(Type messageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback)
+            => NetworkManager.instance.SubscribeMessagePackage(messageType, callback);
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void SubscribeMessagePackage<T>(ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback) where T : IMessagePackage
+            => SubscribeMessagePackage(typeof(T), callback);
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void UnsubscribeMessagePackage<T>(Action<IRecviedMessagePackageExecuteHandle> callback) where T : IMessagePackage
+            => UnsubscribeMessagePackage(typeof(T), ISubscribeHandle<IRecviedMessagePackageExecuteHandle>.Create(callback));
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="meesageType"></param>
+        /// <param name="callback"></param>
+        public static void UnsubscribeMessagePackage(Type meesageType, Action<IRecviedMessagePackageExecuteHandle> callback)
+            => UnsubscribeMessagePackage(meesageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle>.Create(callback));
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void UnsubscribeMessagePackage<T>(ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback) where T : IMessagePackage
+            => UnsubscribeMessagePackage(typeof(T), callback);
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void UnsubscribeMessagePackage(Type meesageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback)
+            => NetworkManager.instance.UnsubscribeMessagePackage(meesageType, callback);
     }
 }

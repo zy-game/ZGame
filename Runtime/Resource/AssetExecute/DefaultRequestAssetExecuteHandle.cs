@@ -11,7 +11,7 @@ namespace ZEngine.Resource
     {
     }
 
-    class DefaultRequestAssetExecuteHandle<T> :ExecuteHandle, IExecuteHandle<IRequestAssetExecuteHandle<T>>, IRequestAssetExecuteResult<T>, IRequestAssetExecuteHandle<T> where T : Object
+    class DefaultRequestAssetExecuteHandle<T> : ExecuteHandle, IRequestAssetExecuteResult<T>, IRequestAssetExecuteHandle<T> where T : Object
     {
         public T asset => result.asset;
         public string path => result.path;
@@ -45,7 +45,7 @@ namespace ZEngine.Resource
                 yield break;
             }
 
-            yield return runtimeAssetBundleHandle.LoadAsync<T>(result.path, ISubscribeHandle<T>.Create(args => result.asset = args));
+            yield return runtimeAssetBundleHandle.LoadAsync<T>(result.path, ISubscribeHandle.Create<T>(args => result.asset = args));
             status = Status.Success;
             OnComplete();
         }

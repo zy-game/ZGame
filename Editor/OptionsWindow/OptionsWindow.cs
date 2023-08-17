@@ -16,6 +16,7 @@ namespace ZEngine.Editor.OptionsEditorWindow
         static OptionsWindow provider;
         public static OptionsWindow instance => provider;
 
+        private bool[] foldout = new bool[4];
 
         [MenuItem("Game/Options")]
         public static void OpenSetting()
@@ -45,35 +46,52 @@ namespace ZEngine.Editor.OptionsEditorWindow
         public override void OnGUI(string searchContext)
         {
             base.OnGUI(searchContext);
-            GUILayout.BeginVertical("Reference Options", EditorStyles.helpBox);
-            GUILayout.Space(10);
-            EditorGUILayout.PropertyField(reference.FindProperty("DefaultCount"), true);
-            EditorGUILayout.PropertyField(reference.FindProperty("MaxCount"), true);
-            GUILayout.EndVertical();
+            foldout[0] = EditorGUILayout.Foldout(foldout[0], "Reference Options", EditorStyles.foldoutHeader);
+            if (foldout[0])
+            {
+                GUILayout.BeginVertical("Reference Options", EditorStyles.helpBox);
+                EditorGUILayout.PropertyField(reference.FindProperty("DefaultCount"), true);
+                EditorGUILayout.PropertyField(reference.FindProperty("MaxCount"), true);
+                GUILayout.EndVertical();
+            }
 
-            GUILayout.BeginVertical("File System Options", EditorStyles.helpBox);
-            GUILayout.Space(10);
-            EditorGUILayout.PropertyField(vfs.FindProperty("vfsState"), true);
-            EditorGUILayout.PropertyField(vfs.FindProperty("layout"), true);
-            EditorGUILayout.PropertyField(vfs.FindProperty("Lenght"), true);
-            EditorGUILayout.PropertyField(vfs.FindProperty("Count"), true);
-            EditorGUILayout.PropertyField(vfs.FindProperty("time"), true);
-            GUILayout.EndVertical();
 
-            GUILayout.BeginVertical("Hotfix Options", EditorStyles.helpBox);
-            GUILayout.Space(10);
-            EditorGUILayout.PropertyField(hotfix.FindProperty("useHotfix"), true);
-            EditorGUILayout.PropertyField(hotfix.FindProperty("useScript"), true);
-            EditorGUILayout.PropertyField(hotfix.FindProperty("useAsset"), true);
-            EditorGUILayout.PropertyField(hotfix.FindProperty("cachetime"), true);
-            EditorGUILayout.PropertyField(hotfix.FindProperty("address"), true);
-            EditorGUILayout.PropertyField(hotfix.FindProperty("preloads"), true);
-            GUILayout.EndVertical();
+            foldout[1] = EditorGUILayout.Foldout(foldout[1], "File System Options", EditorStyles.foldoutHeader);
+            if (foldout[1])
+            {
+                GUILayout.BeginVertical("File System Options", EditorStyles.helpBox);
+                EditorGUILayout.PropertyField(vfs.FindProperty("vfsState"), true);
+                EditorGUILayout.PropertyField(vfs.FindProperty("layout"), true);
+                EditorGUILayout.PropertyField(vfs.FindProperty("Lenght"), true);
+                EditorGUILayout.PropertyField(vfs.FindProperty("Count"), true);
+                EditorGUILayout.PropertyField(vfs.FindProperty("time"), true);
+                GUILayout.EndVertical();
+            }
 
-            GUILayout.BeginVertical("Audio Options", EditorStyles.helpBox);
-            GUILayout.Space(10);
-            EditorGUILayout.PropertyField(audio.FindProperty("optionsList"), true);
-            GUILayout.EndVertical();
+
+            foldout[2] = EditorGUILayout.Foldout(foldout[2], "Hotfix Options", EditorStyles.foldoutHeader);
+            if (foldout[2])
+            {
+                GUILayout.BeginVertical("Hotfix Options", EditorStyles.helpBox);
+                EditorGUILayout.PropertyField(hotfix.FindProperty("useHotfix"), true);
+                EditorGUILayout.PropertyField(hotfix.FindProperty("useScript"), true);
+                EditorGUILayout.PropertyField(hotfix.FindProperty("useAsset"), true);
+                EditorGUILayout.PropertyField(hotfix.FindProperty("entryList"), true);
+                EditorGUILayout.PropertyField(hotfix.FindProperty("cachetime"), true);
+                EditorGUILayout.PropertyField(hotfix.FindProperty("address"), true);
+                EditorGUILayout.PropertyField(hotfix.FindProperty("preloads"), true);
+                GUILayout.EndVertical();
+            }
+
+
+            foldout[3] = EditorGUILayout.Foldout(foldout[3], "Audio Options", EditorStyles.foldoutHeader);
+            if (foldout[3])
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.PropertyField(audio.FindProperty("optionsList"), true);
+                GUILayout.EndVertical();
+            }
+
             if (EditorGUI.EndChangeCheck())
             {
                 reference.ApplyModifiedProperties();

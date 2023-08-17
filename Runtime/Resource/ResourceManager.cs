@@ -227,7 +227,7 @@ namespace ZEngine.Resource
 
             loadAssetHandles.Add(assetPath, handle = Engine.Class.Loader<DefaultRequestAssetExecuteHandle<T>>());
             IRequestAssetExecuteHandle<T> defaultRequestAssetExecuteHandle = (IRequestAssetExecuteHandle<T>)handle;
-            defaultRequestAssetExecuteHandle.Subscribe(ISubscribeHandle<IRequestAssetExecuteHandle<T>>.Create(args => { loadAssetHandles.Remove(assetPath); }));
+            defaultRequestAssetExecuteHandle.Subscribe(ISubscribeHandle.Create<IRequestAssetExecuteHandle<T>>(args => { loadAssetHandles.Remove(assetPath); }));
             defaultRequestAssetExecuteHandle.Execute(assetPath);
             return defaultRequestAssetExecuteHandle;
         }

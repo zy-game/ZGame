@@ -13,7 +13,7 @@ public class Startup : MonoBehaviour
 {
     private void Start()
     {
-        Engine.Window.Toast("Tips");
+        GameObject.DestroyImmediate(Camera.main.gameObject);
         Loading loading = Engine.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
         HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
         ICheckResourceUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckModuleResourceUpdate(HotfixOptions.instance.preloads.ToArray());
@@ -26,7 +26,7 @@ public class Startup : MonoBehaviour
         Engine.Window.GetWindow<Loading>().SetInfo("初始化默认资源").SetProgress(0);
         IResourceModuleLoaderExecuteHandle resourceModuleLoaderExecuteHandle = Engine.Resource.LoaderResourceModule(HotfixOptions.instance.preloads.ToArray());
         resourceModuleLoaderExecuteHandle.OnPorgressChange(Engine.Window.GetWindow<Loading>().GetProgressSubscribe());
-        resourceModuleLoaderExecuteHandle.Subscribe(ISubscribeHandle<IResourceModuleLoaderExecuteHandle>.Create(ResourcePreloadComplete));
+        resourceModuleLoaderExecuteHandle.Subscribe(ISubscribeHandle.Create<IResourceModuleLoaderExecuteHandle>(ResourcePreloadComplete));
     }
 
     private void ResourcePreloadComplete(IResourceModuleLoaderExecuteHandle resourcePreloadExecuteHandle)
@@ -38,5 +38,6 @@ public class Startup : MonoBehaviour
         }
 
         Engine.Console.Log("进入游戏");
+        Engine.Game.LaunchGameLogicModule(HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On));
     }
 }

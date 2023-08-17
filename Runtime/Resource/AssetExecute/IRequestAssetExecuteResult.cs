@@ -27,14 +27,8 @@ namespace ZEngine.Resource
 
         public void BindTo(GameObject gameObject)
         {
-            ObserverGameObjectDestroy observerGameObjectDestroy = gameObject.GetComponent<ObserverGameObjectDestroy>();
-            if (observerGameObjectDestroy is null)
-            {
-                observerGameObjectDestroy = gameObject.AddComponent<ObserverGameObjectDestroy>();
-            }
-
             isBindObject = true;
-            observerGameObjectDestroy.subscribe.AddListener(() => { ResourceManager.instance.Release(asset); });
+            UnityEventArgs.Subscribe(GameEventType.OnDestroy, args => { ResourceManager.instance.Release(asset); }, gameObject);
         }
 
         public void Free()
