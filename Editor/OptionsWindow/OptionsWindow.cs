@@ -36,10 +36,25 @@ namespace ZEngine.Editor.OptionsEditorWindow
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
             base.OnActivate(searchContext, rootElement);
-            reference = new SerializedObject(ZEngine.ReferenceOptions.instance);
-            vfs = new SerializedObject(ZEngine.VFS.VFSOptions.instance);
-            hotfix = new SerializedObject(ZEngine.HotfixOptions.instance);
-            audio = new SerializedObject(ZEngine.Sound.SoundPlayOptions.instance);
+            if (ZEngine.ReferenceOptions.instance is not null)
+            {
+                reference = new SerializedObject(ZEngine.ReferenceOptions.instance);
+            }
+
+            if (ZEngine.VFS.VFSOptions.instance is not null)
+            {
+                vfs = new SerializedObject(ZEngine.VFS.VFSOptions.instance);
+            }
+
+            if (ZEngine.HotfixOptions.instance is not null)
+            {
+                hotfix = new SerializedObject(ZEngine.HotfixOptions.instance);
+            }
+
+            if (ZEngine.Sound.SoundPlayOptions.instance is not null)
+            {
+                audio = new SerializedObject(ZEngine.Sound.SoundPlayOptions.instance);
+            }
         }
 
 

@@ -10,8 +10,11 @@ namespace ZEngine
     /// <typeparam name="T"></typeparam>
     public abstract class GameEventArgs<T> : IReference where T : GameEventArgs<T>
     {
-        internal static List<GameEventSubscrbe<T>> subscribes = new List<GameEventSubscrbe<T>>();
         private bool isFree = false;
+
+        public virtual void Initialized(params object[] paramsList)
+        {
+        }
 
         public virtual void Release()
         {
@@ -25,6 +28,15 @@ namespace ZEngine
         public void Free()
         {
             isFree = true;
+        }
+
+        internal static ISubscribeHandle<T> _subscrbe;
+
+        public static void Execute(params object[] paramsList)
+        {
+            T args = Engine.Class.Loader<T>();
+            args.Initialized(paramsList);
+            Execute(args);
         }
 
         /// <summary>
@@ -41,15 +53,13 @@ namespace ZEngine
                 return;
             }
 
-            for (int i = subscribes.Count - 1; i >= 0; i--)
+            if (_subscrbe is null)
             {
-                subscribes[i].Execute(args);
-                if (args.isFree)
-                {
-                    break;
-                }
+                Engine.Console.Log("没有订阅", typeof(T));
+                return;
             }
 
+            _subscrbe.Execute(args);
             Engine.Class.Release(args);
         }
 
@@ -60,7 +70,7 @@ namespace ZEngine
         /// <returns>取消事件订阅令牌</returns>
         public static void Subscribe(Action<T> callback)
         {
-            Subscribe(GameEventSubscrbe<T>.Create(callback));
+            Subscribe(ISubscribeHandle<T>.Create(callback));
         }
 
         /// <summary>
@@ -69,8 +79,7 @@ namespace ZEngine
         /// <param name="callback">事件回调</param>
         public static void Unsubscribe(Action<T> callback)
         {
-            GameEventSubscrbe<T> subscribeExecuteHandle = subscribes.Find(x => x.Equals(callback));
-            Unsubscribe(subscribeExecuteHandle);
+            Unsubscribe(ISubscribeHandle<T>.Create(callback));
         }
 
         /// <summary>
@@ -78,35 +87,31 @@ namespace ZEngine
         /// </summary>
         /// <param name="subscribe">事件订阅器</param>
         /// <returns>取消事件订阅令牌</returns>
-        public static void Subscribe(GameEventSubscrbe<T> subscribe)
+        public static void Subscribe(ISubscribeHandle<T> subscribe)
         {
-            subscribes.Add(subscribe);
+            if (_subscrbe is not null)
+            {
+                _subscrbe.Merge(subscribe);
+            }
         }
 
         /// <summary>
         /// 取消事件订阅
         /// </summary>
         /// <param name="subscribe">事件订阅器</param>
-        public static void Unsubscribe(GameEventSubscrbe<T> subscribe)
+        public static void Unsubscribe(ISubscribeHandle<T> subscribe)
         {
             if (subscribe is null)
             {
                 return;
             }
 
+            if (_subscrbe is not null)
+            {
+                _subscrbe.Unmerge(subscribe);
+            }
+
             Engine.Class.Release(subscribe);
-            subscribes.Remove(subscribe);
-        }
-
-        public static void Subscribe<T2>() where T2 : GameEventSubscrbe<T>
-        {
-            Subscribe(Engine.Class.Loader<T2>());
-        }
-
-        public static void Unsubscribe<T2>() where T2 : GameEventSubscrbe<T>
-        {
-            GameEventSubscrbe<T> subscribeExecuteHandle = subscribes.Find(x => x.GetType() == typeof(T2));
-            Unsubscribe(subscribeExecuteHandle);
         }
 
         /// <summary>
@@ -114,7 +119,8 @@ namespace ZEngine
         /// </summary>
         public static void Clear()
         {
-            subscribes.Clear();
+            Engine.Class.Release(_subscrbe);
+            _subscrbe = null;
         }
     }
 }

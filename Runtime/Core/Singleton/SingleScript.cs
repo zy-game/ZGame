@@ -43,7 +43,14 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
                     options.path = $"UserSettings/{typeof(T).Name}.asset";
                 }
 
-                _instance = UnityEditorInternal.InternalEditorUtility.LoadSerializedFileAndForget(options.path).FirstOrDefault() as T;
+                foreach (var VARIABLE in UnityEditorInternal.InternalEditorUtility.LoadSerializedFileAndForget(options.path))
+                {
+                    if (VARIABLE is not null)
+                    {
+                        _instance = VARIABLE as T;
+                    }
+                }
+
                 if (_instance is null)
                 {
                     _instance = CreateInstance<T>();
@@ -106,7 +113,7 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
                     options.path = $"UserSettings/{typeof(T).Name}.asset";
                 }
 
-                UnityEditorInternal.InternalEditorUtility.SaveToSerializedFileAndForget(new Object[1] { _instance }, options.path, true);
+                UnityEditorInternal.InternalEditorUtility.SaveToSerializedFileAndForget(new Object[] { _instance }, options.path, true);
 #endif
                 break;
             case Localtion.Packaged:

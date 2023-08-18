@@ -11,15 +11,6 @@ public class TestGameGameEventArgs : GameEventArgs<TestGameGameEventArgs>
     }
 }
 
-public class TestGameEventSubscribe : GameEventSubscrbe<TestGameGameEventArgs>
-{
-    public override void OnTrigger(TestGameGameEventArgs evtArgs)
-    {
-        base.OnTrigger(evtArgs);
-        Engine.Console.Log("=======================================");
-    }
-}
-
 public class TestGameGameEventArgs2 : GameEventArgs<TestGameGameEventArgs2>
 {
     public override void Release()
@@ -27,14 +18,6 @@ public class TestGameGameEventArgs2 : GameEventArgs<TestGameGameEventArgs2>
     }
 }
 
-public class TestGameEventSubscribe2 : GameEventSubscrbe<TestGameGameEventArgs2>
-{
-    public override void OnTrigger(TestGameGameEventArgs2 evtArgs)
-    {
-        base.OnTrigger(evtArgs);
-        Engine.Console.Log("=======================================2");
-    }
-}
 
 public class TestEvent : MonoBehaviour
 {
@@ -62,11 +45,9 @@ public class TestEvent : MonoBehaviour
         // }));
 
         TestGameGameEventArgs.Subscribe(Test);
-        TestGameGameEventArgs.Subscribe<TestGameEventSubscribe>();
         TestGameGameEventArgs.Execute(new TestGameGameEventArgs());
 
         TestGameGameEventArgs2.Subscribe(Test2);
-        TestGameGameEventArgs2.Subscribe<TestGameEventSubscribe2>();
         TestGameGameEventArgs2.Execute(new TestGameGameEventArgs2());
     }
 

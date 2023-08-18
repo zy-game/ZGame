@@ -44,7 +44,7 @@ namespace ZEngine.Network
         public override void Execute(params object[] paramsList)
         {
             status = Status.Execute;
-            RequestOptions requestOptions = paramsList.TryGetValue<RequestOptions>(0, default);
+            RequestOptions requestOptions = (RequestOptions)paramsList[0];
             if (requestOptions is null)
             {
                 status = Status.Failed;

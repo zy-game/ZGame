@@ -29,30 +29,6 @@ namespace ZEngine
         /// </summary>
         /// <param name="subscribe"></param>
         void OnPorgressChange(ISubscribeHandle<float> subscribe);
-
-        /// <summary>
-        /// 订阅执行完成回调
-        /// </summary>
-        /// <param name="callback">回调对象</param>
-        void Subscribe(Action callback)
-        {
-            this.Subscribe(ISubscribeHandle.Create(callback));
-        }
-
-        /// <summary>
-        /// 取消订阅
-        /// </summary>
-        /// <param name="subscribe"></param>
-        void Unsubscribe(ISubscribeHandle subscribe);
-
-        /// <summary>
-        /// 取消订阅
-        /// </summary>
-        /// <param name="callback"></param>
-        void Unsubscribe(Action callback)
-        {
-            this.Unsubscribe(ISubscribeHandle.Create(callback));
-        }
     }
 
     /// <summary>
@@ -69,61 +45,32 @@ namespace ZEngine
         {
             Subscribe((ISubscribeHandle)subscribe);
         }
-
-        /// <summary>
-        /// 订阅执行器完成回调
-        /// </summary>
-        /// <param name="callback">订阅对象</param>
-        void Subscribe(Action<T> callback)
-        {
-            this.Subscribe(ISubscribeHandle<T>.Create(callback));
-        }
-
-        /// <summary>
-        /// 取消订阅
-        /// </summary>
-        /// <param name="subscribe"></param>
-        void Unsubscribe(ISubscribeHandle<T> subscribe)
-        {
-            Unsubscribe((ISubscribeHandle)subscribe);
-        }
-
-        /// <summary>
-        /// 取消订阅
-        /// </summary>
-        /// <param name="callback"></param>
-        void Unsubscribe(Action<T> callback)
-        {
-            Unsubscribe(ISubscribeHandle<T>.Create(callback));
-        }
     }
 
     public abstract class ExecuteHandle : IExecuteHandle
     {
-        protected List<ISubscribeHandle> subscribes;
+        protected ISubscribeHandle subscribes;
         protected ISubscribeHandle<float> progresSubsceibe;
         public Status status { get; protected set; }
 
-        public ExecuteHandle()
-        {
-            subscribes = new List<ISubscribeHandle>();
-        }
 
         public abstract void Execute(params object[] paramsList);
 
         public void Subscribe(ISubscribeHandle subscribe)
         {
-            subscribes.Add(subscribe);
+            if (subscribes is null)
+            {
+                subscribes = subscribe;
+                return;
+            }
+
+            subscribes.Merge(subscribe);
+            Engine.Class.Release(subscribe);
         }
 
         public void OnPorgressChange(ISubscribeHandle<float> subscribe)
         {
             progresSubsceibe = subscribe;
-        }
-
-        public void Unsubscribe(ISubscribeHandle subscribe)
-        {
-            subscribes.Remove(subscribe);
         }
 
         protected void OnProgress(float progress)
@@ -133,12 +80,7 @@ namespace ZEngine
 
         public virtual void Release()
         {
-            if (subscribes.Count() > 0)
-            {
-                subscribes.ForEach(Engine.Class.Release);
-                subscribes.Clear();
-            }
-
+            Engine.Class.Release(subscribes);
             Engine.Class.Release(progresSubsceibe);
             progresSubsceibe = null;
             status = Status.None;
@@ -147,11 +89,7 @@ namespace ZEngine
 
         protected virtual void OnComplete()
         {
-            for (int i = 0; i < subscribes.Count; i++)
-            {
-                subscribes[i].Execute(this);
-            }
-
+            subscribes?.Execute(this);
             WaitFor.WaitFormFrameEnd(() => { Engine.Class.Release(this); });
         }
     }

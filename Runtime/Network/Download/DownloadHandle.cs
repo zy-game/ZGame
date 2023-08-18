@@ -44,7 +44,7 @@ namespace ZEngine.Network
 
             Engine.Console.Log(request.url, version, request.result, "time:" + useTime.Seconds);
             IWriteFileExecuteHandle writeFileExecuteHandle = Engine.FileSystem.WriteFileAsync(name, request.downloadHandler.data, version);
-            writeFileExecuteHandle.Subscribe(() => { status = Status.Success; });
+            writeFileExecuteHandle.Subscribe(ISubscribeHandle.Create(() => { status = Status.Success; }));
         }
 
         public bool IsComplete()

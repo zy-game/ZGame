@@ -32,6 +32,7 @@ namespace ZEngine
         [Header("代码文件名")] public string dllName;
         [Header("元数据列表")] public List<string> aotList;
         [Header("启动参数")] public List<string> paramsList;
+        [Header("入口名")] public string methodName;
     }
 
     [Serializable]

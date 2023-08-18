@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using ZEngine;
+using ZEngine.Network;
 using ZEngine.Resource;
 using ZEngine.Window;
 using ZEngine.World;
@@ -13,7 +14,7 @@ public class Startup : MonoBehaviour
 {
     private void Start()
     {
-        GameObject.DestroyImmediate(Camera.main.gameObject);
+        GameObject.DontDestroyOnLoad(Camera.main.gameObject);
         Loading loading = Engine.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
         HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
         ICheckResourceUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckModuleResourceUpdate(HotfixOptions.instance.preloads.ToArray());
@@ -38,6 +39,23 @@ public class Startup : MonoBehaviour
         }
 
         Engine.Console.Log("进入游戏");
-        Engine.Game.LaunchGameLogicModule(HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On));
+        Engine.Game.LoaderGameLogicModule(HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On));
+        Engine.Network.WriteAndFlush<TestMessage2>("", new TestMessage())?.Subscribe(ISubscribeHandle.Create<IWriteMessageExecuteHandle<TestMessage2>>(args => { Engine.Console.Log("response"); }));
+    }
+
+    [RPCHandle]
+    class TestMessage : IMessagePackage
+    {
+        public void Release()
+        {
+        }
+    }
+
+    [RPCHandle]
+    class TestMessage2 : IMessagePackage
+    {
+        public void Release()
+        {
+        }
     }
 }

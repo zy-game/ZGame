@@ -168,6 +168,7 @@ namespace ZEngine.Window
             Destroy();
             GameObject.DestroyImmediate(gameObject);
             childList.Clear();
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Awake()

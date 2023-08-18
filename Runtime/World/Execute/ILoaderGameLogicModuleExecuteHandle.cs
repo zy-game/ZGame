@@ -45,7 +45,34 @@ namespace ZEngine.World
             try
             {
                 Assembly assembly = Assembly.Load(requestAssetExecuteResult.asset.bytes);
-                assembly.InvokeMethod("Main", new object[] { });
+                foreach (var VARIABLE in assembly.GetTypes())
+                {
+                    RPCHandle handle = VARIABLE.GetCustomAttribute<RPCHandle>();
+                    if (handle is null)
+                    {
+                        continue;
+                    }
+
+                    NetworkManager.instance.RegisterMessageType(VARIABLE);
+                }
+
+
+                Type entryType = assembly.GetType(gameEntryOptions.methodName);
+                if (entryType is null)
+                {
+                    Engine.Console.Error("未找到入口函数：" + gameEntryOptions.methodName);
+                    yield break;
+                }
+
+                string methodName = gameEntryOptions.methodName.Substring(gameEntryOptions.methodName.LastIndexOf('.') + 1);
+                MethodInfo methodInfo = entryType.GetMethod(methodName);
+                if (methodInfo is null)
+                {
+                    Engine.Console.Error("未找到入口函数：" + gameEntryOptions.methodName);
+                    yield break;
+                }
+
+                methodInfo.Invoke(null, gameEntryOptions.paramsList?.ToArray());
                 status = Status.Success;
             }
             catch (Exception e)

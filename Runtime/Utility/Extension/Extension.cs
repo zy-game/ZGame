@@ -1,78 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using ZEngine;
 
-public class WaitFor : CustomYieldInstruction, IReference
-{
-    private Func<bool> m_Predicate;
-    private float end;
-    public override bool keepWaiting => !this.m_Predicate();
-
-    public static WaitFor Create(Func<bool> func)
-    {
-        WaitFor wait = Engine.Class.Loader<WaitFor>();
-        wait.m_Predicate = func;
-        return wait;
-    }
-
-    public static WaitFor Create(float time)
-    {
-        WaitFor wait = Engine.Class.Loader<WaitFor>();
-        wait.end = UnityEngine.Time.realtimeSinceStartup + time;
-        wait.m_Predicate = () => UnityEngine.Time.realtimeSinceStartup > wait.end;
-        return wait;
-    }
-
-    public static void Create(float time, Action callback)
-    {
-        IEnumerator Start()
-        {
-            yield return WaitFor.Create(time);
-            callback?.Invoke();
-        }
-
-        Start().StartCoroutine();
-    }
-
-    public static void WaitFormFrameEnd(Action callback)
-    {
-        IEnumerator Start()
-        {
-            yield return new WaitForEndOfFrame();
-            callback?.Invoke();
-        }
-
-        Start().StartCoroutine();
-    }
-
-    public void Release()
-    {
-        m_Predicate = null;
-    }
-}
-
 public static class Extension
 {
-    private static UniContent _content;
-
-    class Template
-    {
-        public Coroutine coroutine;
-        public IEnumerator enumerator;
-    }
-
-    public static T TryGetValue<T>(this object[] arr, int index, T def)
-    {
-        if (arr.Length > index)
-        {
-            return (T)arr[index];
-        }
-
-        return def;
-    }
-
     public static Coroutine StartCoroutine(this IReference reference, IEnumerator enumerator)
     {
         return StartCoroutine(enumerator);
@@ -80,162 +12,139 @@ public static class Extension
 
     public static Coroutine StartCoroutine(this IEnumerator enumerator)
     {
-        EnsureContentInstance();
-
         IEnumerator Running()
         {
             yield return new WaitForSeconds(0.1f);
             yield return enumerator;
         }
 
-        return _content.StartCoroutine(Running());
+        return UnityEventHandle.instance.StartCoroutine(Running());
     }
 
     public static void StopAll()
     {
-        _content.StopAllCoroutines();
+        UnityEventHandle.instance.StopAllCoroutines();
     }
 
 
     public static void StopCoroutine(this Coroutine coroutine)
     {
-        EnsureContentInstance();
-        _content.StopCoroutine(coroutine);
+        UnityEventHandle.instance.StopCoroutine(coroutine);
+    }
+}
+
+public class Crc32
+{
+    private static ulong[] Crc32Table;
+    private static object _lock = new object();
+
+    private static void GetCRC32Table()
+    {
+        ulong Crc;
+        Crc32Table = new ulong[256];
+        int i, j;
+        for (i = 0; i < 256; i++)
+        {
+            Crc = (ulong)i;
+            for (j = 8; j > 0; j--)
+            {
+                if ((Crc & 1) == 1)
+                    Crc = (Crc >> 1) ^ 0xEDB88320;
+                else
+                    Crc >>= 1;
+            }
+
+            Crc32Table[i] = Crc;
+        }
     }
 
-    public static void Timer(this ISubscribeHandle subscribe, float interval)
+    public static uint GetCRC32Str(string sInputString, uint crc)
     {
-        EnsureContentInstance();
-        _content.AddTimer(subscribe, interval);
+        if (Crc32Table is null)
+        {
+            GetCRC32Table();
+        }
+
+        uint crc32;
+        byte[] buffer = System.Text.ASCIIEncoding.ASCII.GetBytes(sInputString);
+        crc32 = crc ^ 0xffffffff;
+        int len = buffer.Length;
+        for (int i = 0; i < len; i++)
+        {
+            crc32 = (uint)((crc32 >> 8) ^ Crc32Table[(crc32 ^ buffer[i]) & 0xff]);
+        }
+
+        return crc32 ^ 0xffffffff;
     }
 
-    public static void Stoping(this ISubscribeHandle subscribe)
+    public static uint GetCRC32Byte(byte[] buffer, uint crc)
     {
-        EnsureContentInstance();
-        _content.RemoveCallback(subscribe);
+        if (Crc32Table is null)
+        {
+            GetCRC32Table();
+        }
+
+        uint crc32;
+        crc32 = crc ^ 0xffffffff;
+        int len = buffer.Length;
+        for (int i = 0; i < len; i++)
+        {
+            crc32 = (uint)((crc32 >> 8) ^ Crc32Table[(crc32 ^ buffer[i]) & 0xff]);
+        }
+
+        return crc32 ^ 0xffffffff;
     }
 
-    private static void EnsureContentInstance()
+    public static uint GetCRC32Byte(byte[] buffer, int len, uint crc)
     {
-        if (_content is not null)
+        if (Crc32Table is null)
         {
-            return;
+            GetCRC32Table();
         }
 
-        _content = new GameObject("__ENGINE_CONTENT__").AddComponent<UniContent>();
+        uint crc32;
+        crc32 = crc ^ 0xffffffff;
+        for (int i = 0; i < len; i++)
+        {
+            crc32 = (uint)((crc32 >> 8) ^ Crc32Table[(crc32 ^ buffer[i]) & 0xff]);
+        }
+
+        return crc32 ^ 0xffffffff;
     }
 
-    class UniContent : MonoBehaviour
+    public static uint GetCRC32Byte(byte[] buffer, int start, int len, uint crc)
     {
-        private List<ISubscribeHandle> _update = new List<ISubscribeHandle>();
-        private List<ISubscribeHandle> _lateUpdate = new List<ISubscribeHandle>();
-        private List<ISubscribeHandle> _fixedUpdate = new List<ISubscribeHandle>();
-        private List<Timer> timer = new List<Timer>();
-
-        private void Update()
+        if (Crc32Table is null)
         {
-            Execute(_update);
+            GetCRC32Table();
         }
 
-        private void FixedUpdate()
+        uint crc32;
+        crc32 = crc ^ 0xffffffff;
+        for (int i = start; i < start + len; i++)
         {
-            Execute(_fixedUpdate);
+            crc32 = (uint)((crc32 >> 8) ^ Crc32Table[(crc32 ^ buffer[i]) & 0xff]);
         }
 
-        private void LateUpdate()
+        return crc32 ^ 0xffffffff;
+    }
+
+
+    public static uint Compute(byte[] bytes, int start, int size, uint crc = 0)
+    {
+        if (Crc32Table is null)
         {
-            Execute(_lateUpdate);
+            GetCRC32Table();
         }
 
-        private void Execute(List<ISubscribeHandle> subscribes)
-        {
-            if (subscribes.Count is 0)
-            {
-                return;
-            }
+        uint crc32;
+        crc32 = crc ^ 0xffffffff;
 
-            for (int i = 0; i < subscribes.Count; i++)
-            {
-                subscribes[i].Execute((object)default);
-            }
+        for (var i = start; i < start + size; i++)
+        {
+            crc32 = (uint)((crc32 >> 8) ^ Crc32Table[(crc32 ^ bytes[i]) & 0xff]);
         }
 
-        public void AddUpdate(ISubscribeHandle subscribe)
-        {
-            _update.Add(subscribe);
-            if (timer.Count is 0)
-            {
-                return;
-            }
-
-            for (int i = 0; i < timer.Count; i++)
-            {
-                if (Time.realtimeSinceStartup <= timer[i].time)
-                {
-                    continue;
-                }
-
-                timer[i].Execute((object)default);
-            }
-        }
-
-        public void AddFixedUpdate(ISubscribeHandle subscribe)
-        {
-            _fixedUpdate.Add(subscribe);
-        }
-
-        public void AddLateUpdate(ISubscribeHandle subscribe)
-        {
-            _lateUpdate.Add(subscribe);
-        }
-
-        public void AddTimer(ISubscribeHandle subscribe, float interval)
-        {
-            timer.Add(new Timer(subscribe, interval));
-        }
-
-        public void RemoveCallback(ISubscribeHandle subscribe)
-        {
-            _update.Remove(subscribe);
-            _lateUpdate.Remove(subscribe);
-            _fixedUpdate.Remove(subscribe);
-            Timer temp = timer.Find(x => x.subscribe == subscribe);
-            if (subscribe is not null)
-            {
-                timer.Remove(temp);
-            }
-        }
-
-        struct Timer : ISubscribeHandle
-        {
-            public float time;
-            public ISubscribeHandle subscribe;
-            public object result { get; }
-
-            public Timer(ISubscribeHandle subscribe, float time)
-            {
-                this.result = default;
-                this.time = Time.realtimeSinceStartup + time;
-                this.subscribe = subscribe;
-            }
-
-            public void Release()
-            {
-                Engine.Class.Release(subscribe);
-                subscribe = default;
-                time = 0;
-            }
-
-
-            public void Execute(object value)
-            {
-                subscribe.Execute(value);
-            }
-
-            public void Execute(Exception exception)
-            {
-                subscribe.Execute(exception);
-            }
-        }
+        return crc32 ^ 0xffffffff;
     }
 }

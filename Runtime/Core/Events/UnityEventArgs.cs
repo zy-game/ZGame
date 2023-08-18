@@ -45,8 +45,6 @@ namespace ZEngine
         public GameEventType eventType;
         public object data;
 
-        private static UnityEventHandle unityEventHandle;
-
         public override void Release()
         {
             gameObject = null;
@@ -64,7 +62,7 @@ namespace ZEngine
         /// <param name="gameObject">目标对象</param>
         public static void Subscribe(GameEventType eventType, Action<UnityEventArgs> subscribe, GameObject gameObject = null)
         {
-            Subscribe(eventType, GameEventSubscrbe<UnityEventArgs>.Create(eventType, subscribe), gameObject);
+            Subscribe(eventType, ISubscribeHandle<UnityEventArgs>.Create(subscribe), gameObject);
         }
 
         /// <summary>
@@ -73,17 +71,11 @@ namespace ZEngine
         /// <param name="eventType">事件类型</param>
         /// <param name="subscribe">订阅器</param>
         /// <param name="gameObject">目标对象</param>
-        public static void Subscribe(GameEventType eventType, GameEventSubscrbe<UnityEventArgs> subscribe, GameObject gameObject = null)
+        public static void Subscribe(GameEventType eventType, ISubscribeHandle<UnityEventArgs> subscribe, GameObject gameObject = null)
         {
-            if (unityEventHandle == null)
-            {
-                unityEventHandle = new GameObject("UnityEventListener").AddComponent<UnityEventHandle>();
-                GameObject.DontDestroyOnLoad(unityEventHandle.gameObject);
-            }
-
             if (gameObject == null)
             {
-                unityEventHandle.Subscribe(eventType, subscribe);
+                UnityEventHandle.instance.Subscribe(eventType, subscribe);
                 return;
             }
 
@@ -104,7 +96,7 @@ namespace ZEngine
         /// <param name="gameObject">目标对象</param>
         public static void Unsubscribe(GameEventType eventType, Action<UnityEventArgs> subscribe, GameObject gameObject = null)
         {
-            Unsubscribe(eventType, GameEventSubscrbe<UnityEventArgs>.Create(eventType, subscribe), gameObject);
+            Unsubscribe(eventType, ISubscribeHandle<UnityEventArgs>.Create(subscribe), gameObject);
         }
 
         /// <summary>
@@ -113,17 +105,11 @@ namespace ZEngine
         /// <param name="eventType">事件类型</param>
         /// <param name="subscribe">订阅器</param>
         /// <param name="gameObject">目标对象</param>
-        public static void Unsubscribe(GameEventType eventType, GameEventSubscrbe<UnityEventArgs> subscribe, GameObject gameObject = null)
+        public static void Unsubscribe(GameEventType eventType, ISubscribeHandle<UnityEventArgs> subscribe, GameObject gameObject = null)
         {
-            if (unityEventHandle == null)
-            {
-                unityEventHandle = new GameObject("UnityEventListener").AddComponent<UnityEventHandle>();
-                GameObject.DontDestroyOnLoad(unityEventHandle.gameObject);
-            }
-
             if (gameObject == null)
             {
-                unityEventHandle.Unsubscribe(eventType, subscribe);
+                UnityEventHandle.instance.Unsubscribe(eventType, subscribe);
                 return;
             }
 

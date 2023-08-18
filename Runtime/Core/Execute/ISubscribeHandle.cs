@@ -7,69 +7,79 @@ namespace ZEngine
 {
     public interface ISubscribeHandle : IReference
     {
-        void Execute(object value);
-        void Execute(Exception exception);
+        void Execute(object args);
+        void Merge(ISubscribeHandle subscribe);
+        void Unmerge(ISubscribeHandle subscribe);
 
         public static ISubscribeHandle Create(Action action)
         {
-            return ISubscribeHandle<object>.DefaultMethodSubscribeHandle.Create(args => action(), action);
+            return InternalGameSubscribeHandle<object>.Create(args => action(), action);
         }
 
         public static ISubscribeHandle<T> Create<T>(Action<T> callback)
         {
-            return ISubscribeHandle<T>.DefaultMethodSubscribeHandle.Create(callback, callback);
+            return InternalGameSubscribeHandle<T>.Create(callback, callback);
         }
     }
 
     public interface ISubscribeHandle<T> : ISubscribeHandle
     {
-        class DefaultMethodSubscribeHandle : ISubscribeHandle<T>
+        void Execute(T args);
+
+        void Merge(ISubscribeHandle<T> subscribe)
         {
-            private bool isComplete;
-            private Action<T> method;
-            private Exception exception;
-            private object handle;
+            Merge((ISubscribeHandle)subscribe);
+        }
 
-            public void Execute(object value)
+        void Unmerge(ISubscribeHandle<T> subscribe)
+        {
+            Unmerge((ISubscribeHandle)subscribe);
+        }
+    }
+
+    class InternalGameSubscribeHandle<T> : ISubscribeHandle<T>
+    {
+        protected Action<T> method;
+        private object handle;
+
+        public virtual void Execute(object args)
+        {
+            Execute((T)args);
+        }
+
+        public void Execute(T args)
+        {
+            method?.Invoke(args);
+            if (args is IReference reference)
             {
-                method((T)value);
+                Engine.Class.Release(reference);
             }
+        }
 
-            public void Execute(Exception exception)
-            {
-                this.exception = exception;
-                Engine.Console.Error(this.exception);
-                isComplete = true;
-            }
+        public void Merge(ISubscribeHandle subscribe)
+        {
+            this.method += ((InternalGameSubscribeHandle<T>)subscribe).method;
+        }
 
-            public override bool Equals(object obj)
-            {
-                if (obj is DefaultMethodSubscribeHandle temp)
-                {
-                    return handle.Equals(temp.handle);
-                }
+        public void Unmerge(ISubscribeHandle subscribe)
+        {
+            this.method -= ((InternalGameSubscribeHandle<T>)subscribe).method;
+        }
 
-                return method.Equals(obj);
-            }
-
-            public void Release()
-            {
-                isComplete = false;
-                exception = null;
-                method = null;
-                handle = null;
-                GC.SuppressFinalize(this);
-            }
+        public void Release()
+        {
+            method = null;
+            handle = null;
+            GC.SuppressFinalize(this);
+        }
 
 
-            public static DefaultMethodSubscribeHandle Create(Action<T> callback, object handle)
-            {
-                DefaultMethodSubscribeHandle defaultMethodSubscribeHandle = Engine.Class.Loader<DefaultMethodSubscribeHandle>();
-                defaultMethodSubscribeHandle.method = callback;
-                defaultMethodSubscribeHandle.handle = handle;
-                defaultMethodSubscribeHandle.isComplete = false;
-                return defaultMethodSubscribeHandle;
-            }
+        internal static InternalGameSubscribeHandle<T> Create(Action<T> callback, object handle)
+        {
+            InternalGameSubscribeHandle<T> internalGameSubscribeHandle = Engine.Class.Loader<InternalGameSubscribeHandle<T>>();
+            internalGameSubscribeHandle.method = callback;
+            internalGameSubscribeHandle.handle = handle;
+            return internalGameSubscribeHandle;
         }
     }
 }

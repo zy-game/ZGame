@@ -75,7 +75,8 @@ namespace ZEngine.Window
             SetToLayer(options.layer, window.gameObject);
             windows.Add(windowType, window);
             window.OnAwake();
-            window.OnEnable();
+            WindowOpenedEventArgs.Execute(WindowOpenedEventArgs.Create(window));
+            Show(windowType);
             return window;
         }
 
@@ -128,8 +129,8 @@ namespace ZEngine.Window
                 return;
             }
 
+            Hide(windowType);
             windows.Remove(windowType);
-            window.OnDiable();
             if (isCache)
             {
                 cacheList.Add(CacheData.Create(window));
@@ -137,7 +138,34 @@ namespace ZEngine.Window
             else
             {
                 Engine.Class.Release(window);
+                WindowCloseEventArgs.Execute(WindowCloseEventArgs.Create(window));
             }
+        }
+
+        public void Show(Type type)
+        {
+            UIWindow window = GetWindow(type);
+            if (window is null)
+            {
+                Engine.Console.Log("Not Find Window Type:", type.Name);
+                return;
+            }
+
+            window.OnEnable();
+            WindowEnableEventArgs.Execute(WindowEnableEventArgs.Create(window));
+        }
+
+        public void Hide(Type type)
+        {
+            UIWindow window = GetWindow(type);
+            if (window is null)
+            {
+                Engine.Console.Log("Not Find Window Type:", type.Name);
+                return;
+            }
+
+            window.OnDiable();
+            WindowDisableEventArgs.Execute(WindowDisableEventArgs.Create(window));
         }
     }
 }

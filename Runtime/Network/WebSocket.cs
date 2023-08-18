@@ -10,10 +10,11 @@ namespace ZEngine.Network
     {
         private WebSocketSharp.WebSocket _websocket;
         public string address { get; private set; }
-        public bool connected => _websocket == null ? false : _websocket.IsConnected;
+        public bool connected { get; set; }
 
         public void Close()
         {
+            _websocket.Close();
         }
 
         public void Connect(string address)
@@ -29,27 +30,39 @@ namespace ZEngine.Network
 
         public void WriteAndFlush(byte[] bytes)
         {
-            throw new NotImplementedException();
+            _websocket.Send(bytes);
         }
 
         private void OnWebSocketClosed(object sender, CloseEventArgs e)
         {
+            connected = false;
         }
 
         private void OnWebSocketRecvied(object sender, MessageEventArgs e)
         {
+            NetworkManager.instance.DispatchMessage(this, e.RawData);
         }
 
         private void OnWebSocketCrashErrord(object sender, ErrorEventArgs e)
         {
+            connected = false;
+            NetworkManager.instance.Close(address);
         }
 
         private void OnConnectCompletion(object sender, EventArgs e)
         {
+            connected = true;
         }
 
         public void Release()
         {
+            if (connected)
+            {
+                Close();
+            }
+
+            _websocket = null;
+            address = String.Empty;
         }
     }
 }

@@ -11,19 +11,9 @@ namespace ZEngine.World
             return (T)AddComponent(typeof(T));
         }
 
-        IComponent AddComponent(Type type)
-        {
-            return WorldManager.instance.current.AddComponent(guid, type);
-        }
-
         T GetComponent<T>() where T : IComponent
         {
             return (T)GetComponent(typeof(T));
-        }
-
-        IComponent GetComponent(Type type)
-        {
-            return WorldManager.instance.current.GetComponent(guid, type);
         }
 
         void DestroyComponent<T>()
@@ -31,9 +21,38 @@ namespace ZEngine.World
             DestroyComponent(typeof(T));
         }
 
-        void DestroyComponent(Type type)
+        IComponent AddComponent(Type type);
+
+        IComponent GetComponent(Type type);
+
+        void DestroyComponent(Type type);
+    }
+
+    class InternalEntityObject : IEntity
+    {
+        public int guid { get; set; }
+        public GameWorldHandle worldHandle;
+
+        public void Release()
         {
-            WorldManager.instance.current.DestroyComponent(guid, type);
+            guid = 0;
+            worldHandle = null;
+            GC.SuppressFinalize(this);
+        }
+
+        public IComponent AddComponent(Type type)
+        {
+            return worldHandle.AddComponent(guid, type);
+        }
+
+        public IComponent GetComponent(Type type)
+        {
+            return worldHandle.GetComponent(guid, type);
+        }
+
+        public void DestroyComponent(Type type)
+        {
+            worldHandle.DestroyComponent(guid, type);
         }
     }
 }

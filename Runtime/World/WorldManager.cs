@@ -25,6 +25,12 @@ namespace ZEngine.World
 
         public ILoaderGameLogicModuleExecuteHandle LoaderGameLogicModule(GameEntryOptions gameEntryOptions)
         {
+            if (gameEntryOptions is null)
+            {
+                Engine.Console.Log("入口配置不能为空");
+                return default;
+            }
+
             InternalLaunchGameLogicModuleExecuteHandle internalLaunchGameLogicModuleExecuteHandle = Engine.Class.Loader<InternalLaunchGameLogicModuleExecuteHandle>();
             internalLaunchGameLogicModuleExecuteHandle.Execute(gameEntryOptions);
             return internalLaunchGameLogicModuleExecuteHandle;
@@ -32,19 +38,48 @@ namespace ZEngine.World
 
         public IGameWorld CreateWorld(string name, Camera camera)
         {
-            InternalGameWorldHandle internalGameWorldHandle = Engine.Class.Loader<InternalGameWorldHandle>();
-            internalGameWorldHandle.name = name;
-            internalGameWorldHandle.camera = camera;
-            gameWorldHandles.Add(internalGameWorldHandle);
+            GameWorldHandle gameWorldHandle = Engine.Class.Loader<GameWorldHandle>();
+            gameWorldHandle.name = name;
+            gameWorldHandle.camera = camera;
+            gameWorldHandles.Add(gameWorldHandle);
             if (current is not null)
             {
                 current.OnDisable();
                 current = null;
             }
 
+            UniversalAdditionalCameraData universalAdditionalCameraData = camera.gameObject.GetComponent<UniversalAdditionalCameraData>();
+            if (universalAdditionalCameraData == null)
+            {
+                universalAdditionalCameraData = camera.gameObject.AddComponent<UniversalAdditionalCameraData>();
+            }
+
+            universalAdditionalCameraData.renderType = CameraRenderType.Overlay;
             Camera.main.GetComponent<UniversalAdditionalCameraData>().cameraStack.Add(camera);
-            current = internalGameWorldHandle;
-            return internalGameWorldHandle;
+            current = gameWorldHandle;
+            return gameWorldHandle;
+        }
+
+        public void OnDisable(string name)
+        {
+            IGameWorld handle = gameWorldHandles.Find(x => x.name == name);
+            if (handle is null)
+            {
+                return;
+            }
+
+            handle.OnDisable();
+        }
+
+        public void OnEnable(string worldName)
+        {
+            IGameWorld handle = gameWorldHandles.Find(x => x.name == worldName);
+            if (handle is null)
+            {
+                return;
+            }
+
+            handle.OnEnable();
         }
 
         public IGameWorld GetGameWorld(string worldName)
