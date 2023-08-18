@@ -13,12 +13,12 @@ namespace ZEngine
 
         public static ISubscribeHandle Create(Action action)
         {
-            return InternalGameSubscribeHandle<object>.Create(args => action(), action);
+            return ISubscribeHandle<object>.InternalGameSubscribeHandle.Create(args => action());
         }
 
         public static ISubscribeHandle<T> Create<T>(Action<T> callback)
         {
-            return InternalGameSubscribeHandle<T>.Create(callback, callback);
+            return ISubscribeHandle<T>.InternalGameSubscribeHandle.Create(callback);
         }
     }
 
@@ -35,51 +35,48 @@ namespace ZEngine
         {
             Unmerge((ISubscribeHandle)subscribe);
         }
-    }
 
-    class InternalGameSubscribeHandle<T> : ISubscribeHandle<T>
-    {
-        protected Action<T> method;
-        private object handle;
-
-        public virtual void Execute(object args)
+        class InternalGameSubscribeHandle : ISubscribeHandle<T>
         {
-            Execute((T)args);
-        }
+            protected Action<T> method;
 
-        public void Execute(T args)
-        {
-            method?.Invoke(args);
-            if (args is IReference reference)
+            public virtual void Execute(object args)
             {
-                Engine.Class.Release(reference);
+                Execute((T)args);
             }
-        }
 
-        public void Merge(ISubscribeHandle subscribe)
-        {
-            this.method += ((InternalGameSubscribeHandle<T>)subscribe).method;
-        }
+            public void Execute(T args)
+            {
+                method?.Invoke(args);
+                if (args is IReference reference)
+                {
+                    Engine.Class.Release(reference);
+                }
+            }
 
-        public void Unmerge(ISubscribeHandle subscribe)
-        {
-            this.method -= ((InternalGameSubscribeHandle<T>)subscribe).method;
-        }
+            public void Merge(ISubscribeHandle subscribe)
+            {
+                this.method += ((InternalGameSubscribeHandle)subscribe).method;
+            }
 
-        public void Release()
-        {
-            method = null;
-            handle = null;
-            GC.SuppressFinalize(this);
-        }
+            public void Unmerge(ISubscribeHandle subscribe)
+            {
+                this.method -= ((InternalGameSubscribeHandle)subscribe).method;
+            }
+
+            public void Release()
+            {
+                method = null;
+                GC.SuppressFinalize(this);
+            }
 
 
-        internal static InternalGameSubscribeHandle<T> Create(Action<T> callback, object handle)
-        {
-            InternalGameSubscribeHandle<T> internalGameSubscribeHandle = Engine.Class.Loader<InternalGameSubscribeHandle<T>>();
-            internalGameSubscribeHandle.method = callback;
-            internalGameSubscribeHandle.handle = handle;
-            return internalGameSubscribeHandle;
+            internal static InternalGameSubscribeHandle Create(Action<T> callback)
+            {
+                InternalGameSubscribeHandle internalGameSubscribeHandle = Engine.Class.Loader<InternalGameSubscribeHandle>();
+                internalGameSubscribeHandle.method = callback;
+                return internalGameSubscribeHandle;
+            }
         }
     }
 }
