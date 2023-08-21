@@ -27,8 +27,4 @@ namespace ZEngine.World
         {
         }
     }
-
-    public sealed class TransformComponent : EntityComponent
-    {
-    }
 }

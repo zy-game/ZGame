@@ -15,8 +15,6 @@ namespace ZEngine.Network
         string name { get; }
         float progress { get; }
         NetworkRequestMethod method { get; }
-
-        void OnPorgressChange(ISubscribeHandle<float> subscribe);
     }
 
     class DefaultWebRequestExecuteHandle<T> : ExecuteHandle, IExecuteHandle<IWebRequestExecuteHandle<T>>, IWebRequestExecuteHandle<T>
@@ -39,7 +37,6 @@ namespace ZEngine.Network
             progress = 0;
             base.Release();
         }
-
 
         public override void Execute(params object[] paramsList)
         {

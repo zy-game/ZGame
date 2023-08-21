@@ -14,7 +14,7 @@ public static class Extension
     {
         IEnumerator Running()
         {
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForEndOfFrame();
             yield return enumerator;
         }
 

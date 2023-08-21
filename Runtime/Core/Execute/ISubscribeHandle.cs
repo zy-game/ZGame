@@ -22,6 +22,52 @@ namespace ZEngine
         }
     }
 
+    public interface IProgressSubscribeHandle : ISubscribeHandle<float>
+    {
+        public static IProgressSubscribeHandle Create(Action<float> callback)
+        {
+            return InternalProgressSubscribeHandle.Create(callback);
+        }
+
+        class InternalProgressSubscribeHandle : IProgressSubscribeHandle
+        {
+            private Action<float> method;
+
+            public void Execute(object args)
+            {
+                Execute((float)args);
+            }
+
+            public void Execute(float args)
+            {
+                method?.Invoke(args);
+            }
+
+            public void Merge(ISubscribeHandle subscribe)
+            {
+                this.method += ((InternalProgressSubscribeHandle)subscribe).method;
+            }
+
+            public void Unmerge(ISubscribeHandle subscribe)
+            {
+                this.method -= ((InternalProgressSubscribeHandle)subscribe).method;
+            }
+
+            public void Release()
+            {
+                method = null;
+                GC.SuppressFinalize(this);
+            }
+
+            public static InternalProgressSubscribeHandle Create(Action<float> callback)
+            {
+                InternalProgressSubscribeHandle internalProgressSubscribeHandle = Engine.Class.Loader<InternalProgressSubscribeHandle>();
+                internalProgressSubscribeHandle.method = callback;
+                return internalProgressSubscribeHandle;
+            }
+        }
+    }
+
     public interface ISubscribeHandle<T> : ISubscribeHandle
     {
         void Execute(T args);

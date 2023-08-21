@@ -15,10 +15,10 @@ public class Startup : MonoBehaviour
     private void Start()
     {
         GameObject.DontDestroyOnLoad(Camera.main.gameObject);
-        Loading loading = Engine.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
+        Engine.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
         HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
         ICheckResourceUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckModuleResourceUpdate(HotfixOptions.instance.preloads.ToArray());
-        checkUpdateExecuteHandle.OnPorgressChange(loading.GetProgressSubscribe());
+        checkUpdateExecuteHandle.Subscribe(Engine.Window.GetWindow<Loading>().GetProgressSubscribe());
         checkUpdateExecuteHandle.Subscribe(ISubscribeHandle.Create(ResourceChekcUpdateComplete));
     }
 
@@ -26,7 +26,7 @@ public class Startup : MonoBehaviour
     {
         Engine.Window.GetWindow<Loading>().SetInfo("初始化默认资源").SetProgress(0);
         IResourceModuleLoaderExecuteHandle resourceModuleLoaderExecuteHandle = Engine.Resource.LoaderResourceModule(HotfixOptions.instance.preloads.ToArray());
-        resourceModuleLoaderExecuteHandle.OnPorgressChange(Engine.Window.GetWindow<Loading>().GetProgressSubscribe());
+        resourceModuleLoaderExecuteHandle.Subscribe(Engine.Window.GetWindow<Loading>().GetProgressSubscribe());
         resourceModuleLoaderExecuteHandle.Subscribe(ISubscribeHandle.Create<IResourceModuleLoaderExecuteHandle>(ResourcePreloadComplete));
     }
 
@@ -40,22 +40,5 @@ public class Startup : MonoBehaviour
 
         Engine.Console.Log("进入游戏");
         Engine.Game.LoaderGameLogicModule(HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On));
-        Engine.Network.WriteAndFlush<TestMessage2>("", new TestMessage())?.Subscribe(ISubscribeHandle.Create<IWriteMessageExecuteHandle<TestMessage2>>(args => { Engine.Console.Log("response"); }));
-    }
-
-    [RPCHandle]
-    class TestMessage : IMessagePackage
-    {
-        public void Release()
-        {
-        }
-    }
-
-    [RPCHandle]
-    class TestMessage2 : IMessagePackage
-    {
-        public void Release()
-        {
-        }
     }
 }

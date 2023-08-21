@@ -103,6 +103,8 @@ namespace ZEngine.World
                 temp.Remove(VARIABLE);
                 Engine.Class.Release(VARIABLE);
             }
+
+            components.Remove(guid);
         }
 
         public IComponent AddComponent(int guid, Type type)

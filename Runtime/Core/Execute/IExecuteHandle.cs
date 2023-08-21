@@ -17,18 +17,11 @@ namespace ZEngine
         /// </summary>
         Status status { get; }
 
-
         /// <summary>
         /// 订阅执行器完成回调
         /// </summary>
         /// <param name="subscribe">订阅器</param>
         void Subscribe(ISubscribeHandle subscribe);
-
-        /// <summary>
-        /// 订阅执行器进度
-        /// </summary>
-        /// <param name="subscribe"></param>
-        void OnPorgressChange(ISubscribeHandle<float> subscribe);
     }
 
     /// <summary>
@@ -50,7 +43,7 @@ namespace ZEngine
     public abstract class ExecuteHandle : IExecuteHandle
     {
         protected ISubscribeHandle subscribes;
-        protected ISubscribeHandle<float> progresSubsceibe;
+        protected IProgressSubscribeHandle progressSubscribeHandle;
         public Status status { get; protected set; }
 
 
@@ -58,31 +51,40 @@ namespace ZEngine
 
         public void Subscribe(ISubscribeHandle subscribe)
         {
-            if (subscribes is null)
+            if (subscribe is IProgressSubscribeHandle progressSubscribeHandle)
             {
-                subscribes = subscribe;
+                if (this.progressSubscribeHandle is null)
+                {
+                    this.progressSubscribeHandle = progressSubscribeHandle;
+                    return;
+                }
+
+                this.progressSubscribeHandle.Merge(progressSubscribeHandle);
+                Engine.Class.Release(progressSubscribeHandle);
                 return;
             }
 
-            subscribes.Merge(subscribe);
-            Engine.Class.Release(subscribe);
-        }
+            if (this.subscribes is null)
+            {
+                this.subscribes = subscribe;
+                return;
+            }
 
-        public void OnPorgressChange(ISubscribeHandle<float> subscribe)
-        {
-            progresSubsceibe = subscribe;
+            this.subscribes.Merge(subscribe);
+            Engine.Class.Release(subscribe);
         }
 
         protected void OnProgress(float progress)
         {
-            progresSubsceibe?.Execute(progress);
+            progressSubscribeHandle?.Execute(progress);
         }
 
         public virtual void Release()
         {
             Engine.Class.Release(subscribes);
-            Engine.Class.Release(progresSubsceibe);
-            progresSubsceibe = null;
+            subscribes = null;
+            Engine.Class.Release(progressSubscribeHandle);
+            progressSubscribeHandle = null;
             status = Status.None;
             GC.SuppressFinalize(this);
         }

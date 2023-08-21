@@ -19,9 +19,9 @@ namespace ZEngine.Window
             return this;
         }
 
-        public ISubscribeHandle<float> GetProgressSubscribe()
+        public IProgressSubscribeHandle GetProgressSubscribe()
         {
-            return ISubscribeHandle.Create<float>(args => SetProgress(args));
+            return IProgressSubscribeHandle.Create(args => SetProgress(args));
         }
 
         public Loading SetProgress(float progress)
