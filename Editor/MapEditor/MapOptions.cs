@@ -16,6 +16,7 @@ namespace ZEngine.Editor.MapEditor
     {
         public string name;
         public Vector2 size;
+        public Vector2 offset;
         public List<SceneLayer> layers;
     }
 
@@ -24,6 +25,7 @@ namespace ZEngine.Editor.MapEditor
     {
         public string name;
         public int layer;
+        public float weight;
         public Sprite sprite;
     }
 }
