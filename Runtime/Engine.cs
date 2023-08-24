@@ -11,7 +11,7 @@ using ZEngine.Network;
 using ZEngine.Resource;
 using ZEngine.Sound;
 using ZEngine.Window;
-using ZEngine.World;
+using ZEngine.Game;
 using Object = UnityEngine.Object;
 
 public sealed class Engine
@@ -228,86 +228,7 @@ public sealed class Engine
     /// </summary>
     public sealed class Game
     {
-        /// <summary>
-        /// 创建World
-        /// </summary>
-        /// <param name="options"></param>
-        /// <returns></returns>
-        public static IGameWorld CreateWorld(string name, Camera camera)
-            => WorldManager.instance.CreateWorld(name, camera);
-
-        /// <summary>
-        /// 获取指定名称且已加载的游戏
-        /// </summary>
-        /// <param name="worldName"></param>
-        /// <returns></returns>
-        public static IGameWorld GetGameWorld(string worldName)
-            => WorldManager.instance.GetGameWorld(worldName);
-
-        /// <summary>
-        /// 关闭已开启的游戏
-        /// </summary>
-        /// <param name="worldName"></param>
-        public static void CloseWorld(string worldName)
-            => WorldManager.instance.CloseWorld(worldName);
-
-        /// <summary>
-        /// 加载游戏模块
-        /// </summary>
-        /// <param name="gameEntryOptions">游戏入口设置</param>
-        /// <returns></returns>
-        public static ILoaderGameLogicModuleExecuteHandle LoaderGameLogicModule(GameEntryOptions gameEntryOptions)
-            => WorldManager.instance.LoaderGameLogicModule(gameEntryOptions);
-
-        /// <summary>
-        /// 隐藏Game
-        /// </summary>
-        public static void OnDisable(string worldName)
-            => WorldManager.instance.OnDisable(worldName);
-
-        /// <summary>
-        /// 显示Game
-        /// </summary>
-        public static void OnEnable(string worldName)
-            => WorldManager.instance.OnEnable(worldName);
-
-        /// <summary>
-        /// 查找实体对象
-        /// </summary>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        public static IEntity Find(int guid)
-            => WorldManager.instance.current.Find(guid);
-
-        /// <summary>
-        /// 在当前Game创建实体
-        /// </summary>
-        /// <returns></returns>
-        public static IEntity CreateEntity()
-            => WorldManager.instance.current.CreateEntity();
-
-        /// <summary>
-        /// 在当前Game销毁实体
-        /// </summary>
-        /// <param name="guid"></param>
-        public static void DestroyEntity(int guid)
-            => WorldManager.instance.current.DestroyEntity(guid);
-
-        /// <summary>
-        /// 获取当前Game所有组件
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T[] GetComponents<T>() where T : IComponent
-            => WorldManager.instance.current.GetComponents<T>();
-
-        /// <summary>
-        /// 获取当前Game所有组件
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static IComponent[] GetComponents(Type type)
-            => WorldManager.instance.current.GetComponents(type);
+       
     }
 
     /// <summary>
