@@ -13,7 +13,7 @@ namespace ZEngine.Resource
         RuntimeBundleManifest[] bundles { get; }
     }
 
-    class DefaultCheckResourceUpdateExecuteHandle : ExecuteHandle, IExecuteHandle<ICheckResourceUpdateExecuteHandle>, ICheckResourceUpdateExecuteHandle
+    class DefaultCheckResourceUpdateExecuteHandle : AbstractExecuteHandle, IExecuteHandle<ICheckResourceUpdateExecuteHandle>, ICheckResourceUpdateExecuteHandle
     {
         public ModuleOptions[] options { get; set; }
         public RuntimeBundleManifest[] bundles { get; set; }
@@ -25,21 +25,14 @@ namespace ZEngine.Resource
             public RuntimeBundleManifest bundle;
         }
 
-        public override void Execute(params object[] paramsList)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
-            status = Status.Execute;
             options = paramsList.Cast<ModuleOptions>().ToArray();
-            OnStart().StartCoroutine();
-        }
-
-        IEnumerator OnStart()
-        {
             //todo 如果在编辑器模式下，并且未使用热更模式，直接跳过
             if (options is null || options.Length is 0)
             {
                 status = Status.Failed;
                 OnProgress(1);
-                OnComplete();
                 yield break;
             }
 
@@ -76,7 +69,6 @@ namespace ZEngine.Resource
             {
                 moduleManifests.ForEach(ResourceManager.instance.AddModuleManifest);
                 status = Status.Success;
-                OnComplete();
                 yield break;
             }
 
@@ -87,7 +79,6 @@ namespace ZEngine.Resource
             if (msgBox.result.Equals(false))
             {
                 status = Status.Success;
-                OnComplete();
                 yield break;
             }
 
@@ -104,13 +95,11 @@ namespace ZEngine.Resource
             if (downloadExecuteHandle.status is not Status.Success || downloadExecuteHandle.Handles is null || downloadExecuteHandle.Handles.Length is 0)
             {
                 status = Status.Failed;
-                OnComplete();
                 yield break;
             }
 
             moduleManifests.ForEach(ResourceManager.instance.AddModuleManifest);
             status = Status.Success;
-            OnComplete();
         }
     }
 }

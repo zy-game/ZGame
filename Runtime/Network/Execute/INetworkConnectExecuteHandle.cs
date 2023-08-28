@@ -8,19 +8,16 @@ namespace ZEngine.Network
         IChannel channel { get; }
     }
 
-    class InternalNetworkConnectExecuteHandle : ExecuteHandle, INetworkConnectExecuteHandle
+    class InternalNetworkConnectExecuteHandle : AbstractExecuteHandle, INetworkConnectExecuteHandle
     {
         public string address { get; set; }
         public IChannel channel { get; set; }
 
-        public override void Execute(params object[] paramsList)
+
+
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
             address = paramsList[0].ToString();
-            this.StartCoroutine(OnStartConnect());
-        }
-
-        private IEnumerator OnStartConnect()
-        {
             if (address.StartsWith("ws") || address.StartsWith("wss"))
             {
                 channel = Engine.Class.Loader<WebSocket>();
@@ -34,7 +31,6 @@ namespace ZEngine.Network
             }
 
             yield return WaitFor.Create(() => channel.connected is true);
-            OnComplete();
         }
     }
 }

@@ -15,7 +15,7 @@ namespace ZEngine.Resource
         InternalRuntimeBundleHandle bundle { get; }
     }
 
-    class DefaultRequestAssetBundleExecuteHandle : ExecuteHandle, IExecuteHandle<DefaultRequestAssetBundleExecuteHandle>, IRequestAssetBundleExecuteHandle
+    class DefaultRequestAssetBundleExecuteHandle : AbstractExecuteHandle, IExecuteHandle<DefaultRequestAssetBundleExecuteHandle>, IRequestAssetBundleExecuteHandle
     {
         private float count;
         private float loadCount;
@@ -35,20 +35,24 @@ namespace ZEngine.Resource
         }
 
 
-        public override void Execute(params object[] paramsList)
+        public void Release()
         {
-            status = Status.Execute;
+            version = null;
+            bundle = null;
+            module = String.Empty;
+            name = String.Empty;
+            count = 0;
+            loadCount = 0;
+            manifest = null;
+        }
+
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
+        {
             manifest = (RuntimeBundleManifest)paramsList[0];
             module = manifest.owner;
             name = manifest.name;
             version = manifest.version;
-            this.StartCoroutine(OnStart(name, version));
-        }
-
-        IEnumerator OnStart(string name, VersionOptions ver)
-        {
-            status = Status.Execute;
-            IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFileAsync(name, ver);
+            IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFileAsync(name, version);
 
             yield return WaitFor.Create(() => readFileExecuteHandle.status == Status.Success || readFileExecuteHandle.status == Status.Failed);
             AssetBundleCreateRequest createRequest = AssetBundle.LoadFromMemoryAsync(readFileExecuteHandle.bytes);
@@ -62,7 +66,6 @@ namespace ZEngine.Resource
             bundle = InternalRuntimeBundleHandle.Create(manifest, createRequest.assetBundle);
             ResourceManager.instance.AddAssetBundleHandle(bundle);
             status = Status.Success;
-            OnComplete();
         }
     }
 }

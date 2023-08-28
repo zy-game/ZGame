@@ -55,7 +55,6 @@ namespace ZEngine
 
             if (_subscrbe is null)
             {
-                Engine.Console.Log("没有订阅", typeof(T));
                 return;
             }
 
@@ -117,7 +116,7 @@ namespace ZEngine
         /// <summary>
         /// 清理所有同类型的事件订阅
         /// </summary>
-        public static void Clear()
+        public static void ClearSubscribe()
         {
             Engine.Class.Release(_subscrbe);
             _subscrbe = null;

@@ -40,14 +40,25 @@ namespace ZEngine
         }
     }
 
-    public abstract class ExecuteHandle : IExecuteHandle
+    public abstract class AbstractExecuteHandle : IExecuteHandle
     {
-        protected ISubscribeHandle subscribes;
-        protected IProgressSubscribeHandle progressSubscribeHandle;
+        private ISubscribeHandle subscribes;
+        private IProgressSubscribeHandle progressSubscribeHandle;
+        private Coroutine coroutine;
         public Status status { get; protected set; }
+        protected abstract IEnumerator ExecuteCoroutine(params object[] paramsList);
 
+        public void Execute(params object[] paramsList)
+        {
+            status = Status.Execute;
+            coroutine = ExecuteCoroutine(paramsList).StartCoroutine(OnComplete);
+        }
 
-        public abstract void Execute(params object[] paramsList);
+        private void OnComplete()
+        {
+            subscribes?.Execute(this);
+            WaitFor.WaitFormFrameEnd(() => { Engine.Class.Release(this); });
+        }
 
         public void Subscribe(ISubscribeHandle subscribe)
         {
@@ -81,18 +92,13 @@ namespace ZEngine
 
         public virtual void Release()
         {
+            coroutine.StopCoroutine();
             Engine.Class.Release(subscribes);
             subscribes = null;
             Engine.Class.Release(progressSubscribeHandle);
             progressSubscribeHandle = null;
             status = Status.None;
             GC.SuppressFinalize(this);
-        }
-
-        protected virtual void OnComplete()
-        {
-            subscribes?.Execute(this);
-            WaitFor.WaitFormFrameEnd(() => { Engine.Class.Release(this); });
         }
     }
 }

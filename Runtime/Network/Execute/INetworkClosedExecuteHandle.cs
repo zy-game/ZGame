@@ -7,17 +7,13 @@ namespace ZEngine.Network
         IChannel channel { get; }
     }
 
-    class InternalNetworkClosedExecuteHandle : ExecuteHandle, INetworkClosedExecuteHandle
+    class InternalNetworkClosedExecuteHandle : AbstractExecuteHandle, INetworkClosedExecuteHandle
     {
         public IChannel channel { get; set; }
 
-        public override void Execute(params object[] paramsList)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
             channel = (IChannel)paramsList[0];
-        }
-
-        private IEnumerator OnStartClosed()
-        {
             if (channel is null)
             {
                 yield break;
@@ -25,7 +21,6 @@ namespace ZEngine.Network
 
             channel.Close();
             yield return WaitFor.Create(() => channel.connected == false);
-            OnComplete();
         }
     }
 }

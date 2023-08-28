@@ -15,7 +15,7 @@ namespace ZEngine.VFS
         VersionOptions version { get; }
     }
 
-    class DefaultReadFileExecuteHandle : ExecuteHandle, IExecuteHandle<IReadFileExecuteHandle>, IReadFileExecuteHandle
+    class DefaultReadFileExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IReadFileExecuteHandle>, IReadFileExecuteHandle
     {
         public string name { get; set; }
         public long time { get; set; }
@@ -27,21 +27,14 @@ namespace ZEngine.VFS
             base.Release();
         }
 
-        public override void Execute(params object[] paramsList)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
-            status = Status.Execute;
             name = paramsList[0].ToString();
             version = paramsList[1] is null ? VersionOptions.None : (VersionOptions)paramsList[1];
-            OnStart().StartCoroutine();
-        }
-
-        IEnumerator OnStart()
-        {
             VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
             if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != version)
             {
                 status = Status.Failed;
-                OnComplete();
                 yield break;
             }
 
@@ -57,7 +50,6 @@ namespace ZEngine.VFS
             }
 
             status = Status.Success;
-            OnComplete();
         }
     }
 }

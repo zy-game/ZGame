@@ -18,6 +18,9 @@ public sealed class Engine
 {
     public sealed class Custom
     {
+        /// <summary>
+        /// 退出播放
+        /// </summary>
         public static void Quit()
         {
             Extension.StopAll();
@@ -28,6 +31,10 @@ public sealed class Engine
 #endif
         }
 
+        /// <summary>
+        /// 获取当前运行时平台名(小写)
+        /// </summary>
+        /// <returns></returns>
         public static string GetPlatfrom()
         {
 #if UNITY_ANDROID
@@ -39,11 +46,21 @@ public sealed class Engine
 #endif
         }
 
+        /// <summary>
+        /// 获取随机名
+        /// </summary>
+        /// <returns></returns>
         public static string RandomName()
         {
             return Guid.NewGuid().ToString().Replace("-", "");
         }
 
+        /// <summary>
+        /// 获取热更资源路径
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public static string GetHotfixPath(string url, string name)
         {
             return $"{url}/{Engine.Custom.GetPlatfrom()}/{name}";
@@ -228,7 +245,6 @@ public sealed class Engine
     /// </summary>
     public sealed class Game
     {
-       
     }
 
     /// <summary>

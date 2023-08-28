@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,18 +12,22 @@ namespace ZEngine.Network
     }
 
 
-    class DefaultDownloadExecuteHandle : ExecuteHandle, IExecuteHandle<IDownloadExecuteHandle>, IDownloadExecuteHandle
+    class DefaultDownloadExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IDownloadExecuteHandle>, IDownloadExecuteHandle
     {
         public DownloadHandle[] Handles { get; set; }
 
         public override void Release()
         {
-            subscribes = null;
+            foreach (DownloadHandle downloadHandle in Handles)
+            {
+                Engine.Class.Release(downloadHandle);
+            }
+
+            Handles = Array.Empty<DownloadHandle>();
         }
 
-        public override void Execute(params object[] paramsList)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
-            status = Status.Execute;
             Handles = new DownloadHandle[paramsList.Length];
             for (int i = 0; i < paramsList.Length; i++)
             {
@@ -31,11 +36,6 @@ namespace ZEngine.Network
                 Handles[i].OnStart();
             }
 
-            this.StartCoroutine(OnStart());
-        }
-
-        private IEnumerator OnStart()
-        {
             yield return WaitFor.Create(() =>
             {
                 OnProgress(Handles.Sum(x => x.progress) / (float)Handles.Length);
@@ -43,7 +43,6 @@ namespace ZEngine.Network
             });
 
             status = Handles.Where(x => x.status == Status.Failed).Count() > 0 ? Status.Failed : Status.Success;
-            OnComplete();
         }
     }
 }

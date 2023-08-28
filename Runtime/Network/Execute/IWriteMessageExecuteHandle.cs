@@ -15,18 +15,19 @@ namespace ZEngine.Network
         T response { get; }
     }
 
-    class InternalWriteMessageExecuteHandle : ExecuteHandle, IWriteMessageExecuteHandle
+    class InternalWriteMessageExecuteHandle : AbstractExecuteHandle, IWriteMessageExecuteHandle
     {
         public IChannel channel { get; set; }
         public IMessagePackage write { get; set; }
 
-        public override void Execute(params object[] paramsList)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
             channel = (IChannel)paramsList[0];
             write = (IMessagePackage)paramsList[1];
             MemoryStream memoryStream = new MemoryStream();
             Serializer.Serialize(memoryStream, write);
             channel.WriteAndFlush(memoryStream.ToArray());
+            yield break;
         }
     }
 
@@ -34,18 +35,16 @@ namespace ZEngine.Network
     {
         public T response { get; set; }
 
-        public override void Execute(params object[] paramsList)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
-            status = Status.Execute;
             Engine.Network.SubscribeMessagePackage<T>(Response);
-            base.Execute(paramsList);
+            yield return base.ExecuteCoroutine(paramsList);
         }
 
         private void Response(IRecviedMessagePackageExecuteHandle iRecviedMessagePackageExecuteHandle)
         {
             response = (T)iRecviedMessagePackageExecuteHandle.message;
             Engine.Network.UnsubscribeMessagePackage<T>(Response);
-            OnComplete();
         }
     }
 }

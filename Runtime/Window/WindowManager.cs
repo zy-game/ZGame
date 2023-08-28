@@ -72,6 +72,7 @@ namespace ZEngine.Window
             window = (UIWindow)Activator.CreateInstance(windowType);
             Engine.Console.Log("Create Window:", windowType.Name);
             window.SetGameObject(GameObject.Instantiate(request.asset));
+            request.BindTo(window.gameObject);
             SetToLayer(options.layer, window.gameObject);
             windows.Add(windowType, window);
             window.OnAwake();

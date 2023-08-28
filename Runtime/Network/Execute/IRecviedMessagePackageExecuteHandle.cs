@@ -23,13 +23,13 @@ namespace ZEngine.Network
         }
     }
 
-    public class InternalRecviedMessagePackageExecuteHandle : ExecuteHandle, IRecviedMessagePackageExecuteHandle
+    public class InternalRecviedMessagePackageExecuteHandle : AbstractExecuteHandle, IRecviedMessagePackageExecuteHandle
     {
         public IChannel channel { get; set; }
         public IMessagePackage message { get; set; }
         public byte[] bytes { get; set; }
 
-        public override void Execute(params object[] paramsList)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
             channel = (IChannel)paramsList[0];
             bytes = (byte[])paramsList[1];
@@ -38,7 +38,7 @@ namespace ZEngine.Network
             MemoryStream memoryStream = new MemoryStream(bytes, sizeof(uint), bytes.Length - sizeof(uint));
             message = (IMessagePackage)RuntimeTypeModel.Default.Deserialize(memoryStream, null, msgType);
             handle.Execute(this);
-            OnComplete();
+            yield break;
         }
     }
 }

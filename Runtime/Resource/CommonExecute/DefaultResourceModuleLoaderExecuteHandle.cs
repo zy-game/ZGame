@@ -11,23 +11,16 @@ namespace ZEngine.Resource
     {
     }
 
-    class DefaultResourceModuleLoaderExecuteHandle : ExecuteHandle, IExecuteHandle<IResourceModuleLoaderExecuteHandle>, IResourceModuleLoaderExecuteHandle
+    class DefaultResourceModuleLoaderExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IResourceModuleLoaderExecuteHandle>, IResourceModuleLoaderExecuteHandle
     {
         private ModuleOptions[] moduleList;
 
-        public override void Execute(params object[] paramsList)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
-            status = Status.Execute;
             moduleList = paramsList.Cast<ModuleOptions>().ToArray();
-            OnStart().StartCoroutine();
-        }
-
-        private IEnumerator OnStart()
-        {
             if (moduleList is null || moduleList.Length is 0)
             {
                 status = Status.Success;
-                OnComplete();
                 yield break;
             }
 
@@ -76,7 +69,6 @@ namespace ZEngine.Resource
             });
 
             status = Status.Success;
-            OnComplete();
         }
     }
 }

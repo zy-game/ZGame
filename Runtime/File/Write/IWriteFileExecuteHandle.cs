@@ -14,7 +14,7 @@ namespace ZEngine.VFS
         VersionOptions version { get; }
     }
 
-    class DefaultWriteFileExecuteHandle : ExecuteHandle, IExecuteHandle<IWriteFileExecuteHandle>, IWriteFileExecuteHandle
+    class DefaultWriteFileExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IWriteFileExecuteHandle>, IWriteFileExecuteHandle
     {
         public string name { get; set; }
         public byte[] bytes { get; set; }
@@ -28,26 +28,18 @@ namespace ZEngine.VFS
             base.Release();
         }
 
-
-        public override void Execute(params object[] args)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
-            status = Status.Execute;
-            if (args is null || args.Length is 0)
+            if (paramsList is null || paramsList.Length is 0)
             {
                 Engine.Console.Error("Not Find Write File Patg or fileData");
                 status = Status.Failed;
-                OnComplete();
-                return;
+                yield break;
             }
 
-            name = (string)args[0];
-            bytes = (byte[])args[1];
-            version = (VersionOptions)args[2];
-            OnStart().StartCoroutine();
-        }
-
-        IEnumerator OnStart()
-        {
+            name = (string)paramsList[0];
+            bytes = (byte[])paramsList[1];
+            version = (VersionOptions)paramsList[2];
             VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
             int offset = 0;
             int index = 0;
@@ -63,7 +55,6 @@ namespace ZEngine.VFS
 
             VFSManager.instance.SaveVFSData();
             status = Status.Success;
-            OnComplete();
         }
     }
 }

@@ -9,8 +9,6 @@ namespace ZEngine
         Update,
         FixedUpdate,
         LateUpdate,
-        OnEnable,
-        OnDisable,
         OnDestroy,
         OnApplicationFocus,
         OnApplicationPause,

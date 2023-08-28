@@ -9,24 +9,19 @@ using ZEngine;
 using ZEngine.Network;
 using ZEngine.Resource;
 using ZEngine.Window;
-using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 
 
 public class Startup : MonoBehaviour
 {
     private void Start()
     {
-        // World.DefaultGameObjectInjectionWorld.CreateSystem<SpawnSystem>();
-        // World world = new World("Test", WorldFlags.Game);
-        // world.CreateSystem<PlayerSpawnerSystem>();
-        // GameObject.DontDestroyOnLoad(Camera.main.gameObject);
-        // Engine.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
-        // HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
-        // ICheckResourceUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckModuleResourceUpdate(HotfixOptions.instance.preloads.ToArray());
-        // checkUpdateExecuteHandle.Subscribe(Engine.Window.GetWindow<Loading>().GetProgressSubscribe());
-        // checkUpdateExecuteHandle.Subscribe(ISubscribeHandle.Create(ResourceChekcUpdateComplete));
+        GameObject.DontDestroyOnLoad(Camera.main.gameObject);
+        Engine.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
+        HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
+        ICheckResourceUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckModuleResourceUpdate(HotfixOptions.instance.preloads.ToArray());
+        checkUpdateExecuteHandle.Subscribe(Engine.Window.GetWindow<Loading>().GetProgressSubscribe());
+        checkUpdateExecuteHandle.Subscribe(ISubscribeHandle.Create(ResourceChekcUpdateComplete));
     }
 
     private void ResourceChekcUpdateComplete()

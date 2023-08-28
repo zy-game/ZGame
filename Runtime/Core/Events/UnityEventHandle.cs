@@ -114,16 +114,6 @@ namespace ZEngine
             lateupdate?.Execute(default);
         }
 
-        private void OnEnable()
-        {
-            Execute(GameEventType.OnEnable);
-        }
-
-        private void OnDisable()
-        {
-            Execute(GameEventType.OnDisable);
-        }
-
         private void OnDestroy()
         {
             Execute(GameEventType.OnDestroy);

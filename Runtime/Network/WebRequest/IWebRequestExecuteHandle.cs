@@ -17,7 +17,7 @@ namespace ZEngine.Network
         NetworkRequestMethod method { get; }
     }
 
-    class DefaultWebRequestExecuteHandle<T> : ExecuteHandle, IExecuteHandle<IWebRequestExecuteHandle<T>>, IWebRequestExecuteHandle<T>
+    class DefaultWebRequestExecuteHandle<T> : AbstractExecuteHandle, IExecuteHandle<IWebRequestExecuteHandle<T>>, IWebRequestExecuteHandle<T>
     {
         public T result => (T)_data;
         public string url { get; set; }
@@ -38,15 +38,14 @@ namespace ZEngine.Network
             base.Release();
         }
 
-        public override void Execute(params object[] paramsList)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
             status = Status.Execute;
             RequestOptions requestOptions = (RequestOptions)paramsList[0];
             if (requestOptions is null)
             {
                 status = Status.Failed;
-                OnComplete();
-                return;
+                yield break;
             }
 
             url = requestOptions.url;
@@ -54,11 +53,7 @@ namespace ZEngine.Network
             upload = requestOptions.data;
             header = requestOptions.header;
             method = requestOptions.method;
-            OnStart().StartCoroutine();
-        }
 
-        IEnumerator OnStart()
-        {
             UnityWebRequest request = method switch
             {
                 NetworkRequestMethod.GET => UnityWebRequest.Get(url),
@@ -70,7 +65,6 @@ namespace ZEngine.Network
             if (request is null)
             {
                 Engine.Console.Error(new NotSupportedException(method.ToString()));
-                OnComplete();
                 status = Status.Failed;
                 yield break;
             }
@@ -94,7 +88,6 @@ namespace ZEngine.Network
             if (request.result is not UnityWebRequest.Result.Success)
             {
                 Engine.Console.Error(request.error);
-                OnComplete();
                 status = Status.Failed;
                 yield break;
             }
@@ -113,7 +106,6 @@ namespace ZEngine.Network
             }
 
             status = Status.Success;
-            OnComplete();
         }
     }
 }

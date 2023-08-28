@@ -11,28 +11,21 @@ namespace ZEngine.Resource
     {
     }
 
-    class DefaultRequestAssetExecuteHandle<T> : ExecuteHandle, IRequestAssetExecuteResult<T>, IRequestAssetExecuteHandle<T> where T : Object
+    class DefaultRequestAssetExecuteHandle<T> : AbstractExecuteHandle, IRequestAssetExecuteResult<T>, IRequestAssetExecuteHandle<T> where T : Object
     {
         public T asset => result.asset;
         public string path => result.path;
         private InternalRequestAssetExecuteResult<T> result { get; set; }
 
-        public override void Execute(params object[] args)
+        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
         {
-            status = Status.Execute;
             result = Engine.Class.Loader<InternalRequestAssetExecuteResult<T>>();
-            result.path = args[0].ToString();
-            OnStart().StartCoroutine();
-        }
-
-        IEnumerator OnStart()
-        {
+            result.path = paramsList[0].ToString();
             RuntimeBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(result.path);
             if (manifest is null)
             {
                 Engine.Console.Error("Not Find The Asset Bundle Manifest");
                 status = Status.Failed;
-                OnComplete();
                 yield break;
             }
 
@@ -41,13 +34,11 @@ namespace ZEngine.Resource
             {
                 Engine.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
                 status = Status.Failed;
-                OnComplete();
                 yield break;
             }
 
             yield return runtimeAssetBundleHandle.LoadAsync<T>(result.path, ISubscribeHandle.Create<T>(args => result.asset = args));
             status = Status.Success;
-            OnComplete();
         }
 
         public void BindTo(GameObject gameObject)

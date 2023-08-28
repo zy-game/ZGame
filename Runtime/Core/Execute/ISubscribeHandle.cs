@@ -5,25 +5,61 @@ using UnityEngine;
 
 namespace ZEngine
 {
+    /// <summary>
+    /// 订阅器
+    /// </summary>
     public interface ISubscribeHandle : IReference
     {
+        /// <summary>
+        /// 执行订阅函数
+        /// </summary>
+        /// <param name="args"></param>
         void Execute(object args);
+
+        /// <summary>
+        /// 合并订阅
+        /// </summary>
+        /// <param name="subscribe"></param>
         void Merge(ISubscribeHandle subscribe);
+
+        /// <summary>
+        /// 取消合并
+        /// </summary>
+        /// <param name="subscribe"></param>
         void Unmerge(ISubscribeHandle subscribe);
 
+        /// <summary>
+        /// 创建一个订阅器
+        /// </summary>
+        /// <param name="action">回调函数</param>
+        /// <returns>订阅器</returns>
         public static ISubscribeHandle Create(Action action)
         {
             return ISubscribeHandle<object>.InternalGameSubscribeHandle.Create(args => action());
         }
 
+        /// <summary>
+        /// 创建一个订阅器
+        /// </summary>
+        /// <param name="callback">回调函数</param>
+        /// <typeparam name="T">订阅类型</typeparam>
+        /// <returns>订阅器</returns>
         public static ISubscribeHandle<T> Create<T>(Action<T> callback)
         {
             return ISubscribeHandle<T>.InternalGameSubscribeHandle.Create(callback);
         }
     }
 
+    /// <summary>
+    /// 订阅器
+    /// </summary>
     public interface IProgressSubscribeHandle : ISubscribeHandle<float>
     {
+        /// <summary>
+        /// 创建一个进度订阅器
+        /// </summary>
+        /// <param name="callback">回调函数</param>
+        /// <returns>订阅器</returns>
         public static IProgressSubscribeHandle Create(Action<float> callback)
         {
             return InternalProgressSubscribeHandle.Create(callback);
@@ -45,12 +81,18 @@ namespace ZEngine
 
             public void Merge(ISubscribeHandle subscribe)
             {
-                this.method += ((InternalProgressSubscribeHandle)subscribe).method;
+                if (subscribe is InternalProgressSubscribeHandle internalProgressSubscribeHandle)
+                {
+                    this.method += internalProgressSubscribeHandle.method;
+                }
             }
 
             public void Unmerge(ISubscribeHandle subscribe)
             {
-                this.method -= ((InternalProgressSubscribeHandle)subscribe).method;
+                if (subscribe is InternalProgressSubscribeHandle internalProgressSubscribeHandle)
+                {
+                    this.method -= internalProgressSubscribeHandle.method;
+                }
             }
 
             public void Release()
@@ -70,13 +112,25 @@ namespace ZEngine
 
     public interface ISubscribeHandle<T> : ISubscribeHandle
     {
+        /// <summary>
+        /// 指定订阅
+        /// </summary>
+        /// <param name="args"></param>
         void Execute(T args);
 
+        /// <summary>
+        /// 合并订阅
+        /// </summary>
+        /// <param name="subscribe"></param>
         void Merge(ISubscribeHandle<T> subscribe)
         {
             Merge((ISubscribeHandle)subscribe);
         }
 
+        /// <summary>
+        /// 取消合并
+        /// </summary>
+        /// <param name="subscribe"></param>
         void Unmerge(ISubscribeHandle<T> subscribe)
         {
             Unmerge((ISubscribeHandle)subscribe);
@@ -115,7 +169,6 @@ namespace ZEngine
                 method = null;
                 GC.SuppressFinalize(this);
             }
-
 
             internal static InternalGameSubscribeHandle Create(Action<T> callback)
             {

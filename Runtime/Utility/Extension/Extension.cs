@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using ZEngine;
@@ -16,6 +17,18 @@ public static class Extension
         {
             yield return new WaitForEndOfFrame();
             yield return enumerator;
+        }
+
+        return UnityEventHandle.instance.StartCoroutine(Running());
+    }
+
+    public static Coroutine StartCoroutine(this IEnumerator enumerator, Action complete)
+    {
+        IEnumerator Running()
+        {
+            yield return new WaitForEndOfFrame();
+            yield return enumerator;
+            complete();
         }
 
         return UnityEventHandle.instance.StartCoroutine(Running());
