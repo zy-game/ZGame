@@ -37,17 +37,6 @@ namespace ZEngine
         {
             return ISubscribeHandle<object>.InternalGameSubscribeHandle.Create(args => action());
         }
-
-        /// <summary>
-        /// 创建一个订阅器
-        /// </summary>
-        /// <param name="callback">回调函数</param>
-        /// <typeparam name="T">订阅类型</typeparam>
-        /// <returns>订阅器</returns>
-        public static ISubscribeHandle<T> Create<T>(Action<T> callback)
-        {
-            return ISubscribeHandle<T>.InternalGameSubscribeHandle.Create(callback);
-        }
     }
 
     /// <summary>
@@ -135,6 +124,19 @@ namespace ZEngine
         {
             Unmerge((ISubscribeHandle)subscribe);
         }
+
+        /// <summary>
+        /// 创建一个订阅器
+        /// </summary>
+        /// <param name="callback">回调函数</param>
+        /// <typeparam name="T">订阅类型</typeparam>
+        /// <returns>订阅器</returns>
+        public static ISubscribeHandle<T> Create(Action<T> callback)
+        {
+            return ISubscribeHandle<T>.InternalGameSubscribeHandle.Create(callback);
+        }
+        
+        
 
         class InternalGameSubscribeHandle : ISubscribeHandle<T>
         {

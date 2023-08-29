@@ -75,7 +75,6 @@ namespace ZEngine.Resource
             runtimeAssetBundleHandle.module = manifest.owner;
             runtimeAssetBundleHandle.refCount = 0;
             runtimeAssetBundleHandle._handles = new HashSet<Object>();
-            
             return runtimeAssetBundleHandle;
         }
     }

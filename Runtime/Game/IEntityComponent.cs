@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using ZEngine.Resource;
 
 namespace ZEngine.Game
 {
@@ -145,45 +146,95 @@ namespace ZEngine.Game
     /// </summary>
     public class TransformComponent : IEntityComponent
     {
-        public Vector3 position { get; set; }
-        public Vector3 rotation { get; set; }
-        public Vector3 scale { get; set; }
-
-        private Action onRelease;
-
-        public void Release()
+        public Vector3 position
         {
-            onRelease?.Invoke();
-            position = Vector3.zero;
-            rotation = Vector3.zero;
-            scale = Vector3.zero;
-            onRelease = null;
-        }
-
-
-        class LinkerTransform : MonoBehaviour
-        {
-            public IEntity entity;
-            private TransformComponent transformComponent;
-
-            public void Content(IEntity entity)
+            get
             {
-                this.entity = entity;
-                this.transformComponent = entity.GetComponent<TransformComponent>();
-                this.transformComponent.onRelease = () => { GameObject.DestroyImmediate(this.gameObject); };
+                if (gameObject == null)
+                {
+                    return Vector3.zero;
+                }
+
+                return gameObject.transform.position;
             }
-
-            private void FixedUpdate()
+            set
             {
-                if (entity is null || transformComponent is null)
+                if (gameObject == null)
                 {
                     return;
                 }
 
-                this.transform.position = transformComponent.position;
-                this.transform.rotation = Quaternion.Euler(transformComponent.rotation);
-                this.transform.localScale = transformComponent.scale;
+                gameObject.transform.position = value;
             }
+        }
+
+        public Vector3 rotation
+        {
+            get
+            {
+                if (gameObject == null)
+                {
+                    return Vector3.zero;
+                }
+
+                return gameObject.transform.rotation.eulerAngles;
+            }
+            set
+            {
+                if (gameObject == null)
+                {
+                    return;
+                }
+
+                gameObject.transform.rotation = Quaternion.Euler(value);
+            }
+        }
+
+        public Vector3 scale
+        {
+            get
+            {
+                if (gameObject == null)
+                {
+                    return Vector3.zero;
+                }
+
+                return gameObject.transform.localScale;
+            }
+            set
+            {
+                if (gameObject == null)
+                {
+                    return;
+                }
+
+                gameObject.transform.localScale = value;
+            }
+        }
+
+        private GameObject _gameObject;
+        public GameObject gameObject => _gameObject;
+
+
+        public static TransformComponent Create(IEntity entity, string assetPath)
+        {
+            IRequestAssetExecute<GameObject> requestAssetExecuteHandle = Engine.Resource.LoadAsset<GameObject>(assetPath);
+            return default;
+        }
+
+        public static TransformComponent Create(IEntity entity, GameObject gameObject)
+        {
+            TransformComponent transformComponent = entity.AddComponent<TransformComponent>();
+            transformComponent._gameObject = gameObject;
+            return transformComponent;
+        }
+
+        public void Release()
+        {
+            GameObject.DestroyImmediate(gameObject);
+            position = Vector3.zero;
+            rotation = Vector3.zero;
+            scale = Vector3.zero;
         }
     }
 }

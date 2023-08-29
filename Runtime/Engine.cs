@@ -245,6 +245,96 @@ public sealed class Engine
     /// </summary>
     public sealed class Game
     {
+        public static IGameModuleLoaderExecuteHandle LoadGameModule(GameEntryOptions gameEntryOptions)
+            => GameManager.instance.LoadGameModule(gameEntryOptions);
+        /// <summary>
+        /// 打开或创建一个World
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static IWorld OpenWorld(string name)
+            => GameManager.instance.OpenWorld(name);
+
+        /// <summary>
+        /// 获取指定名称的World
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static IWorld GetWorld(string name)
+            => GameManager.instance.Find(name);
+
+        /// <summary>
+        /// 关闭指定的World
+        /// </summary>
+        /// <param name="name"></param>
+        public static void CloseWorld(string name)
+            => GameManager.instance.CloseWorld(name);
+
+        /// <summary>
+        /// 创建实体对象
+        /// </summary>
+        /// <returns></returns>
+        public static IEntity CreateEntity()
+            => GameManager.instance.CreateEntity();
+
+        /// <summary>
+        /// 删除实体对象
+        /// </summary>
+        /// <param name="id"></param>
+        public static void DestroyEntity(int id)
+            => GameManager.instance.DestroyEntity(id);
+
+        /// <summary>
+        /// 查找实体对象
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static IEntity FindEntity(int id)
+            => GameManager.instance.Find(id);
+
+        /// <summary>
+        /// 获取实体所有组件
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static IEntityComponent[] GetComponents(int id)
+            => GameManager.instance.GetComponents(id);
+
+        /// <summary>
+        /// 获取相同类型的组件列表
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static IEntityComponent[] GetComponents(Type type)
+            => GameManager.instance.GetComponents(type);
+
+        /// <summary>
+        /// 加载游戏逻辑系统
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public static void LoadGameLogicSystem<T>() where T : IGameLogicSystem
+            => LoadGameLogicSystem(typeof(T));
+
+        /// <summary>
+        /// 加载游戏逻辑系统
+        /// </summary>
+        /// <param name="logicType"></param>
+        public static void LoadGameLogicSystem(Type logicType)
+            => GameManager.instance.LoadGameLogicSystem(logicType);
+
+        /// <summary>
+        /// 卸载游戏逻辑系统
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public static void UnloadGameLogicSystem<T>() where T : IGameLogicSystem
+            => UnloadGameLogicSystem(typeof(T));
+
+        /// <summary>
+        /// 卸载游戏逻辑系统
+        /// </summary>
+        /// <param name="logicType"></param>
+        public static void UnloadGameLogicSystem(Type logicType)
+            => GameManager.instance.UnloadGameLogicSystem(logicType);
     }
 
     /// <summary>
@@ -257,7 +347,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static IRequestAssetExecuteResult<T> LoadAsset<T>(string assetPath) where T : Object
+        public static IRequestAssetExecute<T> LoadAsset<T>(string assetPath) where T : Object
             => ResourceManager.instance.LoadAsset<T>(assetPath);
 
         /// <summary>
@@ -516,7 +606,7 @@ public sealed class Engine
         /// <param name="messagePackage">需要写入的消息</param>
         /// <typeparam name="T">等待响应的消息类型</typeparam>
         /// <returns></returns>
-        public static IWriteMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessagePackage messagePackage) where T : IMessagePackage
+        public static IRecvieMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessagePackage messagePackage) where T : IMessagePackage
             => NetworkManager.instance.WriteAndFlush<T>(address, messagePackage);
 
         /// <summary>
@@ -526,70 +616,5 @@ public sealed class Engine
         /// <returns></returns>
         public static INetworkClosedExecuteHandle Close(string address)
             => NetworkManager.instance.Close(address);
-
-        /// <summary>
-        /// 订阅消息
-        /// </summary>
-        /// <param name="meesageType"></param>
-        /// <param name="callback"></param>
-        public static void SubscribeMessagePackage(Type meesageType, Action<IRecviedMessagePackageExecuteHandle> callback)
-            => SubscribeMessagePackage(meesageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle>.Create(callback));
-
-
-        /// <summary>
-        /// 订阅消息
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <typeparam name="T"></typeparam>
-        public static void SubscribeMessagePackage<T>(Action<IRecviedMessagePackageExecuteHandle> callback) where T : IMessagePackage
-            => SubscribeMessagePackage(typeof(T), ISubscribeHandle<IRecviedMessagePackageExecuteHandle>.Create(callback));
-
-        /// <summary>
-        /// 订阅消息
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <typeparam name="T"></typeparam>
-        public static void SubscribeMessagePackage(Type messageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback)
-            => NetworkManager.instance.SubscribeMessagePackage(messageType, callback);
-
-        /// <summary>
-        /// 订阅消息
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <typeparam name="T"></typeparam>
-        public static void SubscribeMessagePackage<T>(ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback) where T : IMessagePackage
-            => SubscribeMessagePackage(typeof(T), callback);
-
-        /// <summary>
-        /// 订阅消息
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <typeparam name="T"></typeparam>
-        public static void UnsubscribeMessagePackage<T>(Action<IRecviedMessagePackageExecuteHandle> callback) where T : IMessagePackage
-            => UnsubscribeMessagePackage(typeof(T), ISubscribeHandle<IRecviedMessagePackageExecuteHandle>.Create(callback));
-
-        /// <summary>
-        /// 订阅消息
-        /// </summary>
-        /// <param name="meesageType"></param>
-        /// <param name="callback"></param>
-        public static void UnsubscribeMessagePackage(Type meesageType, Action<IRecviedMessagePackageExecuteHandle> callback)
-            => UnsubscribeMessagePackage(meesageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle>.Create(callback));
-
-        /// <summary>
-        /// 订阅消息
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <typeparam name="T"></typeparam>
-        public static void UnsubscribeMessagePackage<T>(ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback) where T : IMessagePackage
-            => UnsubscribeMessagePackage(typeof(T), callback);
-
-        /// <summary>
-        /// 订阅消息
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <typeparam name="T"></typeparam>
-        public static void UnsubscribeMessagePackage(Type meesageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback)
-            => NetworkManager.instance.UnsubscribeMessagePackage(meesageType, callback);
     }
 }

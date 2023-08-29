@@ -7,7 +7,7 @@ namespace ZEngine
     class UnityEventHandle : MonoBehaviour
     {
         private ISubscribeHandle<UnityEventArgs> update;
-        private ISubscribeHandle<UnityEventHandle> fixedupdate;
+        private ISubscribeHandle<UnityEventArgs> fixedupdate;
         private ISubscribeHandle<UnityEventArgs> lateupdate;
         private Dictionary<GameEventType, ISubscribeHandle<UnityEventArgs>> map = new Dictionary<GameEventType, ISubscribeHandle<UnityEventArgs>>();
 
@@ -31,19 +31,41 @@ namespace ZEngine
         {
             if (type == GameEventType.Update)
             {
-                update.Merge(subscribe);
+                if (update == null)
+                {
+                    update = subscribe;
+                }
+                else
+                {
+                    update.Merge(subscribe);
+                }
+
                 return;
             }
 
             if (type == GameEventType.FixedUpdate)
             {
-                fixedupdate.Merge(subscribe);
+                if (fixedupdate == null)
+                {
+                    fixedupdate = subscribe;
+                }
+                else
+                {
+                    fixedupdate.Merge(subscribe);
+                }
                 return;
             }
 
             if (type == GameEventType.LateUpdate)
             {
-                lateupdate.Merge(subscribe);
+                if (lateupdate == null)
+                {
+                    lateupdate = subscribe;
+                }
+                else
+                {
+                    lateupdate.Merge(subscribe);
+                }
                 return;
             }
 

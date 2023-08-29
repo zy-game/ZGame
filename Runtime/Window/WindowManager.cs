@@ -62,8 +62,8 @@ namespace ZEngine.Window
                 return default;
             }
 
-            IRequestAssetExecuteResult<GameObject> request = Engine.Resource.LoadAsset<GameObject>(options.path);
-            if (request.asset == null)
+            IRequestAssetExecute<GameObject> requestAssetExecute = Engine.Resource.LoadAsset<GameObject>(options.path);
+            if (requestAssetExecute.asset == null)
             {
                 Engine.Console.Error(EngineException.Create<NullReferenceException>(options.path));
                 return default;
@@ -71,8 +71,7 @@ namespace ZEngine.Window
 
             window = (UIWindow)Activator.CreateInstance(windowType);
             Engine.Console.Log("Create Window:", windowType.Name);
-            window.SetGameObject(GameObject.Instantiate(request.asset));
-            request.BindTo(window.gameObject);
+            window.SetGameObject(requestAssetExecute.Instantiate());
             SetToLayer(options.layer, window.gameObject);
             windows.Add(windowType, window);
             window.OnAwake();

@@ -29,7 +29,7 @@ public class Startup : MonoBehaviour
         Engine.Window.GetWindow<Loading>().SetInfo("初始化默认资源").SetProgress(0);
         IResourceModuleLoaderExecuteHandle resourceModuleLoaderExecuteHandle = Engine.Resource.LoaderResourceModule(HotfixOptions.instance.preloads.ToArray());
         resourceModuleLoaderExecuteHandle.Subscribe(Engine.Window.GetWindow<Loading>().GetProgressSubscribe());
-        resourceModuleLoaderExecuteHandle.Subscribe(ISubscribeHandle.Create<IResourceModuleLoaderExecuteHandle>(ResourcePreloadComplete));
+        resourceModuleLoaderExecuteHandle.Subscribe(ISubscribeHandle<IResourceModuleLoaderExecuteHandle>.Create(ResourcePreloadComplete));
     }
 
     private void ResourcePreloadComplete(IResourceModuleLoaderExecuteHandle resourcePreloadExecuteHandle)
@@ -41,6 +41,7 @@ public class Startup : MonoBehaviour
         }
 
         Engine.Console.Log("进入游戏");
+        Engine.Game.OpenWorld("Test");
         // Engine.Game.LoaderGameLogicModule(HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On));
     }
 }

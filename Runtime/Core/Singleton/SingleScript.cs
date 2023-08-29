@@ -72,7 +72,7 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
 
                     return;
 #endif
-                    IRequestAssetExecuteResult<T> execute = Engine.Resource.LoadAsset<T>(options.path);
+                    IRequestAssetExecute<T> execute = Engine.Resource.LoadAsset<T>(options.path);
                     _instance = execute.asset;
                 }
                 else if (options.path.EndsWith("json"))
@@ -82,7 +82,7 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
                     _instance = Engine.Json.Parse<T>(json);
                     return;
 #endif
-                    IRequestAssetExecuteResult<TextAsset> execute = Engine.Resource.LoadAsset<TextAsset>(options.path);
+                    IRequestAssetExecute<TextAsset> execute = Engine.Resource.LoadAsset<TextAsset>(options.path);
                     _instance = Engine.Json.Parse<T>(execute.asset.text);
                 }
 

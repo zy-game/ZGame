@@ -10,10 +10,31 @@ namespace ZEngine.Network
         IMessagePackage write { get; }
     }
 
-    public interface IWriteMessageExecuteHandle<T> : IWriteMessageExecuteHandle, IExecuteHandle<IWriteMessageExecuteHandle<T>> where T : IMessagePackage
+
+    public interface IRecvieMessageExecuteHandle<T> : IExecuteHandle<T> where T : IMessagePackage
     {
-        T response { get; }
+        IChannel channel { get; }
+        T message { get; }
+
+        internal static IRecvieMessageExecuteHandle<T> Create()
+        {
+            return Engine.Class.Loader<InternalRecvieMessageExecuteHandle>();
+        }
+
+        class InternalRecvieMessageExecuteHandle : AbstractExecuteHandle, IRecvieMessageExecuteHandle<T>
+        {
+            protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
+            {
+                channel = (IChannel)paramsList[0];
+                message = (T)paramsList[1];
+                yield break;
+            }
+
+            public IChannel channel { get; set; }
+            public T message { get; set; }
+        }
     }
+
 
     class InternalWriteMessageExecuteHandle : AbstractExecuteHandle, IWriteMessageExecuteHandle
     {
@@ -28,23 +49,6 @@ namespace ZEngine.Network
             Serializer.Serialize(memoryStream, write);
             channel.WriteAndFlush(memoryStream.ToArray());
             yield break;
-        }
-    }
-
-    class InternalWriteMessageExecuteHandle<T> : InternalWriteMessageExecuteHandle, IWriteMessageExecuteHandle<T> where T : IMessagePackage
-    {
-        public T response { get; set; }
-
-        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
-        {
-            Engine.Network.SubscribeMessagePackage<T>(Response);
-            yield return base.ExecuteCoroutine(paramsList);
-        }
-
-        private void Response(IRecviedMessagePackageExecuteHandle iRecviedMessagePackageExecuteHandle)
-        {
-            response = (T)iRecviedMessagePackageExecuteHandle.message;
-            Engine.Network.UnsubscribeMessagePackage<T>(Response);
         }
     }
 }

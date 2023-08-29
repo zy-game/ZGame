@@ -5,8 +5,18 @@ using UnityEngine;
 public class WaitFor : CustomYieldInstruction, IReference
 {
     private Func<bool> m_Predicate;
-    private float end;
-    public override bool keepWaiting => !this.m_Predicate();
+    public override bool keepWaiting => Check();
+
+    private bool Check()
+    {
+        bool state = m_Predicate();
+        if (state)
+        {
+            Engine.Class.Release(this);
+        }
+
+        return state;
+    }
 
     public static WaitFor Create(Func<bool> func)
     {
@@ -18,8 +28,8 @@ public class WaitFor : CustomYieldInstruction, IReference
     public static WaitFor Create(float time)
     {
         WaitFor wait = Engine.Class.Loader<WaitFor>();
-        wait.end = UnityEngine.Time.realtimeSinceStartup + time;
-        wait.m_Predicate = () => UnityEngine.Time.realtimeSinceStartup > wait.end;
+        float end = UnityEngine.Time.realtimeSinceStartup + time;
+        wait.m_Predicate = () => UnityEngine.Time.realtimeSinceStartup > end;
         return wait;
     }
 

@@ -31,7 +31,7 @@ namespace ZEngine.Sound
 
         public void Play(string clipName)
         {
-            IRequestAssetExecuteResult<AudioClip> requestAssetExecuteResult = Engine.Resource.LoadAsset<AudioClip>(clipName);
+            IRequestAssetExecute<AudioClip> requestAssetExecuteResult = Engine.Resource.LoadAsset<AudioClip>(clipName);
             if (requestAssetExecuteResult.asset == null)
             {
                 Engine.Console.Log("加载音效失败:" + clipName);

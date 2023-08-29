@@ -30,7 +30,7 @@ namespace ZEngine
             isFree = true;
         }
 
-        internal static ISubscribeHandle<T> _subscrbe;
+        static ISubscribeHandle<T> _subscrbe;
 
         public static void Execute(params object[] paramsList)
         {

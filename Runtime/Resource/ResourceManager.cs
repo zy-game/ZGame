@@ -202,14 +202,12 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public IRequestAssetExecuteResult<T> LoadAsset<T>(string assetPath) where T : Object
+        public IRequestAssetExecute<T> LoadAsset<T>(string assetPath) where T : Object
         {
             //todo 如果在编辑器并且没有启用热更，那么直接用编辑器的api加载资源
             DefaultRequestAssetExecute<T> defaultLoadAssetExecuteHandle = Engine.Class.Loader<DefaultRequestAssetExecute<T>>();
             defaultLoadAssetExecuteHandle.Execute(assetPath);
-            IRequestAssetExecuteResult<T> requestAssetExecuteResult = defaultLoadAssetExecuteHandle.result;
-            Engine.Class.Release(defaultLoadAssetExecuteHandle);
-            return requestAssetExecuteResult;
+            return defaultLoadAssetExecuteHandle;
         }
 
         /// <summary>
@@ -227,7 +225,7 @@ namespace ZEngine.Resource
 
             loadAssetHandles.Add(assetPath, handle = Engine.Class.Loader<DefaultRequestAssetExecuteHandle<T>>());
             IRequestAssetExecuteHandle<T> defaultRequestAssetExecuteHandle = (IRequestAssetExecuteHandle<T>)handle;
-            defaultRequestAssetExecuteHandle.Subscribe(ISubscribeHandle.Create<IRequestAssetExecuteHandle<T>>(args => { loadAssetHandles.Remove(assetPath); }));
+            defaultRequestAssetExecuteHandle.Subscribe(ISubscribeHandle<IRequestAssetExecuteHandle<T>>.Create(args => { loadAssetHandles.Remove(assetPath); }));
             defaultRequestAssetExecuteHandle.Execute(assetPath);
             return defaultRequestAssetExecuteHandle;
         }

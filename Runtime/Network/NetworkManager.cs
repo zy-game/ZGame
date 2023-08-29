@@ -10,13 +10,14 @@ namespace ZEngine.Network
     public class NetworkManager : Single<NetworkManager>
     {
         private Dictionary<string, IChannel> channels;
-        private Dictionary<uint, Type> messageMap = new Dictionary<uint, Type>();
-        private Dictionary<Type, ISubscribeHandle<IRecviedMessagePackageExecuteHandle>> subscribes;
+        private Dictionary<uint, Type> map = new Dictionary<uint, Type>();
+        private Dictionary<Type, Delegate> subscribes;
+        private Dictionary<Type, ISubscribeHandle> waiting;
 
         public NetworkManager()
         {
             channels = new Dictionary<string, IChannel>();
-            subscribes = new Dictionary<Type, ISubscribeHandle<IRecviedMessagePackageExecuteHandle>>();
+            subscribes = new Dictionary<Type, Delegate>();
         }
 
         public override void Dispose()
@@ -28,59 +29,12 @@ namespace ZEngine.Network
                 Engine.Class.Release(VARIABLE);
             }
 
-            foreach (var VARIABLE in subscribes.Values)
-            {
-                Engine.Class.Release(VARIABLE);
-            }
-
+            map.Clear();
             channels.Clear();
-            messageMap.Clear();
             subscribes.Clear();
             Engine.Console.Log("关闭所有网络链接");
         }
 
-        public void RegisterMessageType(Type type)
-        {
-            uint crc = Crc32.GetCRC32Str(type.Name, 0);
-            if (messageMap.ContainsKey(crc))
-            {
-                return;
-            }
-
-            messageMap.Add(crc, type);
-        }
-
-        /// <summary>
-        /// 订阅消息
-        /// </summary>
-        /// <param name="messageType">消息类型</param>
-        /// <param name="callback">回调</param>
-        public void SubscribeMessagePackage(Type messageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback)
-        {
-            if (!subscribes.TryGetValue(messageType, out ISubscribeHandle<IRecviedMessagePackageExecuteHandle> subscribe))
-            {
-                subscribes.Add(messageType, subscribe = callback);
-                return;
-            }
-
-            subscribe.Merge(callback);
-        }
-
-        /// <summary>
-        /// 取消订阅消息
-        /// </summary>
-        /// <param name="messageType">消息类型</param>
-        /// <param name="callback">回调</param>
-        public void UnsubscribeMessagePackage(Type messageType, ISubscribeHandle<IRecviedMessagePackageExecuteHandle> callback)
-        {
-            if (!subscribes.TryGetValue(messageType, out ISubscribeHandle<IRecviedMessagePackageExecuteHandle> subscribe))
-            {
-                return;
-            }
-
-            subscribe.Unmerge(callback);
-            Engine.Class.Release(callback);
-        }
 
         /// <summary>
         /// 分发消息
@@ -89,19 +43,21 @@ namespace ZEngine.Network
         public void DispatchMessage(IChannel channel, byte[] bytes)
         {
             uint crc = Crc32.GetCRC32Byte(bytes, 0, sizeof(uint));
-            if (!messageMap.TryGetValue(crc, out Type msgType))
+            if (!map.TryGetValue(crc, out Type msgType))
             {
                 Engine.Console.Log("位置的消息类型 crc：", crc);
                 return;
             }
 
-            if (!subscribes.TryGetValue(msgType, out ISubscribeHandle<IRecviedMessagePackageExecuteHandle> subscribe))
+            if (!subscribes.TryGetValue(msgType, out Delegate handle))
             {
-                Engine.Console.Error("未知的消息类型，或没有找到订阅此消息的订阅者", msgType);
+                Engine.Console.Log("没有订阅此消息", msgType.Name);
                 return;
             }
 
-            Engine.Class.Loader<InternalRecviedMessagePackageExecuteHandle>().Execute(channel, bytes, msgType, subscribe);
+            MemoryStream memoryStream = new MemoryStream(bytes, sizeof(uint), bytes.Length - sizeof(uint));
+            IMessagePackage message = (IMessagePackage)RuntimeTypeModel.Default.Deserialize(memoryStream, null, msgType);
+            handle.DynamicInvoke(message);
         }
 
         /// <summary>
@@ -146,7 +102,7 @@ namespace ZEngine.Network
             }
 
             INetworkConnectExecuteHandle networkConnectExecuteHandle = Engine.Class.Loader<InternalNetworkConnectExecuteHandle>();
-            networkConnectExecuteHandle.Subscribe(ISubscribeHandle.Create<INetworkConnectExecuteHandle>(args => channels.Add(address, args.channel)));
+            networkConnectExecuteHandle.Subscribe(ISubscribeHandle<INetworkConnectExecuteHandle>.Create(args => channels.Add(address, args.channel)));
             networkConnectExecuteHandle.Execute(address);
             return networkConnectExecuteHandle;
         }
@@ -183,9 +139,9 @@ namespace ZEngine.Network
         /// <param name="messagePackage">需要写入的消息</param>
         /// <typeparam name="T">等待响应的消息类型</typeparam>
         /// <returns></returns>
-        public IWriteMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessagePackage messagePackage) where T : IMessagePackage
+        public IRecvieMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessagePackage messagePackage) where T : IMessagePackage
         {
-            IWriteMessageExecuteHandle<T> writeNetworkMessageExecuteHandle = Engine.Class.Loader<InternalWriteMessageExecuteHandle<T>>();
+            IWriteMessageExecuteHandle writeNetworkMessageExecuteHandle = Engine.Class.Loader<InternalWriteMessageExecuteHandle>();
             if (!channels.TryGetValue(address, out IChannel channel))
             {
                 Engine.Console.Log("未找到指定的链接", address);
@@ -198,8 +154,10 @@ namespace ZEngine.Network
                 return default;
             }
 
+            IRecvieMessageExecuteHandle<T> internalRecvieMessageExecuteHandle = IRecvieMessageExecuteHandle<T>.Create();
+            ISubscribeHandle<T>.Create(args => { internalRecvieMessageExecuteHandle.Execute(channel, args); });
             writeNetworkMessageExecuteHandle.Execute(channel, messagePackage);
-            return writeNetworkMessageExecuteHandle;
+            return internalRecvieMessageExecuteHandle;
         }
 
         /// <summary>
