@@ -12,49 +12,48 @@ namespace ZEngine.VFS
         string name { get; }
         byte[] bytes { get; }
         VersionOptions version { get; }
-    }
 
-    class DefaultWriteFileExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IWriteFileExecuteHandle>, IWriteFileExecuteHandle
-    {
-        public string name { get; set; }
-        public byte[] bytes { get; set; }
-        public VersionOptions version { get; set; }
-
-        public void Release()
+        internal static IWriteFileExecuteHandle Create(string name, byte[] bytes, VersionOptions version)
         {
-            name = String.Empty;
-            bytes = Array.Empty<byte>();
-            version = VersionOptions.None;
-            base.Release();
+            InternalVFSWriteFileExecuteHandle internalVfsWriteFileExecuteHandle = Engine.Class.Loader<InternalVFSWriteFileExecuteHandle>();
+            internalVfsWriteFileExecuteHandle.name = name;
+            internalVfsWriteFileExecuteHandle.bytes = bytes;
+            internalVfsWriteFileExecuteHandle.version = version;
+            return internalVfsWriteFileExecuteHandle;
         }
 
-        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
+        class InternalVFSWriteFileExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IWriteFileExecuteHandle>, IWriteFileExecuteHandle
         {
-            if (paramsList is null || paramsList.Length is 0)
+            public string name { get; set; }
+            public byte[] bytes { get; set; }
+            public VersionOptions version { get; set; }
+
+            public void Release()
             {
-                Engine.Console.Error("Not Find Write File Patg or fileData");
-                status = Status.Failed;
-                yield break;
+                name = String.Empty;
+                bytes = Array.Empty<byte>();
+                version = VersionOptions.None;
+                base.Release();
             }
 
-            name = (string)paramsList[0];
-            bytes = (byte[])paramsList[1];
-            version = (VersionOptions)paramsList[2];
-            VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
-            int offset = 0;
-            int index = 0;
-            foreach (var VARIABLE in vfsDataList)
+            protected override IEnumerator ExecuteCoroutine()
             {
-                int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
-                VARIABLE.Write(bytes, offset, length, version, index);
-                offset += VARIABLE.length;
-                index++;
-                VARIABLE.name = name;
-                yield return WaitFor.Create(0.01f);
-            }
+                VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
+                int offset = 0;
+                int index = 0;
+                foreach (var VARIABLE in vfsDataList)
+                {
+                    int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
+                    VARIABLE.Write(bytes, offset, length, version, index);
+                    offset += VARIABLE.length;
+                    index++;
+                    VARIABLE.name = name;
+                    yield return WaitFor.Create(0.01f);
+                }
 
-            VFSManager.instance.SaveVFSData();
-            status = Status.Success;
+                VFSManager.instance.SaveVFSData();
+                status = Status.Success;
+            }
         }
     }
 }

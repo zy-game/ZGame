@@ -2,7 +2,10 @@ using System.Threading.Tasks;
 using WebSocketSharp;
 using System.Collections.Generic;
 using System;
+using System.IO;
+using ProtoBuf;
 using ZEngine;
+using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
 
 namespace ZEngine.Network
 {
@@ -28,9 +31,12 @@ namespace ZEngine.Network
             _websocket.Connect();
         }
 
-        public void WriteAndFlush(byte[] bytes)
+        public IWriteResult WriteAndFlush(IMessagePacket messagePackage)
         {
-            _websocket.Send(bytes);
+            MemoryStream memoryStream = new MemoryStream();
+            Serializer.Serialize(memoryStream, messagePackage);
+            _websocket.Send(memoryStream.ToArray());
+            return default;
         }
 
         private void OnWebSocketClosed(object sender, CloseEventArgs e)

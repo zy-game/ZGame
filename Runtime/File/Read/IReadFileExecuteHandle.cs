@@ -13,43 +13,54 @@ namespace ZEngine.VFS
         long time { get; }
         byte[] bytes { get; }
         VersionOptions version { get; }
-    }
 
-    class DefaultReadFileExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IReadFileExecuteHandle>, IReadFileExecuteHandle
-    {
-        public string name { get; set; }
-        public long time { get; set; }
-        public byte[] bytes { get; set; }
-        public VersionOptions version { get; set; }
-
-        public override void Release()
+        internal static IReadFileExecuteHandle Create(string name, VersionOptions version)
         {
-            base.Release();
+            InternalVFSReaderFileExecuteHandle internalVfsReaderFileExecuteHandle = Engine.Class.Loader<InternalVFSReaderFileExecuteHandle>();
+            internalVfsReaderFileExecuteHandle.name = name;
+            internalVfsReaderFileExecuteHandle.version = version;
+            return internalVfsReaderFileExecuteHandle;
         }
 
-        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
+        class InternalVFSReaderFileExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IReadFileExecuteHandle>, IReadFileExecuteHandle
         {
-            name = paramsList[0].ToString();
-            version = paramsList[1] is null ? VersionOptions.None : (VersionOptions)paramsList[1];
-            VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
-            if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != version)
+            public string name { get; set; }
+            public long time { get; set; }
+            public byte[] bytes { get; set; }
+            public VersionOptions version { get; set; }
+
+            public override void Release()
             {
-                status = Status.Failed;
-                yield break;
+                version = null;
+                name = String.Empty;
+                bytes = Array.Empty<byte>();
+                time = 0;
+                GC.SuppressFinalize(this);
+                base.Release();
             }
 
-            bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
-            version = vfsDatas[0].version;
-            long time = vfsDatas[0].time;
-            int offset = 0;
-            for (int i = 0; i < vfsDatas.Length; i++)
+            protected override IEnumerator ExecuteCoroutine()
             {
-                vfsDatas[i].Read(bytes, offset, vfsDatas[i].fileLenght);
-                offset += vfsDatas[i].fileLenght;
-                yield return new WaitForEndOfFrame();
-            }
+                VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
+                if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != version)
+                {
+                    status = Status.Failed;
+                    yield break;
+                }
 
-            status = Status.Success;
+                bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
+                version = vfsDatas[0].version;
+                long time = vfsDatas[0].time;
+                int offset = 0;
+                for (int i = 0; i < vfsDatas.Length; i++)
+                {
+                    vfsDatas[i].Read(bytes, offset, vfsDatas[i].fileLenght);
+                    offset += vfsDatas[i].fileLenght;
+                    yield return new WaitForEndOfFrame();
+                }
+
+                status = Status.Success;
+            }
         }
     }
 }

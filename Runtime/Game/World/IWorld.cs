@@ -175,6 +175,7 @@ namespace ZEngine.Game
 
             private void FixedUpdate(UnityEventArgs args)
             {
+                Engine.Console.Log("Fixed Update World ", name);
                 if (systems is null || systems.Count is 0)
                 {
                     return;

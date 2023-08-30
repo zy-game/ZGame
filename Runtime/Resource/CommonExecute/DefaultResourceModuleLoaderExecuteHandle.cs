@@ -9,66 +9,72 @@ namespace ZEngine.Resource
     /// </summary>
     public interface IResourceModuleLoaderExecuteHandle : IExecuteHandle<IResourceModuleLoaderExecuteHandle>
     {
-    }
+        ModuleOptions[] options { get; }
 
-    class DefaultResourceModuleLoaderExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IResourceModuleLoaderExecuteHandle>, IResourceModuleLoaderExecuteHandle
-    {
-        private ModuleOptions[] moduleList;
-
-        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
+        internal static IResourceModuleLoaderExecuteHandle Create(params ModuleOptions[] options)
         {
-            moduleList = paramsList.Cast<ModuleOptions>().ToArray();
-            if (moduleList is null || moduleList.Length is 0)
-            {
-                status = Status.Success;
-                yield break;
-            }
+            InternalResourceModuleLoaderExecuteHandle internalResourceModuleLoaderExecuteHandle = Engine.Class.Loader<InternalResourceModuleLoaderExecuteHandle>();
+            internalResourceModuleLoaderExecuteHandle.options = options;
+            return internalResourceModuleLoaderExecuteHandle;
+        }
 
-            List<RuntimeBundleManifest> runtimeBundleManifests = new List<RuntimeBundleManifest>();
-            for (int i = 0; i < moduleList.Length; i++)
+        class InternalResourceModuleLoaderExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IResourceModuleLoaderExecuteHandle>, IResourceModuleLoaderExecuteHandle
+        {
+            public ModuleOptions[] options { get; set; }
+
+            protected override IEnumerator ExecuteCoroutine()
             {
-                ModuleOptions options = moduleList[i];
-                RuntimeModuleManifest runtimeModuleManifest = ResourceManager.instance.GetRuntimeModuleManifest(options.moduleName);
-                if (runtimeModuleManifest is null)
+                if (options is null || options.Length is 0)
                 {
-                    Engine.Console.Log("获取资源模块信息失败，请确认在加载模块前已执行了模块更新检查", options.moduleName);
-                    break;
+                    status = Status.Success;
+                    yield break;
                 }
 
-                if (runtimeModuleManifest.bundleList is null || runtimeModuleManifest.bundleList.Count is 0)
+                List<RuntimeBundleManifest> runtimeBundleManifests = new List<RuntimeBundleManifest>();
+                for (int i = 0; i < options.Length; i++)
                 {
-                    status = Status.Failed;
-                    Engine.Console.Error("Not Find Bundle List:", options.moduleName);
-                    continue;
-                }
-
-                foreach (var UPPER in runtimeModuleManifest.bundleList)
-                {
-                    if (ResourceManager.instance.HasLoadAssetBundle(runtimeModuleManifest.name, UPPER.name))
+                    RuntimeModuleManifest runtimeModuleManifest = ResourceManager.instance.GetRuntimeModuleManifest(options[i].moduleName);
+                    if (runtimeModuleManifest is null)
                     {
+                        Engine.Console.Log("获取资源模块信息失败，请确认在加载模块前已执行了模块更新检查", options[i].moduleName);
+                        break;
+                    }
+
+                    if (runtimeModuleManifest.bundleList is null || runtimeModuleManifest.bundleList.Count is 0)
+                    {
+                        status = Status.Failed;
+                        Engine.Console.Error("Not Find Bundle List:", options[i].moduleName);
                         continue;
                     }
 
-                    runtimeBundleManifests.Add(UPPER);
+                    foreach (var UPPER in runtimeModuleManifest.bundleList)
+                    {
+                        if (ResourceManager.instance.HasLoadAssetBundle(runtimeModuleManifest.name, UPPER.name))
+                        {
+                            continue;
+                        }
+
+                        runtimeBundleManifests.Add(UPPER);
+                    }
                 }
+
+                IRequestAssetBundleExecuteHandle[] requestAssetBundleExecuteHandles = new IRequestAssetBundleExecuteHandle[runtimeBundleManifests.Count];
+                //todo 开始加载资源包
+                for (int i = 0; i < runtimeBundleManifests.Count; i++)
+                {
+                    requestAssetBundleExecuteHandles[i] = IRequestAssetBundleExecuteHandle.Create(runtimeBundleManifests[i]);
+                    requestAssetBundleExecuteHandles[i].Execute();
+                }
+
+                yield return WaitFor.Create(() =>
+                {
+                    int count = requestAssetBundleExecuteHandles.Where(x => x.status == Status.Failed || x.status == Status.Success).Count();
+                    OnProgress((float)count / (float)requestAssetBundleExecuteHandles.Length);
+                    return count == requestAssetBundleExecuteHandles.Length;
+                });
+
+                status = Status.Success;
             }
-
-            DefaultRequestAssetBundleExecuteHandle[] requestAssetBundleExecuteHandles = new DefaultRequestAssetBundleExecuteHandle[runtimeBundleManifests.Count];
-            //todo 开始加载资源包
-            for (int i = 0; i < runtimeBundleManifests.Count; i++)
-            {
-                requestAssetBundleExecuteHandles[i] = Engine.Class.Loader<DefaultRequestAssetBundleExecuteHandle>();
-                requestAssetBundleExecuteHandles[i].Execute(runtimeBundleManifests[i]);
-            }
-
-            yield return WaitFor.Create(() =>
-            {
-                int count = requestAssetBundleExecuteHandles.Where(x => x.status == Status.Failed || x.status == Status.Success).Count();
-                OnProgress((float)count / (float)requestAssetBundleExecuteHandles.Length);
-                return count == requestAssetBundleExecuteHandles.Length;
-            });
-
-            status = Status.Success;
         }
     }
 }

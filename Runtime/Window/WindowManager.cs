@@ -7,7 +7,7 @@ using ZEngine.Resource;
 
 namespace ZEngine.Window
 {
-    public class WindowManager : Single<WindowManager>
+    class WindowManager : Single<WindowManager>
     {
         private List<CacheData> cacheList = new List<CacheData>();
         private Dictionary<Type, UIWindow> windows = new Dictionary<Type, UIWindow>();

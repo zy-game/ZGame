@@ -1,6 +1,6 @@
 namespace ZEngine.Network
 {
-    public interface IMessagePackage : IReference
+    public interface IMessagePacket : IReference
     {
         
     }

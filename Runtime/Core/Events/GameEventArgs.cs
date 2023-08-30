@@ -109,8 +109,6 @@ namespace ZEngine
             {
                 _subscrbe.Unmerge(subscribe);
             }
-
-            Engine.Class.Release(subscribe);
         }
 
         /// <summary>

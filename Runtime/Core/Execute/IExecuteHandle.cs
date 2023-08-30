@@ -8,7 +8,7 @@ using ZEngine.VFS;
 namespace ZEngine
 {
     /// <summary>
-    /// 异步执行器
+    /// 执行器
     /// </summary>
     public interface IExecuteHandle : IExecute
     {
@@ -25,33 +25,25 @@ namespace ZEngine
     }
 
     /// <summary>
-    /// 异步执行器
+    /// 执行器
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public interface IExecuteHandle<T> : IExecuteHandle, IExecute
     {
-        /// <summary>
-        /// 订阅执行器完成回调
-        /// </summary>
-        /// <param name="subscribe">订阅器</param>
-        void Subscribe(ISubscribeHandle<T> subscribe)
-        {
-            Subscribe((ISubscribeHandle)subscribe);
-        }
     }
 
     public abstract class AbstractExecuteHandle : IExecuteHandle
     {
+        private Coroutine coroutine;
         private ISubscribeHandle subscribes;
         private IProgressSubscribeHandle progressSubscribeHandle;
-        private Coroutine coroutine;
         public Status status { get; protected set; }
-        protected abstract IEnumerator ExecuteCoroutine(params object[] paramsList);
+        protected abstract IEnumerator ExecuteCoroutine();
 
-        public void Execute(params object[] paramsList)
+        public void Execute()
         {
             status = Status.Execute;
-            coroutine = ExecuteCoroutine(paramsList).StartCoroutine(OnComplete);
+            coroutine = ExecuteCoroutine().StartCoroutine(OnComplete);
         }
 
         private void OnComplete()
@@ -71,7 +63,6 @@ namespace ZEngine
                 }
 
                 this.progressSubscribeHandle.Merge(progressSubscribeHandle);
-                Engine.Class.Release(progressSubscribeHandle);
                 return;
             }
 
@@ -82,7 +73,6 @@ namespace ZEngine
             }
 
             this.subscribes.Merge(subscribe);
-            Engine.Class.Release(subscribe);
         }
 
         protected void OnProgress(float progress)

@@ -36,12 +36,12 @@ public class Startup : MonoBehaviour
     {
         if (resourcePreloadExecuteHandle.status is not Status.Success)
         {
-            Engine.Window.MsgBox("资源加载失败！", Application.Quit);
+            Engine.Window.MsgBox("Tips", "资源加载失败！", Application.Quit);
             return;
         }
 
         Engine.Console.Log("进入游戏");
         Engine.Game.OpenWorld("Test");
-        // Engine.Game.LoaderGameLogicModule(HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On));
+        Engine.Game.LoadGameModule(HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On));
     }
 }

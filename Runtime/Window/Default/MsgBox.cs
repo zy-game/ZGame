@@ -13,7 +13,7 @@ namespace ZEngine.Window
         private bool complete;
         public object result { get; set; }
 
-        public MsgBox SetBox(string tips, string text, Action ok, Action cancel)
+        public MsgBox SetBox(string tips, string text, Action ok, Action cancel, string okText, string cancelText)
         {
             this.ok = ok;
             complete = false;
@@ -22,8 +22,9 @@ namespace ZEngine.Window
             this.GetChild("Tips").GetComponent<TMP_Text>().text = tips;
             this.GetChild("ok").GetComponent<Button>().onClick.AddListener(OK);
             this.GetChild("cancel").GetComponent<Button>().onClick.AddListener(Cancel);
-            // this.GetChild("ok").SetActive(ok is not null);
             this.GetChild("cancel").SetActive(cancel is not null);
+            this.GetChild("okText").GetComponent<TMP_Text>().text = okText;
+            this.GetChild("cancelText").GetComponent<TMP_Text>().text = cancelText;
             return this;
         }
 

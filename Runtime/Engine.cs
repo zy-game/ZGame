@@ -212,7 +212,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileExecuteResult WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public static IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
             => VFSManager.instance.WriteFile(fileName, bytes, version);
 
         /// <summary>
@@ -228,7 +228,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileExecuteResult ReadFile(string fileName, VersionOptions version = null)
+        public static IReadFileExecute ReadFile(string fileName, VersionOptions version = null)
             => VFSManager.instance.ReadFile(fileName, version);
 
         /// <summary>
@@ -247,6 +247,7 @@ public sealed class Engine
     {
         public static IGameModuleLoaderExecuteHandle LoadGameModule(GameEntryOptions gameEntryOptions)
             => GameManager.instance.LoadGameModule(gameEntryOptions);
+
         /// <summary>
         /// 打开或创建一个World
         /// </summary>
@@ -450,8 +451,8 @@ public sealed class Engine
         /// <param name="ok"></param>
         /// <param name="cancel"></param>
         /// <returns></returns>
-        public static MsgBox MsgBox(string text, Action ok = null, Action cancel = null)
-            => MsgBox("Tips", text, ok, cancel);
+        public static MsgBox MsgBox(string text)
+            => MsgBox("Tips", text);
 
         /// <summary>
         /// 提示消息窗口
@@ -460,8 +461,8 @@ public sealed class Engine
         /// <param name="ok"></param>
         /// <param name="cancel"></param>
         /// <returns></returns>
-        public static MsgBox MsgBox(string tips, string text, Action ok = null, Action cancel = null)
-            => OpenWindow<MsgBox>().SetBox(tips, text, ok, cancel);
+        public static MsgBox MsgBox(string tips, string text, Action ok = null, Action cancel = null, string okText = "OK", string cancelText = "Cancel")
+            => OpenWindow<MsgBox>().SetBox(tips, text, ok, cancel, okText, cancelText);
 
         /// <summary>
         /// 等待窗口
@@ -553,6 +554,35 @@ public sealed class Engine
     public sealed class Network
     {
         /// <summary>
+        /// 订阅消息处理
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public static void SubscribeMessageHandle<T>() where T : ISubscribeMessageExecuteHandle
+            => SubscribeMessageHandle(typeof(T));
+
+        /// <summary>
+        /// 订阅消息处理
+        /// </summary>
+        /// <param name="type"></param>
+        public static void SubscribeMessageHandle(Type type)
+            => NetworkManager.instance.SubscribeMessageHandle(type);
+
+        /// <summary>
+        /// 取消消息订阅管道
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public static void UnsubscribeMessageHandle<T>() where T : ISubscribeMessageExecuteHandle
+            => UnsubscribeMessageHandle(typeof(T));
+
+        /// <summary>
+        /// 取消消息订阅管道
+        /// </summary>
+        /// <param name="type"></param>
+        public static void UnsubscribeMessageHandle(Type type)
+            => NetworkManager.instance.UnsubscribeMessageHandle(type);
+        
+
+        /// <summary>
         /// 请求数据
         /// </summary>
         /// <param name="url"></param>
@@ -587,8 +617,8 @@ public sealed class Engine
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public static INetworkConnectExecuteHandle Connect(string address)
-            => NetworkManager.instance.Connect(address);
+        public static INetworkConnectExecuteHandle Connect(string address, int id = 0)
+            => NetworkManager.instance.Connect(address, id);
 
         /// <summary>
         /// 写入网络消息，如果网络未连接则自动尝试链接，并在链接成功后写入消息
@@ -596,7 +626,7 @@ public sealed class Engine
         /// <param name="address">远程地址</param>
         /// <param name="messagePackage">需要写入的消息</param>
         /// <returns></returns>
-        public static IWriteMessageExecuteHandle WriteAndFlush(string address, IMessagePackage messagePackage)
+        public static IWriteMessageExecuteHandle WriteAndFlush(string address, IMessagePacket messagePackage)
             => NetworkManager.instance.WriteAndFlush(address, messagePackage);
 
         /// <summary>
@@ -606,7 +636,7 @@ public sealed class Engine
         /// <param name="messagePackage">需要写入的消息</param>
         /// <typeparam name="T">等待响应的消息类型</typeparam>
         /// <returns></returns>
-        public static IRecvieMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessagePackage messagePackage) where T : IMessagePackage
+        public static IRecvieMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessagePacket messagePackage) where T : IMessagePacket
             => NetworkManager.instance.WriteAndFlush<T>(address, messagePackage);
 
         /// <summary>

@@ -6,56 +6,51 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-    public interface IWriteFileExecuteResult : IReference
+    public interface IWriteFileExecute : IExecute
     {
         string name { get; }
         byte[] bytes { get; }
         VersionOptions version { get; }
-    }
 
-    class WriteFileExecuteResult : IWriteFileExecuteResult
-    {
-        public void Release()
+        internal static IWriteFileExecute Create(string name, byte[] bytes, VersionOptions version)
         {
-            name = String.Empty;
-            bytes = Array.Empty<byte>();
-            version = null;
+            InternalVFSWriteFileExecute internalVfsWriteFileExecute = Engine.Class.Loader<InternalVFSWriteFileExecute>();
+            internalVfsWriteFileExecute.name = name;
+            internalVfsWriteFileExecute.bytes = bytes;
+            internalVfsWriteFileExecute.version = version;
+            return internalVfsWriteFileExecute;
         }
 
-        public string name { get; set; }
-        public byte[] bytes { get; set; }
-        public VersionOptions version { get; set; }
-    }
-
-    class DefaultWriteFileExecute : IExecute
-    {
-        public WriteFileExecuteResult result { get; set; }
-
-        public void Release()
+        class InternalVFSWriteFileExecute : AbstractExecute, IWriteFileExecute
         {
-            result = null;
-            GC.SuppressFinalize(this);
-        }
+            public string name { get; set; }
+            public byte[] bytes { get; set; }
+            public VersionOptions version { get; set; }
 
-        public void Execute(params object[] args)
-        {
-            result = Engine.Class.Loader<WriteFileExecuteResult>();
-            result.name = (string)args[0];
-            result.bytes = (byte[])args[1];
-            result.version = (VersionOptions)args[2];
-            VFSData[] vfsDataList = VFSManager.instance.GetVFSData(result.bytes.Length);
-            int offset = 0;
-            int index = 0;
-            foreach (var VARIABLE in vfsDataList)
+            public override void Release()
             {
-                int length = result.bytes.Length - offset > VARIABLE.length ? VARIABLE.length : result.bytes.Length - offset;
-                VARIABLE.Write(result.bytes, offset, length, result.version, index);
-                offset += VARIABLE.length;
-                VARIABLE.name = result.name;
-                index++;
+                name = String.Empty;
+                bytes = Array.Empty<byte>();
+                version = null;
+                GC.SuppressFinalize(this);
             }
 
-            VFSManager.instance.SaveVFSData();
+            protected override void ExecuteCommand()
+            {
+                VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
+                int offset = 0;
+                int index = 0;
+                foreach (var VARIABLE in vfsDataList)
+                {
+                    int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
+                    VARIABLE.Write(bytes, offset, length, version, index);
+                    offset += VARIABLE.length;
+                    VARIABLE.name = name;
+                    index++;
+                }
+
+                VFSManager.instance.SaveVFSData();
+            }
         }
     }
 }

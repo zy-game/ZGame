@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-    public class VFSManager : Single<VFSManager>
+     class VFSManager : Single<VFSManager>
     {
         private List<VFSData> dataList = new List<VFSData>();
         private List<VFSHandle> vfsList = new List<VFSHandle>();
@@ -185,36 +185,32 @@ namespace ZEngine.VFS
             return vfsData.version;
         }
 
-        public IWriteFileExecuteResult WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
         {
             Delete(fileName);
-            DefaultWriteFileExecute defaultWriteFileExecute = Engine.Class.Loader<DefaultWriteFileExecute>();
-            defaultWriteFileExecute.Execute(fileName, bytes, version);
-            IWriteFileExecuteResult writeFileExecuteResult = defaultWriteFileExecute.result;
-            Engine.Class.Release(defaultWriteFileExecute);
-            return writeFileExecuteResult;
+            IWriteFileExecute writeFileExecute = IWriteFileExecute.Create(fileName, bytes, version);
+            writeFileExecute.Execute();
+            return writeFileExecute;
         }
 
         public IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
         {
             Delete(fileName);
-            DefaultWriteFileExecuteHandle defaultWriteFileExecuteHandle = Engine.Class.Loader<DefaultWriteFileExecuteHandle>();
-            defaultWriteFileExecuteHandle.Execute(fileName, bytes, version);
-            return defaultWriteFileExecuteHandle;
+            IWriteFileExecuteHandle writeFileExecuteHandle = IWriteFileExecuteHandle.Create(fileName, bytes, version);
+            writeFileExecuteHandle.Execute();
+            return writeFileExecuteHandle;
         }
 
-        public IReadFileExecuteResult ReadFile(string fileName, VersionOptions versionOptions = null)
+        public IReadFileExecute ReadFile(string fileName, VersionOptions versionOptions = null)
         {
             if (Exist(fileName) is false)
             {
                 return default;
             }
 
-            DefaultReadFileExecute defaultReadFileExecute = Engine.Class.Loader<DefaultReadFileExecute>();
-            defaultReadFileExecute.Execute(fileName, versionOptions);
-            IReadFileExecuteResult readFileExecuteResult = defaultReadFileExecute.result;
-            Engine.Class.Release(defaultReadFileExecute);
-            return readFileExecuteResult;
+            IReadFileExecute readFileExecute = IReadFileExecute.Create(fileName, versionOptions);
+            readFileExecute.Execute();
+            return readFileExecute;
         }
 
         public IReadFileExecuteHandle ReadFileAsync(string fileName, VersionOptions versionOptions = null)
@@ -224,9 +220,9 @@ namespace ZEngine.VFS
                 return default;
             }
 
-            DefaultReadFileExecuteHandle defaultReadFileExecuteHandle = Engine.Class.Loader<DefaultReadFileExecuteHandle>();
-            defaultReadFileExecuteHandle.Execute(fileName, versionOptions);
-            return defaultReadFileExecuteHandle;
+            IReadFileExecuteHandle readFileExecuteHandle = IReadFileExecuteHandle.Create(fileName, versionOptions);
+            readFileExecuteHandle.Execute();
+            return readFileExecuteHandle;
         }
     }
 }

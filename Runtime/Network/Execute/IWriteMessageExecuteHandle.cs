@@ -7,48 +7,27 @@ namespace ZEngine.Network
     public interface IWriteMessageExecuteHandle : IExecuteHandle<IWriteMessageExecuteHandle>
     {
         IChannel channel { get; }
-        IMessagePackage write { get; }
-    }
+        IMessagePacket message { get; }
 
-
-    public interface IRecvieMessageExecuteHandle<T> : IExecuteHandle<T> where T : IMessagePackage
-    {
-        IChannel channel { get; }
-        T message { get; }
-
-        internal static IRecvieMessageExecuteHandle<T> Create()
+        internal static IWriteMessageExecuteHandle Create(IChannel channel, IMessagePacket messagePackage)
         {
-            return Engine.Class.Loader<InternalRecvieMessageExecuteHandle>();
+            InternalWriteMessageExecuteHandle internalWriteMessageExecuteHandle = Engine.Class.Loader<InternalWriteMessageExecuteHandle>();
+            internalWriteMessageExecuteHandle.channel = channel;
+            internalWriteMessageExecuteHandle.message = messagePackage;
+            return internalWriteMessageExecuteHandle;
         }
 
-        class InternalRecvieMessageExecuteHandle : AbstractExecuteHandle, IRecvieMessageExecuteHandle<T>
+        class InternalWriteMessageExecuteHandle : AbstractExecuteHandle, IWriteMessageExecuteHandle
         {
-            protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
-            {
-                channel = (IChannel)paramsList[0];
-                message = (T)paramsList[1];
-                yield break;
-            }
-
             public IChannel channel { get; set; }
-            public T message { get; set; }
-        }
-    }
+            public IMessagePacket message { get; set; }
 
+            protected override IEnumerator ExecuteCoroutine()
+            {
 
-    class InternalWriteMessageExecuteHandle : AbstractExecuteHandle, IWriteMessageExecuteHandle
-    {
-        public IChannel channel { get; set; }
-        public IMessagePackage write { get; set; }
-
-        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
-        {
-            channel = (IChannel)paramsList[0];
-            write = (IMessagePackage)paramsList[1];
-            MemoryStream memoryStream = new MemoryStream();
-            Serializer.Serialize(memoryStream, write);
-            channel.WriteAndFlush(memoryStream.ToArray());
-            yield break;
+                IWriteResult writeResult = channel.WriteAndFlush(message);
+                yield return WaitFor.Create(() => writeResult.status == Status.Failed || writeResult.status == Status.Success);
+            }
         }
     }
 }

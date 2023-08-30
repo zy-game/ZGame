@@ -2,7 +2,7 @@
 
 namespace ZEngine.Sound
 {
-    public class SoundManager : Single<SoundManager>
+     class SoundManager : Single<SoundManager>
     {
         private List<AudioPlayerHandle> players = new List<AudioPlayerHandle>();
 

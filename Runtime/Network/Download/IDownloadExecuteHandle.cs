@@ -9,40 +9,48 @@ namespace ZEngine.Network
     public interface IDownloadExecuteHandle : IExecuteHandle<IDownloadExecuteHandle>
     {
         DownloadHandle[] Handles { get; }
-    }
+        DownloadOptions[] options { get; }
 
-
-    class DefaultDownloadExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IDownloadExecuteHandle>, IDownloadExecuteHandle
-    {
-        public DownloadHandle[] Handles { get; set; }
-
-        public override void Release()
+        internal static IDownloadExecuteHandle Create(params DownloadOptions[] options)
         {
-            foreach (DownloadHandle downloadHandle in Handles)
-            {
-                Engine.Class.Release(downloadHandle);
-            }
-
-            Handles = Array.Empty<DownloadHandle>();
+            InternalDownloadExecuteHandle internalDownloadExecuteHandle = Engine.Class.Loader<InternalDownloadExecuteHandle>();
+            internalDownloadExecuteHandle.options = options;
+            return internalDownloadExecuteHandle;
         }
 
-        protected override IEnumerator ExecuteCoroutine(params object[] paramsList)
+        class InternalDownloadExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IDownloadExecuteHandle>, IDownloadExecuteHandle
         {
-            Handles = new DownloadHandle[paramsList.Length];
-            for (int i = 0; i < paramsList.Length; i++)
+            public DownloadHandle[] Handles { get; set; }
+            public DownloadOptions[] options { get; set; }
+
+            public override void Release()
             {
-                DownloadOptions downloadOptions = (DownloadOptions)paramsList[i];
-                Handles[i] = DownloadHandle.Create(downloadOptions.url, i, downloadOptions.version);
-                Handles[i].OnStart();
+                foreach (DownloadHandle downloadHandle in Handles)
+                {
+                    Engine.Class.Release(downloadHandle);
+                }
+
+                Handles = Array.Empty<DownloadHandle>();
             }
 
-            yield return WaitFor.Create(() =>
+            protected override IEnumerator ExecuteCoroutine()
             {
-                OnProgress(Handles.Sum(x => x.progress) / (float)Handles.Length);
-                return Handles.Where(x => x.IsComplete() is false).Count() is 0;
-            });
+                Handles = new DownloadHandle[options.Length];
+                for (int i = 0; i < options.Length; i++)
+                {
+                    DownloadOptions downloadOptions = options[i];
+                    Handles[i] = DownloadHandle.Create(downloadOptions.url, i, downloadOptions.version);
+                    Handles[i].OnStart();
+                }
 
-            status = Handles.Where(x => x.status == Status.Failed).Count() > 0 ? Status.Failed : Status.Success;
+                yield return WaitFor.Create(() =>
+                {
+                    OnProgress(Handles.Sum(x => x.progress) / (float)Handles.Length);
+                    return Handles.Where(x => x.IsComplete() is false).Count() is 0;
+                });
+
+                status = Handles.Where(x => x.status == Status.Failed).Count() > 0 ? Status.Failed : Status.Success;
+            }
         }
     }
 }

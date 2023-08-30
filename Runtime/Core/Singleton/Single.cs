@@ -27,5 +27,6 @@ public class Single<T> : IDisposable where T : Single<T>, new()
 
     public virtual void Dispose()
     {
+        
     }
 }
