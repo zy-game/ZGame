@@ -77,8 +77,17 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
                 }
                 else if (options.path.EndsWith("json"))
                 {
+                    if (File.Exists(options.path) is false)
+                    {
+                        using (File.Create(options.path)) ;
+                    }
 #if UNITY_EDITOR
                     string json = File.ReadAllText(options.path);
+                    if (json.IsNullOrEmpty() is true)
+                    {
+                        json = "{}";
+                    }
+
                     _instance = Engine.Json.Parse<T>(json);
                     return;
 #endif

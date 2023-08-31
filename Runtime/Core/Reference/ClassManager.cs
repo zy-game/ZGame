@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace ZEngine
 {
@@ -17,6 +18,11 @@ namespace ZEngine
             if (!typeof(IReference).IsAssignableFrom(type))
             {
                 throw new NotImplementedException(nameof(IReference));
+            }
+
+            if (Application.isPlaying is false)
+            {
+                return (IReference)Activator.CreateInstance(type);
             }
 
             if (!_dic.TryGetValue(type, out Stack<IReference> stack))
@@ -41,6 +47,11 @@ namespace ZEngine
         public void Enqueue(IReference refresh)
         {
             if (refresh is null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying is false)
             {
                 return;
             }

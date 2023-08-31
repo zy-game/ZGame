@@ -12,6 +12,8 @@ using ZEngine.Resource;
 using ZEngine.Sound;
 using ZEngine.Window;
 using ZEngine.Game;
+using ZEngine.Utility;
+using ZEngine.ZJson;
 using Object = UnityEngine.Object;
 
 public sealed class Engine
@@ -165,7 +167,7 @@ public sealed class Engine
         /// <param name="target"></param>
         /// <returns></returns>
         public static string ToJson(object target)
-            => JsonConvert.SerializeObject(target);
+            => ZJson.ToJson(target);
 
         /// <summary>
         /// 反序列化
@@ -174,7 +176,7 @@ public sealed class Engine
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static T Parse<T>(string value)
-            => JsonConvert.DeserializeObject<T>(value);
+            => ZJson.Parse<T>(value);
 
         /// <summary>
         /// 反序列化
@@ -183,7 +185,7 @@ public sealed class Engine
         /// <param name="value"></param>
         /// <returns></returns>
         public static object Parse(Type type, string value)
-            => JsonConvert.DeserializeObject(value, type);
+            => ZJson.Parse(value, type);
     }
 
     /// <summary>
@@ -580,7 +582,7 @@ public sealed class Engine
         /// <param name="type"></param>
         public static void UnsubscribeMessageHandle(Type type)
             => NetworkManager.instance.UnsubscribeMessageHandle(type);
-        
+
 
         /// <summary>
         /// 请求数据

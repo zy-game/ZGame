@@ -36,6 +36,20 @@ namespace ZEngine.Window
         public override void Dispose()
         {
             base.Dispose();
+            foreach (var VARIABLE in windows.Values)
+            {
+                Engine.Class.Release(VARIABLE);
+            }
+
+            foreach (var VARIABLE in canvasMap.Values)
+            {
+                GameObject.DestroyImmediate(VARIABLE.gameObject);
+            }
+
+            cacheList.ForEach(Engine.Class.Release);
+            windows.Clear();
+            canvasMap.Clear();
+            cacheList.Clear();
             Engine.Console.Log("关闭所有窗口");
         }
 
@@ -75,7 +89,6 @@ namespace ZEngine.Window
             SetToLayer(options.layer, window.gameObject);
             windows.Add(windowType, window);
             window.OnAwake();
-            WindowOpenedEventArgs.Execute(WindowOpenedEventArgs.Create(window));
             Show(windowType);
             return window;
         }
@@ -138,7 +151,6 @@ namespace ZEngine.Window
             else
             {
                 Engine.Class.Release(window);
-                WindowCloseEventArgs.Execute(WindowCloseEventArgs.Create(window));
             }
         }
 
@@ -152,7 +164,6 @@ namespace ZEngine.Window
             }
 
             window.OnEnable();
-            WindowEnableEventArgs.Execute(WindowEnableEventArgs.Create(window));
         }
 
         public void Hide(Type type)
@@ -165,7 +176,6 @@ namespace ZEngine.Window
             }
 
             window.OnDiable();
-            WindowDisableEventArgs.Execute(WindowDisableEventArgs.Create(window));
         }
     }
 }

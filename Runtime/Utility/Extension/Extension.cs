@@ -6,6 +6,21 @@ using ZEngine;
 
 public static class Extension
 {
+    public static void ReleaseAll<T>(this List<T> list)
+    {
+        if (typeof(IReference).IsAssignableFrom(typeof(T)) is false)
+        {
+            return;
+        }
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            Engine.Class.Release((IReference)list[i]);
+        }
+
+        list.Clear();
+    }
+
     public static bool IsNullOrEmpty(this string value)
     {
         return string.IsNullOrEmpty(value);
