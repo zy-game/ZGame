@@ -16,16 +16,10 @@ namespace Editor.SkillEditor
 
     public class SkillEditorWindow : EngineCustomEditor
     {
-        [MenuItem("Game/ZJson")]
-        public static void TestZJson()
-        {
-            Engine.Json.ToJson(SkillDataList.instance.optionsList);
-        }
-
         [MenuItem("Game/SkillEditor")]
         public static void Open()
         {
-            GetWindow<SkillEditorWindow>();
+            GetWindow<SkillEditorWindow>(false, "技能编辑器", true);
         }
 
         protected override void Actived()
@@ -53,7 +47,18 @@ namespace Editor.SkillEditor
         protected override void DrawingItemDataView(object data)
         {
             SkillOptions options = (SkillOptions)data;
-            GUILayout.Label(options.name);
+            options.id = EditorGUILayout.IntField("技能编号", options.id);
+            options.name = EditorGUILayout.TextField("技能名称", options.name);
+            if (options._icon == null && options.icon.IsNullOrEmpty() is false)
+            {
+                options._icon = AssetDatabase.LoadAssetAtPath<Texture2D>(options.icon);
+            }
+
+            options._icon = (Texture2D)EditorGUILayout.ObjectField("角色头像", options._icon, typeof(Texture2D), false);
+            if (options._icon != null)
+            {
+                options.icon = AssetDatabase.GetAssetPath(options._icon);
+            }
         }
 
         protected override void SaveChanged()

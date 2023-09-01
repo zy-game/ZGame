@@ -7,6 +7,11 @@ namespace ZEngine.Game
     public sealed class SkillOptions
     {
         /// <summary>
+        /// 技能编号
+        /// </summary>
+        [Header("技能编号")] public int id;
+
+        /// <summary>
         /// 技能名称
         /// </summary>
         [Header("技能名称")] public string name;
@@ -30,6 +35,10 @@ namespace ZEngine.Game
         /// 装备图标路径
         /// </summary>
         [Header("装备图标路径")] public string icon;
+
+#if UNITY_EDITOR
+        [NonSerialized] public Texture2D _icon;
+#endif
     }
 
     /// <summary>

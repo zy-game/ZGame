@@ -226,6 +226,7 @@ namespace ZEngine.ZJson
             {
                 if (objectType.IsArray is false && typeof(IList).IsAssignableFrom(objectType) is false)
                 {
+                    
                     return default;
                 }
 

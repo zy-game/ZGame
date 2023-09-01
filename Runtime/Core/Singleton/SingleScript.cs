@@ -123,6 +123,7 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
                 }
 
                 UnityEditorInternal.InternalEditorUtility.SaveToSerializedFileAndForget(new Object[] { _instance }, options.path, true);
+
 #endif
                 break;
             case Localtion.Packaged:
@@ -137,5 +138,9 @@ public class SingleScript<T> : ScriptableObject where T : ScriptableObject
                 File.WriteAllText(options.path, Engine.Json.ToJson(_instance));
                 break;
         }
+#if UNITY_EDITOR
+        UnityEditor.AssetDatabase.SaveAssets();
+        UnityEditor.AssetDatabase.Refresh();
+#endif
     }
 }

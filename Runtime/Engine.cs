@@ -167,7 +167,7 @@ public sealed class Engine
         /// <param name="target"></param>
         /// <returns></returns>
         public static string ToJson(object target)
-            => ZJson.ToJson(target);
+            => JsonConvert.SerializeObject(target);
 
         /// <summary>
         /// 反序列化
@@ -176,7 +176,7 @@ public sealed class Engine
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static T Parse<T>(string value)
-            => ZJson.Parse<T>(value);
+            => JsonConvert.DeserializeObject<T>(value);
 
         /// <summary>
         /// 反序列化
@@ -185,7 +185,7 @@ public sealed class Engine
         /// <param name="value"></param>
         /// <returns></returns>
         public static object Parse(Type type, string value)
-            => ZJson.Parse(value, type);
+            => JsonConvert.DeserializeObject(value, type);
     }
 
     /// <summary>
