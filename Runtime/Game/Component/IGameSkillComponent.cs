@@ -3,43 +3,34 @@ using UnityEngine;
 
 namespace ZEngine.Game
 {
-    [Serializable]
-    public sealed class SkillOptions
+    /// <summary>
+    /// 技能分类
+    /// </summary>
+    public enum SkillType
     {
-        /// <summary>
-        /// 技能编号
-        /// </summary>
-        [Header("技能编号")] public int id;
-
-        /// <summary>
-        /// 技能名称
-        /// </summary>
-        [Header("技能名称")] public string name;
-
-        /// <summary>
-        /// 技能冷却时间
-        /// </summary>
-        [Header("技能初始冷却时间")] public float cd;
-
-        /// <summary>
-        /// 技能使用消耗
-        /// </summary>
-        [Header("技能消耗")] public int use;
-
-        /// <summary>
-        /// 技能等级
-        /// </summary>
-        [Header("最大等级")] public uint maxlevel;
-
-        /// <summary>
-        /// 装备图标路径
-        /// </summary>
-        [Header("装备图标路径")] public string icon;
-
-#if UNITY_EDITOR
-        [NonSerialized] public Texture2D _icon;
-#endif
+        Buffer,
+        Skill,
+        Passive
     }
+
+    /// <summary>
+    /// 释放类型
+    /// </summary>
+    public enum UseType
+    {
+        Single,
+        Range
+    }
+
+    public enum PlayerType
+    {
+        Player,
+        NPC,
+        Monster,
+    }
+
+
+
 
     /// <summary>
     /// 游戏技能组件

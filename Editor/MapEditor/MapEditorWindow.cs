@@ -38,7 +38,7 @@ namespace ZEngine.Editor.MapEditor
             SaveChanged();
         }
 
-        protected override void DrawingItemDataView(object data)
+        protected override void DrawingItemDataView(object data, float width)
         {
             SceneOptions options = (SceneOptions)data;
             GUILayout.Label(options.name);

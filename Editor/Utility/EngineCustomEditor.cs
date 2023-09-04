@@ -15,6 +15,11 @@ namespace ZEngine.Editor
         private Color inColor = new Color(1f, 0.92f, 0.01f, .8f);
         private Color outColor = new Color(0, 0, 0, 0.2f);
         private List<ItemData> items = new List<ItemData>();
+        private float rightWidth;
+        private float leftWidth;
+
+        public const string boxStyle = "OL box NoExpand"; // new GUIStyle("OL box NoExpand");
+        public const string boldLable = "LargeBoldLabel"; // new GUIStyle("LargeBoldLabel");
 
         class ItemData
         {
@@ -24,11 +29,14 @@ namespace ZEngine.Editor
 
         private void OnEnable()
         {
+            this.minSize = new Vector2(1130, 640);
             Actived();
         }
 
         public void OnGUI()
         {
+            leftWidth = position.width / 4;
+            rightWidth = position.width - leftWidth - 18;
             Toolbar();
             DrawingSceneEditor();
         }
@@ -45,7 +53,7 @@ namespace ZEngine.Editor
                 }
 
                 GUILayout.FlexibleSpace();
-                search = GUILayout.TextField(search, EditorStyles.toolbarSearchField, GUILayout.Width(300));
+                search = GUILayout.TextField(search, EditorStyles.toolbarSearchField, GUILayout.Width(leftWidth));
                 GUILayout.EndHorizontal();
             }
         }
@@ -59,7 +67,7 @@ namespace ZEngine.Editor
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical("OL box NoExpand", GUILayout.Width(300), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical("OL box NoExpand", GUILayout.Width(leftWidth), GUILayout.Height(position.height - 30));
                     {
                         listScroll = GUILayout.BeginScrollView(listScroll);
                         {
@@ -75,7 +83,7 @@ namespace ZEngine.Editor
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical("OL box NoExpand", GUILayout.Width(position.width - 310), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical("OL box NoExpand", GUILayout.Width(rightWidth), GUILayout.Height(position.height - 30));
                     {
                         manifestScroll = GUILayout.BeginScrollView(manifestScroll, false, true);
                         {
@@ -92,7 +100,7 @@ namespace ZEngine.Editor
 
         protected abstract void Actived();
         protected abstract void CreateNewItem();
-        protected abstract void DrawingItemDataView(object data);
+        protected abstract void DrawingItemDataView(object data, float width);
         protected abstract void SaveChanged();
 
         protected void AddDataItem(string name, object data)
@@ -147,7 +155,7 @@ namespace ZEngine.Editor
                     GUILayout.Space(5);
                     this.BeginColor(items[i] == selection ? inColor : outColor);
                     {
-                        GUILayout.Box("", "WhiteBackground", GUILayout.Width(300), GUILayout.Height(1));
+                        GUILayout.Box("", "WhiteBackground", GUILayout.Width(position.width / 4), GUILayout.Height(1));
                         this.EndColor();
                     }
                     if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
@@ -186,7 +194,7 @@ namespace ZEngine.Editor
             }
 
             EditorGUI.BeginChangeCheck();
-            DrawingItemDataView(selection.data);
+            DrawingItemDataView(selection.data, rightWidth - 20);
             if (EditorGUI.EndChangeCheck())
             {
                 SaveChanged();

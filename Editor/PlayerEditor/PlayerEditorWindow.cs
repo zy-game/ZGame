@@ -78,6 +78,11 @@ namespace ZEngine.Editor.PlayerEditor
         /// </summary>
         public List<int> skills;
 
+        /// <summary>
+        /// 角色类型
+        /// </summary>
+        public PlayerType type;
+
         [NonSerialized] public Sprite icon;
         [NonSerialized] public GameObject playerPrefab;
     }
@@ -97,6 +102,7 @@ namespace ZEngine.Editor.PlayerEditor
 
         protected override void Actived()
         {
+            
             if (PlayerEditorOptions.instance.players is null || PlayerEditorOptions.instance.players.Count is 0)
             {
                 PlayerEditorOptions.instance.players = new List<PlayerOptions>();
@@ -119,11 +125,12 @@ namespace ZEngine.Editor.PlayerEditor
 
         private SkillSelectorWindow skillSelectorWindow;
 
-        protected override void DrawingItemDataView(object data)
+        protected override void DrawingItemDataView(object data, float width)
         {
             PlayerOptions options = (PlayerOptions)data;
             options.id = EditorGUILayout.IntField("角色编号", options.id);
             options.name = EditorGUILayout.TextField("角色名", options.name);
+            options.type = (PlayerType)EditorGUILayout.EnumPopup("角色类型", options.type);
             if (options.icon == null && options.headIcon.IsNullOrEmpty() is false)
             {
                 options.icon = AssetDatabase.LoadAssetAtPath<Sprite>(options.headIcon);
@@ -160,6 +167,7 @@ namespace ZEngine.Editor.PlayerEditor
             }
 
             GUILayout.Label("技能列表");
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
             for (int i = 0; i < options.skills.Count; i++)
             {
                 SkillOptions skillOptions = SkillDataList.instance.optionsList.Find(x => x.id == options.skills[i]);
@@ -168,9 +176,19 @@ namespace ZEngine.Editor.PlayerEditor
                     continue;
                 }
 
-                GUILayout.Label(AssetDatabase.LoadAssetAtPath<Texture2D>(skillOptions.icon), GUILayout.Width(100), GUILayout.Height(100));
+                GUILayout.BeginHorizontal(EditorStyles.helpBox);
+
+                GUILayout.Label(AssetDatabase.LoadAssetAtPath<Texture2D>(skillOptions.icon), EditorStyles.helpBox, GUILayout.Width(100), GUILayout.Height(100));
+                GUILayout.BeginVertical();
+                GUILayout.Label(skillOptions.name);
+                GUILayout.Label($"技能类型：{skillOptions.skillType.ToString()}");
+                GUILayout.Label($"释放类型：{skillOptions.useType.ToString()}");
+                GUILayout.Label($"技能描述：{skillOptions.describe}");
+                GUILayout.EndVertical();
+                GUILayout.EndHorizontal();
             }
 
+            GUILayout.EndHorizontal();
             GUIContent content = new GUIContent("+");
             Rect r = EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button(content))
