@@ -201,7 +201,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical(EngineCustomEditor.boxStyle, GUILayout.Width(300), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(EngineCustomEditor.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(300), GUILayout.Height(position.height - 30));
                     {
                         listScroll = GUILayout.BeginScrollView(listScroll);
                         {
@@ -217,7 +217,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical(EngineCustomEditor.boxStyle, GUILayout.Width(position.width - 310), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(EngineCustomEditor.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width - 310), GUILayout.Height(position.height - 30));
                     {
                         manifestScroll = GUILayout.BeginScrollView(manifestScroll, false, true);
                         {
@@ -255,7 +255,7 @@ namespace ZEngine.Editor.ResourceBuilder
                     {
                         GUILayout.BeginHorizontal();
                         {
-                            GUILayout.Label($"{moduleManifest.title}", EngineCustomEditor.boldLable);
+                            GUILayout.Label($"{moduleManifest.title}", EngineCustomEditor.GUI_STYLE_TITLE_LABLE);
                             GUILayout.FlexibleSpace();
                             GUILayout.Label($"v:{moduleManifest.version}");
                             GUILayout.EndHorizontal();
@@ -325,7 +325,7 @@ namespace ZEngine.Editor.ResourceBuilder
                             manifest.isOn = GUILayout.Toggle(manifest.isOn, "");
                             GUILayout.EndVertical();
                             string name = (manifest.name.IsNullOrEmpty() ? $"Empty" : manifest.name) + $"({AssetDatabase.GetAssetPath(manifest.folder)})";
-                            GUILayout.Label(name, EngineCustomEditor.boldLable);
+                            GUILayout.Label(name, EngineCustomEditor.GUI_STYLE_TITLE_LABLE);
                             GUILayout.FlexibleSpace();
                             GUILayout.Label($"v:{manifest.version.ToString()}");
                         }

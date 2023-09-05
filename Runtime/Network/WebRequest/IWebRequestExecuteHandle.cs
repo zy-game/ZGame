@@ -54,7 +54,7 @@ namespace ZEngine.Network
                 {
                     NetworkRequestMethod.GET => UnityWebRequest.Get(url),
                     NetworkRequestMethod.PUT => UnityWebRequest.Put(url, JsonConvert.SerializeObject(upload)),
-                    NetworkRequestMethod.POST => UnityWebRequest.Post(url, JsonConvert.SerializeObject(upload)),
+                    NetworkRequestMethod.POST => UnityWebRequest.PostWwwForm(url, JsonConvert.SerializeObject(upload)),
                     NetworkRequestMethod.DELETE => UnityWebRequest.Delete(url),
                     _ => default
                 };

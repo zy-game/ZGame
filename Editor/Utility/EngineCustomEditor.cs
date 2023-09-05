@@ -18,8 +18,9 @@ namespace ZEngine.Editor
         private float rightWidth;
         private float leftWidth;
 
-        public const string boxStyle = "OL box NoExpand"; // new GUIStyle("OL box NoExpand");
-        public const string boldLable = "LargeBoldLabel"; // new GUIStyle("LargeBoldLabel");
+        public const string GUI_STYLE_TITLE_LABLE = "LargeBoldLabel"; // new GUIStyle("LargeBoldLabel");
+        public const string GUI_STYLE_BOX_BACKGROUND = "OL box NoExpand"; // new GUIStyle("OL box NoExpand");
+        public const string GUI_STYLE_LINE = "WhiteBackground";
 
         class ItemData
         {
@@ -67,7 +68,7 @@ namespace ZEngine.Editor
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical(boxStyle, GUILayout.Width(leftWidth), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(leftWidth), GUILayout.Height(position.height - 30));
                     {
                         listScroll = GUILayout.BeginScrollView(listScroll);
                         {
@@ -83,7 +84,7 @@ namespace ZEngine.Editor
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical(boxStyle, GUILayout.Width(rightWidth), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(rightWidth), GUILayout.Height(position.height - 30));
                     {
                         manifestScroll = GUILayout.BeginScrollView(manifestScroll, false, true);
                         {
@@ -145,7 +146,7 @@ namespace ZEngine.Editor
                     {
                         GUILayout.BeginHorizontal();
                         {
-                            GUILayout.Label($"{items[i].name}", boldLable);
+                            GUILayout.Label($"{items[i].name}", GUI_STYLE_TITLE_LABLE);
                             GUILayout.FlexibleSpace();
                             GUILayout.EndHorizontal();
                         }
@@ -155,7 +156,7 @@ namespace ZEngine.Editor
                     GUILayout.Space(5);
                     this.BeginColor(items[i] == selection ? inColor : outColor);
                     {
-                        GUILayout.Box("", "WhiteBackground", GUILayout.Width(leftWidth), GUILayout.Height(1));
+                        GUILayout.Box("", GUI_STYLE_LINE, GUILayout.Width(leftWidth), GUILayout.Height(1));
                         this.EndColor();
                     }
                     if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)

@@ -25,6 +25,6 @@ MonoBehaviour:
     layerDatas:
     - index: 0
       name: Layer_0
-      state: 0
-      startFrameIndex: 0
-      endFrameIndex: 71
+      state: 1
+      startFrameIndex: 2
+      endFrameIndex: 51
