@@ -35,7 +35,7 @@ namespace ZEngine.Editor
 
         public void OnGUI()
         {
-            leftWidth = position.width / 4;
+            leftWidth = Mathf.Min(position.width / 4, 300);
             rightWidth = position.width - leftWidth - 18;
             Toolbar();
             DrawingSceneEditor();
@@ -67,7 +67,7 @@ namespace ZEngine.Editor
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical("OL box NoExpand", GUILayout.Width(leftWidth), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(boxStyle, GUILayout.Width(leftWidth), GUILayout.Height(position.height - 30));
                     {
                         listScroll = GUILayout.BeginScrollView(listScroll);
                         {
@@ -83,7 +83,7 @@ namespace ZEngine.Editor
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical("OL box NoExpand", GUILayout.Width(rightWidth), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(boxStyle, GUILayout.Width(rightWidth), GUILayout.Height(position.height - 30));
                     {
                         manifestScroll = GUILayout.BeginScrollView(manifestScroll, false, true);
                         {
@@ -145,7 +145,7 @@ namespace ZEngine.Editor
                     {
                         GUILayout.BeginHorizontal();
                         {
-                            GUILayout.Label($"{items[i].name}", "LargeBoldLabel");
+                            GUILayout.Label($"{items[i].name}", boldLable);
                             GUILayout.FlexibleSpace();
                             GUILayout.EndHorizontal();
                         }
@@ -155,7 +155,7 @@ namespace ZEngine.Editor
                     GUILayout.Space(5);
                     this.BeginColor(items[i] == selection ? inColor : outColor);
                     {
-                        GUILayout.Box("", "WhiteBackground", GUILayout.Width(position.width / 4), GUILayout.Height(1));
+                        GUILayout.Box("", "WhiteBackground", GUILayout.Width(leftWidth), GUILayout.Height(1));
                         this.EndColor();
                     }
                     if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)

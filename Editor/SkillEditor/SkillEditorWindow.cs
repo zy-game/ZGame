@@ -12,75 +12,6 @@ using ZEngine.Game;
 
 namespace Editor.SkillEditor
 {
-    [Config(Localtion.Packaged, "Assets/Test/skill.json")]
-    public sealed class SkillDataList : SingleScript<SkillDataList>
-    {
-        public List<SkillOptions> optionsList;
-    }
-
-    [Serializable]
-    public sealed class SkillOptions
-    {
-        /// <summary>
-        /// 技能编号
-        /// </summary>
-        [Header("技能编号")] public int id;
-
-        /// <summary>
-        /// 技能名称
-        /// </summary>
-        [Header("技能名称")] public string name;
-
-        /// <summary>
-        /// 技能冷却时间
-        /// </summary>
-        [Header("技能初始冷却时间")] public float cd;
-
-        /// <summary>
-        /// 技能使用消耗
-        /// </summary>
-        [Header("技能消耗")] public int use;
-
-        /// <summary>
-        /// 技能等级
-        /// </summary>
-        [Header("最大等级")] public int maxlevel;
-
-        /// <summary>
-        /// 装备图标路径
-        /// </summary>
-        [Header("图标路径")] public string icon;
-
-        /// <summary>
-        /// 技能类型
-        /// </summary>
-        [Header("技能类型")] public SkillType skillType;
-
-        /// <summary>
-        /// 释放类型
-        /// </summary>
-        [Header("释放类型")] public UseType useType;
-
-        /// <summary>
-        /// 技能描述
-        /// </summary>
-        [Header("技能描述")] public string describe;
-
-        public List<SkillLayerData> layerDatas;
-
-#if UNITY_EDITOR
-        [NonSerialized] public Texture2D _icon;
-#endif
-    }
-
-    [Serializable]
-    public sealed class SkillLayerData
-    {
-        public int index;
-        public string name;
-        public Switch state;
-    }
-
     public class SkillEditorWindow : EngineCustomEditor
     {
         [MenuItem("Game/SkillEditor")]
@@ -125,7 +56,7 @@ namespace Editor.SkillEditor
         protected override void DrawingItemDataView(object data, float width)
         {
             SkillOptions options = (SkillOptions)data;
-            layerWidth = width / 3;
+            layerWidth = Mathf.Min(width / 3, 300);
             axisWidth = width - layerWidth;
             options.id = EditorGUILayout.IntField("技能编号", options.id);
             options.name = EditorGUILayout.TextField("技能名称", options.name);
@@ -151,73 +82,97 @@ namespace Editor.SkillEditor
                 options.layerDatas = new List<SkillLayerData>();
             }
 
-            Rect layout = EditorGUILayout.BeginHorizontal("OL box NoExpand");
-            if (GUILayout.Button("+", EditorStyles.toolbarDropDown))
+            layout = EditorGUILayout.BeginHorizontal(boxStyle);
             {
-                options.layerDatas.Add(new SkillLayerData() { name = "Layer_" + options.layerDatas.Count, index = options.layerDatas.Count });
-            }
+                if (GUILayout.Button("+", EditorStyles.toolbarDropDown))
+                {
+                    options.layerDatas.Add(new SkillLayerData() { name = "Layer_" + options.layerDatas.Count, index = options.layerDatas.Count });
+                }
 
-            GUILayout.FlexibleSpace();
+                GUILayout.FlexibleSpace();
+            }
             GUILayout.EndHorizontal();
+
 
             GUILayout.BeginHorizontal();
-
-            GUILayout.BeginVertical("OL box NoExpand", GUILayout.Width(layerWidth));
-            GUILayout.BeginHorizontal("OL box NoExpand", GUILayout.Width(layerWidth));
-            DrawingPlayContorller();
-            GUILayout.FlexibleSpace();
-            DrawingLayerContoller();
-            GUILayout.EndHorizontal();
-            if (options.layerDatas.Count is 0)
             {
-                GUILayout.Label("No Data");
-            }
-            else
-            {
-                foreach (var VARIABLE in options.layerDatas)
+                GUILayout.BeginVertical(boxStyle, GUILayout.Width(layerWidth));
                 {
-                    DrawingTimeLayer(VARIABLE, layerWidth);
+                    GUILayout.BeginHorizontal(boxStyle, GUILayout.Width(layerWidth));
+                    {
+                        DrawingPlayContorller();
+                        GUILayout.FlexibleSpace();
+                        DrawingLayerContoller();
+                    }
+                    GUILayout.EndHorizontal();
+                    if (options.layerDatas.Count is 0)
+                    {
+                        GUILayout.Label("No Data");
+                    }
+                    else
+                    {
+                        foreach (var VARIABLE in options.layerDatas)
+                        {
+                            DrawingTimeLayer(VARIABLE, layerWidth);
+                        }
+                    }
+
+                    GUILayout.FlexibleSpace();
+                    GUILayout.EndVertical();
                 }
-            }
 
-            GUILayout.FlexibleSpace();
-            GUILayout.EndVertical();
 
-            Rect frameLayout = EditorGUILayout.BeginVertical("OL box NoExpand", GUILayout.Width(axisWidth));
-            Rect keyRange = EditorGUILayout.BeginHorizontal("OL box NoExpand", GUILayout.Height(25));
-            DrawingTimeAxisTilet(options, axisWidth);
-            GUILayout.EndHorizontal();
-            if (options.layerDatas.Count is 0)
-            {
-                GUILayout.Label("No Data");
-            }
-            else
-            {
-                foreach (var VARIABLE in options.layerDatas)
+                frameLayout = EditorGUILayout.BeginVertical(boxStyle, GUILayout.Width(axisWidth));
                 {
-                    DrawingTimeAxis(VARIABLE, axisWidth);
+                    keyRange = EditorGUILayout.BeginHorizontal(boxStyle, GUILayout.Height(25));
+                    {
+                        DrawingTimeAxisTilet(options, axisWidth);
+                    }
+                    GUILayout.EndHorizontal();
+                    if (options.layerDatas.Count is 0)
+                    {
+                        GUILayout.Label("No Data");
+                    }
+                    else
+                    {
+                        foreach (var VARIABLE in options.layerDatas)
+                        {
+                            DrawingTimeAxis(VARIABLE, axisWidth);
+                        }
+                    }
+
+                    GUILayout.FlexibleSpace();
+                    if ((Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseDrag) && frameLayout.Contains(Event.current.mousePosition) && Event.current.button == 0)
+                    {
+                        float index = (Event.current.mousePosition.x - keyRange.x) / keyRange.width;
+                        currentFrameIndex = (int)(index * frameCount);
+                        Event.current.Use();
+                        DrawingCurrentFrameLine(layout);
+                        this.Repaint();
+                    }
                 }
+                GUILayout.EndVertical();
             }
-
-            GUILayout.FlexibleSpace();
-            if (Event.current.type == EventType.MouseDown && frameLayout.Contains(Event.current.mousePosition) && Event.current.button == 0)
-            {
-                float index = (Event.current.mousePosition.x - keyRange.x) / keyRange.width;
-                Engine.Console.Log(keyRange, frameLayout, Event.current.mousePosition, index);
-                Event.current.Use();
-            }
-
-            GUILayout.EndVertical();
             GUILayout.EndHorizontal();
-
             DrawingCurrentFrameLine(layout);
         }
 
+        private Rect frameLayout;
+        private Rect keyRange;
+        private Rect layout;
+        private int frameCount = 0;
+        private float frameCountSpace = 0;
+        private int currentFrameIndex = 0;
+
         private void DrawingCurrentFrameLine(Rect layout)
         {
-            GUILayout.Space(-layout.height);
+            float offset = layout.x + layerWidth + frameCountSpace * currentFrameIndex + currentFrameIndex;
+            GUI.Box(new Rect(GetFrameIndexRect(currentFrameIndex), layout.y + layout.height + 5, 2, position.height - layout.y - 40), "", frameLine);
+        }
 
-            GUI.Box(new Rect(layout.x + layerWidth, layout.y + layout.height, 4, position.height - layout.y - 30), "", "U2D.createRect");
+        private float GetFrameIndexRect(int index)
+        {
+            return layout.x + layerWidth + frameCountSpace * index + index;
         }
 
         private void DrawingPlayContorller()
@@ -248,27 +203,29 @@ namespace Editor.SkillEditor
 
         private void DrawingTimeAxisTilet(SkillOptions options, float width)
         {
-            int skillFrameCount = 100;
-            float space = (width - skillFrameCount) / (float)skillFrameCount;
-            GUILayout.Space(space);
+            frameCount = 100;
+            frameCountSpace = (width - frameCount) / (float)frameCount;
             for (int i = 0; i < 100; i++)
             {
                 if (i % 5 == 0)
                 {
-                    GUILayout.Box("", "OverrideMargin", GUILayout.Height(15), GUILayout.Width(1));
+                    GUIContent line = new GUIContent(String.Empty);
+                    GUILayout.Box(line, frameLine, GUILayout.Height(15), GUILayout.Width(1));
+                    Rect spaceLable = GUILayoutUtility.GetLastRect();
+                    GUI.Label(new Rect(spaceLable.x, spaceLable.y, 30, 20), i.ToString());
                 }
                 else
                 {
-                    GUILayout.Box("", "OverrideMargin", GUILayout.Height(3), GUILayout.Width(1));
+                    GUILayout.Box("", frameLine, GUILayout.Height(3), GUILayout.Width(1));
                 }
 
-                GUILayout.Space(space);
+                GUILayout.Space(frameCountSpace);
             }
         }
 
         private void DrawingTimeLayer(SkillLayerData skillLayerData, float width)
         {
-            Rect layout = EditorGUILayout.BeginHorizontal("OL box NoExpand", GUILayout.Width(width), GUILayout.Height(30));
+            Rect layout = EditorGUILayout.BeginHorizontal(boxStyle, GUILayout.Width(width), GUILayout.Height(30));
             skillLayerData.name = GUILayout.TextField(skillLayerData.name, EditorStyles.toolbarTextField);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -276,20 +233,94 @@ namespace Editor.SkillEditor
 
         private void DrawingTimeAxis(SkillLayerData skillLayerData, float width)
         {
-            Color backup = GUI.color;
-            GUI.backgroundColor = skillLayerData.index % 2 == 0 ? Color.clear : new Color(0.8f, 0.8f, 0.8f, 1f);
-            Rect layout = EditorGUILayout.BeginHorizontal("MeTransitionSelect", GUILayout.Width(width), GUILayout.Height(30));
-            if (Event.current.type == EventType.MouseDown && layout.Contains(Event.current.mousePosition) && Event.current.button == 1)
+            Rect sliderLayout = EditorGUILayout.BeginHorizontal(seleteStyle, GUILayout.Width(width), GUILayout.Height(30));
+            if (Event.current.type == EventType.MouseDown && sliderLayout.Contains(Event.current.mousePosition) && Event.current.button == 1)
             {
                 GenericMenu menu = new GenericMenu();
                 menu.AddItem(new GUIContent("Locked"), skillLayerData.state == Switch.On, () => { skillLayerData.state = skillLayerData.state == Switch.On ? Switch.Off : Switch.On; });
+                menu.AddItem(new GUIContent("Edit State"), false, () => { });
                 menu.ShowAsContext();
             }
 
-            GUILayout.Box(String.Empty, "SelectionRect", GUILayout.Height(28), GUILayout.Width(100));
+            float offset = GetFrameIndexRect(skillLayerData.startFrameIndex);
+            int count = skillLayerData.endFrameIndex - skillLayerData.startFrameIndex <= 0 ? 1 : skillLayerData.endFrameIndex - skillLayerData.startFrameIndex;
+            float sliderWidth = frameCountSpace * count + 1;
+            Rect sliderRect = new Rect(GetFrameIndexRect(skillLayerData.startFrameIndex), sliderLayout.y, sliderWidth, sliderLayout.height);
+            GUI.Box(sliderRect, String.Empty, frameRangeStyle);
+            Engine.Console.Log(skillLayerData.startFrameIndex, skillLayerData.endFrameIndex, count, sliderWidth, sliderRect);
+            LeftDrag(skillLayerData, sliderRect);
+            RightDrage(skillLayerData, sliderRect);
+
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-            GUI.color = backup;
+        }
+
+        private void LeftDrag(SkillLayerData skillLayerData, Rect rect)
+        {
+            EditorGUIUtility.AddCursorRect(new Rect(rect.x, rect.y, 2, rect.height), MouseCursor.ResizeHorizontal);
+            switch (Event.current.rawType)
+            {
+                //开始拖拽分割线
+                case EventType.MouseDown:
+                    Event.current.Use();
+                    //todo 判断点击的是否是左边
+                    break;
+                case EventType.MouseDrag:
+                    float index = (Event.current.mousePosition.x - keyRange.x) / keyRange.width;
+                    skillLayerData.startFrameIndex = (int)(index * frameCount);
+                    if (skillLayerData.startFrameIndex < 0)
+                    {
+                        skillLayerData.startFrameIndex = 0;
+                    }
+
+                    if (skillLayerData.startFrameIndex > skillLayerData.endFrameIndex - 1)
+                    {
+                        skillLayerData.startFrameIndex = skillLayerData.endFrameIndex - 1;
+                    }
+
+                    Event.current.Use();
+                    Repaint();
+                    break;
+                //结束拖拽分割线   
+                case EventType.MouseUp:
+                    SaveChanged();
+                    Event.current.Use();
+                    break;
+            }
+        }
+
+        private void RightDrage(SkillLayerData skillLayerData, Rect rect)
+        {
+            EditorGUIUtility.AddCursorRect(new Rect(rect.x + rect.width - 2, rect.y, 2, rect.height), MouseCursor.ResizeHorizontal);
+            switch (Event.current.rawType)
+            {
+                //开始拖拽分割线
+                case EventType.MouseDown:
+                    Event.current.Use();
+                    //todo 判断点击的是否是右边
+                    break;
+                case EventType.MouseDrag:
+                    float index = (Event.current.mousePosition.x - keyRange.x) / keyRange.width;
+                    skillLayerData.endFrameIndex = (int)(index * frameCount);
+                    if (skillLayerData.endFrameIndex >= frameCount - 1)
+                    {
+                        skillLayerData.endFrameIndex = frameCount - 1;
+                    }
+
+                    if (skillLayerData.endFrameIndex < skillLayerData.startFrameIndex)
+                    {
+                        skillLayerData.endFrameIndex = skillLayerData.startFrameIndex + 1;
+                    }
+
+                    Event.current.Use();
+                    Repaint();
+                    break;
+                //结束拖拽分割线   
+                case EventType.MouseUp:
+                    SaveChanged();
+                    Event.current.Use();
+                    break;
+            }
         }
     }
 }
