@@ -21,8 +21,8 @@ namespace ZEngine.Editor
 
         public void OnGUI(Rect rect)
         {
-            GUI.BeginGroup(new Rect(rect.x, rect.y, rect.width, rect.height));
-            rect = new Rect(rect.x - 298, rect.y - 255, rect.width, rect.height);
+            GUI.BeginGroup(rect);
+            // rect = new Rect(rect.x - 298, rect.y - 255, rect.width, rect.height);
             _background.OnGUI(rect);
             for (int i = 0; i < nodes.Count; i++)
             {
@@ -58,7 +58,7 @@ namespace ZEngine.Editor
         {
             if (this.rect.Equals(Rect.zero))
             {
-                this.rect = new Rect(rect.x + rect.width / 2, rect.y + rect.height / 2, minWidth, minHeight);
+                this.rect = new Rect(rect.x, rect.y, minWidth, minHeight);
             }
 
             Rect boxRect = new Rect(this.rect.position + offset + scaleOffset, this.rect.size);
@@ -120,6 +120,7 @@ namespace ZEngine.Editor
 
         public void OnGUI(Rect rect)
         {
+            rect = new Rect(rect.x - 298, rect.y - 255, rect.width, rect.height);
             int x = (int)(rect.width / _size);
             int y = (int)(rect.height / _size);
 

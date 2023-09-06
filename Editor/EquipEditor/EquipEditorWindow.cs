@@ -21,7 +21,7 @@ namespace Editor.EquipEditor
 
     public class EquipEditorWindow : EngineCustomEditor
     {
-        [MenuItem("Game/Equip Editor")]
+        [MenuItem("工具/编辑器/物品编辑器")]
         public static void Open()
         {
             GetWindow<EquipEditorWindow>(false, "物品编辑器", true);

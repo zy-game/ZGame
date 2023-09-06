@@ -10,10 +10,10 @@ namespace ZEngine.Editor.MapEditor
 {
     public class MapEditorWindow : EngineCustomEditor
     {
-        [MenuItem("Game/Map Create")]
+        [MenuItem("工具/编辑器/地图编辑器")]
         public static void Open()
         {
-            GetWindow<MapEditorWindow>(false, "Map Create", true);
+            GetWindow<MapEditorWindow>(false, "地图编辑器", true);
         }
 
         protected override void Actived()
@@ -38,15 +38,16 @@ namespace ZEngine.Editor.MapEditor
             SaveChanged();
         }
 
-        protected override void DrawingItemDataView(object data, float width)
-        {
-            SceneOptions options = (SceneOptions)data;
-            GUILayout.Label(options.name);
-        }
-
         protected override void SaveChanged()
         {
             MapOptions.instance.Saved();
+        }
+
+        protected override void DrawingItemDataView(object data, float width)
+        {
+            SceneOptions options = (SceneOptions)data;
+            options.name = EditorGUILayout.TextField(new GUIContent("配置名"), options.name);
+            
         }
     }
 }

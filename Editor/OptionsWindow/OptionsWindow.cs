@@ -18,7 +18,7 @@ namespace ZEngine.Editor.OptionsEditorWindow
 
         private bool[] foldout = new bool[4];
 
-        [MenuItem("Game/Options")]
+        [MenuItem("工具/项目设置")]
         public static void OpenSetting()
         {
             SettingsService.OpenProjectSettings("Project/Options");
