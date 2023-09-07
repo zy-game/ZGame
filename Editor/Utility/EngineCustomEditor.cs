@@ -21,6 +21,8 @@ namespace ZEngine.Editor
         public const string GUI_STYLE_TITLE_LABLE = "LargeBoldLabel"; // new GUIStyle("LargeBoldLabel");
         public const string GUI_STYLE_BOX_BACKGROUND = "OL box NoExpand"; // new GUIStyle("OL box NoExpand");
         public const string GUI_STYLE_LINE = "WhiteBackground";
+        public const string GUI_STYLE_ADD_BUTTON = "OL Plus";
+        public const string GUI_STYLE_MINUS = "OL Minus";
 
         class ItemData
         {

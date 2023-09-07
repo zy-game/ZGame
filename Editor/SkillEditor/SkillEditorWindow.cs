@@ -233,7 +233,7 @@ namespace Editor.SkillEditor
             }
 
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("", "OL Plus"))
+            if (GUILayout.Button("", GUI_STYLE_ADD_BUTTON))
             {
                 GenericMenu menu = new GenericMenu();
                 menu.AddItem(new GUIContent("Input Checker"), false, () => { });
