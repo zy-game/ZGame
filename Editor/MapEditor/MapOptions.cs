@@ -22,7 +22,6 @@ namespace ZEngine.Editor.MapEditor
     {
         D4 = 4,
         D6 = 6,
-        D8 = 8,
     }
 
     [Serializable]
@@ -30,6 +29,7 @@ namespace ZEngine.Editor.MapEditor
     {
         public string name;
         public Vector2Int size;
+        public Vector2 tileSize;
         public MapType type;
         public MapTileDirection direction;
         public List<MapLayerOptions> layers;

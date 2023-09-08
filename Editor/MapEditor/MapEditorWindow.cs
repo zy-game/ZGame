@@ -53,6 +53,12 @@ namespace ZEngine.Editor.MapEditor
             GUILayout.FlexibleSpace();
             options.size = EditorGUILayout.Vector2IntField("", options.size, GUILayout.Width(width / 2));
             GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("地块大小"));
+            GUILayout.FlexibleSpace();
+            options.tileSize = EditorGUILayout.Vector2Field("", options.tileSize, GUILayout.Width(width / 2));
+            GUILayout.EndHorizontal();
             options.type = (MapType)EditorGUILayout.EnumPopup(new GUIContent("地图类型"), options.type);
             options.direction = (MapTileDirection)EditorGUILayout.EnumPopup(new GUIContent("地块方向"), options.direction);
             if (options.layers is null)
@@ -99,10 +105,14 @@ namespace ZEngine.Editor.MapEditor
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("构建地图"))
             {
+                OnBuild(options);
             }
 
             if (GUILayout.Button("删除配置"))
             {
+                MapOptions.instance.sceneList.Remove(options);
+                SaveChanged();
+                this.Repaint();
             }
 
             GUILayout.EndHorizontal();
@@ -193,6 +203,35 @@ namespace ZEngine.Editor.MapEditor
                 }
             }
             GUILayout.EndVertical();
+        }
+
+        private void OnBuild(SceneOptions options)
+        {
+            GameObject gameObject = GameObject.Find(options.name);
+            if (gameObject != null)
+            {
+                GameObject.DestroyImmediate(gameObject);
+            }
+
+            gameObject = new GameObject(options.name);
+            Grid grid = gameObject.AddComponent<Grid>();
+            grid.cellSize = options.tileSize;
+            switch (options.direction)
+            {
+                case MapTileDirection.D4:
+                    grid.cellLayout = GridLayout.CellLayout.Rectangle;
+                    break;
+                case MapTileDirection.D6:
+                    grid.cellLayout = GridLayout.CellLayout.Hexagon;
+                    break;
+            }
+
+            options.layers.Sort((a, b) => a.layer > b.layer ? 1 : -1);
+            for (int i = 0; i < options.layers.Count; i++)
+            {
+                GameObject layer = new GameObject(options.layers[i].name);
+                Tilemap tilemap = layer.AddComponent<Tilemap>();
+            }
         }
     }
 }
