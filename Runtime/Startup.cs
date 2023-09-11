@@ -10,6 +10,7 @@ using ZEngine.Network;
 using ZEngine.Resource;
 using ZEngine.Window;
 using Unity.Mathematics;
+using ZEngine.Game;
 
 
 public class Startup : MonoBehaviour
@@ -41,7 +42,7 @@ public class Startup : MonoBehaviour
         }
 
         Engine.Console.Log("进入游戏");
-        Engine.Game.OpenWorld("Test");
+        Engine.Game.OpenWorld(new WorldOptions() { name = "Test" });
         Engine.Game.LoadGameModule(HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On));
     }
 }

@@ -89,7 +89,7 @@ namespace ZEngine.Editor.PlayerEditor
 
     public class PlayerEditorWindow : EngineCustomEditor
     {
-        [MenuItem("Game/Player Editor")]
+        [MenuItem("工具/编辑器/角色编辑器")]
         public static void Open()
         {
             GetWindow<PlayerEditorWindow>(false, "角色编辑器", true);

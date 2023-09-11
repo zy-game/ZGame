@@ -255,8 +255,8 @@ public sealed class Engine
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static IWorld OpenWorld(string name)
-            => GameManager.instance.OpenWorld(name);
+        public static IWorld OpenWorld(WorldOptions options)
+            => GameManager.instance.OpenWorld(options);
 
         /// <summary>
         /// 获取指定名称的World

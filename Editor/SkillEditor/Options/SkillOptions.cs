@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using ZEngine.Game;
 
 namespace Editor.SkillEditor
@@ -53,10 +54,16 @@ namespace Editor.SkillEditor
         /// </summary>
         [Header("技能描述")] public string describe;
 
+        public string path_prefab;
+        public string path_hit;
+        public string path_buffer;
         public List<SkillLayerData> layerDatas;
 
 #if UNITY_EDITOR
         [NonSerialized] public Texture2D _icon;
+        [NonSerialized] public GameObject skill_effect;
+        [NonSerialized] public GameObject skill_hit_effect;
+        [NonSerialized] public GameObject skill_buffer_effect;
 #endif
     }
 }

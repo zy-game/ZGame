@@ -19,12 +19,16 @@ MonoBehaviour:
     use: 0
     maxlevel: 0
     icon: 
-    skillType: 0
-    useType: 0
+    skillType: 1
+    useType: 1
     describe: 
+    path_prefab: 
+    path_hit: 
+    path_buffer: 
     layerDatas:
     - index: 0
       name: Layer_0
-      state: 0
-      startFrameIndex: 0
-      endFrameIndex: 71
+      state: 1
+      type: 0
+      startFrameIndex: 11
+      endFrameIndex: 99

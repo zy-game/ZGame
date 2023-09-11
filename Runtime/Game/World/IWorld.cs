@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace ZEngine.Game
 {
+    public class MapData
+    {
+    }
+
     /// <summary>
     /// 世界
     /// </summary>
