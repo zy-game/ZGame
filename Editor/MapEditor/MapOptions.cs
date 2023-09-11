@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.Tilemaps;
 using Object = UnityEngine.Object;
 
 namespace ZEngine.Editor.MapEditor
@@ -51,7 +52,8 @@ namespace ZEngine.Editor.MapEditor
         public string name;
         public int layer;
         public float weight;
-        public Object mapObject;
+        public Tile sprite;
+        public GameObject gameObject;
         public bool[] dirctions;
     }
 }

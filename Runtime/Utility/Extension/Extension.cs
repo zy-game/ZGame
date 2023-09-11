@@ -63,4 +63,17 @@ public static class Extension
     {
         UnityEventArgs.UnityEventHandle.instance.StopCoroutine(coroutine);
     }
+
+    public static void SetParent(this GameObject gameObject, GameObject parent, Vector3 position, Vector3 rotation, Vector3 scale)
+    {
+        if (gameObject == null || parent == null)
+        {
+            return;
+        }
+
+        gameObject.transform.SetParent(parent.transform);
+        gameObject.transform.position = position;
+        gameObject.transform.rotation = Quaternion.Euler(rotation);
+        gameObject.transform.localScale = scale;
+    }
 }

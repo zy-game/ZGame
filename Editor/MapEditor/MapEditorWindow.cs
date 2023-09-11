@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -81,7 +82,7 @@ namespace ZEngine.Editor.MapEditor
                 var VARIABLE = options.layers[i];
                 Rect layerRect = EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 {
-                    GUILayout.BeginHorizontal();
+                    GUILayout.BeginHorizontal(GUI_STYLE_BOX_BACKGROUND);
                     {
                         VARIABLE.flodout = EditorGUILayout.Foldout(VARIABLE.flodout, VARIABLE.name);
                         GUILayout.FlexibleSpace();
@@ -136,11 +137,25 @@ namespace ZEngine.Editor.MapEditor
                     {
                         if (sceneOptions.type == MapType.M3D)
                         {
-                            VARIABLE.mapObject = EditorGUILayout.ObjectField(VARIABLE.mapObject, typeof(GameObject), false, GUILayout.Width(100), GUILayout.Height(100));
+                            VARIABLE.gameObject = (GameObject)EditorGUILayout.ObjectField(VARIABLE.gameObject, typeof(GameObject), false, GUILayout.Width(100), GUILayout.Height(100));
                         }
                         else
                         {
-                            VARIABLE.mapObject = EditorGUILayout.ObjectField(VARIABLE.mapObject, typeof(Sprite), false, GUILayout.Width(100), GUILayout.Height(100));
+                            if (VARIABLE.sprite == null)
+                            {
+                                if (Directory.Exists("Assets/Map/Cache/") is false)
+                                {
+                                    Directory.CreateDirectory("Assets/Map/Cache/");
+                                }
+
+                                string path = "Assets/Map/Cache/" + Guid.NewGuid().ToString().Replace("-", "") + ".asset";
+                                AssetDatabase.CreateAsset(new Tile(), path);
+                                AssetDatabase.SaveAssets();
+                                AssetDatabase.Refresh();
+                                VARIABLE.sprite = AssetDatabase.LoadAssetAtPath<Tile>(path);
+                            }
+
+                            VARIABLE.sprite.sprite = (Sprite)EditorGUILayout.ObjectField(VARIABLE.sprite.sprite, typeof(Sprite), false, GUILayout.Width(100), GUILayout.Height(100));
                         }
 
                         GUILayout.Space(20);
@@ -229,8 +244,15 @@ namespace ZEngine.Editor.MapEditor
             options.layers.Sort((a, b) => a.layer > b.layer ? 1 : -1);
             for (int i = 0; i < options.layers.Count; i++)
             {
+                if (options.layers[i].tiles is null || options.layers[i].tiles.Count is 0)
+                {
+                    continue;
+                }
+
                 GameObject layer = new GameObject(options.layers[i].name);
+                layer.SetParent(gameObject, Vector3.zero, Vector3.zero, Vector3.one);
                 Tilemap tilemap = layer.AddComponent<Tilemap>();
+                tilemap.SetTile(Vector3Int.zero, options.layers[i].tiles[0].sprite);
             }
         }
     }

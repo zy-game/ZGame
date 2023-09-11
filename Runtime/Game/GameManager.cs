@@ -5,10 +5,16 @@ using ZEngine.Network;
 
 namespace ZEngine.Game
 {
+    public class WorldOptions
+    {
+        public string name;
+        public MapData mapData;
+    }
+
     /// <summary>
     /// 游戏管理器
     /// </summary>
-     class GameManager : Single<GameManager>
+    class GameManager : Single<GameManager>
     {
         private List<IWorld> worlds = new List<IWorld>();
 
@@ -25,15 +31,15 @@ namespace ZEngine.Game
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public IWorld OpenWorld(string name)
+        public IWorld OpenWorld(WorldOptions options)
         {
-            IWorld world = Find(name);
+            IWorld world = Find(options.name);
             if (world is not null)
             {
                 return world;
             }
 
-            world = IWorld.Create(name);
+            world = IWorld.Create(options.name);
             worlds.Add(world);
             return world;
         }
