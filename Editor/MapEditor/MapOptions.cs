@@ -31,6 +31,8 @@ namespace ZEngine.Editor.MapEditor
         public string name;
         public Vector2Int size;
         public Vector2 tileSize;
+        public float lacunarity;
+        public int removeSeparateTileNumberOfTimes;
         public MapType type;
         public MapTileDirection direction;
         public List<MapLayerOptions> layers;
@@ -42,7 +44,6 @@ namespace ZEngine.Editor.MapEditor
         public string name;
         public int layer;
         public List<MapTileOptions> tiles;
-
         [NonSerialized] public bool flodout;
     }
 

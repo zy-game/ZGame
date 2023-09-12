@@ -18,6 +18,8 @@ namespace ZEngine.Editor.MapEditor
             GetWindow<MapEditorWindow>(false, "地图编辑器", true);
         }
 
+        private SceneOptions options;
+
         protected override void Actived()
         {
             if (MapOptions.instance.sceneList is null || MapOptions.instance.sceneList.Count is 0)
@@ -30,6 +32,8 @@ namespace ZEngine.Editor.MapEditor
             {
                 AddDataItem(VARIABLE.name, VARIABLE);
             }
+
+            options = MapOptions.instance.sceneList.FirstOrDefault();
         }
 
         protected override void CreateNewItem()
@@ -47,7 +51,7 @@ namespace ZEngine.Editor.MapEditor
 
         protected override void DrawingItemDataView(object data, float width)
         {
-            SceneOptions options = (SceneOptions)data;
+            options = (SceneOptions)data;
             options.name = EditorGUILayout.TextField(new GUIContent("配置名"), options.name);
             GUILayout.BeginHorizontal();
             GUILayout.Label(new GUIContent("地图大小"));
@@ -66,6 +70,9 @@ namespace ZEngine.Editor.MapEditor
             {
                 options.layers = new List<MapLayerOptions>();
             }
+
+            options.lacunarity = EditorGUILayout.Slider("偏移值", options.lacunarity, 0, 1);
+            options.removeSeparateTileNumberOfTimes = EditorGUILayout.IntSlider("移除孤岛次数", options.removeSeparateTileNumberOfTimes, 0, 10);
 
             GUILayout.BeginHorizontal(GUI_STYLE_BOX_BACKGROUND);
             GUILayout.Label("Layers", EditorStyles.boldLabel);
@@ -95,7 +102,7 @@ namespace ZEngine.Editor.MapEditor
                     GUILayout.EndHorizontal();
                     if (VARIABLE.flodout)
                     {
-                        DrawingMapLayerOptions(options, VARIABLE);
+                        DrawingMapLayerOptions(VARIABLE);
                     }
                 }
                 GUILayout.EndVertical();
@@ -106,7 +113,7 @@ namespace ZEngine.Editor.MapEditor
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("构建地图"))
             {
-                OnBuild(options);
+                OnBuild();
             }
 
             if (GUILayout.Button("删除配置"))
@@ -119,7 +126,7 @@ namespace ZEngine.Editor.MapEditor
             GUILayout.EndHorizontal();
         }
 
-        private void DrawingMapLayerOptions(SceneOptions sceneOptions, MapLayerOptions mapLayerOptions)
+        private void DrawingMapLayerOptions(MapLayerOptions mapLayerOptions)
         {
             mapLayerOptions.name = EditorGUILayout.TextField(new GUIContent("Name"), mapLayerOptions.name);
             mapLayerOptions.layer = EditorGUILayout.IntField(new GUIContent("Sort Layer"), mapLayerOptions.layer);
@@ -135,7 +142,7 @@ namespace ZEngine.Editor.MapEditor
                     var VARIABLE = mapLayerOptions.tiles[i];
                     Rect tileRect = EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
                     {
-                        if (sceneOptions.type == MapType.M3D)
+                        if (options.type == MapType.M3D)
                         {
                             VARIABLE.gameObject = (GameObject)EditorGUILayout.ObjectField(VARIABLE.gameObject, typeof(GameObject), false, GUILayout.Width(100), GUILayout.Height(100));
                         }
@@ -159,7 +166,7 @@ namespace ZEngine.Editor.MapEditor
                         }
 
                         GUILayout.Space(20);
-                        DrawingDriectionOptions(sceneOptions, VARIABLE);
+                        DrawingDriectionOptions(VARIABLE);
                         GUILayout.FlexibleSpace();
                         VARIABLE.weight = EditorGUILayout.Slider(new GUIContent("权重"), VARIABLE.weight, 0, 1);
                         GUILayout.FlexibleSpace();
@@ -185,7 +192,7 @@ namespace ZEngine.Editor.MapEditor
             GUILayout.EndVertical();
         }
 
-        private void DrawingDriectionOptions(SceneOptions sceneOptions, MapTileOptions options)
+        private void DrawingDriectionOptions(MapTileOptions options)
         {
             if (options.dirctions is null || options.dirctions.Length != 9)
             {
@@ -220,7 +227,7 @@ namespace ZEngine.Editor.MapEditor
             GUILayout.EndVertical();
         }
 
-        private void OnBuild(SceneOptions options)
+        private void OnBuild()
         {
             GameObject gameObject = GameObject.Find(options.name);
             if (gameObject != null)
@@ -241,6 +248,7 @@ namespace ZEngine.Editor.MapEditor
                     break;
             }
 
+
             options.layers.Sort((a, b) => a.layer > b.layer ? 1 : -1);
             for (int i = 0; i < options.layers.Count; i++)
             {
@@ -252,8 +260,170 @@ namespace ZEngine.Editor.MapEditor
                 GameObject layer = new GameObject(options.layers[i].name);
                 layer.SetParent(gameObject, Vector3.zero, Vector3.zero, Vector3.one);
                 Tilemap tilemap = layer.AddComponent<Tilemap>();
-                tilemap.SetTile(Vector3Int.zero, options.layers[i].tiles[0].sprite);
+                layer.AddComponent<TilemapRenderer>();
+                float[,] mapData = new float[options.size.x, options.size.y];
+                GenerateMapData(mapData);
+                for (int j = 0; j < options.removeSeparateTileNumberOfTimes; j++)
+                {
+                    if (!RemoveSeparateTile(mapData)) // 如果本次操作什么都没有处理，则不进行循环
+                    {
+                        break;
+                    }
+                }
+
+                GenerateTileMap(mapData, options.layers[i], tilemap);
             }
+        }
+
+        private void GenerateRuleMap()
+        {
+        }
+
+        private void GenerateMapData(float[,] mapData)
+        {
+            // 对于种子的应用
+
+
+            float randomOffset = UnityEngine.Random.Range(-10000, 10000);
+
+            float minValue = float.MaxValue;
+            float maxValue = float.MinValue;
+
+            for (int x = 0; x < options.size.x; x++)
+            {
+                for (int y = 0; y < options.size.y; y++)
+                {
+                    float noiseValue = Mathf.PerlinNoise(x * options.lacunarity + randomOffset, y * options.lacunarity + randomOffset);
+                    mapData[x, y] = noiseValue;
+                    if (noiseValue < minValue) minValue = noiseValue;
+                    if (noiseValue > maxValue) maxValue = noiseValue;
+                }
+            }
+
+            // 平滑到0~1
+            for (int x = 0; x < options.size.x; x++)
+            {
+                for (int y = 0; y < options.size.y; y++)
+                {
+                    mapData[x, y] = Mathf.InverseLerp(minValue, maxValue, mapData[x, y]);
+                }
+            }
+        }
+
+        private void GenerateTileMap(float[,] mapData, MapLayerOptions layerOptions, Tilemap tilemap)
+        {
+            // CleanTileMap();
+            if (layerOptions.tiles is null || layerOptions.tiles.Count is 0)
+            {
+                return;
+            }
+
+            List<float> weight = layerOptions.tiles.Select(x => x.weight).ToList();
+
+            //地面
+            for (int x = 0; x < options.size.x; x++)
+            {
+                for (int y = 0; y < options.size.y; y++)
+                {
+                    MapTileOptions mapTile = layerOptions.tiles.OrderBy(s => Mathf.Abs(s.weight - mapData[x, y])).FirstOrDefault();
+                    TileBase tile = mapTile.sprite;
+                    tilemap.SetTile(new Vector3Int(-(options.size.x / 2) + x, -(options.size.y / 2) + y), tile);
+                }
+            }
+        }
+
+        private int GetTileIndex(float target, float[] layerOptions)
+        {
+            float[] temp = new float[layerOptions.Length];
+            for (int i = 0; i < layerOptions.Length; i++)
+            {
+                temp[i] = Mathf.Abs(target - layerOptions[i]);
+            }
+
+            return 0;
+        }
+
+
+        private bool RemoveSeparateTile(float[,] mapData)
+        {
+            bool res = false; // 是否是有效的操作
+            for (int x = 0; x < options.size.x; x++)
+            {
+                for (int y = 0; y < options.size.y; y++)
+                {
+                    // 是地面且只有一个邻居也是地面
+                    if (IsGround(mapData, x, y) && GetFourNeighborsGroundCount(mapData, x, y) <= 1)
+                    {
+                        mapData[x, y] = 0; // 设置为水
+                        res = true;
+                    }
+                }
+            }
+
+            return res;
+        }
+
+        private int GetFourNeighborsGroundCount(float[,] mapData, int x, int y)
+        {
+            int count = 0;
+            // top
+            if (IsInMapRange(x, y + 1) && IsGround(mapData, x, y + 1)) count += 1;
+            // bottom
+            if (IsInMapRange(x, y - 1) && IsGround(mapData, x, y - 1)) count += 1;
+            // left
+            if (IsInMapRange(x - 1, y) && IsGround(mapData, x - 1, y)) count += 1;
+            // right
+            if (IsInMapRange(x + 1, y) && IsGround(mapData, x + 1, y)) count += 1;
+            return count;
+        }
+
+        private int GetEigthNeighborsGroundCount(float[,] mapData, int x, int y)
+        {
+            int count = 0;
+
+            // top
+            if (IsInMapRange(x, y + 1) && IsGround(mapData, x, y + 1)) count += 1;
+            // bottom
+            if (IsInMapRange(x, y - 1) && IsGround(mapData, x, y - 1)) count += 1;
+            // left
+            if (IsInMapRange(x - 1, y) && IsGround(mapData, x - 1, y)) count += 1;
+            // right
+            if (IsInMapRange(x + 1, y) && IsGround(mapData, x + 1, y)) count += 1;
+            if (options.direction == MapTileDirection.D4)
+            {
+                return count;
+            }
+
+            // left top
+            if (IsInMapRange(x - 1, y + 1) && IsGround(mapData, x - 1, y + 1)) count += 1;
+            // right top
+            if (IsInMapRange(x + 1, y + 1) && IsGround(mapData, x + 1, y + 1)) count += 1;
+            // left bottom
+            if (IsInMapRange(x - 1, y - 1) && IsGround(mapData, x - 1, y - 1)) count += 1;
+            // right bottom
+            if (IsInMapRange(x + 1, y - 1) && IsGround(mapData, x + 1, y - 1)) count += 1;
+            return count;
+        }
+
+        public bool IsInMapRange(int x, int y)
+        {
+            return x >= 0 && x < options.size.x && y >= 0 && y < options.size.y;
+        }
+
+        public bool IsGround(float[,] mapData, int x, int y)
+        {
+            return mapData[x, y] > .5f;
+        }
+
+        public void CleanTileMap()
+        {
+            GameObject gameObject = GameObject.Find(options.name);
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            GameObject.DestroyImmediate(gameObject);
         }
     }
 }
