@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using ZEngine.Editor;
 
-namespace Editor.EquipEditor
+namespace ZEngine.Editor.EquipEditor
 {
     [Config(Localtion.Packaged, "Assets/Test/equips.json")]
     public sealed class EquipList : SingleScript<EquipList>
@@ -21,7 +21,7 @@ namespace Editor.EquipEditor
 
     public class EquipEditorWindow : EngineCustomEditor
     {
-        [MenuItem("工具/编辑器/物品编辑器")]
+        // [MenuItem("工具/编辑器/物品编辑器")]
         public static void Open()
         {
             GetWindow<EquipEditorWindow>(false, "物品编辑器", true);

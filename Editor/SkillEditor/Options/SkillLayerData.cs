@@ -1,7 +1,7 @@
 ﻿using System;
 using ZEngine;
 
-namespace Editor.SkillEditor
+namespace ZEngine.Editor.SkillEditor
 {
     [Serializable]
     public class SkillLayerData

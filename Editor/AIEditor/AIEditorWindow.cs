@@ -1,13 +1,14 @@
 using UnityEditor;
 using ZEngine.Editor;
 
-namespace Editor.AIEditor
+namespace ZEngine.Editor.AIEditor
 {
     public class AIEditorWindow : EngineCustomEditor
     {
-        [MenuItem("工具/编辑器/AI编辑器")]
+        // [MenuItem("工具/编辑器/AI编辑器")]
         public static void Open()
         {
+            GetWindow<AIEditorWindow>(false, "行为编辑器", true);
         }
 
         protected override void Actived()

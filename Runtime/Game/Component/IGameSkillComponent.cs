@@ -6,7 +6,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 技能分类
     /// </summary>
-    public enum SkillType
+    public enum SkillType : byte
     {
         Buffer,
         Skill,
@@ -16,20 +16,51 @@ namespace ZEngine.Game
     /// <summary>
     /// 释放类型
     /// </summary>
-    public enum UseType
+    public enum UseType : byte
     {
         Single,
         Range
     }
 
-    public enum PlayerType
+    public enum PlayerType : byte
     {
         Player,
         NPC,
         Monster,
     }
 
+    public enum PlayerLavel : byte
+    {
+        /// <summary>
+        /// 普通
+        /// </summary>
+        Normal,
 
+        /// <summary>
+        /// 高级
+        /// </summary>
+        Senior,
+
+        /// <summary>
+        /// 精英
+        /// </summary>
+        Elite,
+
+        /// <summary>
+        /// 特殊
+        /// </summary>
+        Special,
+
+        /// <summary>
+        /// 区域Boss
+        /// </summary>
+        Boss,
+
+        /// <summary>
+        /// 世界Boss
+        /// </summary>
+        WorldBoss,
+    }
 
 
     /// <summary>

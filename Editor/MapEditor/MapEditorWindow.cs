@@ -12,7 +12,7 @@ namespace ZEngine.Editor.MapEditor
 {
     public class MapEditorWindow : EngineCustomEditor
     {
-        [MenuItem("工具/编辑器/地图编辑器")]
+        // [MenuItem("工具/编辑器/地图编辑器")]
         public static void Open()
         {
             GetWindow<MapEditorWindow>(false, "地图编辑器", true);
@@ -260,7 +260,7 @@ namespace ZEngine.Editor.MapEditor
                 GameObject layer = new GameObject(options.layers[i].name);
                 layer.SetParent(gameObject, Vector3.zero, Vector3.zero, Vector3.one);
                 Tilemap tilemap = layer.AddComponent<Tilemap>();
-                layer.AddComponent<TilemapRenderer>();
+                layer.AddComponent<TilemapRenderer>().sortingOrder = options.layers[i].layer;
                 float[,] mapData = new float[options.size.x, options.size.y];
                 GenerateMapData(mapData);
                 for (int j = 0; j < options.removeSeparateTileNumberOfTimes; j++)
@@ -282,8 +282,6 @@ namespace ZEngine.Editor.MapEditor
         private void GenerateMapData(float[,] mapData)
         {
             // 对于种子的应用
-
-
             float randomOffset = UnityEngine.Random.Range(-10000, 10000);
 
             float minValue = float.MaxValue;

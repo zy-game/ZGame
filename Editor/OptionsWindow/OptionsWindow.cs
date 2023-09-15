@@ -18,11 +18,12 @@ namespace ZEngine.Editor.OptionsEditorWindow
 
         private bool[] foldout = new bool[4];
 
-        [MenuItem("工具/项目设置")]
+        // [MenuItem("工具/项目设置")]
         public static void OpenSetting()
         {
             SettingsService.OpenProjectSettings("Project/Options");
         }
+        
 
         public OptionsWindow() : base("Project/Options", SettingsScope.Project)
         {
@@ -61,6 +62,7 @@ namespace ZEngine.Editor.OptionsEditorWindow
         public override void OnGUI(string searchContext)
         {
             base.OnGUI(searchContext);
+            EditorGUI.BeginChangeCheck();
             foldout[0] = EditorGUILayout.Foldout(foldout[0], "Reference Options", EditorStyles.foldoutHeader);
             if (foldout[0])
             {

@@ -11,11 +11,11 @@ using ZEngine;
 using ZEngine.Editor;
 using ZEngine.Game;
 
-namespace Editor.SkillEditor
+namespace ZEngine.Editor.SkillEditor
 {
     public class SkillEditorWindow : EngineCustomEditor
     {
-        [MenuItem("工具/编辑器/技能编辑器")]
+        // [MenuItem("工具/编辑器/技能编辑器")]
         public static void Open()
         {
             GetWindow<SkillEditorWindow>(false, "技能编辑器", true);

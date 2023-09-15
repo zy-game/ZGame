@@ -2,7 +2,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace Editor.SkillEditor
+namespace ZEngine.Editor.SkillEditor
 {
     class SkillMachineEditor : GraphView
     {

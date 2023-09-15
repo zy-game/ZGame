@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using ZEngine.Game;
 
-namespace Editor.SkillEditor
+namespace ZEngine.Editor.SkillEditor
 {
     [Serializable]
     public sealed class SkillOptions

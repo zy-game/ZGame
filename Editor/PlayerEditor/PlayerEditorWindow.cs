@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Editor.SkillEditor;
+using ZEngine.Editor.SkillEditor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -83,13 +83,18 @@ namespace ZEngine.Editor.PlayerEditor
         /// </summary>
         public PlayerType type;
 
+        /// <summary>
+        /// 角色分类
+        /// </summary>
+        public PlayerLavel level;
+
         [NonSerialized] public Sprite icon;
         [NonSerialized] public GameObject playerPrefab;
     }
 
     public class PlayerEditorWindow : EngineCustomEditor
     {
-        [MenuItem("工具/编辑器/角色编辑器")]
+        // [MenuItem("工具/编辑器/角色编辑器")]
         public static void Open()
         {
             GetWindow<PlayerEditorWindow>(false, "角色编辑器", true);
@@ -102,7 +107,6 @@ namespace ZEngine.Editor.PlayerEditor
 
         protected override void Actived()
         {
-            
             if (PlayerEditorOptions.instance.players is null || PlayerEditorOptions.instance.players.Count is 0)
             {
                 PlayerEditorOptions.instance.players = new List<PlayerOptions>();
@@ -131,6 +135,7 @@ namespace ZEngine.Editor.PlayerEditor
             options.id = EditorGUILayout.IntField("角色编号", options.id);
             options.name = EditorGUILayout.TextField("角色名", options.name);
             options.type = (PlayerType)EditorGUILayout.EnumPopup("角色类型", options.type);
+            options.level = (PlayerLavel)EditorGUILayout.EnumPopup("角色分类", options.level);
             if (options.icon == null && options.headIcon.IsNullOrEmpty() is false)
             {
                 options.icon = AssetDatabase.LoadAssetAtPath<Sprite>(options.headIcon);

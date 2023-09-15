@@ -65,7 +65,7 @@ namespace ZEngine.Editor.ResourceBuilder
 
     public class GameResourceBuilder : EditorWindow
     {
-        [MenuItem("工具/编辑器/资源编辑器")]
+        // [MenuItem("工具/编辑器/资源编辑器")]
         public static void Open()
         {
             GetWindow<GameResourceBuilder>(false, "Package Builder", true);

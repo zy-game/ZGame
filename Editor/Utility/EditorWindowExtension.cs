@@ -70,9 +70,21 @@ namespace ZEngine.Editor
                 Debug.Log("Full setup");
             }
 
-            if (GUILayout.Button(new GUIContent("Wram-up setup"), EditorStyles.toolbarButton))
+            if (GUILayout.Button(new GUIContent("Tools"), EditorStyles.toolbarButton))
             {
-                Debug.Log("Wram-up setup");
+                GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent("行为编辑器"), false, () => { AIEditor.AIEditorWindow.Open(); });
+                menu.AddItem(new GUIContent("地图编辑器"), false, () => { MapEditor.MapEditorWindow.Open(); });
+                menu.AddItem(new GUIContent("物品编辑器"), false, () => { EquipEditor.EquipEditorWindow.Open(); });
+                menu.AddItem(new GUIContent("角色编辑器"), false, () => { PlayerEditor.PlayerEditorWindow.Open(); });
+                menu.AddItem(new GUIContent("技能编辑器"), false, () => { SkillEditor.SkillEditorWindow.Open(); });
+                menu.AddItem(new GUIContent("资源编辑器"), false, () => { ResourceBuilder.GameResourceBuilder.Open(); });
+                menu.ShowAsContext();
+            }
+
+            if (GUILayout.Button("Options", EditorStyles.toolbarButton))
+            {
+                OptionsEditorWindow.OptionsWindow.OpenSetting();
             }
 
             GUILayout.EndHorizontal();
