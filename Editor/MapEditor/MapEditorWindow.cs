@@ -148,7 +148,7 @@ namespace ZEngine.Editor.MapEditor
                         }
                         else
                         {
-                            if (VARIABLE.sprite == null)
+                            if (VARIABLE.mapTile == null)
                             {
                                 if (Directory.Exists("Assets/Map/Cache/") is false)
                                 {
@@ -156,13 +156,22 @@ namespace ZEngine.Editor.MapEditor
                                 }
 
                                 string path = "Assets/Map/Cache/" + Guid.NewGuid().ToString().Replace("-", "") + ".asset";
-                                AssetDatabase.CreateAsset(new Tile(), path);
-                                AssetDatabase.SaveAssets();
-                                AssetDatabase.Refresh();
-                                VARIABLE.sprite = AssetDatabase.LoadAssetAtPath<Tile>(path);
+                                if (File.Exists(path) is false)
+                                {
+                                    AssetDatabase.CreateAsset(new Tile(), path);
+                                    AssetDatabase.SaveAssets();
+                                    AssetDatabase.Refresh();
+                                }
+
+                                VARIABLE.mapTile = AssetDatabase.LoadAssetAtPath<Tile>(path);
                             }
 
-                            VARIABLE.sprite.sprite = (Sprite)EditorGUILayout.ObjectField(VARIABLE.sprite.sprite, typeof(Sprite), false, GUILayout.Width(100), GUILayout.Height(100));
+                            Sprite temp = (Sprite)EditorGUILayout.ObjectField(VARIABLE.mapTile.sprite, typeof(Sprite), false, GUILayout.Width(100), GUILayout.Height(100));
+                            if (VARIABLE.mapTile.sprite == null || VARIABLE.mapTile.sprite.Equals(temp) is false)
+                            {
+                                VARIABLE.mapTile.sprite = temp;
+                                EditorUtility.SetDirty(VARIABLE.mapTile);
+                            }
                         }
 
                         GUILayout.Space(20);
@@ -190,6 +199,11 @@ namespace ZEngine.Editor.MapEditor
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
+        }
+
+        public static int GetMouseChange()
+        {
+            return Event.current.button == 1 ? -1 : 1;
         }
 
         private void DrawingDriectionOptions(MapTileOptions options)
@@ -324,7 +338,7 @@ namespace ZEngine.Editor.MapEditor
                 for (int y = 0; y < options.size.y; y++)
                 {
                     MapTileOptions mapTile = layerOptions.tiles.OrderBy(s => Mathf.Abs(s.weight - mapData[x, y])).FirstOrDefault();
-                    TileBase tile = mapTile.sprite;
+                    TileBase tile = mapTile.mapTile;
                     tilemap.SetTile(new Vector3Int(-(options.size.x / 2) + x, -(options.size.y / 2) + y), tile);
                 }
             }

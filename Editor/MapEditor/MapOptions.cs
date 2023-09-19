@@ -53,7 +53,7 @@ namespace ZEngine.Editor.MapEditor
         public string name;
         public int layer;
         public float weight;
-        public Tile sprite;
+        public Tile mapTile;
         public GameObject gameObject;
         public bool[] dirctions;
     }
