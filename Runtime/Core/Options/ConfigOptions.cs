@@ -1,5 +1,6 @@
 ﻿using System;
 
+
 public enum Localtion
 {
     /// <summary>
@@ -19,7 +20,7 @@ public enum Localtion
 }
 
 [AttributeUsage(AttributeTargets.Class)]
-public sealed class ConfigAttribute : Attribute
+public class ConfigAttribute : Attribute
 {
     internal string path;
     internal Localtion localtion;
@@ -28,5 +29,26 @@ public sealed class ConfigAttribute : Attribute
     {
         this.path = path;
         this.localtion = localtion;
+    }
+}
+
+public class InternalConfigAttribute : ConfigAttribute
+{
+    public InternalConfigAttribute() : base(Localtion.Internal)
+    {
+    }
+}
+
+public class ProjectConfigAttribute : ConfigAttribute
+{
+    public ProjectConfigAttribute() : base(Localtion.Project)
+    {
+    }
+}
+
+public class PackageConfigAttribute : ConfigAttribute
+{
+    public PackageConfigAttribute(string path) : base(Localtion.Packaged, path)
+    {
     }
 }

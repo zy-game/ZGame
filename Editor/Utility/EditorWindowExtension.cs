@@ -73,6 +73,7 @@ namespace ZEngine.Editor
             if (GUILayout.Button(new GUIContent("Tools"), EditorStyles.toolbarButton))
             {
                 GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent("UI编辑器"), false, () => { UIEditor.UIEditorWindow.Open(); });
                 menu.AddItem(new GUIContent("行为编辑器"), false, () => { AIEditor.AIEditorWindow.Open(); });
                 menu.AddItem(new GUIContent("地图编辑器"), false, () => { MapEditor.MapEditorWindow.Open(); });
                 menu.AddItem(new GUIContent("物品编辑器"), false, () => { EquipEditor.EquipEditorWindow.Open(); });

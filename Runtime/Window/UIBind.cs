@@ -2,41 +2,93 @@ using UnityEngine;
 
 namespace ZEngine.Window
 {
-    public interface IUIBind<T>
+    public interface IUIBind<T> : IReference
     {
-        public static IUIBind<T> Create(GameObject gameObject)
-        {
-            return default;
-        }
-
+        T value { get; }
+        GameObject gameObject { get; }
         void Change(T value);
-
-        T GetValue();
     }
 
-    public class BindObject : MonoBehaviour, IUIBind<object>
+    public abstract class BindBasic<T> : IUIBind<T>
     {
-        public void Change(object value)
+        private T _value;
+        public GameObject gameObject { get; protected set; }
+
+        public T value
         {
-            throw new System.NotImplementedException();
+            get => _value;
         }
 
-        public object GetValue()
+        public void Change(T value)
         {
-            throw new System.NotImplementedException();
+            _value = value;
+            OnChange();
+        }
+
+        public virtual void Release()
+        {
+        }
+
+        protected abstract void OnChange();
+    }
+
+    public class BindObject : BindBasic<object>
+    {
+        protected override void OnChange()
+        {
         }
     }
 
-    public class BindSprite : MonoBehaviour, IUIBind<Sprite>
+    public class BindSprite : BindBasic<Sprite>
     {
-        public void Change(Sprite value)
+        protected override void OnChange()
         {
-            throw new System.NotImplementedException();
         }
+    }
 
-        public Sprite GetValue()
+    public class BindTexture : BindBasic<Texture2D>
+    {
+        protected override void OnChange()
         {
-            throw new System.NotImplementedException();
+        }
+    }
+
+    public class BindInputField : BindBasic<object>
+    {
+        protected override void OnChange()
+        {
+        }
+    }
+
+    public class BindButton : BindObject
+    {
+    }
+
+    public class BindToggle : BindBasic<bool>
+    {
+        protected override void OnChange()
+        {
+        }
+    }
+
+    public class BindSlider : BindBasic<float>
+    {
+        protected override void OnChange()
+        {
+        }
+    }
+
+    public class BindScrollbar : BindBasic<float>
+    {
+        protected override void OnChange()
+        {
+        }
+    }
+
+    public class BindScrollView : BindBasic<float>
+    {
+        protected override void OnChange()
+        {
         }
     }
 }
