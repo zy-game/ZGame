@@ -8,13 +8,13 @@ using UnityEngine.UI;
 
 namespace ZEngine.Window
 {
-    public interface IAsyncWindow : IReference
+    public interface IAsyncWindow : IDisposable
     {
         object result { get; }
         IEnumerator GetCoroutine();
     }
 
-    public abstract class UIWindow : IReference
+    public abstract class UIWindow : IDisposable
     {
         private Dictionary<string, GameObject> childList = new Dictionary<string, GameObject>();
         public GameObject gameObject { get; private set; }
@@ -163,7 +163,7 @@ namespace ZEngine.Window
             return default;
         }
 
-        public void Release()
+        public void Dispose()
         {
             Destroy();
             GameObject.DestroyImmediate(gameObject);

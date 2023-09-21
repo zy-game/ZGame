@@ -11,9 +11,11 @@ namespace ZEngine.Network
         DownloadHandle[] Handles { get; }
         DownloadOptions[] options { get; }
 
+        void SubscribeProgressChange(ISubscribeHandle<float> subscribe);
+
         internal static IDownloadExecuteHandle Create(params DownloadOptions[] options)
         {
-            InternalDownloadExecuteHandle internalDownloadExecuteHandle = Engine.Class.Loader<InternalDownloadExecuteHandle>();
+            InternalDownloadExecuteHandle internalDownloadExecuteHandle = Activator.CreateInstance<InternalDownloadExecuteHandle>();
             internalDownloadExecuteHandle.options = options;
             return internalDownloadExecuteHandle;
         }
@@ -22,15 +24,23 @@ namespace ZEngine.Network
         {
             public DownloadHandle[] Handles { get; set; }
             public DownloadOptions[] options { get; set; }
+            private ISubscribeHandle<float> subscribe;
 
-            public override void Release()
+            public override void Dispose()
             {
                 foreach (DownloadHandle downloadHandle in Handles)
                 {
-                    Engine.Class.Release(downloadHandle);
+                    downloadHandle.Dispose();
                 }
 
+                subscribe.Dispose();
+                subscribe = null;
                 Handles = Array.Empty<DownloadHandle>();
+            }
+
+            public void SubscribeProgressChange(ISubscribeHandle<float> subscribe)
+            {
+                this.subscribe = subscribe;
             }
 
             protected override IEnumerator ExecuteCoroutine()
@@ -45,7 +55,7 @@ namespace ZEngine.Network
 
                 yield return WaitFor.Create(() =>
                 {
-                    OnProgress(Handles.Sum(x => x.progress) / (float)Handles.Length);
+                    this.subscribe?.Execute(Handles.Sum(x => x.progress) / (float)Handles.Length);
                     return Handles.Where(x => x.IsComplete() is false).Count() is 0;
                 });
 

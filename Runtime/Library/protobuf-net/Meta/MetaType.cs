@@ -389,7 +389,7 @@ namespace ProtoBuf.Meta
                     }
                     finally
                     {
-                        model.ReleaseLock(opaqueToken);
+                        model.DisposeLock(opaqueToken);
                     }
                 }
                 return serializer;
@@ -1515,7 +1515,7 @@ namespace ProtoBuf.Meta
                 fields.Add(member);
             } finally
             {
-                model.ReleaseLock(opaqueToken);
+                model.DisposeLock(opaqueToken);
             }
         }
         /// <summary>
@@ -1691,7 +1691,7 @@ namespace ProtoBuf.Meta
                 return source;
 
             } finally {
-                model.ReleaseLock(opaqueToken);
+                model.DisposeLock(opaqueToken);
             }
         }
 

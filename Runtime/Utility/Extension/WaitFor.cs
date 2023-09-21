@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class WaitFor : CustomYieldInstruction, IReference
+public class WaitFor : CustomYieldInstruction, IDisposable
 {
     private Func<bool> m_Predicate;
     public override bool keepWaiting => Check();
@@ -12,22 +12,34 @@ public class WaitFor : CustomYieldInstruction, IReference
         bool state = m_Predicate();
         if (state)
         {
-            Engine.Class.Release(this);
+            this.Dispose();
         }
 
         return state;
     }
 
+    public static void Create(Func<bool> func, Action complate)
+    {
+        IEnumerator Waiting()
+        {
+            WaitFor waitFor = Create(func);
+            yield return waitFor;
+            complate?.Invoke();
+        }
+
+        Waiting().StartCoroutine();
+    }
+
     public static WaitFor Create(Func<bool> func)
     {
-        WaitFor wait = Engine.Class.Loader<WaitFor>();
+        WaitFor wait = Activator.CreateInstance<WaitFor>();
         wait.m_Predicate = func;
         return wait;
     }
 
     public static WaitFor Create(float time)
     {
-        WaitFor wait = Engine.Class.Loader<WaitFor>();
+        WaitFor wait = Activator.CreateInstance<WaitFor>();
         float end = UnityEngine.Time.realtimeSinceStartup + time;
         wait.m_Predicate = () => UnityEngine.Time.realtimeSinceStartup > end;
         return wait;
@@ -55,7 +67,7 @@ public class WaitFor : CustomYieldInstruction, IReference
         Start().StartCoroutine();
     }
 
-    public void Release()
+    public void Dispose()
     {
         m_Predicate = null;
     }

@@ -10,7 +10,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 世界
     /// </summary>
-    public interface IWorld : IReference
+    public interface IWorld : IDisposable
     {
         /// <summary>
         /// 世界名
@@ -107,7 +107,7 @@ namespace ZEngine.Game
         /// <returns></returns>
         internal static IWorld Create(string name)
         {
-            World world = Engine.Class.Loader<World>();
+            World world = Activator.CreateInstance<World>();
             world.Init(name);
             return world;
         }
@@ -120,7 +120,7 @@ namespace ZEngine.Game
             private List<EntityContext> contexts;
             private List<IGameLogicSystem> systems;
 
-            class EntityContext : IReference
+            class EntityContext : IDisposable
             {
                 public int id;
                 public List<IEntityComponent> components;
@@ -138,7 +138,7 @@ namespace ZEngine.Game
                         return component;
                     }
 
-                    component = (IEntityComponent)Engine.Class.Loader(type);
+                    component = (IEntityComponent)Activator.CreateInstance(type);
                     components.Add(component);
                     return component;
                 }
@@ -159,9 +159,9 @@ namespace ZEngine.Game
                     return components.Find(x => x.GetType() == type);
                 }
 
-                public void Release()
+                public void Dispose()
                 {
-                    components.ForEach(Engine.Class.Release);
+                    components.ForEach(x => x.Dispose());
                     components.Clear();
                     id = 0;
                 }
@@ -179,7 +179,6 @@ namespace ZEngine.Game
 
             private void FixedUpdate(UnityEventArgs args)
             {
-                Engine.Console.Log("Fixed Update World ", name);
                 if (systems is null || systems.Count is 0)
                 {
                     return;
@@ -191,11 +190,11 @@ namespace ZEngine.Game
                 }
             }
 
-            public void Release()
+            public void Dispose()
             {
-                systems.ForEach(Engine.Class.Release);
-                contexts.ForEach(Engine.Class.Release);
-                entities.ForEach(Engine.Class.Release);
+                systems.ForEach(x => x.Dispose());
+                contexts.ForEach(x => x.Dispose());
+                entities.ForEach(x => x.Dispose());
                 systems.Clear();
                 contexts.Clear();
                 entities.Clear();
@@ -225,7 +224,7 @@ namespace ZEngine.Game
                 }
 
                 contexts.Remove(context);
-                Engine.Class.Release(context);
+                context.Dispose();
             }
 
             public IEntity Find(int id)
@@ -302,7 +301,7 @@ namespace ZEngine.Game
                     return;
                 }
 
-                gameLogicSystem = (IGameLogicSystem)Engine.Class.Loader(logicType);
+                gameLogicSystem = (IGameLogicSystem)Activator.CreateInstance(logicType);
                 gameLogicSystem.OnCreate();
                 systems.Add(gameLogicSystem);
             }

@@ -21,7 +21,7 @@ namespace ZEngine.Resource
 
         internal static IRequestAssetExecute<T> Create(string path)
         {
-            InternalRequestAssetExecute<T> internalRequestAssetExecute = Engine.Class.Loader<InternalRequestAssetExecute<T>>();
+            InternalRequestAssetExecute<T> internalRequestAssetExecute = Activator.CreateInstance<InternalRequestAssetExecute<T>>();
             internalRequestAssetExecute.path = path;
             return internalRequestAssetExecute;
         }
@@ -44,24 +44,16 @@ namespace ZEngine.Resource
                 {
                     string temp = path.Substring("Resources/".Length);
                     asset = Resources.Load<T>(temp);
-                    WaitFor.WaitFormFrameEnd(() => Engine.Class.Release(this));
+                    WaitFor.WaitFormFrameEnd(this.Dispose);
                     return;
                 }
                 else
                 {
-#if UNITY_EDITOR
-                    if (HotfixOptions.instance.useHotfix is Switch.On && HotfixOptions.instance.useAsset == Switch.On)
-                    {
-                        asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
-                        WaitFor.WaitFormFrameEnd(() => Engine.Class.Release(this));
-                        return;
-                    }
-#endif
                     manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
                     if (manifest is null)
                     {
                         Engine.Console.Error("Not Find The Asset Bundle Manifest");
-                        WaitFor.WaitFormFrameEnd(() => Engine.Class.Release(this));
+                        WaitFor.WaitFormFrameEnd(this.Dispose);
                         return;
                     }
 
@@ -69,16 +61,16 @@ namespace ZEngine.Resource
                     if (bundleHandle is null)
                     {
                         Engine.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
-                        WaitFor.WaitFormFrameEnd(() => Engine.Class.Release(this));
+                        WaitFor.WaitFormFrameEnd(this.Dispose);
                         return;
                     }
 
                     asset = bundleHandle.Load<T>(path);
-                    WaitFor.WaitFormFrameEnd(() => Engine.Class.Release(this));
+                    WaitFor.WaitFormFrameEnd(this.Dispose);
                 }
             }
 
-            public override void Release()
+            public override void Dispose()
             {
                 asset = null;
                 GC.SuppressFinalize(this);

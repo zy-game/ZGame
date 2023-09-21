@@ -410,7 +410,7 @@ namespace ProtoBuf.Compiler
             return result;
         }
         //
-        internal void ReleaseToPool(LocalBuilder value)
+        internal void DisposeToPool(LocalBuilder value)
         {
             int count = locals.Count;
             for (int i = 0; i < count; i++)

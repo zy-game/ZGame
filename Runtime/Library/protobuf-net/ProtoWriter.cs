@@ -19,7 +19,7 @@ namespace ProtoBuf
     /// Why is the API backwards (static methods with writer arguments)?
     /// See: http://marcgravell.blogspot.com/2010/03/last-will-be-first-and-first-will-be.html
     /// </summary>
-    public sealed class ProtoWriter : IDisposable
+    public sealed class ProtoWriter : System.IDisposable
     {
         private Stream dest;
         TypeModel model;
@@ -467,7 +467,7 @@ namespace ProtoBuf
         /// Addition information about this serialization operation.
         /// </summary>
         public SerializationContext Context { get { return context; } }
-        void IDisposable.Dispose()
+        void System.IDisposable.Dispose()
         {
             Dispose();
         }
@@ -479,7 +479,7 @@ namespace ProtoBuf
                 dest = null;
             }
             model = null;
-            BufferPool.ReleaseBufferToPool(ref ioBuffer);
+            BufferPool.DisposeBufferToPool(ref ioBuffer);
         }
 
         private byte[] ioBuffer;

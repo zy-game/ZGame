@@ -65,11 +65,6 @@ namespace ZEngine.Editor
         private static void OnGuiBody()
         {
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(new GUIContent("Full setup"), EditorStyles.toolbarButton))
-            {
-                Debug.Log("Full setup");
-            }
-
             if (GUILayout.Button(new GUIContent("Tools"), EditorStyles.toolbarButton))
             {
                 GenericMenu menu = new GenericMenu();

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -15,18 +16,18 @@ namespace ZEngine.Resource
         private List<CacheData> cacheList = new List<CacheData>();
         private List<RuntimeModuleManifest> moduleList = new List<RuntimeModuleManifest>();
         private List<InternalRuntimeBundleHandle> bundleLists = new List<InternalRuntimeBundleHandle>();
-        private Dictionary<string, IReference> loadAssetHandles = new Dictionary<string, IReference>();
+        private Dictionary<string, IDisposable> loadAssetHandles = new Dictionary<string, IDisposable>();
 
 
-        class CacheData : IReference
+        class CacheData : IDisposable
         {
             public float timeout;
             public InternalRuntimeBundleHandle bundle;
 
-            public void Release()
+            public void Dispose()
             {
                 timeout = 0;
-                Engine.Class.Release(bundle);
+                bundle.Dispose();
                 bundle = null;
             }
         }
@@ -34,14 +35,14 @@ namespace ZEngine.Resource
         public override void Dispose()
         {
             base.Dispose();
-            cacheList.ForEach(Engine.Class.Release);
+            cacheList.ForEach(x=>x.Dispose());
             cacheList.Clear();
             moduleList.Clear();
-            bundleLists.ForEach(Engine.Class.Release);
+            bundleLists.ForEach(x=>x.Dispose());
             bundleLists.Clear();
-            foreach (KeyValuePair<string, IReference> loadAssetHandle in loadAssetHandles)
+            foreach (var loadAssetHandle in loadAssetHandles.Values)
             {
-                Engine.Class.Release(loadAssetHandle.Value);
+                loadAssetHandle.Dispose();
             }
 
             loadAssetHandles.Clear();
@@ -218,7 +219,7 @@ namespace ZEngine.Resource
         public IRequestAssetExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
         {
             //todo 如果在编辑器并且没有启用热更，那么直接用编辑器的api加载资源
-            if (loadAssetHandles.TryGetValue(assetPath, out IReference handle))
+            if (loadAssetHandles.TryGetValue(assetPath, out IDisposable handle))
             {
                 return (IRequestAssetExecuteHandle<T>)handle;
             }
@@ -234,7 +235,7 @@ namespace ZEngine.Resource
         /// 回收资源
         /// </summary>
         /// <param name="target">资源句柄</param>
-        public void Release(Object target)
+        public void Dispose(Object target)
         {
             InternalRuntimeBundleHandle runtimeAssetObjectHandle = bundleLists.Find(x => x.Contains(target));
             if (runtimeAssetObjectHandle is null)

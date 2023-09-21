@@ -20,7 +20,7 @@ namespace ProtoBuf
     /// A stateful reader, used to read a protobuf stream. Typical usage would be (sequentially) to call
     /// ReadFieldHeader and (after matching the field) an appropriate Read* method.
     /// </summary>
-    public sealed class ProtoReader : IDisposable
+    public sealed class ProtoReader : System.IDisposable
     {
         Stream source;
         byte[] ioBuffer;
@@ -109,7 +109,7 @@ namespace ProtoBuf
         /// </summary>
         public SerializationContext Context { get { return context; } }
         /// <summary>
-        /// Releases resources used by the reader, but importantly <b>does not</b> Dispose the 
+        /// Disposes resources used by the reader, but importantly <b>does not</b> Dispose the 
         /// underlying stream; in many typical use-cases the stream is used for different
         /// processes, so it is assumed that the consumer will Dispose their stream separately.
         /// </summary>
@@ -118,7 +118,7 @@ namespace ProtoBuf
             // importantly, this does **not** own the stream, and does not dispose it
             source = null;
             model = null;
-            BufferPool.ReleaseBufferToPool(ref ioBuffer);
+            BufferPool.DisposeBufferToPool(ref ioBuffer);
             if(stringInterner != null) stringInterner.Clear();
             if(netCache != null) netCache.Clear();
         }
@@ -1171,7 +1171,7 @@ namespace ProtoBuf
                 }
                 finally
                 {
-                    BufferPool.ReleaseBufferToPool(ref buffer);
+                    BufferPool.DisposeBufferToPool(ref buffer);
                 }
             }
             if (count > 0) throw EoF(null);

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -12,9 +13,11 @@ namespace ZEngine.Resource
         ModuleOptions[] options { get; }
         RuntimeBundleManifest[] bundles { get; }
 
+        void SubscribeProgressChange(ISubscribeHandle<float> subscribe);
+
         internal static ICheckResourceUpdateExecuteHandle Create(params ModuleOptions[] options)
         {
-            InternalCheckResourceUpdateExecuteHandle internalCheckResourceUpdateExecuteHandle = Engine.Class.Loader<InternalCheckResourceUpdateExecuteHandle>();
+            InternalCheckResourceUpdateExecuteHandle internalCheckResourceUpdateExecuteHandle = Activator.CreateInstance<InternalCheckResourceUpdateExecuteHandle>();
             internalCheckResourceUpdateExecuteHandle.options = options;
             return internalCheckResourceUpdateExecuteHandle;
         }
@@ -23,6 +26,7 @@ namespace ZEngine.Resource
         {
             public ModuleOptions[] options { get; set; }
             public RuntimeBundleManifest[] bundles { get; set; }
+            private ISubscribeHandle<float> progressSubsceibeHandle;
 
             class UpdateItem
             {
@@ -31,13 +35,34 @@ namespace ZEngine.Resource
                 public RuntimeBundleManifest bundle;
             }
 
+            public override void Dispose()
+            {
+                base.Dispose();
+                progressSubsceibeHandle?.Dispose();
+                progressSubsceibeHandle = null;
+                bundles = Array.Empty<RuntimeBundleManifest>();
+                options = Array.Empty<ModuleOptions>();
+            }
+
+            public void SubscribeProgressChange(ISubscribeHandle<float> subscribe)
+            {
+                this.progressSubsceibeHandle = subscribe;
+            }
+
             protected override IEnumerator ExecuteCoroutine()
             {
                 //todo 如果在编辑器模式下，并且未使用热更模式，直接跳过
+#if UNITY_EDITOR
+                if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset is Switch.Off)
+                {
+                    status = Status.Success;
+                    yield break;
+                }
+#endif
                 if (options is null || options.Length is 0)
                 {
                     status = Status.Failed;
-                    OnProgress(1);
+                    progressSubsceibeHandle?.Execute(1);
                     yield break;
                 }
 
@@ -95,7 +120,7 @@ namespace ZEngine.Resource
                     version = x.bundle.version
                 });
                 IDownloadExecuteHandle downloadExecuteHandle = Engine.Network.Download(optionsList.ToArray());
-                downloadExecuteHandle.Subscribe(IProgressSubscribeHandle.Create(OnProgress));
+                downloadExecuteHandle.SubscribeProgressChange(progressSubsceibeHandle);
                 yield return WaitFor.Create(() => downloadExecuteHandle.status == Status.Success || downloadExecuteHandle.status == Status.Failed);
 
                 if (downloadExecuteHandle.status is not Status.Success || downloadExecuteHandle.Handles is null || downloadExecuteHandle.Handles.Length is 0)

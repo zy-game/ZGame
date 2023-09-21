@@ -6,14 +6,14 @@ using ZEngine.Resource;
 
 public class TestGameGameEventArgs : GameEventArgs<TestGameGameEventArgs>
 {
-    public override void Release()
+    public override void Dispose()
     {
     }
 }
 
 public class TestGameGameEventArgs2 : GameEventArgs<TestGameGameEventArgs2>
 {
-    public override void Release()
+    public override void Dispose()
     {
     }
 }

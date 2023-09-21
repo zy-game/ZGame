@@ -68,7 +68,7 @@ namespace WebSocketSharp
     ///   <see href="http://tools.ietf.org/html/rfc6455">RFC 6455</see>.
     ///   </para>
     /// </remarks>
-    public class WebSocket : IDisposable
+    public class WebSocket : System.IDisposable
     {
         #region Private Fields
 
@@ -4556,7 +4556,7 @@ namespace WebSocketSharp
         ///   Closing or Closed.
         ///   </para>
         /// </remarks>
-        void IDisposable.Dispose()
+        void System.IDisposable.Dispose()
         {
             close(1001, String.Empty);
         }

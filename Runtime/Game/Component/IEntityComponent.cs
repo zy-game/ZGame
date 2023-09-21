@@ -6,7 +6,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 实体组件
     /// </summary>
-    public interface IEntityComponent : IReference
+    public interface IEntityComponent : IDisposable
     {
     }
 }

@@ -518,7 +518,7 @@ namespace ProtoBuf
         public delegate Type TypeResolver(int fieldNumber);
 
         /// <summary>
-        /// Releases any internal buffers that have been reserved for efficiency; this does not affect any serialization
+        /// Disposes any internal buffers that have been reserved for efficiency; this does not affect any serialization
         /// operations; simply: it can be used (optionally) to release the buffers for garbage collection (at the expense
         /// of having to re-allocate a new buffer for the next operation, rather than re-use prior buffers).
         /// </summary>

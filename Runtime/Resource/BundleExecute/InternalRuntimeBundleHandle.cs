@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    internal sealed class InternalRuntimeBundleHandle : IReference
+    internal sealed class InternalRuntimeBundleHandle : IDisposable
     {
         public string name { get; private set; }
         public uint refCount { get; private set; }
         public string module { get; private set; }
 
         private AssetBundle bundle;
-        private HashSet<Object> _handles;
+        private List<Object> _handles;
 
-        public void Release()
+        public void Dispose()
         {
             _handles.Clear();
             bundle?.Unload(true);
@@ -33,16 +34,48 @@ namespace ZEngine.Resource
 
         public T Load<T>(string path) where T : Object
         {
+            Object temp = default;
+#if UNITY_EDITOR
+            if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset == Switch.Off)
+            {
+                temp = _handles.Find(x => x.name == Path.GetFileNameWithoutExtension(path));
+                if (temp == null)
+                {
+                    temp = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
+                    _handles.Add(temp);
+                }
+
+                return (T)temp;
+            }
+#endif
             if (bundle is null)
             {
                 return default;
             }
 
-            return bundle.LoadAsset<T>(path);
+            temp = bundle.LoadAsset<T>(path);
+            _handles.Add(temp);
+            return (T)temp;
         }
 
         public IEnumerator LoadAsync<T>(string path, ISubscribeHandle<T> subscribe) where T : Object
         {
+            Object temp = default;
+#if UNITY_EDITOR
+            if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset == Switch.Off)
+            {
+                temp = _handles.Find(x => x.name == Path.GetFileNameWithoutExtension(path));
+                if (temp == null)
+                {
+                    temp = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
+                    _handles.Add(temp);
+                }
+
+                subscribe.Execute(temp);
+                yield break;
+            }
+#endif
+
             if (bundle is null)
             {
                 subscribe.Execute(default);
@@ -57,8 +90,8 @@ namespace ZEngine.Resource
                 yield break;
             }
 
-            subscribe.Execute(request.asset);
             _handles.Add(request.asset);
+            subscribe.Execute(request.asset);
         }
 
         public void Unload(Object obj)
@@ -69,12 +102,12 @@ namespace ZEngine.Resource
 
         public static InternalRuntimeBundleHandle Create(RuntimeBundleManifest manifest, AssetBundle bundle)
         {
-            InternalRuntimeBundleHandle runtimeAssetBundleHandle = Engine.Class.Loader<InternalRuntimeBundleHandle>();
+            InternalRuntimeBundleHandle runtimeAssetBundleHandle = Activator.CreateInstance<InternalRuntimeBundleHandle>();
             runtimeAssetBundleHandle.bundle = bundle;
             runtimeAssetBundleHandle.name = manifest.name;
             runtimeAssetBundleHandle.module = manifest.owner;
             runtimeAssetBundleHandle.refCount = 0;
-            runtimeAssetBundleHandle._handles = new HashSet<Object>();
+            runtimeAssetBundleHandle._handles = new List<Object>();
             return runtimeAssetBundleHandle;
         }
     }

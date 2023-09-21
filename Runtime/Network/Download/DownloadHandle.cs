@@ -6,7 +6,7 @@ using ZEngine.VFS;
 
 namespace ZEngine.Network
 {
-    public class DownloadHandle : IReference
+    public class DownloadHandle : IDisposable
     {
         public string name;
         public string url;
@@ -52,7 +52,7 @@ namespace ZEngine.Network
             return status == Status.Failed || status == Status.Success;
         }
 
-        public void Release()
+        public void Dispose()
         {
             name = String.Empty;
             url = String.Empty;
@@ -63,7 +63,7 @@ namespace ZEngine.Network
 
         public static DownloadHandle Create(string url, int index, VersionOptions ver)
         {
-            DownloadHandle downloadHandle = Engine.Class.Loader<DownloadHandle>();
+            DownloadHandle downloadHandle = Activator.CreateInstance<DownloadHandle>();
             downloadHandle.url = url;
             downloadHandle.version = ver;
             downloadHandle.index = index;

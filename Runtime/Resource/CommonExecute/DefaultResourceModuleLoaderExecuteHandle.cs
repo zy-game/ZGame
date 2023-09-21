@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,9 +12,16 @@ namespace ZEngine.Resource
     {
         ModuleOptions[] options { get; }
 
+        /// <summary>
+        /// 订阅模块加载进度
+        /// </summary>
+        /// <param name="subscribe"></param>
+        void SubscribeProgressChange(ISubscribeHandle<float> subscribe);
+
+
         internal static IResourceModuleLoaderExecuteHandle Create(params ModuleOptions[] options)
         {
-            InternalResourceModuleLoaderExecuteHandle internalResourceModuleLoaderExecuteHandle = Engine.Class.Loader<InternalResourceModuleLoaderExecuteHandle>();
+            InternalResourceModuleLoaderExecuteHandle internalResourceModuleLoaderExecuteHandle = Activator.CreateInstance<InternalResourceModuleLoaderExecuteHandle>();
             internalResourceModuleLoaderExecuteHandle.options = options;
             return internalResourceModuleLoaderExecuteHandle;
         }
@@ -21,12 +29,34 @@ namespace ZEngine.Resource
         class InternalResourceModuleLoaderExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IResourceModuleLoaderExecuteHandle>, IResourceModuleLoaderExecuteHandle
         {
             public ModuleOptions[] options { get; set; }
+            private ISubscribeHandle<float> subscribe;
+
+            public void SubscribeProgressChange(ISubscribeHandle<float> subscribe)
+            {
+                this.subscribe = subscribe;
+            }
+
+            public override void Dispose()
+            {
+                base.Dispose();
+                options = Array.Empty<ModuleOptions>();
+                subscribe?.Dispose();
+                subscribe = null;
+            }
 
             protected override IEnumerator ExecuteCoroutine()
             {
+#if UNITY_EDITOR
+                if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset is Switch.Off)
+                {
+                    status = Status.Success;
+                    yield break;
+                }
+#endif
                 if (options is null || options.Length is 0)
                 {
                     status = Status.Success;
+                    this.subscribe.Execute(1);
                     yield break;
                 }
 
@@ -69,7 +99,7 @@ namespace ZEngine.Resource
                 yield return WaitFor.Create(() =>
                 {
                     int count = requestAssetBundleExecuteHandles.Where(x => x.status == Status.Failed || x.status == Status.Success).Count();
-                    OnProgress((float)count / (float)requestAssetBundleExecuteHandles.Length);
+                    this.subscribe?.Execute((float)count / (float)requestAssetBundleExecuteHandles.Length);
                     return count == requestAssetBundleExecuteHandles.Length;
                 });
 

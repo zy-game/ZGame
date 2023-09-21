@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ namespace ZEngine
     /// <summary>
     /// 订阅器
     /// </summary>
-    public interface ISubscribeHandle : IReference
+    public interface ISubscribeHandle : IDisposable
     {
         /// <summary>
         /// 执行订阅函数
@@ -37,6 +38,8 @@ namespace ZEngine
         {
             return ISubscribeHandle<object>.InternalGameSubscribeHandle.Create(args => action());
         }
+
+        
     }
 
     public interface ISubscribeHandle<T> : ISubscribeHandle
@@ -60,7 +63,7 @@ namespace ZEngine
 
         class InternalGameSubscribeHandle : ISubscribeHandle<T>
         {
-            protected Action<T> method;
+            protected List<Action<T>> methods;
 
             public void Execute(object args)
             {
@@ -69,98 +72,61 @@ namespace ZEngine
 
             public void Execute(T args)
             {
-                method?.Invoke(args);
-                if (args is IReference reference)
+                for (int i = 0; i < methods.Count; i++)
                 {
-                    Engine.Class.Release(reference);
+                    methods[i].Invoke(args);
                 }
+
+                if (args is IDisposable reference)
+                {
+                    reference.Dispose();
+                }
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is InternalGameSubscribeHandle subscribe)
+                {
+                    for (int i = 0; i < subscribe.methods.Count; i++)
+                    {
+                        if (this.methods.Contains(subscribe.methods[i]) is false)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return methods.Equals(obj);
             }
 
             public void Merge(ISubscribeHandle subscribe)
             {
-                this.method += ((InternalGameSubscribeHandle)subscribe).method;
-                Engine.Class.Release(subscribe);
+                this.methods.AddRange(((InternalGameSubscribeHandle)subscribe).methods);
+                subscribe.Dispose();
             }
 
             public void Unmerge(ISubscribeHandle subscribe)
             {
-                this.method -= ((InternalGameSubscribeHandle)subscribe).method;
-                Engine.Class.Release(subscribe);
+                InternalGameSubscribeHandle internalGameSubscribeHandle = (InternalGameSubscribeHandle)subscribe;
+                for (int i = 0; i < internalGameSubscribeHandle.methods.Count; i++)
+                {
+                    this.methods.Remove(internalGameSubscribeHandle.methods[i]);
+                }
+
+                internalGameSubscribeHandle.Dispose();
             }
 
-            public void Release()
+            public void Dispose()
             {
-                method = null;
+                methods.Clear();
                 GC.SuppressFinalize(this);
             }
 
             internal static InternalGameSubscribeHandle Create(Action<T> callback)
             {
-                InternalGameSubscribeHandle internalGameSubscribeHandle = Engine.Class.Loader<InternalGameSubscribeHandle>();
-                internalGameSubscribeHandle.method = callback;
+                InternalGameSubscribeHandle internalGameSubscribeHandle = Activator.CreateInstance<InternalGameSubscribeHandle>();
+                internalGameSubscribeHandle.methods = new List<Action<T>>() { callback };
                 return internalGameSubscribeHandle;
-            }
-        }
-    }
-
-    /// <summary>
-    /// 订阅器
-    /// </summary>
-    public interface IProgressSubscribeHandle : ISubscribeHandle<float>
-    {
-        /// <summary>
-        /// 创建一个进度订阅器
-        /// </summary>
-        /// <param name="callback">回调函数</param>
-        /// <returns>订阅器</returns>
-        public static IProgressSubscribeHandle Create(Action<float> callback)
-        {
-            return InternalProgressSubscribeHandle.Create(callback);
-        }
-
-        class InternalProgressSubscribeHandle : IProgressSubscribeHandle
-        {
-            private Action<float> method;
-
-            public void Execute(object args)
-            {
-                Execute((float)args);
-            }
-
-            public void Execute(float args)
-            {
-                method?.Invoke(args);
-            }
-
-            public void Merge(ISubscribeHandle subscribe)
-            {
-                if (subscribe is InternalProgressSubscribeHandle internalProgressSubscribeHandle)
-                {
-                    this.method += internalProgressSubscribeHandle.method;
-                    Engine.Class.Release(subscribe);
-                }
-            }
-
-            public void Unmerge(ISubscribeHandle subscribe)
-            {
-                if (subscribe is InternalProgressSubscribeHandle internalProgressSubscribeHandle)
-                {
-                    this.method -= internalProgressSubscribeHandle.method;
-                    Engine.Class.Release(subscribe);
-                }
-            }
-
-            public void Release()
-            {
-                method = null;
-                GC.SuppressFinalize(this);
-            }
-
-            public static InternalProgressSubscribeHandle Create(Action<float> callback)
-            {
-                InternalProgressSubscribeHandle internalProgressSubscribeHandle = Engine.Class.Loader<InternalProgressSubscribeHandle>();
-                internalProgressSubscribeHandle.method = callback;
-                return internalProgressSubscribeHandle;
             }
         }
     }

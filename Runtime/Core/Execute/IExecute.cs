@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ namespace ZEngine
     /// <summary>
     /// 执行器
     /// </summary>
-    public interface IExecute : IReference
+    public interface IExecute : IDisposable
     {
         /// <summary>
         /// 开始执行
@@ -21,10 +22,10 @@ namespace ZEngine
         public void Execute()
         {
             ExecuteCommand();
-            WaitFor.WaitFormFrameEnd(() => { Engine.Class.Release(this); });
+            WaitFor.WaitFormFrameEnd(this.Dispose);
         }
 
-        public abstract void Release();
+        public abstract void Dispose();
         protected abstract void ExecuteCommand();
     }
 }

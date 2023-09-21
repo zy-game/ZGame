@@ -48,7 +48,7 @@ If these prove popular, I may wish to do further tiles to add to this set, and f
 
 Changelog:
 1.0:
-	- First Release
+	- First Dispose
 
 1.1:
 	- Added dirt, base, void, hills tile types. 

@@ -15,7 +15,7 @@ namespace ZEngine.Game
 
         internal static IGameModuleLoaderExecuteHandle Create(GameEntryOptions gameEntryOptions)
         {
-            InternalGameModuleLoaderExecuteHandle internalGameModuleLoaderExecuteHandle = Engine.Class.Loader<InternalGameModuleLoaderExecuteHandle>();
+            InternalGameModuleLoaderExecuteHandle internalGameModuleLoaderExecuteHandle = Activator.CreateInstance<InternalGameModuleLoaderExecuteHandle>();
             internalGameModuleLoaderExecuteHandle.gameEntryOptions = gameEntryOptions;
             return internalGameModuleLoaderExecuteHandle;
         }

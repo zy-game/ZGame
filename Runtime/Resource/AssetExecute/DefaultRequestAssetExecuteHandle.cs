@@ -15,7 +15,7 @@ namespace ZEngine.Resource
     {
         internal static IRequestAssetExecuteHandle<T> Create(string path)
         {
-            InternalRequestAssetExecuteHandle<T> internalRequestAssetExecuteHandle = Engine.Class.Loader<InternalRequestAssetExecuteHandle<T>>();
+            InternalRequestAssetExecuteHandle<T> internalRequestAssetExecuteHandle = Activator.CreateInstance<InternalRequestAssetExecuteHandle<T>>();
             internalRequestAssetExecuteHandle.path = path;
             return internalRequestAssetExecuteHandle;
         }

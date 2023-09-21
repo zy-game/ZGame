@@ -13,7 +13,7 @@ namespace ZEngine.VFS
 
         internal static IReadFileExecute Create(string name, VersionOptions version)
         {
-            InternalVFSReadderExecute internalVfsReadderExecute = Engine.Class.Loader<InternalVFSReadderExecute>();
+            InternalVFSReadderExecute internalVfsReadderExecute = Activator.CreateInstance<InternalVFSReadderExecute>();
             internalVfsReadderExecute.name = name;
             internalVfsReadderExecute.version = version;
             return internalVfsReadderExecute;
@@ -26,7 +26,7 @@ namespace ZEngine.VFS
             public byte[] bytes { get; set; }
             public VersionOptions version { get; set; }
 
-            public override void Release()
+            public override void Dispose()
             {
                 version = null;
                 name = String.Empty;

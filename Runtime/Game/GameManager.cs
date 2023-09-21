@@ -67,7 +67,7 @@ namespace ZEngine.Game
             }
 
             worlds.Remove(world);
-            Engine.Class.Release(world);
+            world.Dispose();
         }
 
         /// <summary>

@@ -96,7 +96,7 @@ namespace ZEngine.Game
             return transformComponent;
         }
 
-        public void Release()
+        public void Dispose()
         {
             GameObject.DestroyImmediate(gameObject);
             position = Vector3.zero;

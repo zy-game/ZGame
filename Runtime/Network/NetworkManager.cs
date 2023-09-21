@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using ProtoBuf;
-using ProtoBuf.Meta;
 
 namespace ZEngine.Network
 {
@@ -12,14 +11,12 @@ namespace ZEngine.Network
         private Dictionary<uint, Type> map;
         private Dictionary<string, IChannel> channels;
         private Dictionary<Type, ISubscribeHandle> waiting;
-        private List<ISubscribeMessageExecuteHandle> subscribeMessageExecuteHandles;
 
         public NetworkManager()
         {
             map = new Dictionary<uint, Type>();
             channels = new Dictionary<string, IChannel>();
             waiting = new Dictionary<Type, ISubscribeHandle>();
-            subscribeMessageExecuteHandles = new List<ISubscribeMessageExecuteHandle>();
         }
 
         public override void Dispose()
@@ -28,68 +25,18 @@ namespace ZEngine.Network
             foreach (var VARIABLE in channels.Values)
             {
                 VARIABLE.Close();
-                Engine.Class.Release(VARIABLE);
+                VARIABLE.Dispose();
             }
 
             map.Clear();
             foreach (var VARIABLE in waiting.Values)
             {
-                Engine.Class.Release(VARIABLE);
+                VARIABLE.Dispose();
             }
 
             waiting.Clear();
-            subscribeMessageExecuteHandles.ForEach(Engine.Class.Release);
-            subscribeMessageExecuteHandles.Clear();
             channels.Clear();
             Engine.Console.Log("关闭所有网络链接");
-        }
-
-        public void SubscribeMessageHandle(Type type)
-        {
-            if (typeof(ISubscribeMessageExecuteHandle).IsAssignableFrom(type) is false)
-            {
-                Engine.Console.Error("当前注册的消息管道没有实现", typeof(ISubscribeMessageExecuteHandle).Name);
-                return;
-            }
-
-            subscribeMessageExecuteHandles.Add((ISubscribeMessageExecuteHandle)Engine.Class.Loader(type));
-        }
-
-        public void UnsubscribeMessageHandle(Type type)
-        {
-            ISubscribeMessageExecuteHandle subscribeMessageExecuteHandle = subscribeMessageExecuteHandles.Find(x => x.GetType() == type);
-            if (subscribeMessageExecuteHandle is null)
-            {
-                return;
-            }
-
-            subscribeMessageExecuteHandles.Remove(subscribeMessageExecuteHandle);
-        }
-
-        /// <summary>
-        /// 分发消息
-        /// </summary>
-        /// <param name="messagePackage">消息数据</param>
-        public void DispatchMessage(IChannel channel, byte[] bytes)
-        {
-            uint crc = Crc32.GetCRC32Byte(bytes, 0, sizeof(uint));
-            if (!map.TryGetValue(crc, out Type msgType))
-            {
-                Engine.Console.Log("位置的消息类型 crc：", crc);
-                return;
-            }
-
-            MemoryStream memoryStream = new MemoryStream(bytes, sizeof(uint), bytes.Length - sizeof(uint));
-            IMessagePacket message = (IMessagePacket)RuntimeTypeModel.Default.Deserialize(memoryStream, null, msgType);
-            if (waiting.TryGetValue(msgType, out ISubscribeHandle subscribeHandle))
-            {
-                subscribeHandle.Execute(message);
-            }
-
-            for (int i = 0; i < subscribeMessageExecuteHandles.Count; i++)
-            {
-                subscribeMessageExecuteHandles[i].OnHandleMessage(message);
-            }
         }
 
         /// <summary>
@@ -125,7 +72,7 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public INetworkConnectExecuteHandle Connect(string address, int id = 0)
+        public IChannelConnectExecuteHandle Connect(string address, int id = 0)
         {
             if (channels.TryGetValue(address, out IChannel channel))
             {
@@ -133,10 +80,7 @@ namespace ZEngine.Network
                 return default;
             }
 
-            INetworkConnectExecuteHandle networkConnectExecuteHandle = INetworkConnectExecuteHandle.Create(address, id);
-            networkConnectExecuteHandle.Subscribe(ISubscribeHandle<INetworkConnectExecuteHandle>.Create(args => channels.Add(address, args.channel)));
-            networkConnectExecuteHandle.Execute();
-            return networkConnectExecuteHandle;
+            return channel.Connect(address, id);
         }
 
         /// <summary>
@@ -145,7 +89,7 @@ namespace ZEngine.Network
         /// <param name="address">远程地址</param>
         /// <param name="messagePackage">需要写入的消息</param>
         /// <returns></returns>
-        public IWriteMessageExecuteHandle WriteAndFlush(string address, IMessagePacket messagePackage)
+        public IChannelWriteExecuteHandle WriteAndFlush(string address, IMessaged messagePackage)
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
@@ -159,9 +103,9 @@ namespace ZEngine.Network
                 return default;
             }
 
-            IWriteMessageExecuteHandle writeNetworkMessageExecuteHandle = IWriteMessageExecuteHandle.Create(channel, messagePackage);
-            writeNetworkMessageExecuteHandle.Execute();
-            return writeNetworkMessageExecuteHandle;
+            MemoryStream memoryStream = new MemoryStream();
+            Serializer.Serialize(memoryStream, messagePackage);
+            return channel.WriteAndFlush(memoryStream.ToArray());
         }
 
         /// <summary>
@@ -171,7 +115,7 @@ namespace ZEngine.Network
         /// <param name="messagePackage">需要写入的消息</param>
         /// <typeparam name="T">等待响应的消息类型</typeparam>
         /// <returns></returns>
-        public IRecvieMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessagePacket messagePackage) where T : IMessagePacket
+        public IResponseMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
@@ -185,10 +129,17 @@ namespace ZEngine.Network
                 return default;
             }
 
-            IWriteMessageExecuteHandle writeNetworkMessageExecuteHandle = IWriteMessageExecuteHandle.Create(channel, messagePackage);
-            IRecvieMessageExecuteHandle<T> internalRecvieMessageExecuteHandle = IRecvieMessageExecuteHandle<T>.Create(channel);
-            writeNetworkMessageExecuteHandle.Execute();
-            return internalRecvieMessageExecuteHandle;
+            MemoryStream memoryStream = new MemoryStream();
+            Serializer.Serialize(memoryStream, messagePackage);
+
+            void Waiting(T args)
+            {
+                MessageDispatcher.instance.Unsubscribe(typeof(T), ISubscribeHandle<T>.Create(Waiting));
+            }
+
+            MessageDispatcher.instance.Subscribe(typeof(T), ISubscribeHandle<T>.Create(Waiting));
+            channel.WriteAndFlush(memoryStream.ToArray());
+            return IResponseMessageExecuteHandle<T>.Create();
         }
 
         /// <summary>
@@ -196,7 +147,7 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public INetworkClosedExecuteHandle Close(string address)
+        public IChannelClosedExecuteHandle Close(string address)
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
@@ -204,10 +155,7 @@ namespace ZEngine.Network
                 return default;
             }
 
-            INetworkClosedExecuteHandle networkClosedExecuteHandle = INetworkClosedExecuteHandle.Create(channel);
-            networkClosedExecuteHandle.Subscribe(ISubscribeHandle.Create(() => channels.Remove(address)));
-            networkClosedExecuteHandle.Execute();
-            return networkClosedExecuteHandle;
+            return channel.Close();
         }
     }
 }

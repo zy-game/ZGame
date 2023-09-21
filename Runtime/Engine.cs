@@ -5,19 +5,73 @@ using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Internal;
+using UnityEngine.Video;
 using ZEngine;
+using ZEngine.Cache;
 using ZEngine.VFS;
 using ZEngine.Network;
 using ZEngine.Resource;
-using ZEngine.Sound;
 using ZEngine.Window;
 using ZEngine.Game;
+using ZEngine.Playable;
 using ZEngine.Utility;
 using ZEngine.ZJson;
 using Object = UnityEngine.Object;
 
 public sealed class Engine
 {
+    /// <summary>
+    /// 缓存区
+    /// </summary>
+    public sealed class Cache
+    {
+        /// <summary>
+        /// 缓存对象
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public static void Handle(string key, object value)
+            => CacheManager.instance.Handle(key, value);
+
+        /// <summary>
+        /// 尝试获取缓存对象
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static bool TryGetValue<T>(string key, out T value)
+            => CacheManager.instance.TryGetValue(key, out value);
+
+        /// <summary>
+        /// 设置缓存管道
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public static void SetCacheHandle<T>() where T : ICacheHandler
+            => CacheManager.instance.SetCacheHandle(typeof(T));
+
+        /// <summary>
+        /// 设置缓存管道
+        /// </summary>
+        /// <param name="handleType"></param>
+        public static void SetCacheHandle(Type handleType)
+            => CacheManager.instance.SetCacheHandle(handleType);
+
+        /// <summary>
+        /// 移除缓存管道
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public static void RemoveCacheHandle<T>() where T : ICacheHandler
+            => CacheManager.instance.RemoveCacheHandle(typeof(T));
+
+        /// <summary>
+        /// 移除缓存管道
+        /// </summary>
+        /// <param name="handleType"></param>
+        public static void RemoveCacheHandle(Type handleType)
+            => CacheManager.instance.RemoveCacheHandle(handleType);
+    }
+
     public sealed class Custom
     {
         /// <summary>
@@ -125,35 +179,6 @@ public sealed class Engine
         /// <param name="message"></param>
         public static void Error(params object[] message)
             => Debug.LogError($"[ERROR] {string.Join("\n", message)}");
-    }
-
-    /// <summary>
-    /// 引用池
-    /// </summary>
-    public sealed class Class
-    {
-        /// <summary>
-        /// 获取一个引用对象
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T Loader<T>() where T : IReference
-            => ClassManager.instance.Dequeue<T>();
-
-        /// <summary>
-        /// 获取一个引用对象
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static IReference Loader(Type type)
-            => ClassManager.instance.Dequeue(type);
-
-        /// <summary>
-        /// 回收引用对象，但是不释放对象
-        /// </summary>
-        /// <param name="reference"></param>
-        public static void Release(IReference reference)
-            => ClassManager.instance.Enqueue(reference);
     }
 
     /// <summary>
@@ -365,8 +390,8 @@ public sealed class Engine
         /// 回收资源
         /// </summary>
         /// <param name="handle">资源句柄</param>
-        public static void Release(Object handle)
-            => ResourceManager.instance.Release(handle);
+        public static void Dispose(Object handle)
+            => ResourceManager.instance.Dispose(handle);
 
         /// <summary>
         /// 预加载资源模块
@@ -384,53 +409,38 @@ public sealed class Engine
     }
 
     /// <summary>
-    /// 音效
+    /// 播放器
     /// </summary>
-    public sealed class Sound
+    public sealed class Playable
     {
         /// <summary>
-        /// 设置默认播放器选项
+        /// 播放视频
         /// </summary>
-        /// <param name="options">音效配置</param>
-        public static void SetPlayOptions(SoundOptions options)
-            => SoundManager.instance.SetPlayOptions(options);
-
-        /// <summary>
-        /// 播放音乐
-        /// </summary>
-        /// <param name="soundName">音效名</param>
+        /// <param name="url"></param>
+        /// <param name="volume"></param>
+        /// <param name="isFullScene"></param>
+        /// <param name="isLoop"></param>
         /// <returns></returns>
-        public static void PlaySound(string soundName, string optionsName = "default")
-            => SoundManager.instance.PlaySound(soundName, optionsName);
+        public static IPlayableHandle PlayVideo(string url, float volume = 1, RenderTexture scene = null, bool isLoop = false, Switch isCache = Switch.Off)
+            => PlayableManager.instance.PlayVideo(url, volume, scene, isLoop, isCache);
 
         /// <summary>
-        /// 暂停播放音效
+        /// 播放音效
         /// </summary>
-        /// <param name="soundName">音效名</param>
-        public static void PauseSound(string soundName)
-            => SoundManager.instance.PauseSound(soundName);
-
-        /// <summary>
-        /// 继续播放音效
-        /// </summary>
-        /// <param name="soundName">音效名</param>
-        public static void ResumeSound(string soundName)
-            => SoundManager.instance.ResumeSound(soundName);
-
-        /// <summary>
-        /// 停止音效播放
-        /// </summary>
-        /// <param name="soundName">音效名</param>
-        public static void StopSound(string soundName)
-            => SoundManager.instance.StopSound(soundName);
-
-        /// <summary>
-        /// 获取播放器设置
-        /// </summary>
-        /// <param name="optionsName">配置名</param>
+        /// <param name="soundName"></param>
+        /// <param name="volume"></param>
+        /// <param name="isLoop"></param>
         /// <returns></returns>
-        public static SoundOptions GetSoundPlayOptions(string optionsName)
-            => SoundManager.instance.GetSoundPlayOptions(optionsName);
+        public static IPlayableHandle PlaySound(string url, float volume = 1, bool isLoop = false, Switch isCache = Switch.Off)
+            => PlayableManager.instance.PlaySound(url, volume, isLoop, isCache);
+
+        /// <summary>
+        /// 获取播放器
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static IPlayableHandle GetPlayableHandle(string name)
+            => PlayableManager.instance.GetPlayableHandle(name);
     }
 
     /// <summary>
@@ -559,29 +569,29 @@ public sealed class Engine
         /// 订阅消息处理
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void SubscribeMessageHandle<T>() where T : ISubscribeMessageExecuteHandle
-            => SubscribeMessageHandle(typeof(T));
+        public static void SubscribeMessageHandle<T>(ISubscribeHandle<T> subscribe) where T : IMessaged
+            => SubscribeMessageHandle(typeof(T), subscribe);
 
         /// <summary>
         /// 订阅消息处理
         /// </summary>
         /// <param name="type"></param>
-        public static void SubscribeMessageHandle(Type type)
-            => NetworkManager.instance.SubscribeMessageHandle(type);
+        public static void SubscribeMessageHandle(Type type, ISubscribeHandle subscribe)
+            => MessageDispatcher.instance.Subscribe(type, subscribe);
 
         /// <summary>
         /// 取消消息订阅管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void UnsubscribeMessageHandle<T>() where T : ISubscribeMessageExecuteHandle
-            => UnsubscribeMessageHandle(typeof(T));
+        public static void UnsubscribeMessageHandle<T>(ISubscribeHandle<T> subscribe) where T : IMessaged
+            => UnsubscribeMessageHandle(typeof(T), subscribe);
 
         /// <summary>
         /// 取消消息订阅管道
         /// </summary>
         /// <param name="type"></param>
-        public static void UnsubscribeMessageHandle(Type type)
-            => NetworkManager.instance.UnsubscribeMessageHandle(type);
+        public static void UnsubscribeMessageHandle(Type type, ISubscribeHandle subscribe)
+            => MessageDispatcher.instance.Unsubscribe(type, subscribe);
 
 
         /// <summary>
@@ -619,7 +629,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public static INetworkConnectExecuteHandle Connect(string address, int id = 0)
+        public static IChannelConnectExecuteHandle Connect(string address, int id = 0)
             => NetworkManager.instance.Connect(address, id);
 
         /// <summary>
@@ -628,7 +638,7 @@ public sealed class Engine
         /// <param name="address">远程地址</param>
         /// <param name="messagePackage">需要写入的消息</param>
         /// <returns></returns>
-        public static IWriteMessageExecuteHandle WriteAndFlush(string address, IMessagePacket messagePackage)
+        public static IChannelWriteExecuteHandle WriteAndFlush(string address, IMessaged messagePackage)
             => NetworkManager.instance.WriteAndFlush(address, messagePackage);
 
         /// <summary>
@@ -638,7 +648,7 @@ public sealed class Engine
         /// <param name="messagePackage">需要写入的消息</param>
         /// <typeparam name="T">等待响应的消息类型</typeparam>
         /// <returns></returns>
-        public static IRecvieMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessagePacket messagePackage) where T : IMessagePacket
+        public static IResponseMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
             => NetworkManager.instance.WriteAndFlush<T>(address, messagePackage);
 
         /// <summary>
@@ -646,7 +656,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public static INetworkClosedExecuteHandle Close(string address)
+        public static IChannelClosedExecuteHandle Close(string address)
             => NetworkManager.instance.Close(address);
     }
 }

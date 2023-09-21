@@ -19,20 +19,15 @@ namespace ZEngine.Window
             return this;
         }
 
-        public IProgressSubscribeHandle GetProgressSubscribe()
-        {
-            return IProgressSubscribeHandle.Create(args => SetProgress(args));
-        }
 
-        public Loading SetProgress(float progress)
+        public void SetProgress(float progress)
         {
             if (slider == null)
             {
-                return this;
+                return;
             }
 
             slider.value = progress;
-            return this;
         }
     }
 }

@@ -17,7 +17,7 @@ namespace ZEngine.Resource
 
         internal static IRequestAssetBundleExecuteHandle Create(RuntimeBundleManifest manifest)
         {
-            InternalRequestAssetBundleExecuteHandle internalRequestAssetBundleExecuteHandle = Engine.Class.Loader<InternalRequestAssetBundleExecuteHandle>();
+            InternalRequestAssetBundleExecuteHandle internalRequestAssetBundleExecuteHandle = Activator.CreateInstance<InternalRequestAssetBundleExecuteHandle>();
             internalRequestAssetBundleExecuteHandle.manifest = manifest;
             return internalRequestAssetBundleExecuteHandle;
         }
@@ -40,7 +40,7 @@ namespace ZEngine.Resource
             }
 
 
-            public void Release()
+            public void Dispose()
             {
                 version = null;
                 bundle = null;

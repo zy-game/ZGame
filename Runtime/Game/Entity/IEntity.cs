@@ -5,7 +5,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 游戏实体
     /// </summary>
-    public interface IEntity : IReference
+    public interface IEntity : IDisposable
     {
         /// <summary>
         /// 实体编号
@@ -81,14 +81,14 @@ namespace ZEngine.Game
 
         internal static IEntity Create()
         {
-            Entity entity = Engine.Class.Loader<Entity>();
+            Entity entity = Activator.CreateInstance<Entity>();
             entity.id = Guid.NewGuid().GetHashCode();
             return entity;
         }
 
         class Entity : IEntity
         {
-            public void Release()
+            public void Dispose()
             {
                 id = 0;
             }

@@ -14,7 +14,7 @@ namespace ZEngine.VFS
 
         internal static IWriteFileExecute Create(string name, byte[] bytes, VersionOptions version)
         {
-            InternalVFSWriteFileExecute internalVfsWriteFileExecute = Engine.Class.Loader<InternalVFSWriteFileExecute>();
+            InternalVFSWriteFileExecute internalVfsWriteFileExecute = Activator.CreateInstance<InternalVFSWriteFileExecute>();
             internalVfsWriteFileExecute.name = name;
             internalVfsWriteFileExecute.bytes = bytes;
             internalVfsWriteFileExecute.version = version;
@@ -27,7 +27,7 @@ namespace ZEngine.VFS
             public byte[] bytes { get; set; }
             public VersionOptions version { get; set; }
 
-            public override void Release()
+            public override void Dispose()
             {
                 name = String.Empty;
                 bytes = Array.Empty<byte>();

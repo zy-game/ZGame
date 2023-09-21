@@ -36,7 +36,6 @@ namespace ZEngine
     {
         private Coroutine coroutine;
         private ISubscribeHandle subscribes;
-        private IProgressSubscribeHandle progressSubscribeHandle;
         public Status status { get; protected set; }
         protected abstract IEnumerator ExecuteCoroutine();
 
@@ -49,23 +48,11 @@ namespace ZEngine
         private void OnComplete()
         {
             subscribes?.Execute(this);
-            WaitFor.WaitFormFrameEnd(() => { Engine.Class.Release(this); });
+            WaitFor.WaitFormFrameEnd(this.Dispose);
         }
 
         public void Subscribe(ISubscribeHandle subscribe)
         {
-            if (subscribe is IProgressSubscribeHandle progressSubscribeHandle)
-            {
-                if (this.progressSubscribeHandle is null)
-                {
-                    this.progressSubscribeHandle = progressSubscribeHandle;
-                    return;
-                }
-
-                this.progressSubscribeHandle.Merge(progressSubscribeHandle);
-                return;
-            }
-
             if (this.subscribes is null)
             {
                 this.subscribes = subscribe;
@@ -75,18 +62,12 @@ namespace ZEngine
             this.subscribes.Merge(subscribe);
         }
 
-        protected void OnProgress(float progress)
-        {
-            progressSubscribeHandle?.Execute(progress);
-        }
 
-        public virtual void Release()
+        public virtual void Dispose()
         {
             coroutine.StopCoroutine();
-            Engine.Class.Release(subscribes);
+            subscribes?.Dispose();
             subscribes = null;
-            Engine.Class.Release(progressSubscribeHandle);
-            progressSubscribeHandle = null;
             status = Status.None;
             GC.SuppressFinalize(this);
         }

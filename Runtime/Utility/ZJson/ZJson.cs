@@ -23,9 +23,9 @@ namespace ZEngine.ZJson
         }
     }
 
-    public sealed class JsonWrite : IReference
+    public sealed class JsonWrite : IDisposable
     {
-        public void Release()
+        public void Dispose()
         {
         }
 
@@ -35,13 +35,13 @@ namespace ZEngine.ZJson
         }
     }
 
-    public sealed class JsonRead : IReference
+    public sealed class JsonRead : IDisposable
     {
         public void Initialize(string json)
         {
         }
 
-        public void Release()
+        public void Dispose()
         {
         }
 
@@ -65,9 +65,9 @@ namespace ZEngine.ZJson
 
         public static string ToJson(object data)
         {
-            Analysis serialize = Engine.Class.Loader<Analysis>();
+            Analysis serialize = Activator.CreateInstance<Analysis>();
             string result = serialize.ToJson(data);
-            Engine.Class.Release(serialize);
+            serialize.Dispose();
             return result;
         }
 
@@ -78,22 +78,22 @@ namespace ZEngine.ZJson
 
         public static object Parse(string data, Type type)
         {
-            Analysis serialize = Engine.Class.Loader<Analysis>();
+            Analysis serialize = Activator.CreateInstance<Analysis>();
             object result = serialize.Parse(data, type);
-            Engine.Class.Release(serialize);
+            serialize.Dispose();
             return result;
         }
 
 
-        class Analysis : IReference
+        class Analysis : IDisposable
         {
-            public void Release()
+            public void Dispose()
             {
             }
 
             public object Parse(string data, Type type)
             {
-                JsonRead read = Engine.Class.Loader<JsonRead>();
+                JsonRead read = Activator.CreateInstance<JsonRead>();
                 read.Initialize(data);
                 for (int i = 0; i < options.converters.Count; i++)
                 {
@@ -111,7 +111,7 @@ namespace ZEngine.ZJson
 
             public string ToJson(object data)
             {
-                JsonWrite write = Engine.Class.Loader<JsonWrite>();
+                JsonWrite write = Activator.CreateInstance<JsonWrite>();
                 Type type = data.GetType();
                 for (int i = 0; i < options.converters.Count; i++)
                 {
@@ -124,7 +124,7 @@ namespace ZEngine.ZJson
 
         class InternalNumberSeriazedConverter : IZJsonConverter
         {
-            public void Release()
+            public void Dispose()
             {
             }
 
@@ -165,7 +165,7 @@ namespace ZEngine.ZJson
 
         class InternalJsonObjectSerializeConverter : IZJsonConverter
         {
-            public void Release()
+            public void Dispose()
             {
             }
 
@@ -208,7 +208,7 @@ namespace ZEngine.ZJson
 
         class InternalArraryObjectSerizlieConverter : IZJsonConverter
         {
-            public void Release()
+            public void Dispose()
             {
             }
 
@@ -236,7 +236,7 @@ namespace ZEngine.ZJson
         }
     }
 
-    public interface IZJsonConverter : IReference
+    public interface IZJsonConverter : IDisposable
     {
         void WriteJson(JsonWrite builder, object value);
         object ReadJson(JsonRead read, Type objectType);

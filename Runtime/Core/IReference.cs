@@ -1,6 +1,6 @@
 ﻿using System;
 
-public interface IReference
-{
-    void Release();
-}
+// public interface IDisposable
+// {
+//     void Dispose();
+// }

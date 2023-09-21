@@ -59,7 +59,7 @@ namespace WebSocketSharp.Net
   /// <remarks>
   /// This class cannot be inherited.
   /// </remarks>
-  public sealed class HttpListenerResponse : IDisposable
+  public sealed class HttpListenerResponse : System.IDisposable
   {
     #region Private Fields
 
@@ -1184,9 +1184,9 @@ namespace WebSocketSharp.Net
     #region Explicit Interface Implementations
 
     /// <summary>
-    /// Releases all resources used by this instance.
+    /// Disposes all resources used by this instance.
     /// </summary>
-    void IDisposable.Dispose ()
+    void System.IDisposable.Dispose ()
     {
       if (_disposed)
         return;

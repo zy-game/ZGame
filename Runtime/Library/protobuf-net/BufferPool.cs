@@ -64,11 +64,11 @@ namespace ProtoBuf
             }
             if (buffer.Length == BufferPool.BufferLength)
             {
-                BufferPool.ReleaseBufferToPool(ref buffer);
+                BufferPool.DisposeBufferToPool(ref buffer);
             }
             buffer = newBuffer;
         }
-        internal static void ReleaseBufferToPool(ref byte[] buffer)
+        internal static void DisposeBufferToPool(ref byte[] buffer)
         {
             if (buffer == null) return;
             if (buffer.Length == BufferLength)

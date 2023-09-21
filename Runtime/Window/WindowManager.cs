@@ -13,13 +13,13 @@ namespace ZEngine.Window
         private Dictionary<Type, UIWindow> windows = new Dictionary<Type, UIWindow>();
         private Dictionary<UIOptions.Layer, Canvas> canvasMap = new Dictionary<UIOptions.Layer, Canvas>();
 
-        class CacheData : IReference
+        class CacheData : IDisposable
         {
             public float time;
             public UIWindow handle;
 
 
-            public void Release()
+            public void Dispose()
             {
                 throw new NotImplementedException();
             }
@@ -38,7 +38,7 @@ namespace ZEngine.Window
             base.Dispose();
             foreach (var VARIABLE in windows.Values)
             {
-                Engine.Class.Release(VARIABLE);
+                VARIABLE.Dispose();
             }
 
             foreach (var VARIABLE in canvasMap.Values)
@@ -46,7 +46,7 @@ namespace ZEngine.Window
                 GameObject.DestroyImmediate(VARIABLE.gameObject);
             }
 
-            cacheList.ForEach(Engine.Class.Release);
+            cacheList.ForEach(x => x.Dispose());
             windows.Clear();
             canvasMap.Clear();
             cacheList.Clear();
@@ -150,7 +150,7 @@ namespace ZEngine.Window
             }
             else
             {
-                Engine.Class.Release(window);
+                window.Dispose();
             }
         }
 

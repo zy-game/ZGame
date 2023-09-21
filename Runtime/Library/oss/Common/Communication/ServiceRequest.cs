@@ -12,7 +12,7 @@ using Aliyun.OSS.Util;
 
 namespace Aliyun.OSS.Common.Communication
 {
-    internal class ServiceRequest : ServiceMessage, IDisposable
+    internal class ServiceRequest : ServiceMessage, System.IDisposable
     {
         private bool _disposed;
         

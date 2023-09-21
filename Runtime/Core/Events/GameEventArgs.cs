@@ -8,7 +8,7 @@ namespace ZEngine
     /// 游戏事件参数
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract class GameEventArgs<T> : IReference where T : GameEventArgs<T>
+    public abstract class GameEventArgs<T> : IDisposable where T : GameEventArgs<T>
     {
         private bool isFree = false;
 
@@ -16,7 +16,7 @@ namespace ZEngine
         {
         }
 
-        public virtual void Release()
+        public virtual void Dispose()
         {
             isFree = false;
             GC.SuppressFinalize(this);
@@ -34,7 +34,7 @@ namespace ZEngine
 
         public static void Execute(params object[] paramsList)
         {
-            T args = Engine.Class.Loader<T>();
+            T args = Activator.CreateInstance<T>();
             args.Initialized(paramsList);
             Execute(args);
         }
@@ -59,7 +59,7 @@ namespace ZEngine
             }
 
             _subscrbe.Execute(args);
-            Engine.Class.Release(args);
+            args.Dispose();
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace ZEngine
         /// </summary>
         public static void ClearSubscribe()
         {
-            Engine.Class.Release(_subscrbe);
+            _subscrbe.Dispose();
             _subscrbe = null;
         }
     }

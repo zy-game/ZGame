@@ -1,9 +1,11 @@
+using System;
+
 namespace ZEngine.Game
 {
     /// <summary>
     /// 逻辑模块
     /// </summary>
-    public interface IGameLogicSystem : IReference
+    public interface IGameLogicSystem : IDisposable
     {
         /// <summary>
         /// 初始化游戏逻辑系统

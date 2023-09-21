@@ -23,7 +23,7 @@ public class Crc32
         }
     }
 
-    public static uint GetCRC32Str(string sInputString, uint crc)
+    public static uint GetCRC32Str(string sInputString, uint crc = 0)
     {
         if (Crc32Table is null)
         {
@@ -42,7 +42,7 @@ public class Crc32
         return crc32 ^ 0xffffffff;
     }
 
-    public static uint GetCRC32Byte(byte[] buffer, uint crc)
+    public static uint GetCRC32Byte(byte[] buffer, uint crc = 0)
     {
         if (Crc32Table is null)
         {

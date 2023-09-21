@@ -11,13 +11,13 @@ namespace ZEngine.VFS
         private List<VFSData> dataList = new List<VFSData>();
         private List<VFSHandle> vfsList = new List<VFSHandle>();
 
-        internal class VFSHandle : IReference
+        internal class VFSHandle : IDisposable
         {
             public float time;
             public string name;
             public FileStream fileStream;
 
-            public void Release()
+            public void Dispose()
             {
                 time = 0;
                 Engine.Console.Log("Dispose File: " + name);
@@ -30,7 +30,7 @@ namespace ZEngine.VFS
         public override void Dispose()
         {
             base.Dispose();
-            vfsList.ForEach(x => x.Release());
+            vfsList.ForEach(x => x.Dispose());
             Engine.Console.Log("释放所有文件句柄");
         }
 
@@ -59,7 +59,7 @@ namespace ZEngine.VFS
                 }
 
                 vfsList.Remove(handle);
-                Engine.Class.Release(handle);
+                handle.Dispose();
             }
         }
 

@@ -26,13 +26,13 @@ namespace ZEngine
         public GameEventType eventType;
         public object data;
 
-        public override void Release()
+        public override void Dispose()
         {
             gameObject = null;
             eventType = GameEventType.None;
             data = null;
             GC.SuppressFinalize(this);
-            base.Release();
+            base.Dispose();
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace ZEngine
                 }
 
                 Engine.Console.Log("Mono Event", eventType);
-                UnityEventArgs args = Engine.Class.Loader<UnityEventArgs>();
+                UnityEventArgs args = Activator.CreateInstance<UnityEventArgs>();
                 args.gameObject = this.gameObject;
                 args.eventType = eventType;
                 args.data = data;

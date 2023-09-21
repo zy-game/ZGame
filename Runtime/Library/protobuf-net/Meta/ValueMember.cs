@@ -395,7 +395,7 @@ namespace ProtoBuf.Meta
             }
             finally
             {
-                model.ReleaseLock(opaqueToken);
+                model.DisposeLock(opaqueToken);
             }
         }
 

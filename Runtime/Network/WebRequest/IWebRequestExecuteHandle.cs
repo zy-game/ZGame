@@ -18,7 +18,7 @@ namespace ZEngine.Network
 
         internal static IWebRequestExecuteHandle<T> Create(string url, object data, Dictionary<string, object> header, NetworkRequestMethod method)
         {
-            InternalWebRequestExecuteHandle<T> internalWebRequestExecuteHandle = Engine.Class.Loader<InternalWebRequestExecuteHandle<T>>();
+            InternalWebRequestExecuteHandle<T> internalWebRequestExecuteHandle = Activator.CreateInstance<InternalWebRequestExecuteHandle<T>>();
             internalWebRequestExecuteHandle.url = url;
             internalWebRequestExecuteHandle.name = Path.GetFileName(url);
             internalWebRequestExecuteHandle.upload = data;
@@ -39,13 +39,13 @@ namespace ZEngine.Network
             public object upload;
             public Dictionary<string, object> header;
 
-            public override void Release()
+            public override void Dispose()
             {
                 method = NetworkRequestMethod.NONE;
                 url = String.Empty;
                 _data = default;
                 progress = 0;
-                base.Release();
+                base.Dispose();
             }
 
             protected override IEnumerator ExecuteCoroutine()

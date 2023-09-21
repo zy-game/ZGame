@@ -448,7 +448,7 @@ namespace ProtoBuf.Meta
             }
             finally
             {
-                ReleaseLock(opaqueToken);
+                DisposeLock(opaqueToken);
             }
         }
         BasicList basicTypes = new BasicList();
@@ -572,7 +572,7 @@ namespace ProtoBuf.Meta
                 }
                 finally
                 {
-                    ReleaseLock(opaqueToken);
+                    DisposeLock(opaqueToken);
                 }
             }
             return key;
@@ -668,7 +668,7 @@ namespace ProtoBuf.Meta
             }
             finally
             {
-                ReleaseLock(opaqueToken);
+                DisposeLock(opaqueToken);
             }
             
             return newType;
@@ -1779,7 +1779,7 @@ namespace ProtoBuf.Meta
 #endif
         }
 
-        internal void ReleaseLock(int opaqueToken)
+        internal void DisposeLock(int opaqueToken)
         {
             if (opaqueToken != 0)
             {

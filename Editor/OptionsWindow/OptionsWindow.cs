@@ -6,7 +6,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using ZEngine;
-using ZEngine.Sound;
 using ZEngine.VFS;
 
 namespace ZEngine.Editor.OptionsEditorWindow
@@ -16,32 +15,25 @@ namespace ZEngine.Editor.OptionsEditorWindow
         static OptionsWindow provider;
         public static OptionsWindow instance => provider;
 
-        private bool[] foldout = new bool[4];
+        private bool[] foldout = new bool[2];
 
         // [MenuItem("工具/项目设置")]
         public static void OpenSetting()
         {
             SettingsService.OpenProjectSettings("Project/Options");
         }
-        
+
 
         public OptionsWindow() : base("Project/Options", SettingsScope.Project)
         {
         }
 
         private SerializedObject hotfix;
-        private SerializedObject audio;
         private SerializedObject vfs;
-        private SerializedObject reference;
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
             base.OnActivate(searchContext, rootElement);
-            if (ZEngine.ReferenceOptions.instance is not null)
-            {
-                reference = new SerializedObject(ZEngine.ReferenceOptions.instance);
-            }
-
             if (ZEngine.VFS.VFSOptions.instance is not null)
             {
                 vfs = new SerializedObject(ZEngine.VFS.VFSOptions.instance);
@@ -50,11 +42,7 @@ namespace ZEngine.Editor.OptionsEditorWindow
             if (ZEngine.HotfixOptions.instance is not null)
             {
                 hotfix = new SerializedObject(ZEngine.HotfixOptions.instance);
-            }
-
-            if (ZEngine.Sound.SoundPlayOptions.instance is not null)
-            {
-                audio = new SerializedObject(ZEngine.Sound.SoundPlayOptions.instance);
+                
             }
         }
 
@@ -63,18 +51,9 @@ namespace ZEngine.Editor.OptionsEditorWindow
         {
             base.OnGUI(searchContext);
             EditorGUI.BeginChangeCheck();
-            foldout[0] = EditorGUILayout.Foldout(foldout[0], "Reference Options", EditorStyles.foldoutHeader);
-            if (foldout[0])
-            {
-                GUILayout.BeginVertical("Reference Options", EditorStyles.helpBox);
-                EditorGUILayout.PropertyField(reference.FindProperty("DefaultCount"), true);
-                EditorGUILayout.PropertyField(reference.FindProperty("MaxCount"), true);
-                GUILayout.EndVertical();
-            }
-
-
-            foldout[1] = EditorGUILayout.Foldout(foldout[1], "File System Options", EditorStyles.foldoutHeader);
-            if (foldout[1])
+            int index = 0;
+            foldout[index] = EditorGUILayout.Foldout(foldout[index], "File System Options", EditorStyles.foldoutHeader);
+            if (foldout[index])
             {
                 GUILayout.BeginVertical("File System Options", EditorStyles.helpBox);
                 EditorGUILayout.PropertyField(vfs.FindProperty("vfsState"), true);
@@ -85,9 +64,9 @@ namespace ZEngine.Editor.OptionsEditorWindow
                 GUILayout.EndVertical();
             }
 
-
-            foldout[2] = EditorGUILayout.Foldout(foldout[2], "Hotfix Options", EditorStyles.foldoutHeader);
-            if (foldout[2])
+            index++;
+            foldout[index] = EditorGUILayout.Foldout(foldout[index], "Hotfix Options", EditorStyles.foldoutHeader);
+            if (foldout[index])
             {
                 GUILayout.BeginVertical("Hotfix Options", EditorStyles.helpBox);
                 EditorGUILayout.PropertyField(hotfix.FindProperty("useHotfix"), true);
@@ -100,25 +79,13 @@ namespace ZEngine.Editor.OptionsEditorWindow
                 GUILayout.EndVertical();
             }
 
-
-            foldout[3] = EditorGUILayout.Foldout(foldout[3], "Audio Options", EditorStyles.foldoutHeader);
-            if (foldout[3])
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                EditorGUILayout.PropertyField(audio.FindProperty("optionsList"), true);
-                GUILayout.EndVertical();
-            }
-
             if (EditorGUI.EndChangeCheck())
             {
-                reference.ApplyModifiedProperties();
                 vfs.ApplyModifiedProperties();
                 hotfix.ApplyModifiedProperties();
-                audio.ApplyModifiedProperties();
                 ZEngine.HotfixOptions.instance.Saved();
                 ZEngine.VFS.VFSOptions.instance.Saved();
-                ZEngine.ReferenceOptions.instance.Saved();
-                ZEngine.Sound.SoundPlayOptions.instance.Saved();
+                // ZEngine.ReferenceOptions.instance.Saved();
             }
         }
 

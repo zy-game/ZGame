@@ -1,12 +1,18 @@
+using System;
 using UnityEngine;
 
 namespace ZEngine.Window
 {
-    public interface IUIBind<T> : IReference
+    public interface IUIBind<T> : IDisposable
     {
         T value { get; }
         GameObject gameObject { get; }
         void Change(T value);
+    }
+
+    public sealed class Localization
+    {
+        
     }
 
     public abstract class BindBasic<T> : IUIBind<T>
@@ -25,7 +31,7 @@ namespace ZEngine.Window
             OnChange();
         }
 
-        public virtual void Release()
+        public virtual void Dispose()
         {
         }
 
