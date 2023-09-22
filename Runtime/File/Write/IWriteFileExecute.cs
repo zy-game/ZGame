@@ -35,7 +35,7 @@ namespace ZEngine.VFS
                 GC.SuppressFinalize(this);
             }
 
-            protected override void ExecuteCommand()
+            protected override void OnExecute()
             {
                 VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
                 int offset = 0;

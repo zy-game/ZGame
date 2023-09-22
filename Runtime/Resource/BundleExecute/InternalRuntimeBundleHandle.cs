@@ -58,7 +58,7 @@ namespace ZEngine.Resource
             return (T)temp;
         }
 
-        public IEnumerator LoadAsync<T>(string path, ISubscribeHandle<T> subscribe) where T : Object
+        public IEnumerator LoadAsync<T>(string path, ISubscriber<T> subscribe) where T : Object
         {
             Object temp = default;
 #if UNITY_EDITOR

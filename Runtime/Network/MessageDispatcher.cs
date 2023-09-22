@@ -8,9 +8,9 @@ namespace ZEngine.Network
     class MessageDispatcher : Single<MessageDispatcher>
     {
         private Dictionary<uint, Type> opcode = new Dictionary<uint, Type>();
-        private Dictionary<Type, ISubscribeHandle> messageSubscribeList = new Dictionary<Type, ISubscribeHandle>();
+        private Dictionary<Type, ISubscriber> messageSubscribeList = new Dictionary<Type, ISubscriber>();
 
-        public void Subscribe(Type type, ISubscribeHandle subscribe)
+        public void Subscribe(Type type, ISubscriber subscribe)
         {
             uint crc = Crc32.GetCRC32Str(type.Name);
             if (opcode.TryGetValue(crc, out Type _) is false)
@@ -18,7 +18,7 @@ namespace ZEngine.Network
                 opcode.Add(crc, type);
             }
 
-            if (messageSubscribeList.TryGetValue(type, out ISubscribeHandle _subscribe) is false)
+            if (messageSubscribeList.TryGetValue(type, out ISubscriber _subscribe) is false)
             {
                 messageSubscribeList.Add(type, subscribe);
             }
@@ -26,9 +26,9 @@ namespace ZEngine.Network
             _subscribe.Merge(subscribe);
         }
 
-        public void Unsubscribe(Type type, ISubscribeHandle subscribe)
+        public void Unsubscribe(Type type, ISubscriber subscribe)
         {
-            if (messageSubscribeList.TryGetValue(type, out ISubscribeHandle _subscribe))
+            if (messageSubscribeList.TryGetValue(type, out ISubscriber _subscribe))
             {
                 _subscribe.Unmerge(subscribe);
             }
@@ -46,7 +46,7 @@ namespace ZEngine.Network
             MemoryStream memoryStream = new MemoryStream(bytes, sizeof(uint), bytes.Length - sizeof(uint));
             IMessaged message = (IMessaged)RuntimeTypeModel.Default.Deserialize(memoryStream, null, msgType);
 
-            if (messageSubscribeList.TryGetValue(msgType, out ISubscribeHandle subscribeHandle) is false)
+            if (messageSubscribeList.TryGetValue(msgType, out ISubscriber subscribeHandle) is false)
             {
                 Engine.Console.Error("未找到订阅：", msgType.Name);
                 return;

@@ -16,7 +16,7 @@ namespace ZEngine.Resource
         /// 订阅模块加载进度
         /// </summary>
         /// <param name="subscribe"></param>
-        void SubscribeProgressChange(ISubscribeHandle<float> subscribe);
+        void SubscribeProgressChange(ISubscriber<float> subscribe);
 
 
         internal static IResourceModuleLoaderExecuteHandle Create(params ModuleOptions[] options)
@@ -29,9 +29,9 @@ namespace ZEngine.Resource
         class InternalResourceModuleLoaderExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IResourceModuleLoaderExecuteHandle>, IResourceModuleLoaderExecuteHandle
         {
             public ModuleOptions[] options { get; set; }
-            private ISubscribeHandle<float> subscribe;
+            private ISubscriber<float> subscribe;
 
-            public void SubscribeProgressChange(ISubscribeHandle<float> subscribe)
+            public void SubscribeProgressChange(ISubscriber<float> subscribe)
             {
                 this.subscribe = subscribe;
             }
@@ -44,7 +44,7 @@ namespace ZEngine.Resource
                 subscribe = null;
             }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
 #if UNITY_EDITOR
                 if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset is Switch.Off)

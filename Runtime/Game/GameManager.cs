@@ -26,6 +26,16 @@ namespace ZEngine.Game
             get { return default; }
         }
 
+        protected override void OnFixedUpdate()
+        {
+            if (current is null)
+            {
+                return;
+            }
+
+            current.FixedUpdate();
+        }
+
         /// <summary>
         /// 创建world
         /// </summary>

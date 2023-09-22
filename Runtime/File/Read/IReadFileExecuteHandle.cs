@@ -39,7 +39,7 @@ namespace ZEngine.VFS
                 base.Dispose();
             }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
                 if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != version)

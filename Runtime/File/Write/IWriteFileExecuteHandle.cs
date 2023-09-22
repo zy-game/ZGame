@@ -36,7 +36,7 @@ namespace ZEngine.VFS
                 base.Dispose();
             }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
                 int offset = 0;

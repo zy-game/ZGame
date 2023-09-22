@@ -482,7 +482,7 @@ public sealed class Engine
         /// <param name="text"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public static Waiting Wait(string text, float time = 0, ISubscribeHandle subscribe = null)
+        public static Waiting Wait(string text, float time = 0, ISubscriber subscribe = null)
             => OpenWindow<Waiting>().SetWait(text, time, subscribe);
 
         /// <summary>
@@ -569,28 +569,28 @@ public sealed class Engine
         /// 订阅消息处理
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void SubscribeMessageHandle<T>(ISubscribeHandle<T> subscribe) where T : IMessaged
+        public static void SubscribeMessageHandle<T>(ISubscriber<T> subscribe) where T : IMessaged
             => SubscribeMessageHandle(typeof(T), subscribe);
 
         /// <summary>
         /// 订阅消息处理
         /// </summary>
         /// <param name="type"></param>
-        public static void SubscribeMessageHandle(Type type, ISubscribeHandle subscribe)
+        public static void SubscribeMessageHandle(Type type, ISubscriber subscribe)
             => MessageDispatcher.instance.Subscribe(type, subscribe);
 
         /// <summary>
         /// 取消消息订阅管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void UnsubscribeMessageHandle<T>(ISubscribeHandle<T> subscribe) where T : IMessaged
+        public static void UnsubscribeMessageHandle<T>(ISubscriber<T> subscribe) where T : IMessaged
             => UnsubscribeMessageHandle(typeof(T), subscribe);
 
         /// <summary>
         /// 取消消息订阅管道
         /// </summary>
         /// <param name="type"></param>
-        public static void UnsubscribeMessageHandle(Type type, ISubscribeHandle subscribe)
+        public static void UnsubscribeMessageHandle(Type type, ISubscriber subscribe)
             => MessageDispatcher.instance.Unsubscribe(type, subscribe);
 
 

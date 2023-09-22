@@ -51,7 +51,7 @@ namespace ZEngine.Resource
                 manifest = null;
             }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 if (manifest is null)
                 {

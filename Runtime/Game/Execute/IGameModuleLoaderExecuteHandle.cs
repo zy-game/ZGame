@@ -25,7 +25,7 @@ namespace ZEngine.Game
             public Assembly assembly { get; set; }
             public GameEntryOptions gameEntryOptions { get; set; }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 if (gameEntryOptions is null || gameEntryOptions.methodName.IsNullOrEmpty() || gameEntryOptions.isOn == Switch.Off)
                 {
@@ -33,23 +33,13 @@ namespace ZEngine.Game
                     yield break;
                 }
 
+                yield return LoadAOTDll();
+                yield return LoadLogicAssembly();
+            }
+
+            private IEnumerator LoadLogicAssembly()
+            {
                 IRequestAssetExecute<TextAsset> requestAssetExecuteResult = default;
-                if (gameEntryOptions.aotList is not null && gameEntryOptions.aotList.Count > 0)
-                {
-                    HomologousImageMode mode = HomologousImageMode.SuperSet;
-                    foreach (var item in gameEntryOptions.aotList)
-                    {
-                        requestAssetExecuteResult = Engine.Resource.LoadAsset<TextAsset>(item + ".bytes");
-                        if (requestAssetExecuteResult.asset == null)
-                        {
-                            yield break;
-                        }
-
-                        LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(requestAssetExecuteResult.asset.bytes, mode);
-                        Debug.Log($"LoadMetadataForAOTAssembly:{item}. mode:{mode} ret:{err}");
-                    }
-                }
-
                 requestAssetExecuteResult = Engine.Resource.LoadAsset<TextAsset>(gameEntryOptions.dllName);
                 if (requestAssetExecuteResult.asset == null)
                 {
@@ -85,6 +75,26 @@ namespace ZEngine.Game
                     status = Status.Failed;
                     Engine.Console.Error(e);
                     Engine.Window.MsgBox("Tips", "Loading Game Fail", Engine.Custom.Quit);
+                }
+            }
+
+            private IEnumerator LoadAOTDll()
+            {
+                IRequestAssetExecute<TextAsset> requestAssetExecuteResult = default;
+                if (gameEntryOptions.aotList is not null && gameEntryOptions.aotList.Count > 0)
+                {
+                    HomologousImageMode mode = HomologousImageMode.SuperSet;
+                    foreach (var item in gameEntryOptions.aotList)
+                    {
+                        requestAssetExecuteResult = Engine.Resource.LoadAsset<TextAsset>(item + ".bytes");
+                        if (requestAssetExecuteResult.asset == null)
+                        {
+                            yield break;
+                        }
+
+                        LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(requestAssetExecuteResult.asset.bytes, mode);
+                        Debug.Log($"LoadMetadataForAOTAssembly:{item}. mode:{mode} ret:{err}");
+                    }
                 }
             }
         }

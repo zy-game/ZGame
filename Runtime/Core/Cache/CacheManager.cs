@@ -7,6 +7,14 @@ namespace ZEngine.Cache
     {
         private List<ICacheHandler> handlers = new List<ICacheHandler>();
 
+        protected override void OnUpdate()
+        {
+            for (int i = 0; i < handlers.Count; i++)
+            {
+                handlers[i].OnUpdate();
+            }
+        }
+
         public void SetCacheHandle(Type handleType)
         {
             if (handlers.Find(x => x.GetType() == handleType) is not null)
@@ -36,7 +44,7 @@ namespace ZEngine.Cache
             ICacheHandler cacheHandler = handlers.Find(x => x.cacheType == valueType);
             if (cacheHandler is null)
             {
-                cacheHandler = InternalCommonCacheHandler.Create(valueType);
+                cacheHandler = CommonCacheHandler.Create(valueType);
             }
 
             cacheHandler.Release(key, value);

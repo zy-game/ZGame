@@ -11,7 +11,7 @@ namespace ZEngine.Network
         DownloadHandle[] Handles { get; }
         DownloadOptions[] options { get; }
 
-        void SubscribeProgressChange(ISubscribeHandle<float> subscribe);
+        void SubscribeProgressChange(ISubscriber<float> subscribe);
 
         internal static IDownloadExecuteHandle Create(params DownloadOptions[] options)
         {
@@ -24,7 +24,7 @@ namespace ZEngine.Network
         {
             public DownloadHandle[] Handles { get; set; }
             public DownloadOptions[] options { get; set; }
-            private ISubscribeHandle<float> subscribe;
+            private ISubscriber<float> subscribe;
 
             public override void Dispose()
             {
@@ -38,12 +38,12 @@ namespace ZEngine.Network
                 Handles = Array.Empty<DownloadHandle>();
             }
 
-            public void SubscribeProgressChange(ISubscribeHandle<float> subscribe)
+            public void SubscribeProgressChange(ISubscriber<float> subscribe)
             {
                 this.subscribe = subscribe;
             }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 Handles = new DownloadHandle[options.Length];
                 for (int i = 0; i < options.Length; i++)

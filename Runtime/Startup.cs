@@ -21,16 +21,16 @@ public class Startup : MonoBehaviour
         Engine.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
         HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
         ICheckResourceUpdateExecuteHandle checkUpdateExecuteHandle = Engine.Resource.CheckModuleResourceUpdate(HotfixOptions.instance.preloads.ToArray());
-        checkUpdateExecuteHandle.SubscribeProgressChange(ISubscribeHandle<float>.Create(Engine.Window.GetWindow<Loading>().SetProgress));
-        checkUpdateExecuteHandle.Subscribe(ISubscribeHandle.Create(ResourceChekcUpdateComplete));
+        checkUpdateExecuteHandle.SubscribeProgressChange(ISubscriber.Create<float>(Engine.Window.GetWindow<Loading>().SetProgress));
+        checkUpdateExecuteHandle.Subscribe(ISubscriber.Create(ResourceChekcUpdateComplete));
     }
 
     private void ResourceChekcUpdateComplete()
     {
         Engine.Window.GetWindow<Loading>().SetInfo("初始化默认资源").SetProgress(0);
         IResourceModuleLoaderExecuteHandle resourceModuleLoaderExecuteHandle = Engine.Resource.LoaderResourceModule(HotfixOptions.instance.preloads.ToArray());
-        resourceModuleLoaderExecuteHandle.SubscribeProgressChange(ISubscribeHandle<float>.Create(Engine.Window.GetWindow<Loading>().SetProgress));
-        resourceModuleLoaderExecuteHandle.Subscribe(ISubscribeHandle<IResourceModuleLoaderExecuteHandle>.Create(ResourcePreloadComplete));
+        resourceModuleLoaderExecuteHandle.SubscribeProgressChange(ISubscriber.Create<float>(Engine.Window.GetWindow<Loading>().SetProgress));
+        resourceModuleLoaderExecuteHandle.Subscribe(ISubscriber.Create<IResourceModuleLoaderExecuteHandle>(ResourcePreloadComplete));
     }
 
     private void ResourcePreloadComplete(IResourceModuleLoaderExecuteHandle resourcePreloadExecuteHandle)
@@ -43,6 +43,7 @@ public class Startup : MonoBehaviour
 
         Engine.Console.Log("进入游戏");
         Engine.Game.OpenWorld(new WorldOptions() { name = "Test" });
-        Engine.Game.LoadGameModule(HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On));
+        Engine.Window.MsgBox("Tips", "Loading Game Fail", Engine.Custom.Quit);
+        HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On).LoadGameLogicAssembly();
     }
 }

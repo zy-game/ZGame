@@ -21,7 +21,7 @@ namespace ZEngine
         /// 订阅执行器完成回调
         /// </summary>
         /// <param name="subscribe">订阅器</param>
-        void Subscribe(ISubscribeHandle subscribe);
+        void Subscribe(ISubscriber subscribe);
     }
 
     /// <summary>
@@ -34,15 +34,14 @@ namespace ZEngine
 
     public abstract class AbstractExecuteHandle : IExecuteHandle
     {
-        private Coroutine coroutine;
-        private ISubscribeHandle subscribes;
+        private ISubscriber subscribes;
         public Status status { get; protected set; }
-        protected abstract IEnumerator ExecuteCoroutine();
+        protected abstract IEnumerator OnExecute();
 
         public void Execute()
         {
             status = Status.Execute;
-            coroutine = ExecuteCoroutine().StartCoroutine(OnComplete);
+            OnExecute().StartCoroutine(OnComplete);
         }
 
         private void OnComplete()
@@ -51,7 +50,7 @@ namespace ZEngine
             WaitFor.WaitFormFrameEnd(this.Dispose);
         }
 
-        public void Subscribe(ISubscribeHandle subscribe)
+        public void Subscribe(ISubscriber subscribe)
         {
             if (this.subscribes is null)
             {
@@ -65,7 +64,6 @@ namespace ZEngine
 
         public virtual void Dispose()
         {
-            coroutine.StopCoroutine();
             subscribes?.Dispose();
             subscribes = null;
             status = Status.None;

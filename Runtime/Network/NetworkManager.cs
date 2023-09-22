@@ -10,13 +10,13 @@ namespace ZEngine.Network
     {
         private Dictionary<uint, Type> map;
         private Dictionary<string, IChannel> channels;
-        private Dictionary<Type, ISubscribeHandle> waiting;
+        private Dictionary<Type, ISubscriber> waiting;
 
         public NetworkManager()
         {
             map = new Dictionary<uint, Type>();
             channels = new Dictionary<string, IChannel>();
-            waiting = new Dictionary<Type, ISubscribeHandle>();
+            waiting = new Dictionary<Type, ISubscriber>();
         }
 
         public override void Dispose()
@@ -134,10 +134,10 @@ namespace ZEngine.Network
 
             void Waiting(T args)
             {
-                MessageDispatcher.instance.Unsubscribe(typeof(T), ISubscribeHandle<T>.Create(Waiting));
+                MessageDispatcher.instance.Unsubscribe(typeof(T), ISubscriber.Create<T>(Waiting));
             }
 
-            MessageDispatcher.instance.Subscribe(typeof(T), ISubscribeHandle<T>.Create(Waiting));
+            MessageDispatcher.instance.Subscribe(typeof(T), ISubscriber.Create<T>(Waiting));
             channel.WriteAndFlush(memoryStream.ToArray());
             return IResponseMessageExecuteHandle<T>.Create();
         }

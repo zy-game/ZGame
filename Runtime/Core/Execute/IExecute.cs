@@ -21,11 +21,11 @@ namespace ZEngine
     {
         public void Execute()
         {
-            ExecuteCommand();
+            OnExecute();
             WaitFor.WaitFormFrameEnd(this.Dispose);
         }
 
         public abstract void Dispose();
-        protected abstract void ExecuteCommand();
+        protected abstract void OnExecute();
     }
 }

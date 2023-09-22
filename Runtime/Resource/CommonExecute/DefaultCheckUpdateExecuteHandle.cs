@@ -13,7 +13,7 @@ namespace ZEngine.Resource
         ModuleOptions[] options { get; }
         RuntimeBundleManifest[] bundles { get; }
 
-        void SubscribeProgressChange(ISubscribeHandle<float> subscribe);
+        void SubscribeProgressChange(ISubscriber<float> subscribe);
 
         internal static ICheckResourceUpdateExecuteHandle Create(params ModuleOptions[] options)
         {
@@ -26,7 +26,7 @@ namespace ZEngine.Resource
         {
             public ModuleOptions[] options { get; set; }
             public RuntimeBundleManifest[] bundles { get; set; }
-            private ISubscribeHandle<float> progressSubsceibeHandle;
+            private ISubscriber<float> progressSubsceibeHandle;
 
             class UpdateItem
             {
@@ -44,12 +44,12 @@ namespace ZEngine.Resource
                 options = Array.Empty<ModuleOptions>();
             }
 
-            public void SubscribeProgressChange(ISubscribeHandle<float> subscribe)
+            public void SubscribeProgressChange(ISubscriber<float> subscribe)
             {
                 this.progressSubsceibeHandle = subscribe;
             }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 //todo 如果在编辑器模式下，并且未使用热更模式，直接跳过
 #if UNITY_EDITOR

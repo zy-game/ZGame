@@ -8,7 +8,7 @@ namespace ZEngine.Window
     [UIOptions("Resources/Wait", UIOptions.Layer.Top)]
     public class Waiting : UIWindow
     {
-        private ISubscribeHandle subsceibe;
+        private ISubscriber subsceibe;
 
         protected override void Destroy()
         {
@@ -31,7 +31,7 @@ namespace ZEngine.Window
             Waiting().StartCoroutine();
         }
 
-        public Waiting SetWait(string text, float timeout, ISubscribeHandle subscribe)
+        public Waiting SetWait(string text, float timeout, ISubscriber subscribe)
         {
             this.GetChild("text").GetComponent<TMP_Text>().text = text;
             this.subsceibe = subscribe;

@@ -48,7 +48,7 @@ namespace ZEngine.Network
                 base.Dispose();
             }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 UnityWebRequest request = method switch
                 {

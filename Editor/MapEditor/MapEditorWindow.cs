@@ -289,10 +289,6 @@ namespace ZEngine.Editor.MapEditor
             }
         }
 
-        private void GenerateRuleMap()
-        {
-        }
-
         private void GenerateMapData(float[,] mapData)
         {
             // 对于种子的应用

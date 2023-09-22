@@ -35,10 +35,10 @@ namespace ZEngine.Resource
         public override void Dispose()
         {
             base.Dispose();
-            cacheList.ForEach(x=>x.Dispose());
+            cacheList.ForEach(x => x.Dispose());
             cacheList.Clear();
             moduleList.Clear();
-            bundleLists.ForEach(x=>x.Dispose());
+            bundleLists.ForEach(x => x.Dispose());
             bundleLists.Clear();
             foreach (var loadAssetHandle in loadAssetHandles.Values)
             {
@@ -226,7 +226,7 @@ namespace ZEngine.Resource
 
             loadAssetHandles.Add(assetPath, handle = IRequestAssetExecuteHandle<T>.Create(assetPath));
             IRequestAssetExecuteHandle<T> requestAssetExecuteHandle = (IRequestAssetExecuteHandle<T>)handle;
-            requestAssetExecuteHandle.Subscribe(ISubscribeHandle<IRequestAssetExecuteHandle<T>>.Create(args => { loadAssetHandles.Remove(assetPath); }));
+            requestAssetExecuteHandle.Subscribe(ISubscriber.Create<IRequestAssetExecuteHandle<T>>(args => { loadAssetHandles.Remove(assetPath); }));
             requestAssetExecuteHandle.Execute();
             return requestAssetExecuteHandle;
         }

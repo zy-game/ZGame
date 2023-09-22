@@ -8,5 +8,6 @@ namespace ZEngine.Cache
         Type cacheType { get; }
         void Release(string key, object value);
         object Dequeue(string key);
+        void OnUpdate();
     }
 }

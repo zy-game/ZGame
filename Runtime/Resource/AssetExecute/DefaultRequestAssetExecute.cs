@@ -33,7 +33,7 @@ namespace ZEngine.Resource
             public RuntimeBundleManifest manifest { get; set; }
             private InternalRuntimeBundleHandle bundleHandle { get; set; }
 
-            protected override void ExecuteCommand()
+            protected override void OnExecute()
             {
                 if (path.IsNullOrEmpty())
                 {
@@ -106,7 +106,7 @@ namespace ZEngine.Resource
                 gameObject.transform.position = position;
                 gameObject.transform.rotation = Quaternion.Euler(rotation);
                 gameObject.transform.localScale = scale;
-                UnityEventArgs.Subscribe(GameEventType.OnDestroy, ISubscribeHandle<UnityEventArgs>.Create(FreeAsset), gameObject);
+                ISubscriber.Create(Free, gameObject);
                 return gameObject;
             }
 
@@ -119,7 +119,7 @@ namespace ZEngine.Resource
                 }
 
                 source.clip = asset as AudioClip;
-                UnityEventArgs.Subscribe(GameEventType.OnDestroy, ISubscribeHandle<UnityEventArgs>.Create(FreeAsset), gameObject);
+                ISubscriber.Create(Free, gameObject);
                 return source.clip;
             }
 
@@ -132,7 +132,7 @@ namespace ZEngine.Resource
                 }
 
                 source.sprite = asset as Sprite;
-                UnityEventArgs.Subscribe(GameEventType.OnDestroy, ISubscribeHandle<UnityEventArgs>.Create(FreeAsset), gameObject);
+                ISubscriber.Create(Free, gameObject);
                 return source.sprite;
             }
 
@@ -145,7 +145,7 @@ namespace ZEngine.Resource
                 }
 
                 source.texture = asset as Texture2D;
-                UnityEventArgs.Subscribe(GameEventType.OnDestroy, ISubscribeHandle<UnityEventArgs>.Create(FreeAsset), gameObject);
+                ISubscriber.Create(Free, gameObject);
                 return (Texture2D)source.texture;
             }
 
@@ -157,14 +157,9 @@ namespace ZEngine.Resource
                     source = gameObject.AddComponent<VideoPlayer>();
                 }
 
-                UnityEventArgs.Subscribe(GameEventType.OnDestroy, ISubscribeHandle<UnityEventArgs>.Create(FreeAsset), gameObject);
+                ISubscriber.Create(Free, gameObject);
                 source.clip = asset as VideoClip;
                 return source.clip;
-            }
-
-            private void FreeAsset(UnityEventArgs args)
-            {
-                Free();
             }
 
             public void Free()

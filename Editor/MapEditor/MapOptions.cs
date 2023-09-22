@@ -44,6 +44,7 @@ namespace ZEngine.Editor.MapEditor
         public string name;
         public int layer;
         public List<MapTileOptions> tiles;
+        public RuleTile ruleTile;
         [NonSerialized] public bool flodout;
     }
 

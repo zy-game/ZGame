@@ -22,7 +22,7 @@ namespace ZEngine.Network
 
             public WebSocketChannel socketChannel;
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 yield break;
             }
@@ -58,7 +58,7 @@ namespace ZEngine.Network
                 return webSocketConnectExecuteHandle;
             }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 this.address = address;
                 socketChannel._websocket = new WebSocketSharp.WebSocket(address);
@@ -86,7 +86,7 @@ namespace ZEngine.Network
             public byte[] bytes { get; set; }
             private WebSocketChannel socketChannel;
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 socketChannel._websocket.Send(bytes);
                 yield break;

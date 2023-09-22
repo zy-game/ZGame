@@ -18,7 +18,7 @@ namespace ZEngine.Network
             public IChannel channel { get; }
             public T message { get; }
 
-            protected override IEnumerator ExecuteCoroutine()
+            protected override IEnumerator OnExecute()
             {
                 yield break;
             }

@@ -17,6 +17,8 @@ namespace ZEngine.Game
         /// </summary>
         string name { get; }
 
+        void FixedUpdate();
+
         /// <summary>
         /// 创建实体对象
         /// </summary>
@@ -174,10 +176,10 @@ namespace ZEngine.Game
                 entities = new List<IEntity>();
                 systems = new List<IGameLogicSystem>();
                 contexts = new List<EntityContext>();
-                UnityEventArgs.Subscribe(GameEventType.FixedUpdate, FixedUpdate);
             }
 
-            private void FixedUpdate(UnityEventArgs args)
+            
+            public void FixedUpdate()
             {
                 if (systems is null || systems.Count is 0)
                 {
