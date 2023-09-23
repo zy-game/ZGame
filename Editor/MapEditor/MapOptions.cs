@@ -13,18 +13,6 @@ namespace ZEngine.Editor.MapEditor
         public List<SceneOptions> sceneList;
     }
 
-    public enum MapType : byte
-    {
-        M2D,
-        M3D
-    }
-
-    public enum MapTileDirection : byte
-    {
-        D4 = 4,
-        D6 = 6,
-    }
-
     [Serializable]
     public class SceneOptions
     {
@@ -33,8 +21,8 @@ namespace ZEngine.Editor.MapEditor
         public Vector2 tileSize;
         public float lacunarity;
         public int removeSeparateTileNumberOfTimes;
-        public MapType type;
-        public MapTileDirection direction;
+        public GridLayout.CellLayout layout;
+        public GridLayout.CellSwizzle swizzle;
         public List<MapLayerOptions> layers;
     }
 
@@ -43,8 +31,19 @@ namespace ZEngine.Editor.MapEditor
     {
         public string name;
         public int layer;
+
+        public float animationFrameRate;
+        public Color color = Color.white;
+        public Vector3 tileAnchor;
+        public Tilemap.Orientation orientation;
+        public Matrix4x4 matrix;
+
+        public TilemapRenderer.SortOrder sortOrder;
+        public TilemapRenderer.Mode mode;
+        public TilemapRenderer.DetectChunkCullingBounds detectChunkCullingBounds;
+        public Vector3 chunkCullingBounds;
+        public SpriteMaskInteraction maskInteraction;
         public List<MapTileOptions> tiles;
-        public RuleTile ruleTile;
         [NonSerialized] public bool flodout;
     }
 
@@ -54,8 +53,6 @@ namespace ZEngine.Editor.MapEditor
         public string name;
         public int layer;
         public float weight;
-        public Tile mapTile;
-        public GameObject gameObject;
-        public bool[] dirctions;
+        public TileBase mapTile;
     }
 }

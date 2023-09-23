@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using DG.Tweening;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -16,6 +17,24 @@ namespace ZEngine.Editor.MapEditor
         public static void Open()
         {
             GetWindow<MapEditorWindow>(false, "地图编辑器", true);
+        }
+
+        class Style
+        {
+            public static readonly GUIContent empty = EditorGUIUtility.TrTextContent("");
+            public static readonly GUIContent offsetLabel = EditorGUIUtility.TrTextContent("Offset");
+            public static readonly GUIContent rotationLabel = EditorGUIUtility.TrTextContent("Rotation");
+            public static readonly GUIContent scaleLabel = EditorGUIUtility.TrTextContent("Scale");
+            public static readonly GUIContent configName = EditorGUIUtility.TrTextContent("配置名");
+            public static readonly GUIContent mapSize = EditorGUIUtility.TrTextContent("地图大小");
+            public static readonly GUIContent tileSize = EditorGUIUtility.TrTextContent("地块大小");
+            public static readonly GUIContent layout = EditorGUIUtility.TrTextContent("Layout");
+            public static readonly GUIContent swizzle = EditorGUIUtility.TrTextContent("Swizzle");
+            public static readonly GUIContent offset = EditorGUIUtility.TrTextContent("噪波偏移值");
+            public static readonly GUIContent islandCount = EditorGUIUtility.TrTextContent("遍历孤岛次数");
+            public static readonly GUIContent layer = EditorGUIUtility.TrTextContent("Layers");
+            public static readonly GUIContent build = EditorGUIUtility.TrTextContent("构建地图");
+            public static readonly GUIContent delete = EditorGUIUtility.TrTextContent("构建地图");
         }
 
         private SceneOptions options;
@@ -52,32 +71,33 @@ namespace ZEngine.Editor.MapEditor
         protected override void DrawingItemDataView(object data, float width)
         {
             options = (SceneOptions)data;
-            options.name = EditorGUILayout.TextField(new GUIContent("配置名"), options.name);
+            options.name = EditorGUILayout.TextField(Style.configName, options.name);
             GUILayout.BeginHorizontal();
-            GUILayout.Label(new GUIContent("地图大小"));
+            GUILayout.Label(Style.mapSize);
             GUILayout.FlexibleSpace();
-            options.size = EditorGUILayout.Vector2IntField("", options.size, GUILayout.Width(width / 2));
+            options.size = EditorGUILayout.Vector2IntField(Style.empty, options.size, GUILayout.Width(width / 2));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(new GUIContent("地块大小"));
+            GUILayout.Label(Style.tileSize);
             GUILayout.FlexibleSpace();
-            options.tileSize = EditorGUILayout.Vector2Field("", options.tileSize, GUILayout.Width(width / 2));
+            options.tileSize = EditorGUILayout.Vector2Field(Style.empty, options.tileSize, GUILayout.Width(width / 2));
             GUILayout.EndHorizontal();
-            options.type = (MapType)EditorGUILayout.EnumPopup(new GUIContent("地图类型"), options.type);
-            options.direction = (MapTileDirection)EditorGUILayout.EnumPopup(new GUIContent("地块方向"), options.direction);
+            options.layout = (GridLayout.CellLayout)EditorGUILayout.EnumPopup(Style.layout, options.layout);
+            options.swizzle = (GridLayout.CellSwizzle)EditorGUILayout.EnumPopup(Style.swizzle, options.swizzle);
             if (options.layers is null)
             {
                 options.layers = new List<MapLayerOptions>();
             }
 
-            options.lacunarity = EditorGUILayout.Slider("偏移值", options.lacunarity, 0, 1);
-            options.removeSeparateTileNumberOfTimes = EditorGUILayout.IntSlider("移除孤岛次数", options.removeSeparateTileNumberOfTimes, 0, 10);
+            options.lacunarity = EditorGUILayout.Slider(Style.offset, options.lacunarity, 0, 1);
+            options.removeSeparateTileNumberOfTimes =
+                EditorGUILayout.IntSlider(Style.islandCount, options.removeSeparateTileNumberOfTimes, 0, 10);
 
             GUILayout.BeginHorizontal(GUI_STYLE_BOX_BACKGROUND);
-            GUILayout.Label("Layers", EditorStyles.boldLabel);
+            GUILayout.Label(Style.layer, EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("", GUI_STYLE_ADD_BUTTON))
+            if (GUILayout.Button(Style.empty, GUI_STYLE_ADD_BUTTON))
             {
                 options.layers.Add(new MapLayerOptions() { name = "Map Layer" + options.layers.Count });
                 this.Repaint();
@@ -93,7 +113,7 @@ namespace ZEngine.Editor.MapEditor
                     {
                         VARIABLE.flodout = EditorGUILayout.Foldout(VARIABLE.flodout, VARIABLE.name);
                         GUILayout.FlexibleSpace();
-                        if (GUILayout.Button("", GUI_STYLE_MINUS))
+                        if (GUILayout.Button(Style.empty, GUI_STYLE_MINUS))
                         {
                             options.layers.Remove(VARIABLE);
                             this.Repaint();
@@ -111,12 +131,12 @@ namespace ZEngine.Editor.MapEditor
             GUILayout.FlexibleSpace();
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("构建地图"))
+            if (GUILayout.Button(Style.build))
             {
                 OnBuild();
             }
 
-            if (GUILayout.Button("删除配置"))
+            if (GUILayout.Button(Style.delete))
             {
                 MapOptions.instance.sceneList.Remove(options);
                 SaveChanged();
@@ -126,62 +146,83 @@ namespace ZEngine.Editor.MapEditor
             GUILayout.EndHorizontal();
         }
 
-        private void DrawingMapLayerOptions(MapLayerOptions mapLayerOptions)
+        private void DrawingMapLayerOptions(MapLayerOptions layerOptions)
         {
-            mapLayerOptions.name = EditorGUILayout.TextField(new GUIContent("Name"), mapLayerOptions.name);
-            mapLayerOptions.layer = EditorGUILayout.IntField(new GUIContent("Sort Layer"), mapLayerOptions.layer);
-            if (mapLayerOptions.tiles is null)
+            layerOptions.name = EditorGUILayout.TextField(new GUIContent("Name"), layerOptions.name);
+            layerOptions.layer = EditorGUILayout.IntField(new GUIContent("Sort Layer"), layerOptions.layer);
+            if (layerOptions.tiles is null)
             {
-                mapLayerOptions.tiles = new List<MapTileOptions>();
+                layerOptions.tiles = new List<MapTileOptions>();
             }
 
+            layerOptions.animationFrameRate = EditorGUILayout.FloatField("animationFrameRate", layerOptions.animationFrameRate);
+            layerOptions.color = EditorGUILayout.ColorField("Color", layerOptions.color);
+            layerOptions.tileAnchor = EditorGUILayout.Vector3Field("Tile Anchor", layerOptions.tileAnchor);
+            Tilemap.Orientation orientation = (Tilemap.Orientation)EditorGUILayout.EnumPopup("Orientation", layerOptions.orientation);
+
+
+            EditorGUI.BeginDisabledGroup(layerOptions.orientation != Tilemap.Orientation.Custom);
+
+            Vector3 pos = Round(layerOptions.matrix.GetColumn(3), 3);
+            Vector3 euler = Round(layerOptions.matrix.rotation.eulerAngles, 3);
+            Vector3 scale = Round(layerOptions.matrix.lossyScale, 3);
+            if (layerOptions.orientation != orientation)
+            {
+                layerOptions.orientation = orientation;
+                pos = layerOptions.orientation == Tilemap.Orientation.Custom ? pos : Vector3.zero;
+                scale = layerOptions.orientation == Tilemap.Orientation.Custom ? scale : Vector3.one;
+                switch (layerOptions.orientation)
+                {
+                    case Tilemap.Orientation.XY:
+                    case Tilemap.Orientation.XZ:
+                        euler = new Vector3(layerOptions.orientation == Tilemap.Orientation.XY ? 0 : 90, 0, 0);
+                        break;
+                    case Tilemap.Orientation.YX:
+                    case Tilemap.Orientation.YZ:
+                        euler = new Vector3(0, layerOptions.orientation == Tilemap.Orientation.YX ? 180 : 90, 90);
+                        break;
+                    case Tilemap.Orientation.ZX:
+                    case Tilemap.Orientation.ZY:
+                        euler = new Vector3(layerOptions.orientation == Tilemap.Orientation.ZX ? 270 : 0, 270, 0);
+                        break;
+                }
+            }
+
+            pos = EditorGUILayout.Vector3Field(Style.offsetLabel, pos);
+            euler = EditorGUILayout.Vector3Field(Style.rotationLabel, euler);
+            scale = EditorGUILayout.Vector3Field(Style.scaleLabel, scale);
+            if (scale.Equals(Vector3.zero))
+            {
+                scale = Vector3.one;
+            }
+
+            layerOptions.matrix = Matrix4x4.TRS(pos, Quaternion.Euler(euler), scale);
+            EditorGUI.EndDisabledGroup();
+
+            layerOptions.sortOrder = (TilemapRenderer.SortOrder)EditorGUILayout.EnumPopup("Sort Order", layerOptions.sortOrder);
+            layerOptions.mode = (TilemapRenderer.Mode)EditorGUILayout.EnumPopup("Mode", layerOptions.mode);
+            layerOptions.detectChunkCullingBounds = (TilemapRenderer.DetectChunkCullingBounds)EditorGUILayout.EnumPopup("Detect Chunk Culling Bounds", layerOptions.detectChunkCullingBounds);
+            EditorGUI.BeginDisabledGroup(layerOptions.detectChunkCullingBounds == TilemapRenderer.DetectChunkCullingBounds.Auto);
+            layerOptions.chunkCullingBounds = EditorGUILayout.Vector3Field("Chunk Culling Bounds", layerOptions.chunkCullingBounds);
+
+            EditorGUI.EndDisabledGroup();
+
+            layerOptions.maskInteraction = (SpriteMaskInteraction)EditorGUILayout.EnumPopup("Mask Interaction", layerOptions.maskInteraction);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             {
-                for (int i = mapLayerOptions.tiles.Count - 1; i >= 0; i--)
+                for (int i = layerOptions.tiles.Count - 1; i >= 0; i--)
                 {
-                    var VARIABLE = mapLayerOptions.tiles[i];
+                    var VARIABLE = layerOptions.tiles[i];
                     Rect tileRect = EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
                     {
-                        if (options.type == MapType.M3D)
-                        {
-                            VARIABLE.gameObject = (GameObject)EditorGUILayout.ObjectField(VARIABLE.gameObject, typeof(GameObject), false, GUILayout.Width(100), GUILayout.Height(100));
-                        }
-                        else
-                        {
-                            if (VARIABLE.mapTile == null)
-                            {
-                                if (Directory.Exists("Assets/Map/Cache/") is false)
-                                {
-                                    Directory.CreateDirectory("Assets/Map/Cache/");
-                                }
-
-                                string path = "Assets/Map/Cache/" + Guid.NewGuid().ToString().Replace("-", "") + ".asset";
-                                if (File.Exists(path) is false)
-                                {
-                                    AssetDatabase.CreateAsset(new Tile(), path);
-                                    AssetDatabase.SaveAssets();
-                                    AssetDatabase.Refresh();
-                                }
-
-                                VARIABLE.mapTile = AssetDatabase.LoadAssetAtPath<Tile>(path);
-                            }
-
-                            Sprite temp = (Sprite)EditorGUILayout.ObjectField(VARIABLE.mapTile.sprite, typeof(Sprite), false, GUILayout.Width(100), GUILayout.Height(100));
-                            if (VARIABLE.mapTile.sprite == null || VARIABLE.mapTile.sprite.Equals(temp) is false)
-                            {
-                                VARIABLE.mapTile.sprite = temp;
-                                EditorUtility.SetDirty(VARIABLE.mapTile);
-                            }
-                        }
-
+                        VARIABLE.mapTile = (TileBase)EditorGUILayout.ObjectField(VARIABLE.mapTile, typeof(TileBase), false);
                         GUILayout.Space(20);
-                        DrawingDriectionOptions(VARIABLE);
                         GUILayout.FlexibleSpace();
                         VARIABLE.weight = EditorGUILayout.Slider(new GUIContent("权重"), VARIABLE.weight, 0, 1);
                         GUILayout.FlexibleSpace();
                         if (GUILayout.Button("", GUI_STYLE_MINUS))
                         {
-                            mapLayerOptions.tiles.Remove(VARIABLE);
+                            layerOptions.tiles.Remove(VARIABLE);
                             this.Repaint();
                         }
                     }
@@ -193,7 +234,7 @@ namespace ZEngine.Editor.MapEditor
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button("", GUI_STYLE_ADD_BUTTON))
                     {
-                        mapLayerOptions.tiles.Add(new MapTileOptions());
+                        layerOptions.tiles.Add(new MapTileOptions());
                     }
                 }
                 GUILayout.EndHorizontal();
@@ -206,40 +247,6 @@ namespace ZEngine.Editor.MapEditor
             return Event.current.button == 1 ? -1 : 1;
         }
 
-        private void DrawingDriectionOptions(MapTileOptions options)
-        {
-            if (options.dirctions is null || options.dirctions.Length != 9)
-            {
-                options.dirctions = new bool[9];
-                options.dirctions[4] = true;
-            }
-
-            GUILayout.BeginVertical();
-            {
-                GUILayout.Space(10);
-                for (int i = 0; i < 9; i++)
-                {
-                    if (i % 3 == 0)
-                    {
-                        GUILayout.BeginHorizontal();
-                    }
-
-                    if (GUILayout.Button("", options.dirctions[i] ? "WinBtnMaxMac" : "WinBtnInactiveMac", GUILayout.Width(30), GUILayout.Height(30)))
-                    {
-                        options.dirctions[i] = !options.dirctions[i];
-                        options.dirctions[i] = i == 4 ? true : options.dirctions[i];
-                        this.Repaint();
-                    }
-
-                    if (i % 3 == 2)
-                    {
-                        GUILayout.FlexibleSpace();
-                        GUILayout.EndHorizontal();
-                    }
-                }
-            }
-            GUILayout.EndVertical();
-        }
 
         private void OnBuild()
         {
@@ -252,16 +259,7 @@ namespace ZEngine.Editor.MapEditor
             gameObject = new GameObject(options.name);
             Grid grid = gameObject.AddComponent<Grid>();
             grid.cellSize = options.tileSize;
-            switch (options.direction)
-            {
-                case MapTileDirection.D4:
-                    grid.cellLayout = GridLayout.CellLayout.Rectangle;
-                    break;
-                case MapTileDirection.D6:
-                    grid.cellLayout = GridLayout.CellLayout.Hexagon;
-                    break;
-            }
-
+            grid.cellLayout = options.layout;
 
             options.layers.Sort((a, b) => a.layer > b.layer ? 1 : -1);
             for (int i = 0; i < options.layers.Count; i++)
@@ -274,7 +272,20 @@ namespace ZEngine.Editor.MapEditor
                 GameObject layer = new GameObject(options.layers[i].name);
                 layer.SetParent(gameObject, Vector3.zero, Vector3.zero, Vector3.one);
                 Tilemap tilemap = layer.AddComponent<Tilemap>();
-                layer.AddComponent<TilemapRenderer>().sortingOrder = options.layers[i].layer;
+                tilemap.animationFrameRate = options.layers[i].animationFrameRate;
+                tilemap.color = options.layers[i].color;
+                tilemap.tileAnchor = options.layers[i].tileAnchor;
+                tilemap.orientation = options.layers[i].orientation;
+
+
+                tilemap.orientationMatrix = options.layers[i].matrix;
+                TilemapRenderer renderer = layer.AddComponent<TilemapRenderer>();
+                renderer.sortingOrder = options.layers[i].layer;
+                renderer.sortOrder = options.layers[i].sortOrder;
+                renderer.mode = options.layers[i].mode;
+                renderer.chunkCullingBounds = options.layers[i].chunkCullingBounds;
+                renderer.detectChunkCullingBounds = options.layers[i].detectChunkCullingBounds;
+                renderer.maskInteraction = options.layers[i].maskInteraction;
                 float[,] mapData = new float[options.size.x, options.size.y];
                 GenerateMapData(mapData);
                 for (int j = 0; j < options.removeSeparateTileNumberOfTimes; j++)
@@ -289,6 +300,16 @@ namespace ZEngine.Editor.MapEditor
             }
         }
 
+        private static Vector3 Round(Vector3 value, int digits)
+        {
+            float mult = Mathf.Pow(10.0f, (float)digits);
+            return new Vector3(
+                Mathf.Round(value.x * mult) / mult,
+                Mathf.Round(value.y * mult) / mult,
+                Mathf.Round(value.z * mult) / mult
+            );
+        }
+
         private void GenerateMapData(float[,] mapData)
         {
             // 对于种子的应用
@@ -301,7 +322,8 @@ namespace ZEngine.Editor.MapEditor
             {
                 for (int y = 0; y < options.size.y; y++)
                 {
-                    float noiseValue = Mathf.PerlinNoise(x * options.lacunarity + randomOffset, y * options.lacunarity + randomOffset);
+                    float noiseValue = Mathf.PerlinNoise(x * options.lacunarity + randomOffset,
+                        y * options.lacunarity + randomOffset);
                     mapData[x, y] = noiseValue;
                     if (noiseValue < minValue) minValue = noiseValue;
                     if (noiseValue > maxValue) maxValue = noiseValue;
@@ -334,8 +356,7 @@ namespace ZEngine.Editor.MapEditor
                 for (int y = 0; y < options.size.y; y++)
                 {
                     MapTileOptions mapTile = layerOptions.tiles.OrderBy(s => Mathf.Abs(s.weight - mapData[x, y])).FirstOrDefault();
-                    TileBase tile = mapTile.mapTile;
-                    tilemap.SetTile(new Vector3Int(-(options.size.x / 2) + x, -(options.size.y / 2) + y), tile);
+                    tilemap.SetTile(new Vector3Int(-(options.size.x / 2) + x, -(options.size.y / 2) + y), mapTile.mapTile);
                 }
             }
         }
@@ -397,7 +418,7 @@ namespace ZEngine.Editor.MapEditor
             if (IsInMapRange(x - 1, y) && IsGround(mapData, x - 1, y)) count += 1;
             // right
             if (IsInMapRange(x + 1, y) && IsGround(mapData, x + 1, y)) count += 1;
-            if (options.direction == MapTileDirection.D4)
+            if (options.layout == GridLayout.CellLayout.Rectangle)
             {
                 return count;
             }
