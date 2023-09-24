@@ -42,6 +42,21 @@ namespace ZEngine.Editor.SkillEditor
             SkillDataList.instance.Saved();
         }
 
+        protected override MenuListItem[] GetMenuList()
+        {
+            List<MenuListItem> items = new List<MenuListItem>();
+            foreach (var VARIABLE in SkillDataList.instance.optionsList)
+            {
+                items.Add(new MenuListItem()
+                {
+                    name = VARIABLE.name,
+                    data = VARIABLE
+                });
+            }
+
+            return items.ToArray();
+        }
+
         protected override void Actived()
         {
             if (SkillDataList.instance.optionsList is null || SkillDataList.instance.optionsList.Count is 0)
@@ -49,18 +64,12 @@ namespace ZEngine.Editor.SkillEditor
                 SkillDataList.instance.optionsList = new List<SkillOptions>();
                 return;
             }
-
-            foreach (var VARIABLE in SkillDataList.instance.optionsList)
-            {
-                AddDataItem(VARIABLE.name, VARIABLE);
-            }
         }
 
         protected override void CreateNewItem()
         {
             SkillOptions options = new SkillOptions() { name = "未命名" };
             SkillDataList.instance.optionsList.Add(options);
-            AddDataItem(options.name, options);
             SaveChanged();
         }
 
@@ -77,6 +86,7 @@ namespace ZEngine.Editor.SkillEditor
                 options._icon = AssetDatabase.LoadAssetAtPath<Texture2D>(options.icon);
             }
 
+            options.career = (Career)EditorGUILayout.EnumPopup("适用职业", options.career);
             options._icon = (Texture2D)EditorGUILayout.ObjectField("技能图标", options._icon, typeof(Texture2D), false);
             if (options._icon != null)
             {

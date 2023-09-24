@@ -1,97 +1,20 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using Newtonsoft.Json;
 using ZEngine.Editor.SkillEditor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using WebSocketSharp;
 using ZEngine.Game;
 using PopupWindow = UnityEditor.PopupWindow;
 
 namespace ZEngine.Editor.PlayerEditor
 {
-    [Config(Localtion.Packaged, "Assets/Test/player.json")]
-    public class PlayerEditorOptions : SingleScript<PlayerEditorOptions>
-    {
-        public List<PlayerOptions> players;
-    }
-
-    [Serializable]
-    public class PlayerOptions
-    {
-        /// <summary>
-        /// 角色编号
-        /// </summary>
-        public int id;
-
-        /// <summary>
-        /// 角色名
-        /// </summary>
-        public string name;
-
-        /// <summary>
-        /// 角色头像
-        /// </summary>
-        public string headIcon;
-
-        /// <summary>
-        /// 角色预制件路径
-        /// </summary>
-        public string prefab;
-
-        /// <summary>
-        /// 角色初始血量
-        /// </summary>
-        public int hp;
-
-        /// <summary>
-        /// 角色初始能量值
-        /// </summary>
-        public int mp;
-
-        /// <summary>
-        /// 初始攻击力
-        /// </summary>
-        public int attack;
-
-        /// <summary>
-        /// 初始移动速度
-        /// </summary>
-        public int moveSpeed;
-
-        /// <summary>
-        /// 初始攻击速度
-        /// </summary>
-        public int attackSpeed;
-
-        /// <summary>
-        /// 初始物理防御值
-        /// </summary>
-        public int physiceDefense;
-
-        /// <summary>
-        /// 初始魔法防御值
-        /// </summary>
-        public int magicDefense;
-
-        /// <summary>
-        /// 初始技能
-        /// </summary>
-        public List<int> skills;
-
-        /// <summary>
-        /// 角色类型
-        /// </summary>
-        public PlayerType type;
-
-        /// <summary>
-        /// 角色分类
-        /// </summary>
-        public PlayerLavel level;
-
-        [NonSerialized] public Sprite icon;
-        [NonSerialized] public GameObject playerPrefab;
-    }
-
     public class PlayerEditorWindow : EngineCustomEditor
     {
         // [MenuItem("工具/编辑器/角色编辑器")]
@@ -100,30 +23,50 @@ namespace ZEngine.Editor.PlayerEditor
             GetWindow<PlayerEditorWindow>(false, "角色编辑器", true);
         }
 
+        private string cfgPath = String.Empty;
+        private int index = 0;
+        private List<Type> optionsTypes = new List<Type>();
+
         protected override void SaveChanged()
         {
             PlayerEditorOptions.instance.Saved();
         }
+
+        protected override MenuListItem[] GetMenuList()
+        {
+            if (PlayerEditorOptions.instance.players is null || PlayerEditorOptions.instance.players.Count is 0)
+            {
+                PlayerEditorOptions.instance.players = new List<PlayerOptions>();
+            }
+
+            List<MenuListItem> items = new List<MenuListItem>();
+            foreach (var VARIABLE in PlayerEditorOptions.instance.players)
+            {
+                items.Add(new MenuListItem()
+                {
+                    name = VARIABLE.name,
+                    data = VARIABLE
+                });
+            }
+
+            return items.ToArray();
+        }
+
 
         protected override void Actived()
         {
             if (PlayerEditorOptions.instance.players is null || PlayerEditorOptions.instance.players.Count is 0)
             {
                 PlayerEditorOptions.instance.players = new List<PlayerOptions>();
-                return;
-            }
-
-            foreach (var VARIABLE in PlayerEditorOptions.instance.players)
-            {
-                AddDataItem(VARIABLE.name, VARIABLE);
             }
         }
 
         protected override void CreateNewItem()
         {
-            PlayerOptions options = new PlayerOptions() { name = "未命名" };
-            PlayerEditorOptions.instance.players.Add(options);
-            AddDataItem(options.name, options);
+            PlayerOptions playerOptions = new PlayerOptions();
+            playerOptions.name = "未命名";
+            playerOptions.id = 10000000 + PlayerEditorOptions.instance.players.Count;
+            PlayerEditorOptions.instance.players.Add(playerOptions);
             SaveChanged();
         }
 
@@ -132,20 +75,22 @@ namespace ZEngine.Editor.PlayerEditor
         protected override void DrawingItemDataView(object data, float width)
         {
             PlayerOptions options = (PlayerOptions)data;
-            options.id = EditorGUILayout.IntField("角色编号", options.id);
-            options.name = EditorGUILayout.TextField("角色名", options.name);
-            options.type = (PlayerType)EditorGUILayout.EnumPopup("角色类型", options.type);
-            options.level = (PlayerLavel)EditorGUILayout.EnumPopup("角色分类", options.level);
-            if (options.icon == null && options.headIcon.IsNullOrEmpty() is false)
-            {
-                options.icon = AssetDatabase.LoadAssetAtPath<Sprite>(options.headIcon);
-            }
-
             options.icon = (Sprite)EditorGUILayout.ObjectField("角色头像", options.icon, typeof(Sprite), false);
             if (options.icon != null)
             {
                 options.headIcon = AssetDatabase.GetAssetPath(options.icon);
             }
+
+            options.id = EditorGUILayout.IntField("角色编号", options.id);
+            options.name = EditorGUILayout.TextField("角色名", options.name);
+            options.career = (Career)EditorGUILayout.EnumPopup("角色职业", options.career);
+            options.level = (PlayerLavel)EditorGUILayout.EnumPopup("角色分类", options.level);
+
+            if (options.icon == null && options.headIcon.IsNullOrEmpty() is false)
+            {
+                options.icon = AssetDatabase.LoadAssetAtPath<Sprite>(options.headIcon);
+            }
+
 
             if (options.playerPrefab == null && options.prefab.IsNullOrEmpty() is false)
             {
@@ -173,11 +118,14 @@ namespace ZEngine.Editor.PlayerEditor
 
             GUILayout.Label("技能列表");
             GUILayout.BeginHorizontal(EditorStyles.helpBox);
-            for (int i = 0; i < options.skills.Count; i++)
+            for (int i = options.skills.Count - 1; i >= 0; i--)
             {
                 SkillOptions skillOptions = SkillDataList.instance.optionsList.Find(x => x.id == options.skills[i]);
                 if (skillOptions is null)
                 {
+                    options.skills.Remove(options.skills[i]);
+                    SaveChanged();
+                    this.Repaint();
                     continue;
                 }
 
@@ -190,6 +138,13 @@ namespace ZEngine.Editor.PlayerEditor
                 GUILayout.Label($"释放类型：{skillOptions.useType.ToString()}");
                 GUILayout.Label($"技能描述：{skillOptions.describe}");
                 GUILayout.EndVertical();
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(String.Empty, GUI_STYLE_MINUS))
+                {
+                    options.skills.Remove(options.skills[i]);
+                    this.Repaint();
+                }
+
                 GUILayout.EndHorizontal();
             }
 
@@ -203,7 +158,10 @@ namespace ZEngine.Editor.PlayerEditor
                     skillSelectorWindow = new SkillSelectorWindow();
                 }
 
+                skillSelectorWindow.options = options;
+                skillSelectorWindow.playerEditorWindow = this;
                 skillSelectorWindow.size = new Vector2(r.width, SkillDataList.instance.optionsList.Count * 60);
+
                 PopupWindow.Show(r, skillSelectorWindow);
             }
 
@@ -214,6 +172,8 @@ namespace ZEngine.Editor.PlayerEditor
     class SkillSelectorWindow : PopupWindowContent
     {
         public Vector2 size;
+        public PlayerOptions options;
+        public PlayerEditorWindow playerEditorWindow;
 
         public override Vector2 GetWindowSize()
         {
@@ -225,9 +185,27 @@ namespace ZEngine.Editor.PlayerEditor
             GUILayout.BeginVertical();
             foreach (var VARIABLE in SkillDataList.instance.optionsList)
             {
-                GUILayout.BeginHorizontal();
+                GUILayout.BeginHorizontal(EditorStyles.helpBox);
                 GUILayout.Label(AssetDatabase.LoadAssetAtPath<Texture2D>(VARIABLE.icon), GUILayout.Width(50), GUILayout.Height(50));
+                GUILayout.BeginVertical();
                 GUILayout.Label(VARIABLE.name);
+                GUILayout.EndVertical();
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(String.Empty, EngineCustomEditor.GUI_STYLE_ADD_BUTTON))
+                {
+                    var item = options.skills.Find(x => x == VARIABLE.id);
+                    if (item > 0)
+                    {
+                        EditorUtility.DisplayDialog("错误", "该角色已添加过相同技能", "确定");
+                        this.editorWindow.Close();
+                        return;
+                    }
+
+                    options.skills.Add(VARIABLE.id);
+                    playerEditorWindow.SaveChanges();
+                    this.editorWindow.Close();
+                }
+
                 GUILayout.EndHorizontal();
             }
 

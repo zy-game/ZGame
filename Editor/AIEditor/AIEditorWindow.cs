@@ -11,6 +11,11 @@ namespace ZEngine.Editor.AIEditor
             GetWindow<AIEditorWindow>(false, "行为编辑器", true);
         }
 
+        protected override MenuListItem[] GetMenuList()
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void Actived()
         {
         }

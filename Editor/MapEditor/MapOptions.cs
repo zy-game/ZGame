@@ -34,7 +34,7 @@ namespace ZEngine.Editor.MapEditor
 
         public float animationFrameRate;
         public Color color = Color.white;
-        public Vector3 tileAnchor;
+        public Vector3 tileAnchor = new Vector3(0.5f, 0.5f, 0);
         public Tilemap.Orientation orientation;
         public Matrix4x4 matrix;
 

@@ -3,13 +3,45 @@ using UnityEngine;
 
 namespace ZEngine.Game
 {
+    public interface IOptions
+    {
+        int id { get; set; }
+        string name { get; set; }
+    }
+
+    /// <summary>
+    /// 角色数据接口
+    /// </summary>
+    public interface IPlayerOptions : IOptions
+    {
+        string icon { get; set; }
+        string prefab { get; set; }
+    }
+
+    public interface ISkillOptions : IOptions
+    {
+        string icon { get; set; }
+        string prefab { get; set; }
+    }
+
     /// <summary>
     /// 技能分类
     /// </summary>
     public enum SkillType : byte
     {
+        /// <summary>
+        /// 增益或负面效果
+        /// </summary>
         Buffer,
+
+        /// <summary>
+        /// 主动技能
+        /// </summary>
         Skill,
+
+        /// <summary>
+        /// 被动技能
+        /// </summary>
         Passive
     }
 
@@ -18,15 +50,36 @@ namespace ZEngine.Game
     /// </summary>
     public enum UseType : byte
     {
+        /// <summary>
+        /// 单体释放
+        /// </summary>
         Single,
-        Range
+
+        /// <summary>
+        /// 区域范围
+        /// </summary>
+        Area
     }
 
-    public enum PlayerType : byte
+    /// <summary>
+    /// 角色职业
+    /// </summary>
+    public enum Career : byte
     {
-        Player,
-        NPC,
-        Monster,
+        /// <summary>
+        /// 剑客
+        /// </summary>
+        Swordsman,
+
+        /// <summary>
+        /// 拳师
+        /// </summary>
+        Boxer,
+
+        /// <summary>
+        /// 法师
+        /// </summary>
+        Master
     }
 
     public enum PlayerLavel : byte
@@ -54,7 +107,7 @@ namespace ZEngine.Game
         /// <summary>
         /// 区域Boss
         /// </summary>
-        Boss,
+        AreaBoss,
 
         /// <summary>
         /// 世界Boss

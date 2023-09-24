@@ -13,15 +13,16 @@ MonoBehaviour:
   m_Name: skill
   m_EditorClassIdentifier: 
   optionsList:
-  - id: 0
-    name: "\u672A\u547D\u540D"
+  - id: 10001
+    name: "\u70C8\u7130\u707C\u70E7"
     cd: 0
     use: 0
     maxlevel: 0
-    icon: 
+    icon: Assets/Test/New Folder/07765a20.5be5bd44-dd27-46f7-86bd-c3ef016d14ad.png
     skillType: 1
     useType: 1
     describe: 
+    career: 0
     path_prefab: 
     path_hit: 
     path_buffer: 
@@ -30,5 +31,5 @@ MonoBehaviour:
       name: Layer_0
       state: 1
       type: 0
-      startFrameIndex: 11
+      startFrameIndex: 5
       endFrameIndex: 99

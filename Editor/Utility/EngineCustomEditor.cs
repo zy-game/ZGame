@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using ZEngine.Editor.PlayerEditor;
@@ -9,12 +10,12 @@ namespace ZEngine.Editor
     public abstract class EngineCustomEditor : EditorWindow
     {
         private string search;
-        private ItemData selection;
+        private string SeleteName;
+        private MenuListItem[] items;
         private Vector2 listScroll;
         private Vector2 manifestScroll;
         private Color inColor = new Color(1f, 0.92f, 0.01f, .8f);
         private Color outColor = new Color(0, 0, 0, 0.2f);
-        private List<ItemData> items = new List<ItemData>();
         private float rightWidth;
         private float leftWidth;
 
@@ -24,9 +25,10 @@ namespace ZEngine.Editor
         public const string GUI_STYLE_ADD_BUTTON = "OL Plus";
         public const string GUI_STYLE_MINUS = "OL Minus";
 
-        class ItemData
+        protected class MenuListItem
         {
             public string name;
+            public string icon;
             public object data;
         }
 
@@ -55,10 +57,17 @@ namespace ZEngine.Editor
                     this.Repaint();
                 }
 
+                OnDrawingToolbarMenu();
                 GUILayout.FlexibleSpace();
                 search = GUILayout.TextField(search, EditorStyles.toolbarSearchField, GUILayout.Width(leftWidth));
                 GUILayout.EndHorizontal();
             }
+        }
+
+        protected abstract MenuListItem[] GetMenuList();
+
+        protected virtual void OnDrawingToolbarMenu()
+        {
         }
 
 
@@ -106,15 +115,6 @@ namespace ZEngine.Editor
         protected abstract void DrawingItemDataView(object data, float width);
         protected abstract void SaveChanged();
 
-        protected void AddDataItem(string name, object data)
-        {
-            if (items is null)
-            {
-                items = new List<ItemData>();
-            }
-
-            items.Add(new ItemData() { name = name, data = data });
-        }
 
         public class RightMeunItem
         {
@@ -129,13 +129,14 @@ namespace ZEngine.Editor
 
         private void DrawingSceneList()
         {
-            if (items is null || items.Count is 0)
+            items = GetMenuList();
+            if (items is null || items.Length is 0)
             {
                 return;
             }
 
 
-            for (int i = 0; i < items.Count; i++)
+            for (int i = 0; i < items.Length; i++)
             {
                 if (search.IsNullOrEmpty() is false && items[i].name.Equals(search) is false)
                 {
@@ -144,7 +145,7 @@ namespace ZEngine.Editor
 
                 Rect contains = EditorGUILayout.BeginVertical();
                 {
-                    this.BeginColor(items[i] == selection ? Color.cyan : GUI.color);
+                    this.BeginColor(items[i].name == SeleteName ? Color.cyan : GUI.color);
                     {
                         GUILayout.BeginHorizontal();
                         {
@@ -156,14 +157,14 @@ namespace ZEngine.Editor
                     }
 
                     GUILayout.Space(5);
-                    this.BeginColor(items[i] == selection ? inColor : outColor);
+                    this.BeginColor(items[i].name == SeleteName ? inColor : outColor);
                     {
                         GUILayout.Box("", GUI_STYLE_LINE, GUILayout.Width(leftWidth), GUILayout.Height(1));
                         this.EndColor();
                     }
                     if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
                     {
-                        selection = items[i];
+                        SeleteName = items[i].name;
                         this.Repaint();
                     }
 
@@ -191,13 +192,15 @@ namespace ZEngine.Editor
 
         void DrawingSceneOptions()
         {
-            if (selection is null)
+            if (SeleteName.IsNullOrEmpty())
             {
+                Debug.Log("??");
                 return;
             }
 
             EditorGUI.BeginChangeCheck();
-            DrawingItemDataView(selection.data, rightWidth - 20);
+            var item = items.Where(x => x.name == SeleteName).FirstOrDefault();
+            DrawingItemDataView(item.data, rightWidth - 20);
             if (EditorGUI.EndChangeCheck())
             {
                 SaveChanged();

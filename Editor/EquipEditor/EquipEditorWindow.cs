@@ -27,6 +27,11 @@ namespace ZEngine.Editor.EquipEditor
             GetWindow<EquipEditorWindow>(false, "物品编辑器", true);
         }
 
+        protected override MenuListItem[] GetMenuList()
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void Actived()
         {
             if (EquipList.instance.optionsList is null || EquipList.instance.optionsList.Count is 0)
@@ -35,17 +40,12 @@ namespace ZEngine.Editor.EquipEditor
                 return;
             }
 
-            foreach (var VARIABLE in EquipList.instance.optionsList)
-            {
-                AddDataItem(VARIABLE.name, VARIABLE);
-            }
         }
 
         protected override void CreateNewItem()
         {
             EquipOptions options = new EquipOptions() { name = "未命名" };
             EquipList.instance.optionsList.Add(options);
-            AddDataItem(options.name, options);
             SaveChanged();
         }
 

@@ -14,6 +14,11 @@ namespace ZEngine.Editor.UIEditor
             GetWindow<UIEditorWindow>(false, "UI编辑器", true);
         }
 
+        protected override MenuListItem[] GetMenuList()
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override void Actived()
         {
             throw new System.NotImplementedException();

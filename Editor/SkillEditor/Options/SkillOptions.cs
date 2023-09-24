@@ -54,6 +54,11 @@ namespace ZEngine.Editor.SkillEditor
         /// </summary>
         [Header("技能描述")] public string describe;
 
+        /// <summary>
+        /// 适用职业
+        /// </summary>
+        public Career career;
+
         public string path_prefab;
         public string path_hit;
         public string path_buffer;
