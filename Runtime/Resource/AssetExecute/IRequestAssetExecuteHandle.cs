@@ -65,7 +65,7 @@ namespace ZEngine.Resource
             {
                 if (asset == null)
                 {
-                    throw EngineException.Create<NullReferenceException>("asset");
+                    throw new NullReferenceException("asset");
                 }
             }
 

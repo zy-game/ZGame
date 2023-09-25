@@ -58,6 +58,24 @@ public sealed class Engine
     }
 
     /// <summary>
+    /// 获取随机数
+    /// </summary>
+    /// <param name="l"></param>
+    /// <param name="r"></param>
+    /// <returns></returns>
+    public static float Random(float l, float r)
+        => UnityEngine.Random.Range(l, r);
+
+    /// <summary>
+    /// 获取随机数
+    /// </summary>
+    /// <param name="l"></param>
+    /// <param name="r"></param>
+    /// <returns></returns>
+    public static int Random(int l, int r)
+        => UnityEngine.Random.Range(l, r);
+
+    /// <summary>
     /// 获取热更资源路径
     /// </summary>
     /// <param name="url"></param>
@@ -89,7 +107,7 @@ public sealed class Engine
         /// <param name="key"></param>
         /// <param name="value"></param>
         public static void Handle(string key, object value)
-            => ObjectPoolManager.instance.Handle(key, value);
+            => ObjectManager.instance.Handle(key, value);
 
         /// <summary>
         /// 尝试获取缓存对象
@@ -99,35 +117,35 @@ public sealed class Engine
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static bool TryGetValue<T>(string key, out T value)
-            => ObjectPoolManager.instance.TryGetValue(key, out value);
+            => ObjectManager.instance.TryGetValue(key, out value);
 
         /// <summary>
         /// 设置缓存管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
         public static void SetCacheHandle<T>() where T : IObjectPoolHandle
-            => ObjectPoolManager.instance.SetCacheHandle(typeof(T));
+            => ObjectManager.instance.SetCacheHandle(typeof(T));
 
         /// <summary>
         /// 设置缓存管道
         /// </summary>
         /// <param name="handleType"></param>
         public static void SetCacheHandle(Type handleType)
-            => ObjectPoolManager.instance.SetCacheHandle(handleType);
+            => ObjectManager.instance.SetCacheHandle(handleType);
 
         /// <summary>
         /// 移除缓存管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
         public static void RemoveCacheHandle<T>() where T : IObjectPoolHandle
-            => ObjectPoolManager.instance.RemoveCacheHandle(typeof(T));
+            => ObjectManager.instance.RemoveCacheHandle(typeof(T));
 
         /// <summary>
         /// 移除缓存管道
         /// </summary>
         /// <param name="handleType"></param>
         public static void RemoveCacheHandle(Type handleType)
-            => ObjectPoolManager.instance.RemoveCacheHandle(handleType);
+            => ObjectManager.instance.RemoveCacheHandle(handleType);
 
         /// <summary>
         /// 移除自定的类型的缓存区域
@@ -141,7 +159,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="type"></param>
         public static void RemoveCacheArea(Type type)
-            => ObjectPoolManager.instance.RemoveCacheArea(type);
+            => ObjectManager.instance.RemoveCacheArea(type);
     }
 
 

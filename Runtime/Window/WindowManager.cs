@@ -7,7 +7,7 @@ using ZEngine.Resource;
 
 namespace ZEngine.Window
 {
-    class WindowManager : ServiceSingleton<WindowManager>
+    class WindowManager : Singleton<WindowManager>
     {
         private Dictionary<Type, UIWindow> windows = new Dictionary<Type, UIWindow>();
         private Dictionary<UIOptions.Layer, Canvas> canvasMap = new Dictionary<UIOptions.Layer, Canvas>();
@@ -48,14 +48,14 @@ namespace ZEngine.Window
             UIOptions options = windowType.GetCustomAttribute<UIOptions>();
             if (options is null)
             {
-                Engine.Console.Error(EngineException.Create<ArgumentNullException>(nameof(UIOptions)));
+                Engine.Console.Error(new ArgumentNullException(nameof(UIOptions)));
                 return default;
             }
 
             IRequestAssetExecute<GameObject> requestAssetExecute = Engine.Resource.LoadAsset<GameObject>(options.path);
             if (requestAssetExecute.asset == null)
             {
-                Engine.Console.Error(EngineException.Create<NullReferenceException>(options.path));
+                Engine.Console.Error(new NullReferenceException(options.path));
                 return default;
             }
 

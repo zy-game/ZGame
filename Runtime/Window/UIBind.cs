@@ -12,7 +12,7 @@ namespace ZEngine.Window
 
     public sealed class Localization
     {
-        
+        public int id;
     }
 
     public abstract class BindBasic<T> : IUIBind<T>

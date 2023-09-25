@@ -124,7 +124,7 @@ public static class Extension
             yield return enumerator;
         }
 
-        return UnityFunctionLinker.instance.StartCoroutine(Running());
+        return UnityBehaviour.instance.StartCoroutine(Running());
     }
 
     public static Coroutine StartCoroutine(this IEnumerator enumerator, Action complete)
@@ -136,17 +136,17 @@ public static class Extension
             complete();
         }
 
-        return UnityFunctionLinker.instance.StartCoroutine(Running());
+        return UnityBehaviour.instance.StartCoroutine(Running());
     }
 
     public static void StopAll()
     {
-        UnityFunctionLinker.instance.StopAllCoroutines();
+        UnityBehaviour.instance.StopAllCoroutines();
     }
 
     public static void StopCoroutine(this Coroutine coroutine)
     {
-        UnityFunctionLinker.instance.StopCoroutine(coroutine);
+        UnityBehaviour.instance.StopCoroutine(coroutine);
     }
 
     public static void SetParent(this GameObject gameObject, GameObject parent, Vector3 position, Vector3 rotation, Vector3 scale)

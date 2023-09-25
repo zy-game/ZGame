@@ -60,8 +60,7 @@ namespace ZEngine
         public static ISubscriber Create(Action call, GameObject gameObject)
         {
             ISubscriber subscriber = ISubscriber<object>.InternalGameSubscriber.Create(call);
-            UnityFunctionLinker linker = gameObject.TryGetComponent<UnityFunctionLinker>();
-            linker.destroyEvent.AddListener(() => subscriber.Execute(null));
+            gameObject.TryGetComponent<UnityBehaviour>().OnDestroyGameObject(() => subscriber.Execute(null));
             return subscriber;
         }
 

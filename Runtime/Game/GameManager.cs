@@ -14,7 +14,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 游戏管理器
     /// </summary>
-    class GameManager : ServiceSingleton<GameManager>
+    class GameManager : Singleton<GameManager>
     {
         private List<IWorld> worlds = new List<IWorld>();
 

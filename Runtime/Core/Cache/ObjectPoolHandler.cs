@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ZEngine.Cache
 {
-    class CommonObjectPoolHandler : IObjectPoolHandle
+    class ObjectPoolHandler : IObjectPoolHandle
     {
         private List<Handle> list = new List<Handle>();
         public int count { get; }
@@ -97,9 +97,9 @@ namespace ZEngine.Cache
 
         public static IObjectPoolHandle Create(Type type)
         {
-            CommonObjectPoolHandler commonObjectPoolHandler = Activator.CreateInstance<CommonObjectPoolHandler>();
-            commonObjectPoolHandler.cacheType = type;
-            return commonObjectPoolHandler;
+            ObjectPoolHandler objectHandler = Activator.CreateInstance<ObjectPoolHandler>();
+            objectHandler.cacheType = type;
+            return objectHandler;
         }
     }
 }

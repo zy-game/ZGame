@@ -56,7 +56,7 @@ namespace ZEngine.VFS
             VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
             if (handle is null)
             {
-                Engine.Console.Error(EngineException.Create(new FileNotFoundException(vfs)));
+                Engine.Console.Error(new FileNotFoundException(vfs));
                 return;
             }
 
@@ -75,13 +75,13 @@ namespace ZEngine.VFS
             VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
             if (handle is null)
             {
-                Engine.Console.Error(EngineException.Create(new FileNotFoundException(vfs)));
+                Engine.Console.Error(new FileNotFoundException(vfs));
                 return;
             }
 
             if (bytes.Length < offset + lenght)
             {
-                Engine.Console.Error(EngineException.Create(new IndexOutOfRangeException()));
+                Engine.Console.Error(new IndexOutOfRangeException());
                 return;
             }
 

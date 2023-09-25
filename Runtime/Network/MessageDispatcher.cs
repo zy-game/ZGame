@@ -5,7 +5,7 @@ using ProtoBuf.Meta;
 
 namespace ZEngine.Network
 {
-    class MessageDispatcher : ServiceSingleton<MessageDispatcher>
+    class MessageDispatcher : Singleton<MessageDispatcher>
     {
         private Dictionary<uint, Type> opcode = new Dictionary<uint, Type>();
         private Dictionary<Type, ISubscriber> messageSubscribeList = new Dictionary<Type, ISubscriber>();

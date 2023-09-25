@@ -6,7 +6,7 @@ using ProtoBuf;
 
 namespace ZEngine.Network
 {
-    class NetworkManager : ServiceSingleton<NetworkManager>
+    class NetworkManager : Singleton<NetworkManager>
     {
         private Dictionary<uint, Type> map;
         private Dictionary<string, IChannel> channels;

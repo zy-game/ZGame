@@ -42,8 +42,6 @@ public class Startup : MonoBehaviour
             return;
         }
 
-        ResourceManager.instance.SchedulerCommand(ICommand.Create("", () => { }));
-
         Engine.Console.Log("进入游戏");
         Engine.Game.OpenWorld(new WorldOptions() { name = "Test" });
         Engine.Window.MsgBox("Tips", "Loading Game Fail", Engine.Quit);

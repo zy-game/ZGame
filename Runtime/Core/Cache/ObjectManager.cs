@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ZEngine.Cache
 {
-    public class ObjectPoolManager : ServiceSingleton<ObjectPoolManager>
+    public class ObjectManager : Singleton<ObjectManager>
     {
         private List<IObjectPoolHandle> handlers = new List<IObjectPoolHandle>();
 
@@ -56,7 +56,7 @@ namespace ZEngine.Cache
             IObjectPoolHandle cacheHandler = handlers.Find(x => x.cacheType == valueType);
             if (cacheHandler is null)
             {
-                cacheHandler = CommonObjectPoolHandler.Create(valueType);
+                cacheHandler = ObjectPoolHandler.Create(valueType);
             }
 
             cacheHandler.Release(key, value);

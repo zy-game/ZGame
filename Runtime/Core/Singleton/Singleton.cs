@@ -1,15 +1,17 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace ZEngine
 {
-    public class ServiceSingleton<T> : IDisposable where T : ServiceSingleton<T>, new()
+    public class Singleton<T> : IDisposable where T : Singleton<T>, new()
     {
         public static T instance => SingletonHandle.GetInstance();
 
         internal class SingletonHandle
         {
             private static T _instance;
+
             public static T GetInstance()
             {
                 if (_instance is not null)
@@ -20,11 +22,11 @@ namespace ZEngine
                 _instance = new T();
                 if (Application.isPlaying is true)
                 {
-                    UnityFunctionLinker.instance.quit.AddListener(_instance.Dispose);
-                    UnityFunctionLinker.instance.fixedEvent.AddListener(_instance.OnFixedUpdate);
-                    UnityFunctionLinker.instance.updateEvent.AddListener(_instance.OnUpdate);
-                    UnityFunctionLinker.instance.lateEvent.AddListener(_instance.OnLateUpdate);
-                    UnityFunctionLinker.instance.focusEvent.AddListener(_instance.OnFocus);
+                    UnityBehaviour.instance.OnUpdate(_instance.OnUpdate);
+                    UnityBehaviour.instance.OnApplicationQuit(_instance.Dispose);
+                    UnityBehaviour.instance.OnLateUpdate(_instance.OnLateUpdate);
+                    UnityBehaviour.instance.OnFixedUpdate(_instance.OnFixedUpdate);
+                    UnityBehaviour.instance.OnApplicationFocus(_instance.OnFocusChange);
                 }
 
                 return _instance;
@@ -47,11 +49,7 @@ namespace ZEngine
         {
         }
 
-        protected virtual void OnFocus(bool focus)
-        {
-        }
-
-        public virtual void SchedulerCommand(ICommand command)
+        protected virtual void OnFocusChange(bool focus)
         {
         }
     }

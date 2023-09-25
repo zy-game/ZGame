@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-     class VFSManager : ServiceSingleton<VFSManager>
+     class VFSManager : Singleton<VFSManager>
     {
         private List<VFSData> dataList = new List<VFSData>();
         private List<VFSHandle> vfsList = new List<VFSHandle>();
