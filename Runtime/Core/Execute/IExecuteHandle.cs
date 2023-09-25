@@ -18,47 +18,89 @@ namespace ZEngine
         Status status { get; }
 
         /// <summary>
-        /// 订阅执行器完成回调
+        /// 订阅事件
         /// </summary>
-        /// <param name="subscribe">订阅器</param>
-        void Subscribe(ISubscriber subscribe);
+        /// <param name="subscriber"></param>
+        void Subscribe(ISubscriber subscriber);
+
+        public static GameExecuteHandle Create(IEnumerator enumerator = null)
+        {
+            return InternalExecuteHandle<IExecuteHandle>.Create(enumerator);
+        }
     }
 
     /// <summary>
     /// 执行器
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IExecuteHandle<T> : IExecuteHandle, IExecute
+    public interface IExecuteHandle<T> : IExecuteHandle
     {
+        /// <summary>
+        /// 订阅事件
+        /// </summary>
+        /// <param name="subscriber"></param>
+        void Subscribe(ISubscriber<T> subscriber);
+
+        public static GameExecuteHandle<T> Create(IEnumerator enumerator = null)
+        {
+            return InternalExecuteHandle<T>.Create(enumerator);
+        }
     }
 
-    public abstract class AbstractExecuteHandle : IExecuteHandle
+    class InternalExecuteHandle<T> : GameExecuteHandle<T>
     {
+        public static InternalExecuteHandle<T> Create(IEnumerator enumerator = null)
+        {
+            InternalExecuteHandle<T> internalExecuteHandle = new InternalExecuteHandle<T>();
+            internalExecuteHandle.SetMethod(enumerator);
+            internalExecuteHandle.Execute();
+            return internalExecuteHandle;
+        }
+    }
+
+    public abstract class GameExecuteHandle : IExecuteHandle
+    {
+        private IEnumerator enumerator;
         private ISubscriber subscribes;
-        public Status status { get; protected set; }
-        protected abstract IEnumerator OnExecute();
+        public Status status { get; set; }
+
+
+        protected virtual IEnumerator DOExecute()
+        {
+            if (enumerator is null)
+            {
+                yield break;
+            }
+
+            yield return enumerator;
+        }
+
+        public void SetMethod(IEnumerator enumerator)
+        {
+            this.enumerator = enumerator;
+        }
+
+        public void Subscribe(ISubscriber subscribe)
+        {
+            if (subscribes is not null)
+            {
+                this.subscribes.Subscribe(subscribe);
+                return;
+            }
+
+            this.subscribes = subscribe;
+        }
 
         public void Execute()
         {
             status = Status.Execute;
-            OnExecute().StartCoroutine(OnComplete);
+            DOExecute().StartCoroutine(OnComplete);
         }
 
         private void OnComplete()
         {
             subscribes?.Execute(this);
             WaitFor.WaitFormFrameEnd(this.Dispose);
-        }
-
-        public void Subscribe(ISubscriber subscribe)
-        {
-            if (this.subscribes is null)
-            {
-                this.subscribes = subscribe;
-                return;
-            }
-
-            this.subscribes.Merge(subscribe);
         }
 
 
@@ -68,6 +110,14 @@ namespace ZEngine
             subscribes = null;
             status = Status.None;
             GC.SuppressFinalize(this);
+        }
+    }
+
+    public abstract class GameExecuteHandle<T> : GameExecuteHandle, IExecuteHandle<T>
+    {
+        public void Subscribe(ISubscriber<T> subscriber)
+        {
+            this.Subscribe((ISubscriber)subscriber);
         }
     }
 }

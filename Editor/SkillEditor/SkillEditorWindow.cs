@@ -13,7 +13,7 @@ using ZEngine.Game;
 
 namespace ZEngine.Editor.SkillEditor
 {
-    public class SkillEditorWindow : EngineCustomEditor
+    public class SkillEditorWindow : EngineEditorWindow
     {
         // [MenuItem("工具/编辑器/技能编辑器")]
         public static void Open()

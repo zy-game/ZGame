@@ -16,16 +16,4 @@ namespace ZEngine
         /// <param name="args"></param>
         void Execute();
     }
-
-    public abstract class AbstractExecute : IExecute
-    {
-        public void Execute()
-        {
-            OnExecute();
-            WaitFor.WaitFormFrameEnd(this.Dispose);
-        }
-
-        public abstract void Dispose();
-        protected abstract void OnExecute();
-    }
 }

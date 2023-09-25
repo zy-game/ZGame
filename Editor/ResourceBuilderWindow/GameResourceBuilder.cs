@@ -201,7 +201,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical(EngineCustomEditor.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(300), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(EngineEditorWindow.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(300), GUILayout.Height(position.height - 30));
                     {
                         listScroll = GUILayout.BeginScrollView(listScroll);
                         {
@@ -217,7 +217,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical(EngineCustomEditor.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width - 310), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(EngineEditorWindow.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width - 310), GUILayout.Height(position.height - 30));
                     {
                         manifestScroll = GUILayout.BeginScrollView(manifestScroll, false, true);
                         {
@@ -255,7 +255,7 @@ namespace ZEngine.Editor.ResourceBuilder
                     {
                         GUILayout.BeginHorizontal();
                         {
-                            GUILayout.Label($"{moduleManifest.title}", EngineCustomEditor.GUI_STYLE_TITLE_LABLE);
+                            GUILayout.Label($"{moduleManifest.title}", EngineEditorWindow.GUI_STYLE_TITLE_LABLE);
                             GUILayout.FlexibleSpace();
                             GUILayout.Label($"v:{moduleManifest.version}");
                             GUILayout.EndHorizontal();
@@ -325,7 +325,7 @@ namespace ZEngine.Editor.ResourceBuilder
                             manifest.isOn = GUILayout.Toggle(manifest.isOn, "");
                             GUILayout.EndVertical();
                             string name = (manifest.name.IsNullOrEmpty() ? $"Empty" : manifest.name) + $"({AssetDatabase.GetAssetPath(manifest.folder)})";
-                            GUILayout.Label(name, EngineCustomEditor.GUI_STYLE_TITLE_LABLE);
+                            GUILayout.Label(name, EngineEditorWindow.GUI_STYLE_TITLE_LABLE);
                             GUILayout.FlexibleSpace();
                             GUILayout.Label($"v:{manifest.version.ToString()}");
                         }
@@ -399,7 +399,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 });
             }
 
-            string output = Application.dataPath + "/../output/assets/" + Engine.Custom.GetPlatfrom();
+            string output = Application.dataPath + "/../output/assets/" + Engine.GetPlatfrom();
             if (Directory.Exists(output) is false)
             {
                 Directory.CreateDirectory(output);
@@ -522,14 +522,14 @@ namespace ZEngine.Editor.ResourceBuilder
             foreach (var file in manifests)
             {
                 string bundleName = ($"{moduleManifest.title}_{file.name}.assetbundle").ToLower();
-                key = $"{Engine.Custom.GetPlatfrom()}/{bundleName}";
+                key = $"{Engine.GetPlatfrom()}/{bundleName}";
                 result = ossClient.PutObject(options.bucket, key, $"{output}/{bundleName}");
                 Engine.Console.Log(result.ETag);
                 now++;
                 EditorUtility.DisplayProgressBar("上传资源", "正在上传OSS...", now / count);
             }
 
-            key = $"{Engine.Custom.GetPlatfrom()}/{moduleManifest.title.ToLower()}.ini";
+            key = $"{Engine.GetPlatfrom()}/{moduleManifest.title.ToLower()}.ini";
             result = ossClient.PutObject(options.bucket, key, $"{output}/{moduleManifest.title.ToLower()}.ini");
             EditorUtility.DisplayProgressBar("上传资源", "正在上传配置文件...", now / count);
         }
@@ -557,7 +557,7 @@ namespace ZEngine.Editor.ResourceBuilder
             foreach (var file in manifests)
             {
                 string bundleName = ($"{moduleManifest.title}_{file.name}.assetbundle").ToLower();
-                key = ($"{Engine.Custom.GetPlatfrom()}/{bundleName}").ToLower();
+                key = ($"{Engine.GetPlatfrom()}/{bundleName}").ToLower();
                 request = new COSXML.Model.Object.PutObjectRequest(options.bucket, key, $"{output}/{bundleName}");
                 result = cosClient.PutObject(request);
                 Engine.Console.Log(result.eTag);
@@ -565,7 +565,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 EditorUtility.DisplayProgressBar("上传资源", "正在上传COS...", now / count);
             }
 
-            key = ($"{Engine.Custom.GetPlatfrom()}/{moduleManifest.title}.ini").ToLower();
+            key = ($"{Engine.GetPlatfrom()}/{moduleManifest.title}.ini").ToLower();
             request = new COSXML.Model.Object.PutObjectRequest(options.bucket, key, $"{output}/{moduleManifest.title.ToLower()}.ini");
             result = cosClient.PutObject(request);
             EditorUtility.DisplayProgressBar("上传资源", "正在上传配置文件...", now / count);

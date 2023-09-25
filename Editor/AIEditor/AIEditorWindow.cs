@@ -3,7 +3,7 @@ using ZEngine.Editor;
 
 namespace ZEngine.Editor.AIEditor
 {
-    public class AIEditorWindow : EngineCustomEditor
+    public class AIEditorWindow : EngineEditorWindow
     {
         // [MenuItem("工具/编辑器/AI编辑器")]
         public static void Open()

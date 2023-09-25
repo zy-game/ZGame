@@ -27,7 +27,7 @@ namespace ZEngine.Network
             return internalWebRequestExecuteHandle;
         }
 
-        class InternalWebRequestExecuteHandle<T> : AbstractExecuteHandle, IExecuteHandle<IWebRequestExecuteHandle<T>>, IWebRequestExecuteHandle<T>
+        class InternalWebRequestExecuteHandle<T> : GameExecuteHandle<IWebRequestExecuteHandle<T>>, IWebRequestExecuteHandle<T>
         {
             public T result => (T)_data;
             public string url { get; set; }
@@ -48,7 +48,7 @@ namespace ZEngine.Network
                 base.Dispose();
             }
 
-            protected override IEnumerator OnExecute()
+            protected override IEnumerator DOExecute()
             {
                 UnityWebRequest request = method switch
                 {

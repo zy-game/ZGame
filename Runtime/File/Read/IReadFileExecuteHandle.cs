@@ -22,24 +22,14 @@ namespace ZEngine.VFS
             return internalVfsReaderFileExecuteHandle;
         }
 
-        class InternalVFSReaderFileExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IReadFileExecuteHandle>, IReadFileExecuteHandle
+        class InternalVFSReaderFileExecuteHandle : GameExecuteHandle<IReadFileExecuteHandle>, IReadFileExecuteHandle
         {
             public string name { get; set; }
             public long time { get; set; }
             public byte[] bytes { get; set; }
             public VersionOptions version { get; set; }
 
-            public override void Dispose()
-            {
-                version = null;
-                name = String.Empty;
-                bytes = Array.Empty<byte>();
-                time = 0;
-                GC.SuppressFinalize(this);
-                base.Dispose();
-            }
-
-            protected override IEnumerator OnExecute()
+            protected override IEnumerator DOExecute()
             {
                 VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
                 if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != version)
@@ -60,6 +50,15 @@ namespace ZEngine.VFS
                 }
 
                 status = Status.Success;
+            }
+
+            public void Dispose()
+            {
+                version = null;
+                name = String.Empty;
+                bytes = Array.Empty<byte>();
+                time = 0;
+                GC.SuppressFinalize(this);
             }
         }
     }

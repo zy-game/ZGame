@@ -16,16 +16,37 @@ namespace ZEngine.Network
         public string address { get; private set; }
         public bool connected { get; set; }
 
-        class WebSocketCloseExecuteHandle : AbstractExecuteHandle, IChannelClosedExecuteHandle
+        public IExecuteHandle Close()
+        {
+            return WebSocketCloseExecuteHandle.Create(this);
+        }
+
+        public IExecuteHandle<IChannel> Connect(string address, int id = 0)
+        {
+            return default; //WebSocketConnectExecuteHandle.Create(this, address, id);
+        }
+
+        public IExecuteHandle WriteAndFlush(byte[] bytes)
+        {
+            return WebSocketWriteExecuteHandle.Create(this, bytes);
+        }
+
+        public void Dispose()
+        {
+            if (connected)
+            {
+                Close();
+            }
+
+            _websocket = null;
+            address = String.Empty;
+        }
+
+        class WebSocketCloseExecuteHandle : GameExecuteHandle
         {
             public IChannel channel { get; }
 
             public WebSocketChannel socketChannel;
-
-            protected override IEnumerator OnExecute()
-            {
-                yield break;
-            }
 
             public static WebSocketCloseExecuteHandle Create(WebSocketChannel channel)
             {
@@ -34,9 +55,14 @@ namespace ZEngine.Network
                 webSocketCloseExecuteHandle.Execute();
                 return webSocketCloseExecuteHandle;
             }
+
+            protected override IEnumerator DOExecute()
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        class WebSocketConnectExecuteHandle : AbstractExecuteHandle, IChannelConnectExecuteHandle
+        class WebSocketConnectExecuteHandle : GameExecuteHandle<IChannel>
         {
             public int id { get; set; }
             public string address { get; set; }
@@ -58,7 +84,7 @@ namespace ZEngine.Network
                 return webSocketConnectExecuteHandle;
             }
 
-            protected override IEnumerator OnExecute()
+            protected override IEnumerator DOExecute()
             {
                 this.address = address;
                 socketChannel._websocket = new WebSocketSharp.WebSocket(address);
@@ -76,7 +102,7 @@ namespace ZEngine.Network
             }
         }
 
-        class WebSocketWriteExecuteHandle : AbstractExecuteHandle, IChannelWriteExecuteHandle
+        class WebSocketWriteExecuteHandle : GameExecuteHandle
         {
             public IChannel channel
             {
@@ -86,7 +112,7 @@ namespace ZEngine.Network
             public byte[] bytes { get; set; }
             private WebSocketChannel socketChannel;
 
-            protected override IEnumerator OnExecute()
+            protected override IEnumerator DOExecute()
             {
                 socketChannel._websocket.Send(bytes);
                 yield break;
@@ -100,32 +126,6 @@ namespace ZEngine.Network
                 webSocketWriteExecuteHandle.Execute();
                 return webSocketWriteExecuteHandle;
             }
-        }
-
-        public IChannelClosedExecuteHandle Close()
-        {
-            return WebSocketCloseExecuteHandle.Create(this);
-        }
-
-        public IChannelConnectExecuteHandle Connect(string address, int id = 0)
-        {
-            return WebSocketConnectExecuteHandle.Create(this, address, id);
-        }
-
-        public IChannelWriteExecuteHandle WriteAndFlush(byte[] bytes)
-        {
-            return WebSocketWriteExecuteHandle.Create(this, bytes);
-        }
-
-        public void Dispose()
-        {
-            if (connected)
-            {
-                Close();
-            }
-
-            _websocket = null;
-            address = String.Empty;
         }
     }
 }

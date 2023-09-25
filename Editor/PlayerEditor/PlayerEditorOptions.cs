@@ -6,7 +6,7 @@ using ZEngine.Game;
 namespace ZEngine.Editor.PlayerEditor
 {
     [PackageConfig("Assets/Test/players.json")]
-    public class PlayerEditorOptions : SingleScript<PlayerEditorOptions>
+    public class PlayerEditorOptions : ConfigScriptableObject<PlayerEditorOptions>
     {
         public List<PlayerOptions> players;
     }

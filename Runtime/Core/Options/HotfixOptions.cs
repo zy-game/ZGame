@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 namespace ZEngine
 {
     [Config(Localtion.Internal)]
-    public class HotfixOptions : SingleScript<HotfixOptions>
+    public class HotfixOptions : ConfigScriptableObject<HotfixOptions>
     {
         [Header("编辑器启用热更")] public Switch useHotfix;
         [Header("编辑器加载热更脚本")] public Switch useScript;

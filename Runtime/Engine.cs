@@ -21,6 +21,64 @@ using Object = UnityEngine.Object;
 public sealed class Engine
 {
     /// <summary>
+    /// 退出播放
+    /// </summary>
+    public static void Quit()
+    {
+        Extension.StopAll();
+#if UNITY_EDITOR
+        EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+    }
+
+    /// <summary>
+    /// 获取当前运行时平台名(小写)
+    /// </summary>
+    /// <returns></returns>
+    public static string GetPlatfrom()
+    {
+#if UNITY_ANDROID
+            return "android";
+#elif UNITY_IPHONE
+            return "ios";
+#else
+        return "windows";
+#endif
+    }
+
+    /// <summary>
+    /// 获取随机名
+    /// </summary>
+    /// <returns></returns>
+    public static string RandomName()
+    {
+        return Guid.NewGuid().ToString().Replace("-", "");
+    }
+
+    /// <summary>
+    /// 获取热更资源路径
+    /// </summary>
+    /// <param name="url"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static string GetHotfixPath(string url, string name)
+    {
+        return $"{url}/{Engine.GetPlatfrom()}/{name}";
+    }
+
+    /// <summary>
+    /// 获取本地缓存文件路径
+    /// </summary>
+    /// <param name="fileName">文件名，不包含扩展名</param>
+    /// <returns></returns>
+    public static string GetLocalFilePath(string fileName)
+    {
+        return $"{Application.persistentDataPath}/{fileName}";
+    }
+
+    /// <summary>
     /// 缓存区
     /// </summary>
     public sealed class Cache
@@ -31,7 +89,7 @@ public sealed class Engine
         /// <param name="key"></param>
         /// <param name="value"></param>
         public static void Handle(string key, object value)
-            => CacheManager.instance.Handle(key, value);
+            => ObjectPoolManager.instance.Handle(key, value);
 
         /// <summary>
         /// 尝试获取缓存对象
@@ -41,97 +99,51 @@ public sealed class Engine
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static bool TryGetValue<T>(string key, out T value)
-            => CacheManager.instance.TryGetValue(key, out value);
+            => ObjectPoolManager.instance.TryGetValue(key, out value);
 
         /// <summary>
         /// 设置缓存管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void SetCacheHandle<T>() where T : ICacheHandler
-            => CacheManager.instance.SetCacheHandle(typeof(T));
+        public static void SetCacheHandle<T>() where T : IObjectPoolHandle
+            => ObjectPoolManager.instance.SetCacheHandle(typeof(T));
 
         /// <summary>
         /// 设置缓存管道
         /// </summary>
         /// <param name="handleType"></param>
         public static void SetCacheHandle(Type handleType)
-            => CacheManager.instance.SetCacheHandle(handleType);
+            => ObjectPoolManager.instance.SetCacheHandle(handleType);
 
         /// <summary>
         /// 移除缓存管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void RemoveCacheHandle<T>() where T : ICacheHandler
-            => CacheManager.instance.RemoveCacheHandle(typeof(T));
+        public static void RemoveCacheHandle<T>() where T : IObjectPoolHandle
+            => ObjectPoolManager.instance.RemoveCacheHandle(typeof(T));
 
         /// <summary>
         /// 移除缓存管道
         /// </summary>
         /// <param name="handleType"></param>
         public static void RemoveCacheHandle(Type handleType)
-            => CacheManager.instance.RemoveCacheHandle(handleType);
+            => ObjectPoolManager.instance.RemoveCacheHandle(handleType);
+
+        /// <summary>
+        /// 移除自定的类型的缓存区域
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public static void RemoveCacheArea<T>()
+            => RemoveCacheArea(typeof(T));
+
+        /// <summary>
+        /// 移除自定的类型的缓存区域
+        /// </summary>
+        /// <param name="type"></param>
+        public static void RemoveCacheArea(Type type)
+            => ObjectPoolManager.instance.RemoveCacheArea(type);
     }
 
-    public sealed class Custom
-    {
-        /// <summary>
-        /// 退出播放
-        /// </summary>
-        public static void Quit()
-        {
-            Extension.StopAll();
-#if UNITY_EDITOR
-            EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
-        }
-
-        /// <summary>
-        /// 获取当前运行时平台名(小写)
-        /// </summary>
-        /// <returns></returns>
-        public static string GetPlatfrom()
-        {
-#if UNITY_ANDROID
-            return "android";
-#elif UNITY_IPHONE
-            return "ios";
-#else
-            return "windows";
-#endif
-        }
-
-        /// <summary>
-        /// 获取随机名
-        /// </summary>
-        /// <returns></returns>
-        public static string RandomName()
-        {
-            return Guid.NewGuid().ToString().Replace("-", "");
-        }
-
-        /// <summary>
-        /// 获取热更资源路径
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static string GetHotfixPath(string url, string name)
-        {
-            return $"{url}/{Engine.Custom.GetPlatfrom()}/{name}";
-        }
-
-        /// <summary>
-        /// 获取本地缓存文件路径
-        /// </summary>
-        /// <param name="fileName">文件名，不包含扩展名</param>
-        /// <returns></returns>
-        public static string GetLocalFilePath(string fileName)
-        {
-            return $"{Application.persistentDataPath}/{fileName}";
-        }
-    }
 
     /// <summary>
     /// 控制台
@@ -272,9 +284,6 @@ public sealed class Engine
     /// </summary>
     public sealed class Game
     {
-        public static IGameModuleLoaderExecuteHandle LoadGameModule(GameEntryOptions gameEntryOptions)
-            => GameManager.instance.LoadGameModule(gameEntryOptions);
-
         /// <summary>
         /// 打开或创建一个World
         /// </summary>
@@ -629,7 +638,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public static IChannelConnectExecuteHandle Connect(string address, int id = 0)
+        public static IExecuteHandle<IChannel> Connect(string address, int id = 0)
             => NetworkManager.instance.Connect(address, id);
 
         /// <summary>
@@ -638,7 +647,7 @@ public sealed class Engine
         /// <param name="address">远程地址</param>
         /// <param name="messagePackage">需要写入的消息</param>
         /// <returns></returns>
-        public static IChannelWriteExecuteHandle WriteAndFlush(string address, IMessaged messagePackage)
+        public static IExecuteHandle WriteAndFlush(string address, IMessaged messagePackage)
             => NetworkManager.instance.WriteAndFlush(address, messagePackage);
 
         /// <summary>
@@ -648,7 +657,7 @@ public sealed class Engine
         /// <param name="messagePackage">需要写入的消息</param>
         /// <typeparam name="T">等待响应的消息类型</typeparam>
         /// <returns></returns>
-        public static IResponseMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
+        public static ISubscriber<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
             => NetworkManager.instance.WriteAndFlush<T>(address, messagePackage);
 
         /// <summary>
@@ -656,7 +665,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public static IChannelClosedExecuteHandle Close(string address)
+        public static IExecuteHandle Close(string address)
             => NetworkManager.instance.Close(address);
     }
 }

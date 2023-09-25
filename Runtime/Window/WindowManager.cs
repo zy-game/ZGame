@@ -7,31 +7,10 @@ using ZEngine.Resource;
 
 namespace ZEngine.Window
 {
-    class WindowManager : Single<WindowManager>
+    class WindowManager : ServiceSingleton<WindowManager>
     {
-        private List<CacheData> cacheList = new List<CacheData>();
         private Dictionary<Type, UIWindow> windows = new Dictionary<Type, UIWindow>();
         private Dictionary<UIOptions.Layer, Canvas> canvasMap = new Dictionary<UIOptions.Layer, Canvas>();
-
-        class CacheData : IDisposable
-        {
-            public float time;
-            public UIWindow handle;
-
-
-            public void Dispose()
-            {
-                throw new NotImplementedException();
-            }
-
-            public static CacheData Create(UIWindow handle)
-            {
-                CacheData cacheData = new CacheData();
-                cacheData.handle = handle;
-                cacheData.time = Time.realtimeSinceStartup + HotfixOptions.instance.cachetime;
-                return cacheData;
-            }
-        }
 
         public override void Dispose()
         {
@@ -46,10 +25,9 @@ namespace ZEngine.Window
                 GameObject.DestroyImmediate(VARIABLE.gameObject);
             }
 
-            cacheList.ForEach(x => x.Dispose());
+            Engine.Cache.RemoveCacheArea<UIWindow>();
             windows.Clear();
             canvasMap.Clear();
-            cacheList.Clear();
             Engine.Console.Log("关闭所有窗口");
         }
 
@@ -60,12 +38,10 @@ namespace ZEngine.Window
                 return window;
             }
 
-            CacheData cacheData = cacheList.Find(x => x.handle.GetType() == windowType);
-            if (cacheData is not null)
+            if (Engine.Cache.TryGetValue(windowType.Name, out window))
             {
-                cacheList.Remove(cacheData);
-                window = cacheData.handle;
                 window.OnEnable();
+                windows.Add(windowType, window);
                 return window;
             }
 
@@ -84,10 +60,10 @@ namespace ZEngine.Window
             }
 
             window = (UIWindow)Activator.CreateInstance(windowType);
-            Engine.Console.Log("Create Window:", windowType.Name);
             window.SetGameObject(requestAssetExecute.Instantiate());
             SetToLayer(options.layer, window.gameObject);
             windows.Add(windowType, window);
+            Engine.Console.Log("Create Window:", windowType);
             window.OnAwake();
             Show(windowType);
             return window;
@@ -130,6 +106,12 @@ namespace ZEngine.Window
                 return window;
             }
 
+            foreach (var VARIABLE in windows.Keys)
+            {
+                Engine.Console.Error(VARIABLE);
+            }
+
+            Engine.Console.Error("未找到指定类型的window:", windowType, windows.Count);
             return default;
         }
 
@@ -146,7 +128,7 @@ namespace ZEngine.Window
             windows.Remove(windowType);
             if (isCache)
             {
-                cacheList.Add(CacheData.Create(window));
+                Engine.Cache.Handle(windowType.Name, window);
             }
             else
             {

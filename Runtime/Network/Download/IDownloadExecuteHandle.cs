@@ -20,30 +20,13 @@ namespace ZEngine.Network
             return internalDownloadExecuteHandle;
         }
 
-        class InternalDownloadExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IDownloadExecuteHandle>, IDownloadExecuteHandle
+        class InternalDownloadExecuteHandle : GameExecuteHandle<IDownloadExecuteHandle>, IDownloadExecuteHandle
         {
             public DownloadHandle[] Handles { get; set; }
             public DownloadOptions[] options { get; set; }
             private ISubscriber<float> subscribe;
 
-            public override void Dispose()
-            {
-                foreach (DownloadHandle downloadHandle in Handles)
-                {
-                    downloadHandle.Dispose();
-                }
-
-                subscribe.Dispose();
-                subscribe = null;
-                Handles = Array.Empty<DownloadHandle>();
-            }
-
-            public void SubscribeProgressChange(ISubscriber<float> subscribe)
-            {
-                this.subscribe = subscribe;
-            }
-
-            protected override IEnumerator OnExecute()
+            protected override IEnumerator DOExecute()
             {
                 Handles = new DownloadHandle[options.Length];
                 for (int i = 0; i < options.Length; i++)
@@ -60,6 +43,23 @@ namespace ZEngine.Network
                 });
 
                 status = Handles.Where(x => x.status == Status.Failed).Count() > 0 ? Status.Failed : Status.Success;
+            }
+
+            public override void Dispose()
+            {
+                foreach (DownloadHandle downloadHandle in Handles)
+                {
+                    downloadHandle.Dispose();
+                }
+
+                subscribe.Dispose();
+                subscribe = null;
+                Handles = Array.Empty<DownloadHandle>();
+            }
+
+            public void SubscribeProgressChange(ISubscriber<float> subscribe)
+            {
+                this.subscribe = subscribe;
             }
         }
     }

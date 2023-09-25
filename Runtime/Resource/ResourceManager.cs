@@ -11,7 +11,7 @@ namespace ZEngine.Resource
     /// <summary>
     /// 资源管理器
     /// </summary>
-    internal class ResourceManager : Single<ResourceManager>
+    internal class ResourceManager : ServiceSingleton<ResourceManager>
     {
         private List<CacheData> cacheList = new List<CacheData>();
         private List<RuntimeModuleManifest> moduleList = new List<RuntimeModuleManifest>();

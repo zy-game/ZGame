@@ -22,13 +22,13 @@ namespace ZEngine
         /// 合并订阅
         /// </summary>
         /// <param name="subscribe"></param>
-        void Merge(ISubscriber subscribe);
+        void Subscribe(ISubscriber subscribe);
 
         /// <summary>
         /// 取消合并
         /// </summary>
         /// <param name="subscribe"></param>
-        void Unmerge(ISubscriber subscribe);
+        void Unsubscribe(ISubscriber subscribe);
 
         /// <summary>
         /// 创建一个订阅器
@@ -60,7 +60,7 @@ namespace ZEngine
         public static ISubscriber Create(Action call, GameObject gameObject)
         {
             ISubscriber subscriber = ISubscriber<object>.InternalGameSubscriber.Create(call);
-            Linker linker = gameObject.TryGetComponent<Linker>();
+            UnityFunctionLinker linker = gameObject.TryGetComponent<UnityFunctionLinker>();
             linker.destroyEvent.AddListener(() => subscriber.Execute(null));
             return subscriber;
         }
@@ -96,7 +96,7 @@ namespace ZEngine
                 return;
             }
 
-            subscriber.Merge(ISubscriber.Create<T>(callback));
+            subscriber.Subscribe(ISubscriber.Create<T>(callback));
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace ZEngine
                 return;
             }
 
-            subscriber.Merge(callback);
+            subscriber.Subscribe(callback);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace ZEngine
                 return;
             }
 
-            subscriber.Merge(ISubscriber.Create<GameEventArgs>(callback));
+            subscriber.Subscribe(ISubscriber.Create<GameEventArgs>(callback));
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace ZEngine
                 return;
             }
 
-            subscriber.Merge(callback);
+            subscriber.Subscribe(callback);
         }
     }
 
@@ -157,12 +157,19 @@ namespace ZEngine
         /// <param name="args"></param>
         void Execute(T args);
 
+
         class InternalGameSubscriber : ISubscriber<T>
         {
             private Dictionary<int, Action<T>> map = new Dictionary<int, Action<T>>();
 
             public void Execute(object args)
             {
+                if (args is not T)
+                {
+                    Engine.Console.Error("未知类型", args.GetType(), typeof(T));
+                    return;
+                }
+
                 Execute((T)args);
             }
 
@@ -180,9 +187,14 @@ namespace ZEngine
                 }
             }
 
-
-            public void Merge(ISubscriber subscribe)
+            public void Subscribe(ISubscriber subscribe)
             {
+                if (subscribe is not InternalGameSubscriber)
+                {
+                    Engine.Console.Error("未知类型", subscribe.GetType(), this.GetType());
+                    return;
+                }
+
                 InternalGameSubscriber internalGameSubscriber = (InternalGameSubscriber)subscribe;
                 if (internalGameSubscriber == null)
                 {
@@ -203,8 +215,14 @@ namespace ZEngine
                 subscribe.Dispose();
             }
 
-            public void Unmerge(ISubscriber subscribe)
+            public void Unsubscribe(ISubscriber subscribe)
             {
+                if (subscribe is not InternalGameSubscriber)
+                {
+                    Engine.Console.Error("未知类型", subscribe.GetType(), this.GetType());
+                    return;
+                }
+
                 InternalGameSubscriber internalGameSubscriber = (InternalGameSubscriber)subscribe;
                 if (internalGameSubscriber == null)
                 {
@@ -227,6 +245,23 @@ namespace ZEngine
 
             public override bool Equals(object obj)
             {
+                if (obj is Action<T> action)
+                {
+                    return this.map.ContainsKey(action.GetHashCode());
+                }
+
+                if (obj is InternalGameSubscriber subscriber)
+                {
+                    foreach (var VARIABLE in subscriber.map)
+                    {
+                        if (this.map.ContainsKey(VARIABLE.Key) is false)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+
                 return this.Equals(obj);
             }
 

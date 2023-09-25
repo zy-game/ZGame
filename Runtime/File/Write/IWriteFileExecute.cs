@@ -21,13 +21,13 @@ namespace ZEngine.VFS
             return internalVfsWriteFileExecute;
         }
 
-        class InternalVFSWriteFileExecute : AbstractExecute, IWriteFileExecute
+        class InternalVFSWriteFileExecute : IExecute, IWriteFileExecute
         {
             public string name { get; set; }
             public byte[] bytes { get; set; }
             public VersionOptions version { get; set; }
 
-            public override void Dispose()
+            public void Dispose()
             {
                 name = String.Empty;
                 bytes = Array.Empty<byte>();
@@ -35,7 +35,7 @@ namespace ZEngine.VFS
                 GC.SuppressFinalize(this);
             }
 
-            protected override void OnExecute()
+            public void Execute()
             {
                 VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
                 int offset = 0;

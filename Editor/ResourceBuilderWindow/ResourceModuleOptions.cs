@@ -16,7 +16,7 @@ namespace ZEngine.Editor.ResourceBuilder
     }
 
     [Config(Localtion.Project)]
-    public class ResourceModuleOptions : SingleScript<ResourceModuleOptions>
+    public class ResourceModuleOptions : ConfigScriptableObject<ResourceModuleOptions>
     {
         [Header("云存储")] public List<OSSOptions> options;
         [Header("模块列表")] public List<ResourceModuleManifest> modules;

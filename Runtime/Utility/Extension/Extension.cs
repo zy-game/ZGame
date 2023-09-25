@@ -9,9 +9,11 @@ using ZEngine.Resource;
 
 public static class Extension
 {
-    public static ISubscriber<Assembly> LoadGameLogicAssembly(this GameEntryOptions gameEntryOptions)
+    public static IExecuteHandle<Assembly> LoadAssembly(this GameEntryOptions gameEntryOptions)
     {
-        ISubscriber<Assembly> subscriber = ISubscriber.Create<Assembly>(_ => { });
+        GameExecuteHandle<Assembly> execute = IExecuteHandle<Assembly>.Create();
+        execute.SetMethod(StartLoadGameLogicAssembly());
+        execute.Execute();
 
         IEnumerator StartLoadGameLogicAssembly()
         {
@@ -21,21 +23,25 @@ public static class Extension
                 yield break;
             }
 
-            yield return LoadAOTDll(gameEntryOptions);
-            yield return LoadLogicAssembly(gameEntryOptions, subscriber);
+            yield return LoadAOTDll(gameEntryOptions, execute);
+            yield return LoadLogicAssembly(gameEntryOptions, execute);
         }
 
-        StartLoadGameLogicAssembly().StartCoroutine();
-        return subscriber;
+        return execute;
     }
 
-    private static IEnumerator LoadLogicAssembly(GameEntryOptions gameEntryOptions, ISubscriber<Assembly> subscriber)
+    public static IEnumerator LoadLogicAssembly(GameEntryOptions gameEntryOptions, GameExecuteHandle<Assembly> execute)
     {
+        if (execute.status is not Status.Execute)
+        {
+            yield break;
+        }
+
         IRequestAssetExecute<TextAsset> requestAssetExecuteResult = default;
         requestAssetExecuteResult = Engine.Resource.LoadAsset<TextAsset>(gameEntryOptions.dllName);
         if (requestAssetExecuteResult.asset == null)
         {
-            subscriber.Execute(null);
+            execute.status = Status.Failed;
             yield break;
         }
 
@@ -46,7 +52,7 @@ public static class Extension
             if (entryType is null)
             {
                 Engine.Console.Error("未找到入口函数：" + gameEntryOptions.methodName);
-                subscriber.Execute(null);
+                execute.status = Status.Failed;
                 yield break;
             }
 
@@ -55,21 +61,20 @@ public static class Extension
             if (entry is null)
             {
                 Engine.Console.Error("未找到入口函数：" + gameEntryOptions.methodName);
-                subscriber.Execute(null);
+                execute.status = Status.Failed;
                 yield break;
             }
 
             entry.Invoke(null, gameEntryOptions.paramsList?.ToArray());
-            subscriber.Execute(assembly);
+            execute.status = Status.Success;
         }
         catch (Exception e)
         {
             Engine.Console.Error(e);
-            subscriber.Execute(null);
         }
     }
 
-    private static IEnumerator LoadAOTDll(GameEntryOptions gameEntryOptions)
+    public static IEnumerator LoadAOTDll(GameEntryOptions gameEntryOptions, GameExecuteHandle<Assembly> execute)
     {
         IRequestAssetExecute<TextAsset> requestAssetExecuteResult = default;
         if (gameEntryOptions.aotList is not null && gameEntryOptions.aotList.Count > 0)
@@ -80,6 +85,7 @@ public static class Extension
                 requestAssetExecuteResult = Engine.Resource.LoadAsset<TextAsset>(item + ".bytes");
                 if (requestAssetExecuteResult.asset == null)
                 {
+                    execute.status = Status.Failed;
                     yield break;
                 }
 
@@ -118,7 +124,7 @@ public static class Extension
             yield return enumerator;
         }
 
-        return Linker.instance.StartCoroutine(Running());
+        return UnityFunctionLinker.instance.StartCoroutine(Running());
     }
 
     public static Coroutine StartCoroutine(this IEnumerator enumerator, Action complete)
@@ -130,17 +136,17 @@ public static class Extension
             complete();
         }
 
-        return Linker.instance.StartCoroutine(Running());
+        return UnityFunctionLinker.instance.StartCoroutine(Running());
     }
 
     public static void StopAll()
     {
-        Linker.instance.StopAllCoroutines();
+        UnityFunctionLinker.instance.StopAllCoroutines();
     }
 
     public static void StopCoroutine(this Coroutine coroutine)
     {
-        Linker.instance.StopCoroutine(coroutine);
+        UnityFunctionLinker.instance.StopCoroutine(coroutine);
     }
 
     public static void SetParent(this GameObject gameObject, GameObject parent, Vector3 position, Vector3 rotation, Vector3 scale)

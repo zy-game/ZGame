@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using TMPro;
 using Unity.Burst;
 using UnityEngine;
@@ -41,9 +42,19 @@ public class Startup : MonoBehaviour
             return;
         }
 
+        ResourceManager.instance.SchedulerCommand(ICommand.Create("", () => { }));
+
         Engine.Console.Log("进入游戏");
         Engine.Game.OpenWorld(new WorldOptions() { name = "Test" });
-        Engine.Window.MsgBox("Tips", "Loading Game Fail", Engine.Custom.Quit);
-        HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On).LoadGameLogicAssembly();
+        Engine.Window.MsgBox("Tips", "Loading Game Fail", Engine.Quit);
+        GameEntryOptions options = HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On);
+        options.LoadAssembly().Subscribe(ISubscriber.Create<IExecuteHandle<Assembly>>(args =>
+        {
+            if (args.status is not Status.Success)
+            {
+                Engine.Window.MsgBox("Error", "进入游戏失败", Engine.Quit);
+                return;
+            }
+        }));
     }
 }

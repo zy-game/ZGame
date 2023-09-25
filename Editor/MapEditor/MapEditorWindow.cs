@@ -11,7 +11,7 @@ using Random = UnityEngine.Random;
 
 namespace ZEngine.Editor.MapEditor
 {
-    public class MapEditorWindow : EngineCustomEditor
+    public class MapEditorWindow : EngineEditorWindow
     {
         // [MenuItem("工具/编辑器/地图编辑器")]
         public static void Open()

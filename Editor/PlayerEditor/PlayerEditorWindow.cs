@@ -15,7 +15,7 @@ using PopupWindow = UnityEditor.PopupWindow;
 
 namespace ZEngine.Editor.PlayerEditor
 {
-    public class PlayerEditorWindow : EngineCustomEditor
+    public class PlayerEditorWindow : EngineEditorWindow
     {
         // [MenuItem("工具/编辑器/角色编辑器")]
         public static void Open()
@@ -26,6 +26,7 @@ namespace ZEngine.Editor.PlayerEditor
         private string cfgPath = String.Empty;
         private int index = 0;
         private List<Type> optionsTypes = new List<Type>();
+        private SkillSelectorWindow skillSelectorWindow;
 
         protected override void SaveChanged()
         {
@@ -69,8 +70,6 @@ namespace ZEngine.Editor.PlayerEditor
             PlayerEditorOptions.instance.players.Add(playerOptions);
             SaveChanged();
         }
-
-        private SkillSelectorWindow skillSelectorWindow;
 
         protected override void DrawingItemDataView(object data, float width)
         {
@@ -166,50 +165,6 @@ namespace ZEngine.Editor.PlayerEditor
             }
 
             EditorGUILayout.EndHorizontal();
-        }
-    }
-
-    class SkillSelectorWindow : PopupWindowContent
-    {
-        public Vector2 size;
-        public PlayerOptions options;
-        public PlayerEditorWindow playerEditorWindow;
-
-        public override Vector2 GetWindowSize()
-        {
-            return size;
-        }
-
-        public override void OnGUI(Rect rect)
-        {
-            GUILayout.BeginVertical();
-            foreach (var VARIABLE in SkillDataList.instance.optionsList)
-            {
-                GUILayout.BeginHorizontal(EditorStyles.helpBox);
-                GUILayout.Label(AssetDatabase.LoadAssetAtPath<Texture2D>(VARIABLE.icon), GUILayout.Width(50), GUILayout.Height(50));
-                GUILayout.BeginVertical();
-                GUILayout.Label(VARIABLE.name);
-                GUILayout.EndVertical();
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button(String.Empty, EngineCustomEditor.GUI_STYLE_ADD_BUTTON))
-                {
-                    var item = options.skills.Find(x => x == VARIABLE.id);
-                    if (item > 0)
-                    {
-                        EditorUtility.DisplayDialog("错误", "该角色已添加过相同技能", "确定");
-                        this.editorWindow.Close();
-                        return;
-                    }
-
-                    options.skills.Add(VARIABLE.id);
-                    playerEditorWindow.SaveChanges();
-                    this.editorWindow.Close();
-                }
-
-                GUILayout.EndHorizontal();
-            }
-
-            GUILayout.EndVertical();
         }
     }
 }

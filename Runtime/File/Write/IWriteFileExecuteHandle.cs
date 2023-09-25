@@ -22,22 +22,15 @@ namespace ZEngine.VFS
             return internalVfsWriteFileExecuteHandle;
         }
 
-        class InternalVFSWriteFileExecuteHandle : AbstractExecuteHandle, IExecuteHandle<IWriteFileExecuteHandle>, IWriteFileExecuteHandle
+        class InternalVFSWriteFileExecuteHandle : GameExecuteHandle<IWriteFileExecuteHandle>, IWriteFileExecuteHandle
         {
             public string name { get; set; }
             public byte[] bytes { get; set; }
             public VersionOptions version { get; set; }
 
-            public void Dispose()
+            protected override IEnumerator DOExecute()
             {
-                name = String.Empty;
-                bytes = Array.Empty<byte>();
-                version = VersionOptions.None;
-                base.Dispose();
-            }
-
-            protected override IEnumerator OnExecute()
-            {
+                status = Status.Execute;
                 VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
                 int offset = 0;
                 int index = 0;
@@ -53,6 +46,13 @@ namespace ZEngine.VFS
 
                 VFSManager.instance.SaveVFSData();
                 status = Status.Success;
+            }
+
+            public override void Dispose()
+            {
+                name = String.Empty;
+                bytes = Array.Empty<byte>();
+                version = VersionOptions.None;
             }
         }
     }

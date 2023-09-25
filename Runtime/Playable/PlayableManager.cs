@@ -4,7 +4,7 @@ using ZEngine.Cache;
 
 namespace ZEngine.Playable
 {
-    public class PlayableManager : Single<PlayableManager>
+    public class PlayableManager : ServiceSingleton<PlayableManager>
     {
         private List<IPlayableHandle> workList = new List<IPlayableHandle>();
 

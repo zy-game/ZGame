@@ -3,11 +3,11 @@ using ZEngine.Editor;
 namespace ZEngine.Editor.UIEditor
 {
     [ProjectConfig]
-    public class UIEditorOptions : SingleScript<UIEditorOptions>
+    public class UIEditorOptions : ConfigScriptableObject<UIEditorOptions>
     {
     }
 
-    public class UIEditorWindow : EngineCustomEditor
+    public class UIEditorWindow : EngineEditorWindow
     {
         public static void Open()
         {

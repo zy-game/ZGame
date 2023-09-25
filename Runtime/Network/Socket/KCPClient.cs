@@ -37,7 +37,7 @@ namespace ZEngine.Network
         {
         }
 
-        public IChannelClosedExecuteHandle Close()
+        public IExecuteHandle Close()
         {
             running = false;
             try
@@ -56,7 +56,7 @@ namespace ZEngine.Network
             this.cid = id;
         }
 
-        public IChannelConnectExecuteHandle Connect(string address, int id = 0)
+        public IExecuteHandle<IChannel> Connect(string address, int id = 0)
         {
             try
             {
@@ -91,7 +91,7 @@ namespace ZEngine.Network
             return default;
         }
 
-        public IChannelWriteExecuteHandle WriteAndFlush(byte[] bytes)
+        public IExecuteHandle WriteAndFlush(byte[] bytes)
         {
             Send(new ByteBuf(bytes));
             return default;

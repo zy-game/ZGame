@@ -19,14 +19,14 @@ namespace ZEngine.VFS
             return internalVfsReadderExecute;
         }
 
-        class InternalVFSReadderExecute : AbstractExecute, IReadFileExecute
+        class InternalVFSReadderExecute : IExecute, IReadFileExecute
         {
             public string name { get; set; }
             public long time { get; set; }
             public byte[] bytes { get; set; }
             public VersionOptions version { get; set; }
 
-            public override void Dispose()
+            public void Dispose()
             {
                 version = null;
                 name = String.Empty;
@@ -35,7 +35,7 @@ namespace ZEngine.VFS
                 GC.SuppressFinalize(this);
             }
 
-            protected override void OnExecute()
+            public void Execute()
             {
                 VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
                 if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != version)

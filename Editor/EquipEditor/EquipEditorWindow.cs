@@ -6,7 +6,7 @@ using ZEngine.Editor;
 namespace ZEngine.Editor.EquipEditor
 {
     [Config(Localtion.Packaged, "Assets/Test/equips.json")]
-    public sealed class EquipList : SingleScript<EquipList>
+    public sealed class EquipList : ConfigScriptableObject<EquipList>
     {
         public List<EquipOptions> optionsList;
     }
@@ -19,7 +19,7 @@ namespace ZEngine.Editor.EquipEditor
         public string icon;
     }
 
-    public class EquipEditorWindow : EngineCustomEditor
+    public class EquipEditorWindow : EngineEditorWindow
     {
         // [MenuItem("工具/编辑器/物品编辑器")]
         public static void Open()

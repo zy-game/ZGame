@@ -6,7 +6,7 @@ using ProtoBuf;
 
 namespace ZEngine.Network
 {
-    class NetworkManager : Single<NetworkManager>
+    class NetworkManager : ServiceSingleton<NetworkManager>
     {
         private Dictionary<uint, Type> map;
         private Dictionary<string, IChannel> channels;
@@ -72,7 +72,7 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public IChannelConnectExecuteHandle Connect(string address, int id = 0)
+        public IExecuteHandle<IChannel> Connect(string address, int id = 0)
         {
             if (channels.TryGetValue(address, out IChannel channel))
             {
@@ -89,7 +89,7 @@ namespace ZEngine.Network
         /// <param name="address">远程地址</param>
         /// <param name="messagePackage">需要写入的消息</param>
         /// <returns></returns>
-        public IChannelWriteExecuteHandle WriteAndFlush(string address, IMessaged messagePackage)
+        public IExecuteHandle WriteAndFlush(string address, IMessaged messagePackage)
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
@@ -115,7 +115,7 @@ namespace ZEngine.Network
         /// <param name="messagePackage">需要写入的消息</param>
         /// <typeparam name="T">等待响应的消息类型</typeparam>
         /// <returns></returns>
-        public IResponseMessageExecuteHandle<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
+        public ISubscriber<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
@@ -131,15 +131,10 @@ namespace ZEngine.Network
 
             MemoryStream memoryStream = new MemoryStream();
             Serializer.Serialize(memoryStream, messagePackage);
-
-            void Waiting(T args)
-            {
-                MessageDispatcher.instance.Unsubscribe(typeof(T), ISubscriber.Create<T>(Waiting));
-            }
-
-            MessageDispatcher.instance.Subscribe(typeof(T), ISubscriber.Create<T>(Waiting));
+            ISubscriber<T> subscriber = ISubscriber.Create<T>();
+            MessageDispatcher.instance.Subscribe(typeof(T), subscriber);
             channel.WriteAndFlush(memoryStream.ToArray());
-            return IResponseMessageExecuteHandle<T>.Create();
+            return subscriber;
         }
 
         /// <summary>
@@ -147,7 +142,7 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public IChannelClosedExecuteHandle Close(string address)
+        public IExecuteHandle Close(string address)
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {

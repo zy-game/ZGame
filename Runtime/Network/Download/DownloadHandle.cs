@@ -31,7 +31,7 @@ namespace ZEngine.Network
         {
             status = Status.Execute;
             startTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            string path = Engine.Custom.GetLocalFilePath(name);
+            string path = Engine.GetLocalFilePath(name);
             request = UnityWebRequest.Get(url);
             yield return request.SendWebRequest();
             useTime = DateTime.Now - DateTimeOffset.FromUnixTimeMilliseconds(startTime);

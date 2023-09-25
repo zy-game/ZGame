@@ -5,7 +5,7 @@ using UnityEngine.Serialization;
 namespace ZEngine.VFS
 {
     [Config(Localtion.Internal)]
-    public sealed class VFSOptions : SingleScript<VFSOptions>
+    public sealed class VFSOptions : ConfigScriptableObject<VFSOptions>
     {
         [Header("是否启用VFS")] public Switch vfsState;
         [Header("文件系统布局")] public VFSLayout layout;

@@ -22,6 +22,17 @@ namespace ZEngine.Editor
         }
     }
 
+    [AttributeUsage(AttributeTargets.Class)]
+    public class WindowPath : Attribute
+    {
+        internal string path;
+
+        public WindowPath(string path)
+        {
+            this.path = path;
+        }
+    }
+
     [InitializeOnLoad]
     public static class CruToolbar
     {

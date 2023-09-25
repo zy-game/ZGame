@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-     class VFSManager : Single<VFSManager>
+     class VFSManager : ServiceSingleton<VFSManager>
     {
         private List<VFSData> dataList = new List<VFSData>();
         private List<VFSHandle> vfsList = new List<VFSHandle>();
@@ -36,7 +36,7 @@ namespace ZEngine.VFS
 
         public VFSManager()
         {
-            string filePath = Engine.Custom.GetLocalFilePath("vfs");
+            string filePath = Engine.GetLocalFilePath("vfs");
             if (!File.Exists(filePath))
             {
                 return;
@@ -75,7 +75,7 @@ namespace ZEngine.VFS
             {
                 name = vfs,
                 time = Time.realtimeSinceStartup,
-                fileStream = new FileStream(Engine.Custom.GetLocalFilePath(vfs), FileMode.OpenOrCreate, FileAccess.ReadWrite)
+                fileStream = new FileStream(Engine.GetLocalFilePath(vfs), FileMode.OpenOrCreate, FileAccess.ReadWrite)
             });
             return handle;
         }
@@ -85,7 +85,7 @@ namespace ZEngine.VFS
         /// </summary>
         internal void SaveVFSData()
         {
-            string filePath = Engine.Custom.GetLocalFilePath("vfs");
+            string filePath = Engine.GetLocalFilePath("vfs");
             File.WriteAllText(filePath, Engine.Json.ToJson(dataList));
         }
 
@@ -103,7 +103,7 @@ namespace ZEngine.VFS
                     VFSData data = dataList.Find(x => x.use == Switch.Off && x.length >= lenght);
                     if (data is null)
                     {
-                        VFSHandle handle = GetVFSHandle(Engine.Custom.RandomName());
+                        VFSHandle handle = GetVFSHandle(Engine.RandomName());
                         data = new VFSData()
                         {
                             vfs = handle.name,
@@ -124,7 +124,7 @@ namespace ZEngine.VFS
 
                     if (temp is null || temp.Count() < count)
                     {
-                        VFSHandle handle = GetVFSHandle(Engine.Custom.RandomName());
+                        VFSHandle handle = GetVFSHandle(Engine.RandomName());
                         for (int i = 0; i < VFSOptions.instance.Count; i++)
                         {
                             dataList.Add(new VFSData()

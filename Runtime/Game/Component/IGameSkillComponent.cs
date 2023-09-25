@@ -58,7 +58,12 @@ namespace ZEngine.Game
         /// <summary>
         /// 区域范围
         /// </summary>
-        Area
+        Area,
+
+        /// <summary>
+        /// 触发型
+        /// </summary>
+        Trigger
     }
 
     /// <summary>

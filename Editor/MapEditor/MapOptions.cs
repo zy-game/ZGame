@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace ZEngine.Editor.MapEditor
 {
     [Config(Localtion.Project)]
-    public class MapOptions : SingleScript<MapOptions>
+    public class MapOptions : ConfigScriptableObject<MapOptions>
     {
         public List<SceneOptions> sceneList;
     }

@@ -14,7 +14,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 游戏管理器
     /// </summary>
-    class GameManager : Single<GameManager>
+    class GameManager : ServiceSingleton<GameManager>
     {
         private List<IWorld> worlds = new List<IWorld>();
 
@@ -80,17 +80,7 @@ namespace ZEngine.Game
             world.Dispose();
         }
 
-        /// <summary>
-        /// 加载游戏模块
-        /// </summary>
-        /// <param name="gameEntryOptions">游戏入口配置</param>
-        /// <returns></returns>
-        public IGameModuleLoaderExecuteHandle LoadGameModule(GameEntryOptions gameEntryOptions)
-        {
-            IGameModuleLoaderExecuteHandle gameModuleLoaderExecuteHandle = IGameModuleLoaderExecuteHandle.Create(gameEntryOptions);
-            gameModuleLoaderExecuteHandle.Execute();
-            return gameModuleLoaderExecuteHandle;
-        }
+ 
 
         /// <summary>
         /// 创建实体对象

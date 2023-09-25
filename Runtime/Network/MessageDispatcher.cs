@@ -5,7 +5,7 @@ using ProtoBuf.Meta;
 
 namespace ZEngine.Network
 {
-    class MessageDispatcher : Single<MessageDispatcher>
+    class MessageDispatcher : ServiceSingleton<MessageDispatcher>
     {
         private Dictionary<uint, Type> opcode = new Dictionary<uint, Type>();
         private Dictionary<Type, ISubscriber> messageSubscribeList = new Dictionary<Type, ISubscriber>();
@@ -23,14 +23,14 @@ namespace ZEngine.Network
                 messageSubscribeList.Add(type, subscribe);
             }
 
-            _subscribe.Merge(subscribe);
+            _subscribe.Subscribe(subscribe);
         }
 
         public void Unsubscribe(Type type, ISubscriber subscribe)
         {
             if (messageSubscribeList.TryGetValue(type, out ISubscriber _subscribe))
             {
-                _subscribe.Unmerge(subscribe);
+                _subscribe.Unsubscribe(subscribe);
             }
         }
 
