@@ -1,21 +1,27 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using ZEngine;
 
 public class WaitFor : CustomYieldInstruction, IDisposable
 {
     private Func<bool> m_Predicate;
-    public override bool keepWaiting => Check();
+    public override bool keepWaiting => OnComplate();
 
-    private bool Check()
+    bool OnComplate()
     {
         bool state = m_Predicate();
         if (state)
         {
-            this.Dispose();
+            Dispose();
         }
 
-        return state;
+        return !state;
+    }
+
+    public static WaitFor Create(IExecuteHandle execute)
+    {
+        return Create(() => execute.status == Status.Failed || execute.status == Status.Success);
     }
 
     public static void Create(Func<bool> func, Action complate)
@@ -32,14 +38,14 @@ public class WaitFor : CustomYieldInstruction, IDisposable
 
     public static WaitFor Create(Func<bool> func)
     {
-        WaitFor wait = Activator.CreateInstance<WaitFor>();
+        WaitFor wait = new WaitFor();
         wait.m_Predicate = func;
         return wait;
     }
 
     public static WaitFor Create(float time)
     {
-        WaitFor wait = Activator.CreateInstance<WaitFor>();
+        WaitFor wait = new WaitFor();
         float end = UnityEngine.Time.realtimeSinceStartup + time;
         wait.m_Predicate = () => UnityEngine.Time.realtimeSinceStartup > end;
         return wait;
@@ -70,5 +76,6 @@ public class WaitFor : CustomYieldInstruction, IDisposable
     public void Dispose()
     {
         m_Predicate = null;
+        GC.SuppressFinalize(this);
     }
 }

@@ -39,7 +39,12 @@ namespace ZEngine.Resource
         /// <summary>
         /// 版本号哦
         /// </summary>
-        public VersionOptions version;
+        public int version;
+
+        /// <summary>
+        /// 打包当前资源包的Unity版本
+        /// </summary>
+        public string unityVersion = String.Empty;
 
         /// <summary>
         /// 依赖包列表
@@ -81,11 +86,12 @@ namespace ZEngine.Resource
             return base.Equals(obj);
         }
 
-        public void Refersh(VersionOptions manifestVersion, int lenght, string[] dependencies, string hash, uint u)
+        public void Refersh(int manifestVersion, int lenght, string[] dependencies, string hash, uint u)
         {
+            this.unityVersion = Application.unityVersion;
+            this.dependencies = this.dependencies;
             this.version = manifestVersion;
             this.length = length;
-            this.dependencies = this.dependencies;
             this.hash = hash;
             this.crc = u;
         }

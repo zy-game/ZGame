@@ -37,7 +37,7 @@ namespace ZEngine.Editor.ResourceBuilder
     public class ResourceModuleManifest
     {
         public string title;
-        public VersionOptions version;
+        public int version;
         public List<ResourceBundleManifest> bundles;
 
         public bool Search(string search)
@@ -61,7 +61,7 @@ namespace ZEngine.Editor.ResourceBuilder
     {
         public string name;
         public Object folder;
-        public VersionOptions version;
+        public int version;
 
         [NonSerialized] public List<Object> files;
         [NonSerialized] public bool isOn;

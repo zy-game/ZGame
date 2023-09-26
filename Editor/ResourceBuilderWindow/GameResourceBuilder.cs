@@ -257,11 +257,11 @@ namespace ZEngine.Editor.ResourceBuilder
                         {
                             GUILayout.Label($"{moduleManifest.title}", EngineEditorWindow.GUI_STYLE_TITLE_LABLE);
                             GUILayout.FlexibleSpace();
-                            GUILayout.Label($"v:{moduleManifest.version}");
                             GUILayout.EndHorizontal();
                         }
                         this.EndColor();
                     }
+                    
 
                     GUILayout.Space(5);
                     this.BeginColor(moduleManifest == selection ? inColor : outColor);
@@ -451,7 +451,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 foreach (var manifest in VARIABLE.Value)
                 {
                     string bundleName = ($"{VARIABLE.Key.title}_{manifest.name}.assetbundle").ToLower();
-                    manifest.version.Up();
+                    manifest.version++;
                     RuntimeBundleManifest runtimeBundleManifest = runtimeModuleManifest.bundleList.Find(x => x.name == bundleName);
                     if (runtimeBundleManifest is null)
                     {

@@ -49,34 +49,34 @@ namespace ZEngine.Game
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        IEntityComponent GetComponent(int id, Type type);
+        IComponent GetComponent(int id, Type type);
 
         /// <summary>
         /// 添加组件
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        IEntityComponent AddComponent(int id, Type type);
+        IComponent AddComponent(int id, Type type);
 
         /// <summary>
         /// 获取实体所有组件
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        IEntityComponent[] GetComponents(int id);
+        IComponent[] GetComponents(int id);
 
         /// <summary>
         /// 获取相同类型的组件列表
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        IEntityComponent[] GetComponents(Type type);
+        IComponent[] GetComponents(Type type);
 
         /// <summary>
         /// 加载游戏逻辑系统
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        void LoadGameLogicSystem<T>() where T : IGameLogicSystem
+        void LoadGameLogicSystem<T>() where T : ILogicSystem
         {
             LoadGameLogicSystem(typeof(T));
         }
@@ -91,7 +91,7 @@ namespace ZEngine.Game
         /// 卸载游戏逻辑系统
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        void UnloadGameLogicSystem<T>() where T : IGameLogicSystem
+        void UnloadGameLogicSystem<T>() where T : ILogicSystem
         {
             UnloadGameLogicSystem(typeof(T));
         }
@@ -120,34 +120,34 @@ namespace ZEngine.Game
 
             private List<IEntity> entities;
             private List<EntityContext> contexts;
-            private List<IGameLogicSystem> systems;
+            private List<ILogicSystem> systems;
 
             class EntityContext : IDisposable
             {
                 public int id;
-                public List<IEntityComponent> components;
+                public List<IComponent> components;
 
                 public EntityContext()
                 {
-                    components = new List<IEntityComponent>();
+                    components = new List<IComponent>();
                 }
 
-                public IEntityComponent Add(Type type)
+                public IComponent Add(Type type)
                 {
-                    IEntityComponent component = Find(type);
+                    IComponent component = Find(type);
                     if (component is not null)
                     {
                         return component;
                     }
 
-                    component = (IEntityComponent)Activator.CreateInstance(type);
+                    component = (IComponent)Activator.CreateInstance(type);
                     components.Add(component);
                     return component;
                 }
 
                 public void Remove(Type type)
                 {
-                    IEntityComponent component = Find(type);
+                    IComponent component = Find(type);
                     if (component is null)
                     {
                         return;
@@ -156,7 +156,7 @@ namespace ZEngine.Game
                     components.Remove(component);
                 }
 
-                public IEntityComponent Find(Type type)
+                public IComponent Find(Type type)
                 {
                     return components.Find(x => x.GetType() == type);
                 }
@@ -174,7 +174,7 @@ namespace ZEngine.Game
             {
                 this.name = name;
                 entities = new List<IEntity>();
-                systems = new List<IGameLogicSystem>();
+                systems = new List<ILogicSystem>();
                 contexts = new List<EntityContext>();
             }
 
@@ -245,7 +245,7 @@ namespace ZEngine.Game
                 context.Remove(type);
             }
 
-            public IEntityComponent GetComponent(int id, Type type)
+            public IComponent GetComponent(int id, Type type)
             {
                 EntityContext context = contexts.Find(x => x.id == id);
                 if (context is null)
@@ -256,7 +256,7 @@ namespace ZEngine.Game
                 return context.Find(type);
             }
 
-            public IEntityComponent AddComponent(int id, Type type)
+            public IComponent AddComponent(int id, Type type)
             {
                 EntityContext context = contexts.Find(x => x.id == id);
                 if (context is null)
@@ -267,7 +267,7 @@ namespace ZEngine.Game
                 return context.Add(type);
             }
 
-            public IEntityComponent[] GetComponents(int id)
+            public IComponent[] GetComponents(int id)
             {
                 EntityContext context = contexts.Find(x => x.id == id);
                 if (context is null)
@@ -278,12 +278,12 @@ namespace ZEngine.Game
                 return context.components.ToArray();
             }
 
-            public IEntityComponent[] GetComponents(Type type)
+            public IComponent[] GetComponents(Type type)
             {
-                List<IEntityComponent> components = new List<IEntityComponent>();
+                List<IComponent> components = new List<IComponent>();
                 for (int i = 0; i < contexts.Count; i++)
                 {
-                    IEntityComponent component = contexts[i].Find(type);
+                    IComponent component = contexts[i].Find(type);
                     if (component is null)
                     {
                         continue;
@@ -297,20 +297,20 @@ namespace ZEngine.Game
 
             public void LoadGameLogicSystem(Type logicType)
             {
-                IGameLogicSystem gameLogicSystem = systems.Find(x => x.GetType() == logicType);
+                ILogicSystem gameLogicSystem = systems.Find(x => x.GetType() == logicType);
                 if (gameLogicSystem is not null)
                 {
                     return;
                 }
 
-                gameLogicSystem = (IGameLogicSystem)Activator.CreateInstance(logicType);
+                gameLogicSystem = (ILogicSystem)Activator.CreateInstance(logicType);
                 gameLogicSystem.OnCreate();
                 systems.Add(gameLogicSystem);
             }
 
             public void UnloadGameLogicSystem(Type logicType)
             {
-                IGameLogicSystem gameLogicSystem = systems.Find(x => x.GetType() == logicType);
+                ILogicSystem gameLogicSystem = systems.Find(x => x.GetType() == logicType);
                 if (gameLogicSystem is null)
                 {
                     return;

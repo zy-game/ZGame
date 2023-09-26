@@ -11,7 +11,7 @@ namespace ZEngine.Resource
     {
         string name { get; }
         string module { get; }
-        VersionOptions version { get; }
+        int version { get; }
         RuntimeBundleManifest manifest { get; }
         InternalRuntimeBundleHandle bundle { get; }
 
@@ -28,7 +28,7 @@ namespace ZEngine.Resource
             private float loadCount;
             public string name { get; set; }
             public string module { get; set; }
-            public VersionOptions version { get; set; }
+            public int version { get; set; }
             public RuntimeBundleManifest manifest { get; set; }
             public InternalRuntimeBundleHandle bundle { get; set; }
 
@@ -42,7 +42,7 @@ namespace ZEngine.Resource
 
             public void Dispose()
             {
-                version = null;
+                version = 0;
                 bundle = null;
                 module = String.Empty;
                 name = String.Empty;
@@ -62,9 +62,16 @@ namespace ZEngine.Resource
                 module = manifest.owner;
                 name = manifest.name;
                 version = manifest.version;
-                IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFileAsync(name, version);
+                if (manifest.unityVersion.Equals(Application.unityVersion) is false)
+                {
+                    Engine.Console.Error($"{manifest.name}引擎版本不一致 source:{manifest.unityVersion} current:{Application.unityVersion}");
+                    status = Status.Failed;
+                    yield break;
+                }
 
+                IReadFileExecuteHandle readFileExecuteHandle = Engine.FileSystem.ReadFileAsync(name, version);
                 yield return WaitFor.Create(() => readFileExecuteHandle.status == Status.Success || readFileExecuteHandle.status == Status.Failed);
+                Engine.Console.Log("Load Asset Bundle:", name, readFileExecuteHandle.version, readFileExecuteHandle.bytes?.Length);
                 AssetBundleCreateRequest createRequest = AssetBundle.LoadFromMemoryAsync(readFileExecuteHandle.bytes);
                 yield return createRequest;
                 if (createRequest.isDone is false || createRequest.assetBundle is null)

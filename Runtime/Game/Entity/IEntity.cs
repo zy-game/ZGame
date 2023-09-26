@@ -17,7 +17,7 @@ namespace ZEngine.Game
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        T AddComponent<T>() where T : IEntityComponent
+        T AddComponent<T>() where T : IComponent
         {
             return (T)AddComponent(typeof(T));
         }
@@ -27,7 +27,7 @@ namespace ZEngine.Game
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        IEntityComponent AddComponent(Type type)
+        IComponent AddComponent(Type type)
         {
             return GameManager.instance.current.AddComponent(id, type);
         }
@@ -37,7 +37,7 @@ namespace ZEngine.Game
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        T GetComponent<T>() where T : IEntityComponent
+        T GetComponent<T>() where T : IComponent
         {
             return (T)GetComponent(typeof(T));
         }
@@ -47,7 +47,7 @@ namespace ZEngine.Game
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        IEntityComponent GetComponent(Type type)
+        IComponent GetComponent(Type type)
         {
             return GameManager.instance.current.GetComponent(id, type);
         }
@@ -56,7 +56,7 @@ namespace ZEngine.Game
         /// 移除组件
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        void DestroyComponent<T>() where T : IEntityComponent
+        void DestroyComponent<T>() where T : IComponent
         {
             DestroyComponent(typeof(T));
         }
@@ -74,7 +74,7 @@ namespace ZEngine.Game
         /// 获取所有组件
         /// </summary>
         /// <returns></returns>
-        IEntityComponent[] GetComponents()
+        IComponent[] GetComponents()
         {
             return GameManager.instance.current.GetComponents(id);
         }

@@ -12,7 +12,7 @@ namespace ZEngine.Network
         public string url;
         public int index;
         public Status status;
-        public VersionOptions version;
+        public int version;
 
         public float progress => request.downloadProgress;
         public byte[] bytes => request.downloadHandler.data;
@@ -58,10 +58,10 @@ namespace ZEngine.Network
             url = String.Empty;
             index = 0;
             status = Status.None;
-            version = VersionOptions.None;
+            version = 0;
         }
 
-        public static DownloadHandle Create(string url, int index, VersionOptions ver)
+        public static DownloadHandle Create(string url, int index, int ver)
         {
             DownloadHandle downloadHandle = Activator.CreateInstance<DownloadHandle>();
             downloadHandle.url = url;

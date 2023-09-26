@@ -195,7 +195,6 @@ namespace ZEngine.Editor
         {
             if (SeleteName.IsNullOrEmpty())
             {
-                Debug.Log("??");
                 return;
             }
 

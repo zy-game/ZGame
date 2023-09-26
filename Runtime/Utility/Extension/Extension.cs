@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using HybridCLR;
 using UnityEngine;
+using UnityEngine.Events;
 using ZEngine;
 using ZEngine.Resource;
 
@@ -106,6 +107,11 @@ public static class Extension
         return linker;
     }
 
+    public static void OnDestroyEvent(this GameObject gameObject, UnityAction action)
+    {
+        gameObject.TryGetComponent<UnityBehaviour>().OnDestroyGameObject(action);
+    }
+
     public static bool IsNullOrEmpty(this string value)
     {
         return string.IsNullOrEmpty(value);
@@ -131,6 +137,7 @@ public static class Extension
     {
         IEnumerator Running()
         {
+            yield return new WaitForEndOfFrame();
             yield return enumerator;
             yield return new WaitForEndOfFrame();
             complete();

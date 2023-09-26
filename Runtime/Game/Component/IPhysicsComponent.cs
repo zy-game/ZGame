@@ -5,7 +5,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 物理组件
     /// </summary>
-    public interface IEntityPhysicsComponent : IEntityComponent
+    public interface IPhysicsComponent : IComponent
     {
         void Entry(IEntity entity);
 
@@ -13,7 +13,7 @@ namespace ZEngine.Game
 
         void Stay(IEntity entity);
 
-        public static T Create<T>(IEntity entity) where T : IEntityPhysicsComponent
+        public static T Create<T>(IEntity entity) where T : IPhysicsComponent
         {
             TransformComponent transformComponent = entity.GetComponent<TransformComponent>();
             if (transformComponent is null)
@@ -31,7 +31,7 @@ namespace ZEngine.Game
         class Linker : MonoBehaviour
         {
             public IEntity entity;
-            public IEntityPhysicsComponent entityPhysicsComponent;
+            public IPhysicsComponent entityPhysicsComponent;
 
             private void OnCollisionEnter(Collision other)
             {

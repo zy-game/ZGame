@@ -12,9 +12,9 @@ namespace ZEngine.VFS
         string name { get; }
         long time { get; }
         byte[] bytes { get; }
-        VersionOptions version { get; }
+        int version { get; }
 
-        internal static IReadFileExecuteHandle Create(string name, VersionOptions version)
+        internal static IReadFileExecuteHandle Create(string name, int version)
         {
             InternalVFSReaderFileExecuteHandle internalVfsReaderFileExecuteHandle = Activator.CreateInstance<InternalVFSReaderFileExecuteHandle>();
             internalVfsReaderFileExecuteHandle.name = name;
@@ -27,7 +27,7 @@ namespace ZEngine.VFS
             public string name { get; set; }
             public long time { get; set; }
             public byte[] bytes { get; set; }
-            public VersionOptions version { get; set; }
+            public int version { get; set; }
 
             protected override IEnumerator DOExecute()
             {
@@ -54,7 +54,7 @@ namespace ZEngine.VFS
 
             public void Dispose()
             {
-                version = null;
+                version = 0;
                 name = String.Empty;
                 bytes = Array.Empty<byte>();
                 time = 0;

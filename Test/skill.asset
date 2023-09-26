@@ -31,5 +31,5 @@ MonoBehaviour:
       name: Layer_0
       state: 1
       type: 0
-      startFrameIndex: 5
-      endFrameIndex: 99
+      startFrameIndex: 26
+      endFrameIndex: 40

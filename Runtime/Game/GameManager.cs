@@ -115,7 +115,7 @@ namespace ZEngine.Game
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IEntityComponent[] GetComponents(int id)
+        public IComponent[] GetComponents(int id)
         {
             return current.GetComponents(id);
         }
@@ -125,7 +125,7 @@ namespace ZEngine.Game
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public IEntityComponent[] GetComponents(Type type)
+        public IComponent[] GetComponents(Type type)
         {
             return current.GetComponents(type);
         }
@@ -134,7 +134,7 @@ namespace ZEngine.Game
         /// 加载游戏逻辑系统
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void LoadGameLogicSystem<T>() where T : IGameLogicSystem
+        public void LoadGameLogicSystem<T>() where T : ILogicSystem
         {
             LoadGameLogicSystem(typeof(T));
         }
@@ -152,7 +152,7 @@ namespace ZEngine.Game
         /// 卸载游戏逻辑系统
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void UnloadGameLogicSystem<T>() where T : IGameLogicSystem
+        public void UnloadGameLogicSystem<T>() where T : ILogicSystem
         {
             UnloadGameLogicSystem(typeof(T));
         }

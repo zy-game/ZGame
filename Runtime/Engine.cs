@@ -261,7 +261,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName">文件名</param>
         /// <returns></returns>
-        public static VersionOptions GetFileVersion(string fileName)
+        public static int GetFileVersion(string fileName)
             => VFSManager.instance.GetFileVersion(fileName);
 
         /// <summary>
@@ -269,7 +269,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public static IWriteFileExecute WriteFile(string fileName, byte[] bytes, int version)
             => VFSManager.instance.WriteFile(fileName, bytes, version);
 
         /// <summary>
@@ -277,7 +277,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
+        public static IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, int version)
             => VFSManager.instance.WriteFileAsync(fileName, bytes, version);
 
         /// <summary>
@@ -285,7 +285,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileExecute ReadFile(string fileName, VersionOptions version = null)
+        public static IReadFileExecute ReadFile(string fileName, int version = 0)
             => VFSManager.instance.ReadFile(fileName, version);
 
         /// <summary>
@@ -293,7 +293,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileExecuteHandle ReadFileAsync(string fileName, VersionOptions version = null)
+        public static IReadFileExecuteHandle ReadFileAsync(string fileName, int version = 0)
             => VFSManager.instance.ReadFileAsync(fileName, version);
     }
 
@@ -352,7 +352,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static IEntityComponent[] GetComponents(int id)
+        public static IComponent[] GetComponents(int id)
             => GameManager.instance.GetComponents(id);
 
         /// <summary>
@@ -360,14 +360,14 @@ public sealed class Engine
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static IEntityComponent[] GetComponents(Type type)
+        public static IComponent[] GetComponents(Type type)
             => GameManager.instance.GetComponents(type);
 
         /// <summary>
         /// 加载游戏逻辑系统
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void LoadGameLogicSystem<T>() where T : IGameLogicSystem
+        public static void LoadGameLogicSystem<T>() where T : ILogicSystem
             => LoadGameLogicSystem(typeof(T));
 
         /// <summary>
@@ -381,7 +381,7 @@ public sealed class Engine
         /// 卸载游戏逻辑系统
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void UnloadGameLogicSystem<T>() where T : IGameLogicSystem
+        public static void UnloadGameLogicSystem<T>() where T : ILogicSystem
             => UnloadGameLogicSystem(typeof(T));
 
         /// <summary>

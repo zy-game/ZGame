@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,7 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-     class VFSManager : Singleton<VFSManager>
+    class VFSManager : Singleton<VFSManager>
     {
         private List<VFSData> dataList = new List<VFSData>();
         private List<VFSHandle> vfsList = new List<VFSHandle>();
@@ -174,18 +175,18 @@ namespace ZEngine.VFS
             return Exist(fileName);
         }
 
-        public VersionOptions GetFileVersion(string fileName)
+        public int GetFileVersion(string fileName)
         {
             VFSData vfsData = dataList.Find(x => x.name == fileName);
             if (vfsData is null)
             {
-                return VersionOptions.None;
+                return 0;
             }
 
             return vfsData.version;
         }
 
-        public IWriteFileExecute WriteFile(string fileName, byte[] bytes, VersionOptions version)
+        public IWriteFileExecute WriteFile(string fileName, byte[] bytes, int version)
         {
             Delete(fileName);
             IWriteFileExecute writeFileExecute = IWriteFileExecute.Create(fileName, bytes, version);
@@ -193,7 +194,7 @@ namespace ZEngine.VFS
             return writeFileExecute;
         }
 
-        public IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, VersionOptions version)
+        public IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, int version)
         {
             Delete(fileName);
             IWriteFileExecuteHandle writeFileExecuteHandle = IWriteFileExecuteHandle.Create(fileName, bytes, version);
@@ -201,7 +202,7 @@ namespace ZEngine.VFS
             return writeFileExecuteHandle;
         }
 
-        public IReadFileExecute ReadFile(string fileName, VersionOptions versionOptions = null)
+        public IReadFileExecute ReadFile(string fileName, int versionOptions = 0)
         {
             if (Exist(fileName) is false)
             {
@@ -213,7 +214,7 @@ namespace ZEngine.VFS
             return readFileExecute;
         }
 
-        public IReadFileExecuteHandle ReadFileAsync(string fileName, VersionOptions versionOptions = null)
+        public IExecuteHandle<IReadFileExecuteHandle> ReadFileAsync(string fileName, int versionOptions = 0)
         {
             if (Exist(fileName) is false)
             {

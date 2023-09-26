@@ -4,6 +4,6 @@ namespace ZEngine.Network
     {
         public string url;
         public object userData;
-        public VersionOptions version;
+        public int version;
     }
 }

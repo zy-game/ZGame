@@ -91,7 +91,7 @@ namespace ZEngine.Resource
                 gameObject.transform.position = position;
                 gameObject.transform.rotation = Quaternion.Euler(rotation);
                 gameObject.transform.localScale = scale;
-                ISubscriber.Create(Free, gameObject);
+                gameObject.OnDestroyEvent(Free);
                 return gameObject;
             }
 
@@ -104,7 +104,7 @@ namespace ZEngine.Resource
                 }
 
                 source.clip = asset as AudioClip;
-                ISubscriber.Create(Free, gameObject);
+                gameObject.OnDestroyEvent(Free);
                 return source.clip;
             }
 
@@ -117,7 +117,7 @@ namespace ZEngine.Resource
                 }
 
                 source.sprite = asset as Sprite;
-                ISubscriber.Create(Free, gameObject);
+                gameObject.OnDestroyEvent(Free);
                 return source.sprite;
             }
 
@@ -130,7 +130,7 @@ namespace ZEngine.Resource
                 }
 
                 source.texture = asset as Texture2D;
-                ISubscriber.Create(Free, gameObject);
+                gameObject.OnDestroyEvent(Free);
                 return (Texture2D)source.texture;
             }
 
@@ -142,7 +142,7 @@ namespace ZEngine.Resource
                     source = gameObject.AddComponent<VideoPlayer>();
                 }
 
-                ISubscriber.Create(Free, gameObject);
+                gameObject.OnDestroyEvent(Free);
                 source.clip = asset as VideoClip;
                 return source.clip;
             }

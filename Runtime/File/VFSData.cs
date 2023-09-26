@@ -44,14 +44,14 @@ namespace ZEngine.VFS
         /// <summary>
         /// 文件版本
         /// </summary>
-        public VersionOptions version;
+        public int version;
 
         /// <summary>
         /// 是否在使用
         /// </summary>
         public Switch use { get; private set; }
 
-        public void Write(byte[] bytes, int offset, int lenght, VersionOptions version, int sort = 0)
+        public void Write(byte[] bytes, int offset, int lenght, int version, int sort = 0)
         {
             VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
             if (handle is null)
@@ -97,7 +97,7 @@ namespace ZEngine.VFS
             use = Switch.Off;
             fileLenght = 0;
             name = String.Empty;
-            version = VersionOptions.None;
+            version = 0;
         }
     }
 }

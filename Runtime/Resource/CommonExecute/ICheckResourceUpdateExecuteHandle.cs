@@ -72,13 +72,12 @@ namespace ZEngine.Resource
                 {
                     string moduleFilePath = Engine.GetHotfixPath(options[i].url.address, options[i].moduleName + ".ini");
                     IWebRequestExecuteHandle<RuntimeModuleManifest> webRequestExecuteHandle = Engine.Network.Get<RuntimeModuleManifest>(moduleFilePath);
-
                     yield return WaitFor.Create(() => webRequestExecuteHandle.status == Status.Success || webRequestExecuteHandle.status == Status.Failed);
-
+                    Engine.Console.Log(webRequestExecuteHandle.status);
                     foreach (var VARIABLE in webRequestExecuteHandle.result.bundleList)
                     {
-                        VersionOptions localVersion = Engine.FileSystem.GetFileVersion(VARIABLE.name);
-                        if (localVersion is not null && localVersion == VARIABLE.version)
+                        int localVersion = Engine.FileSystem.GetFileVersion(VARIABLE.name);
+                        if (localVersion is not 0 && localVersion == VARIABLE.version)
                         {
                             continue;
                         }

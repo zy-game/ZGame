@@ -6,7 +6,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 变换组件
     /// </summary>
-    public class TransformComponent : IEntityComponent
+    public class TransformComponent : IComponent
     {
         public Vector3 position
         {

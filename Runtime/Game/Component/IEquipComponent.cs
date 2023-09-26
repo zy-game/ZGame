@@ -3,7 +3,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 游戏装备组件
     /// </summary>
-    public interface IGameEquipComponent : IEntityComponent
+    public interface IEquipComponent : IComponent
     {
         /// <summary>
         /// 装备ID

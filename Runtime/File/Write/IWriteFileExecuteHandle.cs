@@ -11,9 +11,9 @@ namespace ZEngine.VFS
     {
         string name { get; }
         byte[] bytes { get; }
-        VersionOptions version { get; }
+        int version { get; }
 
-        internal static IWriteFileExecuteHandle Create(string name, byte[] bytes, VersionOptions version)
+        internal static IWriteFileExecuteHandle Create(string name, byte[] bytes, int version)
         {
             InternalVFSWriteFileExecuteHandle internalVfsWriteFileExecuteHandle = Activator.CreateInstance<InternalVFSWriteFileExecuteHandle>();
             internalVfsWriteFileExecuteHandle.name = name;
@@ -26,7 +26,7 @@ namespace ZEngine.VFS
         {
             public string name { get; set; }
             public byte[] bytes { get; set; }
-            public VersionOptions version { get; set; }
+            public int version { get; set; }
 
             protected override IEnumerator DOExecute()
             {
@@ -52,7 +52,7 @@ namespace ZEngine.VFS
             {
                 name = String.Empty;
                 bytes = Array.Empty<byte>();
-                version = VersionOptions.None;
+                version = 0;
             }
         }
     }

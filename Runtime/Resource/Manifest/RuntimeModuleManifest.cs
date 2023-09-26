@@ -19,7 +19,7 @@ namespace ZEngine.Resource
         /// <summary>
         /// 模块版本
         /// </summary>
-        public VersionOptions version;
+        public int version;
 
         /// <summary>
         /// 资源包列表

@@ -5,7 +5,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 逻辑模块
     /// </summary>
-    public interface IGameLogicSystem : IDisposable
+    public interface ILogicSystem : IDisposable
     {
         /// <summary>
         /// 初始化游戏逻辑系统

@@ -23,7 +23,7 @@ namespace ZEngine.Network
 
         public IExecuteHandle<IChannel> Connect(string address, int id = 0)
         {
-            return default; //WebSocketConnectExecuteHandle.Create(this, address, id);
+            return WebSocketConnectExecuteHandle.Create(this, address, id);
         }
 
         public IExecuteHandle WriteAndFlush(byte[] bytes)

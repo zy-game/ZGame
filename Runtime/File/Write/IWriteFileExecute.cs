@@ -10,9 +10,9 @@ namespace ZEngine.VFS
     {
         string name { get; }
         byte[] bytes { get; }
-        VersionOptions version { get; }
+        int version { get; }
 
-        internal static IWriteFileExecute Create(string name, byte[] bytes, VersionOptions version)
+        internal static IWriteFileExecute Create(string name, byte[] bytes, int version)
         {
             InternalVFSWriteFileExecute internalVfsWriteFileExecute = Activator.CreateInstance<InternalVFSWriteFileExecute>();
             internalVfsWriteFileExecute.name = name;
@@ -25,13 +25,13 @@ namespace ZEngine.VFS
         {
             public string name { get; set; }
             public byte[] bytes { get; set; }
-            public VersionOptions version { get; set; }
+            public int version { get; set; }
 
             public void Dispose()
             {
                 name = String.Empty;
                 bytes = Array.Empty<byte>();
-                version = null;
+                version = 0;
                 GC.SuppressFinalize(this);
             }
 
