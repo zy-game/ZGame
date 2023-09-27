@@ -6,7 +6,7 @@ namespace ZEngine.Resource
     /// 资源数据
     /// </summary>
     [Serializable]
-    public sealed class RuntimeAssetManifest
+    public sealed class GameAssetObjectManifest
     {
         /// <summary>
         /// 文件名
@@ -24,13 +24,13 @@ namespace ZEngine.Resource
         /// </summary>
         public string path;
 
-        public static RuntimeAssetManifest Create(string name, string path, string guid)
+        public static GameAssetObjectManifest Create(string name, string path, string guid)
         {
-            RuntimeAssetManifest runtimeAssetManifest = new RuntimeAssetManifest();
-            runtimeAssetManifest.name = name;
-            runtimeAssetManifest.guid = guid;
-            runtimeAssetManifest.path = path;
-            return runtimeAssetManifest;
+            GameAssetObjectManifest gameAssetObjectManifest = new GameAssetObjectManifest();
+            gameAssetObjectManifest.name = name;
+            gameAssetObjectManifest.guid = guid;
+            gameAssetObjectManifest.path = path;
+            return gameAssetObjectManifest;
         }
     }
 }

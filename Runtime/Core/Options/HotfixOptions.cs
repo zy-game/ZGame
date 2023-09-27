@@ -5,7 +5,7 @@ using UnityEngine.Serialization;
 
 namespace ZEngine
 {
-    [Config(Localtion.Internal)]
+    [InternalConfig]
     public class HotfixOptions : ConfigScriptableObject<HotfixOptions>
     {
         [Header("编辑器启用热更")] public Switch useHotfix;
@@ -25,6 +25,7 @@ namespace ZEngine
         [NonSerialized] public URLOptions url;
     }
 
+    
     [Serializable]
     public class GameEntryOptions
     {

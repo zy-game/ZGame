@@ -13,16 +13,16 @@ namespace ZEngine.Resource
     /// </summary>
     internal class ResourceManager : Singleton<ResourceManager>
     {
-        private List<CacheData> cacheList = new List<CacheData>();
-        private List<RuntimeModuleManifest> moduleList = new List<RuntimeModuleManifest>();
-        private List<InternalRuntimeBundleHandle> bundleLists = new List<InternalRuntimeBundleHandle>();
+        // private List<CacheData> cacheList = new List<CacheData>();
+        private List<GameResourceModuleManifest> moduleList = new List<GameResourceModuleManifest>();
+        private List<AssetBundleRuntimeHandle> bundleLists = new List<AssetBundleRuntimeHandle>();
         private Dictionary<string, IDisposable> loadAssetHandles = new Dictionary<string, IDisposable>();
 
 
         class CacheData : IDisposable
         {
             public float timeout;
-            public InternalRuntimeBundleHandle bundle;
+            public AssetBundleRuntimeHandle bundle;
 
             public void Dispose()
             {
@@ -35,8 +35,9 @@ namespace ZEngine.Resource
         public override void Dispose()
         {
             base.Dispose();
-            cacheList.ForEach(x => x.Dispose());
-            cacheList.Clear();
+            Engine.Cache.RemoveCacheArea<AssetBundleRuntimeHandle>();
+            // cacheList.ForEach(x => x.Dispose());
+            // cacheList.Clear();
             moduleList.Clear();
             bundleLists.ForEach(x => x.Dispose());
             bundleLists.Clear();
@@ -53,7 +54,7 @@ namespace ZEngine.Resource
         /// 添加资源包
         /// </summary>
         /// <param name="bundleHandle"></param>
-        internal void AddAssetBundleHandle(InternalRuntimeBundleHandle bundleHandle)
+        internal void AddAssetBundleHandle(AssetBundleRuntimeHandle bundleHandle)
         {
             bundleLists.Add(bundleHandle);
         }
@@ -73,19 +74,19 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="bundleName"></param>
         /// <returns></returns>
-        internal InternalRuntimeBundleHandle GetRuntimeAssetBundleHandle(string module, string bundleName)
+        internal AssetBundleRuntimeHandle GetRuntimeAssetBundleHandle(string module, string bundleName)
         {
-            InternalRuntimeBundleHandle runtimeAssetBundleHandle = bundleLists.Find(x => x.name == bundleName && x.module == module);
-            if (runtimeAssetBundleHandle is null)
+            AssetBundleRuntimeHandle runtimeAssetBundleHandle = bundleLists.Find(x => x.name == bundleName && x.module == module);
+            if (runtimeAssetBundleHandle is not null)
             {
-                CacheData cacheData = cacheList.Find(x => x.bundle.name == bundleName && x.bundle.module == module);
-                if (cacheData is not null)
-                {
-                    runtimeAssetBundleHandle = cacheData.bundle;
-                    cacheList.Remove(cacheData);
-                    bundleLists.Add(runtimeAssetBundleHandle);
-                }
+                return runtimeAssetBundleHandle;
             }
+
+            if (Engine.Cache.TryGetValue(bundleName, out runtimeAssetBundleHandle))
+            {
+                bundleLists.Add(runtimeAssetBundleHandle);
+            }
+
 
             return runtimeAssetBundleHandle;
         }
@@ -95,9 +96,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="moduleName">模块名</param>
         /// <returns></returns>
-        public RuntimeModuleManifest GetRuntimeModuleManifest(string moduleName)
+        public GameResourceModuleManifest GetRuntimeModuleManifest(string moduleName)
         {
-            RuntimeModuleManifest manifest = moduleList.Find(x => x.name == moduleName);
+            GameResourceModuleManifest manifest = moduleList.Find(x => x.name == moduleName);
             if (manifest is null)
             {
                 return default;
@@ -110,7 +111,7 @@ namespace ZEngine.Resource
         /// 添加资源模块数据
         /// </summary>
         /// <param name="manifest"></param>
-        public void AddModuleManifest(RuntimeModuleManifest manifest)
+        public void AddModuleManifest(GameResourceModuleManifest manifest)
         {
             if (moduleList.Find(x => x.name == manifest.name) is not null)
             {
@@ -124,7 +125,7 @@ namespace ZEngine.Resource
         /// 移除资源模块数据
         /// </summary>
         /// <param name="manifest"></param>
-        public void RemoveModuleManifest(RuntimeModuleManifest manifest)
+        public void RemoveModuleManifest(GameResourceModuleManifest manifest)
         {
             if (moduleList.Find(x => x.name == manifest.name) is null)
             {
@@ -139,19 +140,19 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="bundleName">资源包名</param>
         /// <returns></returns>
-        public RuntimeBundleManifest GetRuntimeBundleManifest(string bundleName)
+        public GameAssetBundleManifest GetRuntimeBundleManifest(string bundleName)
         {
-            RuntimeBundleManifest runtimeBundleManifest = default;
+            GameAssetBundleManifest gameAssetBundleManifest = default;
             foreach (var module in moduleList)
             {
-                runtimeBundleManifest = module.bundleList.Find(x => x.name == bundleName);
-                if (runtimeBundleManifest is not null)
+                gameAssetBundleManifest = module.bundleList.Find(x => x.name == bundleName);
+                if (gameAssetBundleManifest is not null)
                 {
                     break;
                 }
             }
 
-            return runtimeBundleManifest;
+            return gameAssetBundleManifest;
         }
 
         /// <summary>
@@ -159,11 +160,11 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public RuntimeBundleManifest GetBundleManifestWithAssetPath(string assetPath)
+        public GameAssetBundleManifest GetBundleManifestWithAssetPath(string assetPath)
         {
             foreach (var module in moduleList)
             {
-                RuntimeBundleManifest bundleManifest = module.GetBundleManifestWithAsset(assetPath);
+                GameAssetBundleManifest bundleManifest = module.GetBundleManifestWithAsset(assetPath);
                 if (bundleManifest is null)
                 {
                     continue;
@@ -179,11 +180,11 @@ namespace ZEngine.Resource
         /// 预加载资源模块
         /// </summary>
         /// <param name="options">预加载配置</param>
-        public IResourceModuleLoaderExecuteHandle LoaderResourceModule(params ModuleOptions[] options)
+        public IResourceModuleLoaderScheduleHandle LoaderResourceModule(params ModuleOptions[] options)
         {
-            IResourceModuleLoaderExecuteHandle resourceModuleLoaderExecuteHandle = IResourceModuleLoaderExecuteHandle.Create(options);
-            resourceModuleLoaderExecuteHandle.Execute();
-            return resourceModuleLoaderExecuteHandle;
+            IResourceModuleLoaderScheduleHandle resourceModuleLoaderScheduleHandle = IResourceModuleLoaderScheduleHandle.Create(options);
+            resourceModuleLoaderScheduleHandle.Execute();
+            return resourceModuleLoaderScheduleHandle;
         }
 
         /// <summary>
@@ -191,11 +192,11 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="options">资源更新检查配置</param>
         /// <returns></returns>
-        public ICheckResourceUpdateExecuteHandle CheckModuleResourceUpdate(params ModuleOptions[] options)
+        public ICheckResourceUpdateScheduleHandle CheckModuleResourceUpdate(params ModuleOptions[] options)
         {
-            ICheckResourceUpdateExecuteHandle defaultCheckResourceUpdateExecuteHandle = ICheckResourceUpdateExecuteHandle.Create(options);
-            defaultCheckResourceUpdateExecuteHandle.Execute();
-            return defaultCheckResourceUpdateExecuteHandle;
+            ICheckResourceUpdateScheduleHandle defaultCheckResourceUpdateScheduleHandle = ICheckResourceUpdateScheduleHandle.Create(options);
+            defaultCheckResourceUpdateScheduleHandle.Execute();
+            return defaultCheckResourceUpdateScheduleHandle;
         }
 
         /// <summary>
@@ -203,12 +204,11 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public IRequestAssetExecute<T> LoadAsset<T>(string assetPath) where T : Object
+        public IRequestAssetObjectSchedule<T> LoadAsset<T>(string assetPath) where T : Object
         {
-            //todo 如果在编辑器并且没有启用热更，那么直接用编辑器的api加载资源
-            IRequestAssetExecute<T> requestAssetExecute = IRequestAssetExecute<T>.Create(assetPath);
-            requestAssetExecute.Execute();
-            return requestAssetExecute;
+            IRequestAssetObjectSchedule<T> requestAssetObjectSchedule = IRequestAssetObjectSchedule<T>.Create(assetPath);
+            requestAssetObjectSchedule.Execute();
+            return requestAssetObjectSchedule;
         }
 
         /// <summary>
@@ -216,28 +216,28 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public IRequestAssetExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
+        public IRequestAssetObjectScheduleHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
         {
-            //todo 如果在编辑器并且没有启用热更，那么直接用编辑器的api加载资源
             if (loadAssetHandles.TryGetValue(assetPath, out IDisposable handle))
             {
-                return (IRequestAssetExecuteHandle<T>)handle;
+                return (IRequestAssetObjectScheduleHandle<T>)handle;
             }
 
-            loadAssetHandles.Add(assetPath, handle = IRequestAssetExecuteHandle<T>.Create(assetPath));
-            IRequestAssetExecuteHandle<T> requestAssetExecuteHandle = (IRequestAssetExecuteHandle<T>)handle;
-            requestAssetExecuteHandle.Subscribe(ISubscriber.Create<IRequestAssetExecuteHandle<T>>(args => { loadAssetHandles.Remove(assetPath); }));
-            requestAssetExecuteHandle.Execute();
-            return requestAssetExecuteHandle;
+            loadAssetHandles.Add(assetPath, handle = IRequestAssetObjectScheduleHandle<T>.Create(assetPath));
+            IRequestAssetObjectScheduleHandle<T> requestAssetObjectSchedule = (IRequestAssetObjectScheduleHandle<T>)handle;
+            requestAssetObjectSchedule.Subscribe(ISubscriber.Create<IRequestAssetObjectScheduleHandle<T>>(args => { loadAssetHandles.Remove(assetPath); }));
+            requestAssetObjectSchedule.Execute();
+            return requestAssetObjectSchedule;
         }
 
         /// <summary>
         /// 回收资源
         /// </summary>
         /// <param name="target">资源句柄</param>
-        public void Dispose(Object target)
+        public void Release(Object target)
         {
-            InternalRuntimeBundleHandle runtimeAssetObjectHandle = bundleLists.Find(x => x.Contains(target));
+            Engine.Console.Log("Release Asset Object ->", target.name);
+            AssetBundleRuntimeHandle runtimeAssetObjectHandle = bundleLists.Find(x => x.Contains(target));
             if (runtimeAssetObjectHandle is null)
             {
                 return;
@@ -250,11 +250,7 @@ namespace ZEngine.Resource
             }
 
             bundleLists.Remove(runtimeAssetObjectHandle);
-            cacheList.Add(new CacheData()
-            {
-                timeout = Time.realtimeSinceStartup + HotfixOptions.instance.cachetime,
-                bundle = runtimeAssetObjectHandle,
-            });
+            Engine.Cache.Handle(runtimeAssetObjectHandle.name, runtimeAssetObjectHandle);
         }
     }
 }

@@ -48,11 +48,27 @@ namespace ZEngine.Network
         /// <param name="header">标头</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public IWebRequestExecuteHandle<T> Request<T>(string url, object data, NetworkRequestMethod method, Dictionary<string, object> header = default)
+        public IWebRequestScheduleHandle<T> Get<T>(string url, Dictionary<string, object> header = default)
         {
-            IWebRequestExecuteHandle<T> webRequestExecuteHandle = IWebRequestExecuteHandle<T>.Create(url, data, header, method);
-            webRequestExecuteHandle.Execute();
-            return webRequestExecuteHandle;
+            IWebRequestScheduleHandle<T> webRequestScheduleHandle = IWebRequestScheduleHandle<T>.CreateRequest(url, header);
+            webRequestScheduleHandle.Execute();
+            return webRequestScheduleHandle;
+        }
+
+        /// <summary>
+        /// 创建一个HTTP请求
+        /// </summary>
+        /// <param name="url">远程地址</param>
+        /// <param name="data">参数</param>
+        /// <param name="method">方法</param>
+        /// <param name="header">标头</param>
+        /// <typeparam name="T">返回数据类型</typeparam>
+        /// <returns></returns>
+        public IWebRequestScheduleHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+        {
+            IWebRequestScheduleHandle<T> webRequestScheduleHandle = IWebRequestScheduleHandle<T>.CreatePost(url, data, header);
+            webRequestScheduleHandle.Execute();
+            return webRequestScheduleHandle;
         }
 
         /// <summary>
@@ -60,11 +76,11 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="urlList">下载列表</param>
         /// <returns></returns>
-        public IDownloadExecuteHandle Download(params DownloadOptions[] urlList)
+        public IDownloadScheduleHandle Download(params DownloadOptions[] urlList)
         {
-            IDownloadExecuteHandle downloadExecuteHandle = IDownloadExecuteHandle.Create(urlList);
-            downloadExecuteHandle.Execute();
-            return downloadExecuteHandle;
+            IDownloadScheduleHandle downloadScheduleHandle = IDownloadScheduleHandle.Create(urlList);
+            downloadScheduleHandle.Execute();
+            return downloadScheduleHandle;
         }
 
         /// <summary>
@@ -72,15 +88,15 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public IExecuteHandle<IChannel> Connect(string address, int id = 0)
+        public void Connect(string address, int id = 0)
         {
             if (channels.TryGetValue(address, out IChannel channel))
             {
                 Engine.Console.Log("链接已存在：" + address);
-                return default;
+                return;
             }
 
-            return channel.Connect(address, id);
+            channel.Connect(address, id);
         }
 
         /// <summary>
@@ -89,23 +105,23 @@ namespace ZEngine.Network
         /// <param name="address">远程地址</param>
         /// <param name="messagePackage">需要写入的消息</param>
         /// <returns></returns>
-        public IExecuteHandle WriteAndFlush(string address, IMessaged messagePackage)
+        public void WriteAndFlush(string address, IMessaged messagePackage)
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
                 Engine.Console.Log("未找到指定的链接", address);
-                return default;
+                return;
             }
 
             if (channel.connected is false)
             {
                 Engine.Console.Error("连接已断开：", address);
-                return default;
+                return;
             }
 
             MemoryStream memoryStream = new MemoryStream();
             Serializer.Serialize(memoryStream, messagePackage);
-            return channel.WriteAndFlush(memoryStream.ToArray());
+            channel.WriteAndFlush(memoryStream.ToArray());
         }
 
         /// <summary>
@@ -142,15 +158,15 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public IExecuteHandle Close(string address)
+        public void Close(string address)
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
                 Engine.Console.Log("未连接：", address);
-                return default;
+                return;
             }
 
-            return channel.Close();
+            channel.Close();
         }
     }
 }

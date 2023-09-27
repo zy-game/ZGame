@@ -269,7 +269,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileExecute WriteFile(string fileName, byte[] bytes, int version)
+        public static IWriteFileScheduleResult WriteFile(string fileName, byte[] bytes, int version)
             => VFSManager.instance.WriteFile(fileName, bytes, version);
 
         /// <summary>
@@ -277,7 +277,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, int version)
+        public static IWriteFileScheduleHandle WriteFileAsync(string fileName, byte[] bytes, int version)
             => VFSManager.instance.WriteFileAsync(fileName, bytes, version);
 
         /// <summary>
@@ -285,7 +285,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileExecute ReadFile(string fileName, int version = 0)
+        public static IReadFileScheduleResult ReadFile(string fileName, int version)
             => VFSManager.instance.ReadFile(fileName, version);
 
         /// <summary>
@@ -293,7 +293,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static IReadFileExecuteHandle ReadFileAsync(string fileName, int version = 0)
+        public static IReadFileScheduleHandle ReadFileAsync(string fileName, int version)
             => VFSManager.instance.ReadFileAsync(fileName, version);
     }
 
@@ -390,6 +390,14 @@ public sealed class Engine
         /// <param name="logicType"></param>
         public static void UnloadGameLogicSystem(Type logicType)
             => GameManager.instance.UnloadGameLogicSystem(logicType);
+
+        /// <summary>
+        /// 加载DLL
+        /// </summary>
+        /// <param name="gameEntryOptions"></param>
+        /// <returns></returns>
+        public static IGameLogicLoadResult LoadGameLogic(GameEntryOptions gameEntryOptions)
+            => GameManager.instance.LoadGameLogicAssembly(gameEntryOptions);
     }
 
     /// <summary>
@@ -402,7 +410,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static IRequestAssetExecute<T> LoadAsset<T>(string assetPath) where T : Object
+        public static IRequestAssetObjectSchedule<T> LoadAsset<T>(string assetPath) where T : Object
             => ResourceManager.instance.LoadAsset<T>(assetPath);
 
         /// <summary>
@@ -410,20 +418,20 @@ public sealed class Engine
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static IRequestAssetExecuteHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
+        public static IRequestAssetObjectScheduleHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
             => ResourceManager.instance.LoadAssetAsync<T>(assetPath);
 
         /// <summary>
         /// 回收资源
         /// </summary>
         /// <param name="handle">资源句柄</param>
-        public static void Dispose(Object handle)
-            => ResourceManager.instance.Dispose(handle);
+        public static void Release(Object handle)
+            => ResourceManager.instance.Release(handle);
 
         /// <summary>
         /// 预加载资源模块
         /// </summary>
-        public static IResourceModuleLoaderExecuteHandle LoaderResourceModule(params ModuleOptions[] options)
+        public static IResourceModuleLoaderScheduleHandle LoaderResourceModule(params ModuleOptions[] options)
             => ResourceManager.instance.LoaderResourceModule(options);
 
         /// <summary>
@@ -431,7 +439,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ICheckResourceUpdateExecuteHandle CheckModuleResourceUpdate(params ModuleOptions[] options)
+        public static ICheckResourceUpdateScheduleHandle CheckModuleResourceUpdate(params ModuleOptions[] options)
             => ResourceManager.instance.CheckModuleResourceUpdate(options);
     }
 
@@ -620,7 +628,6 @@ public sealed class Engine
         public static void UnsubscribeMessageHandle(Type type, ISubscriber subscribe)
             => MessageDispatcher.instance.Unsubscribe(type, subscribe);
 
-
         /// <summary>
         /// 请求数据
         /// </summary>
@@ -629,8 +636,8 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IWebRequestExecuteHandle<T> Get<T>(string url, object data = default, Dictionary<string, object> header = default)
-            => NetworkManager.instance.Request<T>(url, data, NetworkRequestMethod.GET, header);
+        public static IWebRequestScheduleHandle<T> Get<T>(string url, object data = default, Dictionary<string, object> header = default)
+            => NetworkManager.instance.Get<T>(url, header);
 
         /// <summary>
         /// 提交数据
@@ -640,15 +647,15 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IWebRequestExecuteHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
-            => NetworkManager.instance.Request<T>(url, data, NetworkRequestMethod.POST, header);
+        public static IWebRequestScheduleHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+            => NetworkManager.instance.Post<T>(url, data, header);
 
         /// <summary>
         /// 多文件下载
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IDownloadExecuteHandle Download(params DownloadOptions[] urlList)
+        public static IDownloadScheduleHandle Download(params DownloadOptions[] urlList)
             => NetworkManager.instance.Download(urlList);
 
         /// <summary>
@@ -656,7 +663,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public static IExecuteHandle<IChannel> Connect(string address, int id = 0)
+        public static void Connect(string address, int id = 0)
             => NetworkManager.instance.Connect(address, id);
 
         /// <summary>
@@ -665,7 +672,7 @@ public sealed class Engine
         /// <param name="address">远程地址</param>
         /// <param name="messagePackage">需要写入的消息</param>
         /// <returns></returns>
-        public static IExecuteHandle WriteAndFlush(string address, IMessaged messagePackage)
+        public static void WriteAndFlush(string address, IMessaged messagePackage)
             => NetworkManager.instance.WriteAndFlush(address, messagePackage);
 
         /// <summary>
@@ -683,7 +690,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public static IExecuteHandle Close(string address)
+        public static void Close(string address)
             => NetworkManager.instance.Close(address);
     }
 }

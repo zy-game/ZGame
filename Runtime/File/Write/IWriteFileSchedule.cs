@@ -6,36 +6,29 @@ using UnityEngine;
 
 namespace ZEngine.VFS
 {
-    public interface IWriteFileExecute : IExecute
+    public interface IWriteFileScheduleResult : ISchedule<IWriteFileScheduleResult>
     {
         string name { get; }
         byte[] bytes { get; }
         int version { get; }
 
-        internal static IWriteFileExecute Create(string name, byte[] bytes, int version)
+        internal static IWriteFileScheduleResult Create(string name, byte[] bytes, int version)
         {
-            InternalVFSWriteFileExecute internalVfsWriteFileExecute = Activator.CreateInstance<InternalVFSWriteFileExecute>();
-            internalVfsWriteFileExecute.name = name;
-            internalVfsWriteFileExecute.bytes = bytes;
-            internalVfsWriteFileExecute.version = version;
-            return internalVfsWriteFileExecute;
+            InternalVfsWriteFileSchedule internalVfsWriteFileSchedule = Activator.CreateInstance<InternalVfsWriteFileSchedule>();
+            internalVfsWriteFileSchedule.name = name;
+            internalVfsWriteFileSchedule.bytes = bytes;
+            internalVfsWriteFileSchedule.version = version;
+            return internalVfsWriteFileSchedule;
         }
 
-        class InternalVFSWriteFileExecute : IExecute, IWriteFileExecute
+        class InternalVfsWriteFileSchedule : IWriteFileScheduleResult
         {
             public string name { get; set; }
             public byte[] bytes { get; set; }
             public int version { get; set; }
+            public IWriteFileScheduleResult result => this;
 
-            public void Dispose()
-            {
-                name = String.Empty;
-                bytes = Array.Empty<byte>();
-                version = 0;
-                GC.SuppressFinalize(this);
-            }
-
-            public void Execute()
+            public void Execute(params object[] args)
             {
                 VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
                 int offset = 0;
@@ -50,6 +43,14 @@ namespace ZEngine.VFS
                 }
 
                 VFSManager.instance.SaveVFSData();
+            }
+
+            public void Dispose()
+            {
+                name = String.Empty;
+                bytes = Array.Empty<byte>();
+                version = 0;
+                GC.SuppressFinalize(this);
             }
         }
     }

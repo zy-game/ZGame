@@ -8,7 +8,7 @@ namespace ZEngine.Resource
     /// <summary>
     /// 资源预加载
     /// </summary>
-    public interface IResourceModuleLoaderExecuteHandle : IExecuteHandle<IResourceModuleLoaderExecuteHandle>
+    public interface IResourceModuleLoaderScheduleHandle : IScheduleHandle<IResourceModuleLoaderScheduleHandle>
     {
         ModuleOptions[] options { get; }
 
@@ -19,32 +19,65 @@ namespace ZEngine.Resource
         void SubscribeProgressChange(ISubscriber<float> subscribe);
 
 
-        internal static IResourceModuleLoaderExecuteHandle Create(params ModuleOptions[] options)
+        internal static IResourceModuleLoaderScheduleHandle Create(params ModuleOptions[] options)
         {
-            InternalResourceModuleLoaderExecuteHandle internalResourceModuleLoaderExecuteHandle = Activator.CreateInstance<InternalResourceModuleLoaderExecuteHandle>();
-            internalResourceModuleLoaderExecuteHandle.options = options;
-            return internalResourceModuleLoaderExecuteHandle;
+            InternalResourceModuleLoaderScheduleHandle internalResourceModuleLoaderScheduleHandle = Activator.CreateInstance<InternalResourceModuleLoaderScheduleHandle>();
+            internalResourceModuleLoaderScheduleHandle.options = options;
+            return internalResourceModuleLoaderScheduleHandle;
         }
 
-        class InternalResourceModuleLoaderExecuteHandle : GameExecuteHandle<IResourceModuleLoaderExecuteHandle>, IResourceModuleLoaderExecuteHandle
+        class InternalResourceModuleLoaderScheduleHandle : IResourceModuleLoaderScheduleHandle
         {
+            public Status status { get; set; }
             public ModuleOptions[] options { get; set; }
             private ISubscriber<float> subscribe;
+            private ISubscriber complate;
+
+            public void Subscribe(ISubscriber subscriber)
+            {
+                if (this.complate is null)
+                {
+                    this.complate = subscriber;
+                    return;
+                }
+
+                this.complate.Merge(subscriber);
+            }
+
+            public IResourceModuleLoaderScheduleHandle result { get; }
 
             public void SubscribeProgressChange(ISubscriber<float> subscribe)
             {
                 this.subscribe = subscribe;
             }
 
-            public override void Dispose()
+            public void Dispose()
             {
-                base.Dispose();
                 options = Array.Empty<ModuleOptions>();
                 subscribe?.Dispose();
                 subscribe = null;
             }
 
-            protected override IEnumerator DOExecute()
+            public void Execute(params object[] args)
+            {
+                if (status is not Status.None)
+                {
+                    return;
+                }
+
+                status = Status.Execute;
+                DOExecute().StartCoroutine(OnComplate);
+            }
+
+            private void OnComplate()
+            {
+                if (complate is not null)
+                {
+                    complate.Execute(this);
+                }
+            }
+
+            private IEnumerator DOExecute()
             {
 #if UNITY_EDITOR
                 if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset is Switch.Off)
@@ -61,26 +94,26 @@ namespace ZEngine.Resource
                     yield break;
                 }
 
-                List<RuntimeBundleManifest> runtimeBundleManifests = new List<RuntimeBundleManifest>();
+                List<GameAssetBundleManifest> runtimeBundleManifests = new List<GameAssetBundleManifest>();
                 for (int i = 0; i < options.Length; i++)
                 {
-                    RuntimeModuleManifest runtimeModuleManifest = ResourceManager.instance.GetRuntimeModuleManifest(options[i].moduleName);
-                    if (runtimeModuleManifest is null)
+                    GameResourceModuleManifest gameResourceModuleManifest = ResourceManager.instance.GetRuntimeModuleManifest(options[i].moduleName);
+                    if (gameResourceModuleManifest is null)
                     {
                         Engine.Console.Log("获取资源模块信息失败，请确认在加载模块前已执行了模块更新检查", options[i].moduleName);
                         break;
                     }
 
-                    if (runtimeModuleManifest.bundleList is null || runtimeModuleManifest.bundleList.Count is 0)
+                    if (gameResourceModuleManifest.bundleList is null || gameResourceModuleManifest.bundleList.Count is 0)
                     {
                         status = Status.Failed;
                         Engine.Console.Error("Not Find Bundle List:", options[i].moduleName);
                         continue;
                     }
 
-                    foreach (var UPPER in runtimeModuleManifest.bundleList)
+                    foreach (var UPPER in gameResourceModuleManifest.bundleList)
                     {
-                        if (ResourceManager.instance.HasLoadAssetBundle(runtimeModuleManifest.name, UPPER.name))
+                        if (ResourceManager.instance.HasLoadAssetBundle(gameResourceModuleManifest.name, UPPER.name))
                         {
                             continue;
                         }
@@ -89,11 +122,11 @@ namespace ZEngine.Resource
                     }
                 }
 
-                IRequestAssetBundleExecuteHandle[] requestAssetBundleExecuteHandles = new IRequestAssetBundleExecuteHandle[runtimeBundleManifests.Count];
+                IRequestAssetBundleScheduleHandle[] requestAssetBundleExecuteHandles = new IRequestAssetBundleScheduleHandle[runtimeBundleManifests.Count];
                 //todo 开始加载资源包
                 for (int i = 0; i < runtimeBundleManifests.Count; i++)
                 {
-                    requestAssetBundleExecuteHandles[i] = IRequestAssetBundleExecuteHandle.Create(runtimeBundleManifests[i]);
+                    requestAssetBundleExecuteHandles[i] = IRequestAssetBundleScheduleHandle.Create(runtimeBundleManifests[i]);
                     requestAssetBundleExecuteHandles[i].Execute();
                 }
 
@@ -103,6 +136,10 @@ namespace ZEngine.Resource
                     this.subscribe?.Execute((float)count / (float)requestAssetBundleExecuteHandles.Length);
                     return count == requestAssetBundleExecuteHandles.Length;
                 });
+                foreach (var VARIABLE in requestAssetBundleExecuteHandles)
+                {
+                    VARIABLE.Dispose();
+                }
 
                 status = Status.Success;
             }

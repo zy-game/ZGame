@@ -8,12 +8,17 @@ namespace ZEngine
     /// <summary>
     /// 执行器
     /// </summary>
-    public interface IExecute : IDisposable
+    public interface ISchedule : IDisposable
     {
         /// <summary>
         /// 开始执行
         /// </summary>
         /// <param name="args"></param>
-        void Execute();
+        void Execute(params object[] args);
+    }
+
+    public interface ISchedule<T> : ISchedule
+    {
+        T result { get; }
     }
 }

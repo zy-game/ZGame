@@ -261,7 +261,7 @@ namespace ZEngine.Editor.ResourceBuilder
                         }
                         this.EndColor();
                     }
-                    
+
 
                     GUILayout.Space(5);
                     this.BeginColor(moduleManifest == selection ? inColor : outColor);
@@ -436,42 +436,42 @@ namespace ZEngine.Editor.ResourceBuilder
         {
             foreach (var VARIABLE in map)
             {
-                RuntimeModuleManifest runtimeModuleManifest = default;
+                GameResourceModuleManifest gameResourceModuleManifest = default;
                 if (File.Exists(output + $"/{VARIABLE.Key.title}.ini"))
                 {
-                    runtimeModuleManifest = Engine.Json.Parse<RuntimeModuleManifest>(File.ReadAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini"));
+                    gameResourceModuleManifest = Engine.Json.Parse<GameResourceModuleManifest>(File.ReadAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini"));
                 }
 
-                if (runtimeModuleManifest is null)
+                if (gameResourceModuleManifest is null)
                 {
-                    runtimeModuleManifest = RuntimeModuleManifest.Create(VARIABLE.Key.title.ToLower());
+                    gameResourceModuleManifest = GameResourceModuleManifest.Create(VARIABLE.Key.title.ToLower());
                 }
 
-                runtimeModuleManifest.version = VARIABLE.Key.version;
+                gameResourceModuleManifest.version = VARIABLE.Key.version;
                 foreach (var manifest in VARIABLE.Value)
                 {
                     string bundleName = ($"{VARIABLE.Key.title}_{manifest.name}.assetbundle").ToLower();
                     manifest.version++;
-                    RuntimeBundleManifest runtimeBundleManifest = runtimeModuleManifest.bundleList.Find(x => x.name == bundleName);
-                    if (runtimeBundleManifest is null)
+                    GameAssetBundleManifest gameAssetBundleManifest = gameResourceModuleManifest.bundleList.Find(x => x.name == bundleName);
+                    if (gameAssetBundleManifest is null)
                     {
-                        runtimeBundleManifest = RuntimeBundleManifest.Create(runtimeModuleManifest.name, bundleName);
+                        gameAssetBundleManifest = GameAssetBundleManifest.Create(gameResourceModuleManifest.name, bundleName);
+                        gameResourceModuleManifest.bundleList.Add(gameAssetBundleManifest);
                     }
 
-                    string filePath = output + "/" + runtimeBundleManifest.name;
-                    string hash = bundleManifest.GetAssetBundleHash(runtimeBundleManifest.name).ToString();
-                    int length = (int)new FileInfo(filePath).Length;
-                    string[] dependencies = bundleManifest.GetAllDependencies(runtimeBundleManifest.name);
+                    string filePath = output + "/" + gameAssetBundleManifest.name;
+                    string hash = bundleManifest.GetAssetBundleHash(gameAssetBundleManifest.name).ToString();
+                    string[] dependencies = bundleManifest.GetAllDependencies(gameAssetBundleManifest.name);
                     BuildPipeline.GetCRCForAssetBundle(filePath, out uint crc);
-                    runtimeBundleManifest.Refersh(manifest.version, length, dependencies, hash, crc);
+                    gameAssetBundleManifest.Refersh(manifest.version, (int)new FileInfo(filePath).Length, dependencies, hash, crc);
                     foreach (var file in manifest.files)
                     {
                         string path = AssetDatabase.GetAssetPath(file);
-                        runtimeBundleManifest.files.Add(RuntimeAssetManifest.Create(file.name, path, AssetDatabase.AssetPathToGUID(path)));
+                        gameAssetBundleManifest.files.Add(GameAssetObjectManifest.Create(file.name, path, AssetDatabase.AssetPathToGUID(path)));
                     }
                 }
 
-                File.WriteAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini", JsonConvert.SerializeObject(runtimeModuleManifest));
+                File.WriteAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini", JsonConvert.SerializeObject(gameResourceModuleManifest));
             }
         }
 

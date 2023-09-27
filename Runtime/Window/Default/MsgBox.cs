@@ -20,6 +20,8 @@ namespace ZEngine.Window
             this.cancel = cancel;
             this.GetChild("text").GetComponent<TMP_Text>().text = text;
             this.GetChild("Tips").GetComponent<TMP_Text>().text = tips;
+            this.GetChild("ok").GetComponent<Button>().onClick.RemoveAllListeners();
+            this.GetChild("cancel").GetComponent<Button>().onClick.RemoveAllListeners();
             this.GetChild("ok").GetComponent<Button>().onClick.AddListener(OK);
             this.GetChild("cancel").GetComponent<Button>().onClick.AddListener(Cancel);
             this.GetChild("cancel").SetActive(cancel is not null);

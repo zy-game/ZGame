@@ -22,13 +22,13 @@ namespace ZEngine
         /// 合并订阅
         /// </summary>
         /// <param name="subscribe"></param>
-        void Subscribe(ISubscriber subscribe);
+        void Merge(ISubscriber subscribe);
 
         /// <summary>
         /// 取消合并
         /// </summary>
         /// <param name="subscribe"></param>
-        void Unsubscribe(ISubscriber subscribe);
+        void Unmerge(ISubscriber subscribe);
 
         /// <summary>
         /// 创建一个订阅器
@@ -91,7 +91,7 @@ namespace ZEngine
                 }
             }
 
-            public void Subscribe(ISubscriber subscribe)
+            public void Merge(ISubscriber subscribe)
             {
                 if (subscribe is not InternalGameSubscriber)
                 {
@@ -119,7 +119,7 @@ namespace ZEngine
                 subscribe.Dispose();
             }
 
-            public void Unsubscribe(ISubscriber subscribe)
+            public void Unmerge(ISubscriber subscribe)
             {
                 if (subscribe is not InternalGameSubscriber)
                 {

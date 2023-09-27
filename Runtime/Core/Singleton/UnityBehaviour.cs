@@ -13,6 +13,11 @@ namespace ZEngine
         private UnityEvent<bool> applicationFocus = new UnityEvent<bool>();
         private UnityEvent destroyGameObjectCallback = new UnityEvent();
 
+        private void OnDestroy()
+        {
+            destroyGameObjectCallback.Invoke();
+        }
+
         public void OnDestroyGameObject(UnityAction action)
         {
             destroyGameObjectCallback.AddListener(action);

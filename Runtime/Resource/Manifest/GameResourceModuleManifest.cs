@@ -9,7 +9,7 @@ namespace ZEngine.Resource
     /// 模块数据
     /// </summary>
     [Serializable]
-    public sealed class RuntimeModuleManifest
+    public sealed class GameResourceModuleManifest
     {
         /// <summary>
         /// 模块名
@@ -24,22 +24,22 @@ namespace ZEngine.Resource
         /// <summary>
         /// 资源包列表
         /// </summary>
-        public List<RuntimeBundleManifest> bundleList;
+        public List<GameAssetBundleManifest> bundleList;
 
-        public static RuntimeModuleManifest Create(string name)
+        public static GameResourceModuleManifest Create(string name)
         {
-            RuntimeModuleManifest runtimeModuleManifest = new RuntimeModuleManifest();
-            runtimeModuleManifest.name = name.ToLower();
-            runtimeModuleManifest.bundleList = new List<RuntimeBundleManifest>();
-            return runtimeModuleManifest;
+            GameResourceModuleManifest gameResourceModuleManifest = new GameResourceModuleManifest();
+            gameResourceModuleManifest.name = name.ToLower();
+            gameResourceModuleManifest.bundleList = new List<GameAssetBundleManifest>();
+            return gameResourceModuleManifest;
         }
 
-        public RuntimeBundleManifest GetBundleManifest(string bundleName)
+        public GameAssetBundleManifest GetBundleManifest(string bundleName)
         {
             return bundleList.Find(x => x.name == bundleName);
         }
 
-        public RuntimeBundleManifest GetBundleManifestWithAsset(string assetPath)
+        public GameAssetBundleManifest GetBundleManifestWithAsset(string assetPath)
         {
             foreach (var bundle in bundleList)
             {
@@ -52,7 +52,7 @@ namespace ZEngine.Resource
             return default;
         }
 
-        public RuntimeBundleManifest GetBundleManifestWithAssetGUID(string guid)
+        public GameAssetBundleManifest GetBundleManifestWithAssetGUID(string guid)
         {
             foreach (var bundle in bundleList)
             {
@@ -65,7 +65,7 @@ namespace ZEngine.Resource
             return default;
         }
 
-        public RuntimeBundleManifest GetBundleManifestWithAssetName(string assetName)
+        public GameAssetBundleManifest GetBundleManifestWithAssetName(string assetName)
         {
             foreach (var bundle in bundleList)
             {

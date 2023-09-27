@@ -9,7 +9,7 @@ namespace ZEngine.Resource
     /// 资源包数据
     /// </summary>
     [Serializable]
-    public sealed class RuntimeBundleManifest
+    public sealed class GameAssetBundleManifest
     {
         /// <summary>
         /// 资源包名
@@ -54,31 +54,31 @@ namespace ZEngine.Resource
         /// <summary>
         /// 文件列表
         /// </summary>
-        public List<RuntimeAssetManifest> files;
+        public List<GameAssetObjectManifest> files;
 
-        public static RuntimeBundleManifest Create(string owner, string bundleName)
+        public static GameAssetBundleManifest Create(string owner, string bundleName)
         {
-            RuntimeBundleManifest runtimeBundleManifest = new RuntimeBundleManifest();
-            runtimeBundleManifest.files = new List<RuntimeAssetManifest>();
-            runtimeBundleManifest.dependencies = new List<string>();
-            runtimeBundleManifest.owner = owner;
-            runtimeBundleManifest.name = bundleName;
-            return runtimeBundleManifest;
+            GameAssetBundleManifest gameAssetBundleManifest = new GameAssetBundleManifest();
+            gameAssetBundleManifest.files = new List<GameAssetObjectManifest>();
+            gameAssetBundleManifest.dependencies = new List<string>();
+            gameAssetBundleManifest.owner = owner;
+            gameAssetBundleManifest.name = bundleName;
+            return gameAssetBundleManifest;
         }
 
-        public static bool operator ==(RuntimeBundleManifest l, RuntimeBundleManifest r)
+        public static bool operator ==(GameAssetBundleManifest l, GameAssetBundleManifest r)
         {
             return l.name == r.name && l.version == r.version;
         }
 
-        public static bool operator !=(RuntimeBundleManifest l, RuntimeBundleManifest r)
+        public static bool operator !=(GameAssetBundleManifest l, GameAssetBundleManifest r)
         {
             return l.name != r.name || l.version != r.version;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is RuntimeBundleManifest target)
+            if (obj is GameAssetBundleManifest target)
             {
                 return target.name == name && target.owner == owner && target.version == version;
             }
@@ -86,12 +86,12 @@ namespace ZEngine.Resource
             return base.Equals(obj);
         }
 
-        public void Refersh(int manifestVersion, int lenght, string[] dependencies, string hash, uint u)
+        public void Refersh(int manifestVersion, int count, string[] dependencies, string hash, uint u)
         {
             this.unityVersion = Application.unityVersion;
             this.dependencies = this.dependencies;
             this.version = manifestVersion;
-            this.length = length;
+            this.length = count;
             this.hash = hash;
             this.crc = u;
         }

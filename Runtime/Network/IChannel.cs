@@ -7,8 +7,8 @@ namespace ZEngine.Network
         string address { get; }
 
         bool connected { get; }
-        IExecuteHandle Close();
-        IExecuteHandle<IChannel> Connect(string address, int id = 0);
-        IExecuteHandle WriteAndFlush(byte[] bytes);
+        void Close();
+        void Connect(string address, int id = 0);
+        void WriteAndFlush(byte[] bytes);
     }
 }

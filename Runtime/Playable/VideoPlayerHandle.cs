@@ -46,8 +46,8 @@ namespace ZEngine.Playable
             }
             else
             {
-                IRequestAssetExecute<VideoClip> requestAssetExecute = Engine.Resource.LoadAsset<VideoClip>(url);
-                requestAssetExecute.SetVideoClip(source.gameObject);
+                IRequestAssetObjectSchedule<VideoClip> requestAssetObjectSchedule = Engine.Resource.LoadAsset<VideoClip>(url);
+                requestAssetObjectSchedule.SetAssetObject<VideoPlayer>(source.gameObject);
                 source.Play();
             }
         }

@@ -52,15 +52,15 @@ namespace ZEngine.Window
                 return default;
             }
 
-            IRequestAssetExecute<GameObject> requestAssetExecute = Engine.Resource.LoadAsset<GameObject>(options.path);
-            if (requestAssetExecute.asset == null)
+            IRequestAssetObjectSchedule<GameObject> requestAssetObjectSchedule = Engine.Resource.LoadAsset<GameObject>(options.path);
+            if (requestAssetObjectSchedule.result == null)
             {
                 Engine.Console.Error(new NullReferenceException(options.path));
                 return default;
             }
 
             window = (UIWindow)Activator.CreateInstance(windowType);
-            window.SetGameObject(requestAssetExecute.Instantiate());
+            window.SetGameObject(requestAssetObjectSchedule.Instantiate());
             SetToLayer(options.layer, window.gameObject);
             windows.Add(windowType, window);
             Engine.Console.Log("Create Window:", windowType);
@@ -106,12 +106,6 @@ namespace ZEngine.Window
                 return window;
             }
 
-            foreach (var VARIABLE in windows.Keys)
-            {
-                Engine.Console.Error(VARIABLE);
-            }
-
-            Engine.Console.Error("未找到指定类型的window:", windowType, windows.Count);
             return default;
         }
 
@@ -120,7 +114,7 @@ namespace ZEngine.Window
             UIWindow window = GetWindow(windowType);
             if (window is null)
             {
-                Engine.Console.Log("Not Find Window Type:", windowType.Name);
+                Engine.Console.Error("未找到指定类型的window:", windowType, windows.Count);
                 return;
             }
 

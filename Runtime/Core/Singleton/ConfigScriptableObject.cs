@@ -73,8 +73,8 @@ namespace ZEngine
 
                         return;
 #endif
-                        IRequestAssetExecute<T> execute = Engine.Resource.LoadAsset<T>(options.path);
-                        _instance = execute.asset;
+                        IRequestAssetObjectSchedule<T> schedule = Engine.Resource.LoadAsset<T>(options.path);
+                        _instance = schedule.result;
                     }
                     else if (options.path.EndsWith("json"))
                     {
@@ -92,8 +92,8 @@ namespace ZEngine
                         _instance = Engine.Json.Parse<T>(json);
                         return;
 #endif
-                        IRequestAssetExecute<TextAsset> execute = Engine.Resource.LoadAsset<TextAsset>(options.path);
-                        _instance = Engine.Json.Parse<T>(execute.asset.text);
+                        IRequestAssetObjectSchedule<TextAsset> schedule = Engine.Resource.LoadAsset<TextAsset>(options.path);
+                        _instance = Engine.Json.Parse<T>(schedule.result.text);
                     }
 
                     break;
@@ -108,7 +108,7 @@ namespace ZEngine
                 throw new NullReferenceException(nameof(ConfigAttribute));
             }
 
-            if (_instance is null)
+            if (_instance == null)
             {
                 return;
             }
@@ -139,6 +139,7 @@ namespace ZEngine
                     File.WriteAllText(options.path, Engine.Json.ToJson(_instance));
                     break;
             }
+
 #if UNITY_EDITOR
             UnityEditor.AssetDatabase.SaveAssets();
             UnityEditor.AssetDatabase.Refresh();

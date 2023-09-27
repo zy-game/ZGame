@@ -23,14 +23,14 @@ namespace ZEngine.Network
                 messageSubscribeList.Add(type, subscribe);
             }
 
-            _subscribe.Subscribe(subscribe);
+            _subscribe.Merge(subscribe);
         }
 
         public void Unsubscribe(Type type, ISubscriber subscribe)
         {
             if (messageSubscribeList.TryGetValue(type, out ISubscriber _subscribe))
             {
-                _subscribe.Unsubscribe(subscribe);
+                _subscribe.Unmerge(subscribe);
             }
         }
 

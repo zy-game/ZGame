@@ -6,7 +6,7 @@ using ZEngine.VFS;
 
 namespace ZEngine.Network
 {
-    public class DownloadHandle : IDisposable
+    public class HttpDownloadHandle : IDisposable
     {
         public string name;
         public string url;
@@ -14,7 +14,7 @@ namespace ZEngine.Network
         public Status status;
         public int version;
 
-        public float progress => request.downloadProgress;
+        public float progress => request == null ? 0 : request.downloadProgress;
         public byte[] bytes => request.downloadHandler.data;
 
 
@@ -43,8 +43,12 @@ namespace ZEngine.Network
             }
 
             Engine.Console.Log(request.url, version, request.result, "time:" + useTime.Seconds);
-            IWriteFileExecuteHandle writeFileExecuteHandle = Engine.FileSystem.WriteFileAsync(name, request.downloadHandler.data, version);
-            writeFileExecuteHandle.Subscribe(ISubscriber.Create(() => { status = Status.Success; }));
+            IWriteFileScheduleHandle writeFileScheduleHandle = Engine.FileSystem.WriteFileAsync(name, request.downloadHandler.data, version);
+            writeFileScheduleHandle.Subscribe(ISubscriber.Create(() =>
+            {
+                status = Status.Success;
+                Engine.Console.Log($"write {name} complate");
+            }));
         }
 
         public bool IsComplete()
@@ -61,9 +65,9 @@ namespace ZEngine.Network
             version = 0;
         }
 
-        public static DownloadHandle Create(string url, int index, int ver)
+        public static HttpDownloadHandle Create(string url, int index, int ver)
         {
-            DownloadHandle downloadHandle = Activator.CreateInstance<DownloadHandle>();
+            HttpDownloadHandle downloadHandle = Activator.CreateInstance<HttpDownloadHandle>();
             downloadHandle.url = url;
             downloadHandle.version = ver;
             downloadHandle.index = index;

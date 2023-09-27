@@ -61,7 +61,7 @@ namespace ZEngine.Editor.ResourceBuilder
     {
         public string name;
         public Object folder;
-        public int version;
+        public int version = 1;
 
         [NonSerialized] public List<Object> files;
         [NonSerialized] public bool isOn;

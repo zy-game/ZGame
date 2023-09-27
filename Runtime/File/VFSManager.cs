@@ -180,50 +180,51 @@ namespace ZEngine.VFS
             VFSData vfsData = dataList.Find(x => x.name == fileName);
             if (vfsData is null)
             {
-                return 0;
+                return -1;
             }
 
+            Engine.Console.Log(fileName, vfsData.version);
             return vfsData.version;
         }
 
-        public IWriteFileExecute WriteFile(string fileName, byte[] bytes, int version)
+        public IWriteFileScheduleResult WriteFile(string fileName, byte[] bytes, int version)
         {
             Delete(fileName);
-            IWriteFileExecute writeFileExecute = IWriteFileExecute.Create(fileName, bytes, version);
-            writeFileExecute.Execute();
-            return writeFileExecute;
+            IWriteFileScheduleResult writeFileScheduleResult = IWriteFileScheduleResult.Create(fileName, bytes, version);
+            writeFileScheduleResult.Execute();
+            return writeFileScheduleResult;
         }
 
-        public IWriteFileExecuteHandle WriteFileAsync(string fileName, byte[] bytes, int version)
+        public IWriteFileScheduleHandle WriteFileAsync(string fileName, byte[] bytes, int version)
         {
             Delete(fileName);
-            IWriteFileExecuteHandle writeFileExecuteHandle = IWriteFileExecuteHandle.Create(fileName, bytes, version);
-            writeFileExecuteHandle.Execute();
-            return writeFileExecuteHandle;
+            IWriteFileScheduleHandle writeFileScheduleHandle = IWriteFileScheduleHandle.Create(fileName, bytes, version);
+            writeFileScheduleHandle.Execute();
+            return writeFileScheduleHandle;
         }
 
-        public IReadFileExecute ReadFile(string fileName, int versionOptions = 0)
+        public IReadFileScheduleResult ReadFile(string fileName, int versionOptions)
         {
             if (Exist(fileName) is false)
             {
                 return default;
             }
 
-            IReadFileExecute readFileExecute = IReadFileExecute.Create(fileName, versionOptions);
-            readFileExecute.Execute();
-            return readFileExecute;
+            IReadFileScheduleResult readFileScheduleResult = IReadFileScheduleResult.Create(fileName, versionOptions);
+            readFileScheduleResult.Execute();
+            return readFileScheduleResult;
         }
 
-        public IExecuteHandle<IReadFileExecuteHandle> ReadFileAsync(string fileName, int versionOptions = 0)
+        public IReadFileScheduleHandle ReadFileAsync(string fileName, int versionOptions)
         {
             if (Exist(fileName) is false)
             {
                 return default;
             }
 
-            IReadFileExecuteHandle readFileExecuteHandle = IReadFileExecuteHandle.Create(fileName, versionOptions);
-            readFileExecuteHandle.Execute();
-            return readFileExecuteHandle;
+            IReadFileScheduleHandle readFileScheduleHandle = IReadFileScheduleHandle.Create(fileName, versionOptions);
+            readFileScheduleHandle.Execute();
+            return readFileScheduleHandle;
         }
     }
 }

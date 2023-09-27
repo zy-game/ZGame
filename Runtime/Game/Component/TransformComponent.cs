@@ -80,13 +80,13 @@ namespace ZEngine.Game
 
         public static TransformComponent Create(IEntity entity, string assetPath)
         {
-            IRequestAssetExecute<GameObject> requestAssetExecuteHandle = Engine.Resource.LoadAsset<GameObject>(assetPath);
-            if (requestAssetExecuteHandle.asset == null)
+            IRequestAssetObjectSchedule<GameObject> requestAssetObjectSchedule = Engine.Resource.LoadAsset<GameObject>(assetPath);
+            if (requestAssetObjectSchedule.result == null)
             {
                 return default;
             }
 
-            return Create(entity, requestAssetExecuteHandle.Instantiate());
+            return Create(entity, requestAssetObjectSchedule.Instantiate());
         }
 
         public static TransformComponent Create(IEntity entity, GameObject gameObject)

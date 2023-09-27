@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    internal sealed class InternalRuntimeBundleHandle : IDisposable
+    internal sealed class AssetBundleRuntimeHandle : IDisposable
     {
         public string name { get; private set; }
         public uint refCount { get; private set; }
@@ -34,51 +34,37 @@ namespace ZEngine.Resource
 
         public T Load<T>(string path) where T : Object
         {
-            Object temp = default;
-#if UNITY_EDITOR
-            if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset == Switch.Off)
-            {
-                temp = _handles.Find(x => x.name == Path.GetFileNameWithoutExtension(path));
-                if (temp == null)
-                {
-                    temp = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
-                    _handles.Add(temp);
-                }
-
-                return (T)temp;
-            }
-#endif
             if (bundle is null)
             {
                 return default;
             }
 
+            Object temp = _handles.Find(x => x.name == Path.GetFileNameWithoutExtension(path));
+            if (temp != null)
+            {
+                refCount++;
+                return (T)temp;
+            }
+
             temp = bundle.LoadAsset<T>(path);
             _handles.Add(temp);
+            refCount++;
             return (T)temp;
         }
 
         public IEnumerator LoadAsync<T>(string path, ISubscriber<T> subscribe) where T : Object
         {
-            Object temp = default;
-#if UNITY_EDITOR
-            if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset == Switch.Off)
-            {
-                temp = _handles.Find(x => x.name == Path.GetFileNameWithoutExtension(path));
-                if (temp == null)
-                {
-                    temp = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
-                    _handles.Add(temp);
-                }
-
-                subscribe.Execute(temp);
-                yield break;
-            }
-#endif
-
             if (bundle is null)
             {
                 subscribe.Execute(default);
+                yield break;
+            }
+
+            Object temp = _handles.Find(x => x.name == Path.GetFileNameWithoutExtension(path));
+            if (temp != null)
+            {
+                refCount++;
+                subscribe.Execute(temp);
                 yield break;
             }
 
@@ -90,6 +76,7 @@ namespace ZEngine.Resource
                 yield break;
             }
 
+            refCount++;
             _handles.Add(request.asset);
             subscribe.Execute(request.asset);
         }
@@ -100,9 +87,9 @@ namespace ZEngine.Resource
             _handles.Remove(obj);
         }
 
-        public static InternalRuntimeBundleHandle Create(RuntimeBundleManifest manifest, AssetBundle bundle)
+        public static AssetBundleRuntimeHandle Create(GameAssetBundleManifest manifest, AssetBundle bundle)
         {
-            InternalRuntimeBundleHandle runtimeAssetBundleHandle = Activator.CreateInstance<InternalRuntimeBundleHandle>();
+            AssetBundleRuntimeHandle runtimeAssetBundleHandle = Activator.CreateInstance<AssetBundleRuntimeHandle>();
             runtimeAssetBundleHandle.bundle = bundle;
             runtimeAssetBundleHandle.name = manifest.name;
             runtimeAssetBundleHandle.module = manifest.owner;

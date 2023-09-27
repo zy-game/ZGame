@@ -27,8 +27,8 @@ namespace ZEngine.Playable
 
             if (source.clip == null)
             {
-                IRequestAssetExecute<AudioClip> requestAssetExecute = Engine.Resource.LoadAsset<AudioClip>(url);
-                requestAssetExecute.SetAudioClip(source.gameObject);
+                IRequestAssetObjectSchedule<AudioClip> requestAssetObjectSchedule = Engine.Resource.LoadAsset<AudioClip>(url);
+                requestAssetObjectSchedule.SetAssetObject<AudioSource>(source.gameObject);
             }
 
             status = Status.Execute;

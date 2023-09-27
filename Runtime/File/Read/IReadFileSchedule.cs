@@ -4,27 +4,28 @@ using System.Linq;
 
 namespace ZEngine.VFS
 {
-    public interface IReadFileExecute : IExecute
+    public interface IReadFileScheduleResult : ISchedule<IReadFileScheduleResult>
     {
         string name { get; }
         long time { get; }
         byte[] bytes { get; }
         int version { get; }
 
-        internal static IReadFileExecute Create(string name, int version)
+        internal static IReadFileScheduleResult Create(string name, int version)
         {
-            InternalVFSReadderExecute internalVfsReadderExecute = Activator.CreateInstance<InternalVFSReadderExecute>();
-            internalVfsReadderExecute.name = name;
-            internalVfsReadderExecute.version = version;
-            return internalVfsReadderExecute;
+            InternalVfsReadderSchedule internalVfsReadderSchedule = Activator.CreateInstance<InternalVfsReadderSchedule>();
+            internalVfsReadderSchedule.name = name;
+            internalVfsReadderSchedule.version = version;
+            return internalVfsReadderSchedule;
         }
 
-        class InternalVFSReadderExecute : IExecute, IReadFileExecute
+        class InternalVfsReadderSchedule : IReadFileScheduleResult
         {
             public string name { get; set; }
             public long time { get; set; }
             public byte[] bytes { get; set; }
             public int version { get; set; }
+            public IReadFileScheduleResult result => this;
 
             public void Dispose()
             {
@@ -35,7 +36,7 @@ namespace ZEngine.VFS
                 GC.SuppressFinalize(this);
             }
 
-            public void Execute()
+            public void Execute(params object[] args)
             {
                 VFSData[] vfsDatas = VFSManager.instance.GetFileData(name);
                 if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != version)
