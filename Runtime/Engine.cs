@@ -604,29 +604,29 @@ public sealed class Engine
         /// 订阅消息处理
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void SubscribeMessageHandle<T>(ISubscriber<T> subscribe) where T : IMessaged
-            => SubscribeMessageHandle(typeof(T), subscribe);
+        public static void SubscribeMessageHandle<T>() where T : IMessageHandle
+            => SubscribeMessageHandle(typeof(T));
 
         /// <summary>
         /// 订阅消息处理
         /// </summary>
         /// <param name="type"></param>
-        public static void SubscribeMessageHandle(Type type, ISubscriber subscribe)
-            => MessageDispatcher.instance.Subscribe(type, subscribe);
+        public static void SubscribeMessageHandle(Type type)
+            => RPCHandle.instance.Subscribe(type);
 
         /// <summary>
         /// 取消消息订阅管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void UnsubscribeMessageHandle<T>(ISubscriber<T> subscribe) where T : IMessaged
-            => UnsubscribeMessageHandle(typeof(T), subscribe);
+        public static void UnsubscribeMessageHandle<T>() where T : IMessageHandle
+            => UnsubscribeMessageHandle(typeof(T));
 
         /// <summary>
         /// 取消消息订阅管道
         /// </summary>
         /// <param name="type"></param>
-        public static void UnsubscribeMessageHandle(Type type, ISubscriber subscribe)
-            => MessageDispatcher.instance.Unsubscribe(type, subscribe);
+        public static void UnsubscribeMessageHandle(Type type)
+            => RPCHandle.instance.Unsubscribe(type);
 
         /// <summary>
         /// 请求数据

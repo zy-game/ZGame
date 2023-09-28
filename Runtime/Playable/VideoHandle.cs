@@ -6,7 +6,7 @@ using ZEngine.Resource;
 
 namespace ZEngine.Playable
 {
-    class VideoPlayerHandle : IPlayableHandle
+    class VideoHandle : IPlayableHandle
     {
         public string name { get; set; }
         public string url { get; set; }
@@ -111,17 +111,17 @@ namespace ZEngine.Playable
             GC.SuppressFinalize(this);
         }
 
-        public static VideoPlayerHandle Create(string url, float volume = 1, RenderTexture scene = null, bool isLoop = false, Switch isCache = Switch.Off)
+        public static VideoHandle Create(string url, float volume = 1, RenderTexture scene = null, bool isLoop = false, Switch isCache = Switch.Off)
         {
-            VideoPlayerHandle internalVideoPlayerHandle = Activator.CreateInstance<VideoPlayerHandle>();
-            internalVideoPlayerHandle.url = url;
-            internalVideoPlayerHandle.name = Path.GetFileName(url);
-            internalVideoPlayerHandle.volume = volume;
-            internalVideoPlayerHandle.loop = isLoop;
-            internalVideoPlayerHandle.scene = scene;
-            internalVideoPlayerHandle.isCache = isCache;
-            internalVideoPlayerHandle.Play();
-            return internalVideoPlayerHandle;
+            VideoHandle internalVideoHandle = Activator.CreateInstance<VideoHandle>();
+            internalVideoHandle.url = url;
+            internalVideoHandle.name = Path.GetFileName(url);
+            internalVideoHandle.volume = volume;
+            internalVideoHandle.loop = isLoop;
+            internalVideoHandle.scene = scene;
+            internalVideoHandle.isCache = isCache;
+            internalVideoHandle.Play();
+            return internalVideoHandle;
         }
     }
 }

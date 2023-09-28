@@ -31,7 +31,7 @@ namespace ZEngine.Network
                 connected = false;
                 NetworkManager.instance.Close(address);
             };
-            _websocket.OnMessage += (object sender, MessageEventArgs e) => { MessageDispatcher.instance.Enqueue(this, e.RawData); };
+            _websocket.OnMessage += (object sender, MessageEventArgs e) => { RPCHandle.instance.Dispacher(this, e.RawData); };
             _websocket.OnClose += (s, e) => { connected = false; };
             _websocket.Connect();
         }

@@ -8,7 +8,6 @@ namespace ZEngine.Playable
     {
         private List<IPlayableHandle> workList = new List<IPlayableHandle>();
 
-
         /// <summary>
         /// 播放视频
         /// </summary>
@@ -31,7 +30,7 @@ namespace ZEngine.Playable
             }
             else
             {
-                handle = VideoPlayerHandle.Create(url, volume, scene, isLoop);
+                handle = VideoHandle.Create(url, volume, scene, isLoop);
             }
 
             workList.Add(handle);
@@ -59,7 +58,7 @@ namespace ZEngine.Playable
             }
             else
             {
-                handle = AudioPlayableHandle.Create(url, volume, isLoop);
+                handle = AudioHandle.Create(url, volume, isLoop);
             }
 
             workList.Add(handle);

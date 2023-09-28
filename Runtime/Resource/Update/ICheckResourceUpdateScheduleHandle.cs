@@ -114,11 +114,9 @@ namespace ZEngine.Resource
                         int localVersion = Engine.FileSystem.GetFileVersion(VARIABLE.name);
                         if (localVersion == VARIABLE.version)
                         {
-                            Engine.Console.Log("not update", VARIABLE.name, localVersion, VARIABLE.version);
                             continue;
                         }
 
-                        Engine.Console.Log("update", VARIABLE.name);
                         updateBundleList.Add(new UpdateItem()
                         {
                             options = options[i].url,

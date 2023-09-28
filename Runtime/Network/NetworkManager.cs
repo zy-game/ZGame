@@ -148,7 +148,7 @@ namespace ZEngine.Network
             MemoryStream memoryStream = new MemoryStream();
             Serializer.Serialize(memoryStream, messagePackage);
             ISubscriber<T> subscriber = ISubscriber.Create<T>();
-            MessageDispatcher.instance.Subscribe(typeof(T), subscriber);
+            RPCHandle.instance.Subscribe(typeof(T), subscriber);
             channel.WriteAndFlush(memoryStream.ToArray());
             return subscriber;
         }

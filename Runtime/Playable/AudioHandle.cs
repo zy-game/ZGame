@@ -5,7 +5,7 @@ using ZEngine.Resource;
 
 namespace ZEngine.Playable
 {
-    class AudioPlayableHandle : IPlayableHandle
+    class AudioHandle : IPlayableHandle
     {
         public string name { get; set; }
         public string url { get; set; }
@@ -96,17 +96,17 @@ namespace ZEngine.Playable
             GC.SuppressFinalize(this);
         }
 
-        public static AudioPlayableHandle Create(string url, float volume = 1, bool isLoop = false, Switch isCache = Switch.Off)
+        public static AudioHandle Create(string url, float volume = 1, bool isLoop = false, Switch isCache = Switch.Off)
         {
-            AudioPlayableHandle internalAudioPlayableHandle = Activator.CreateInstance<AudioPlayableHandle>();
-            internalAudioPlayableHandle.name = Path.GetFileName(url);
-            internalAudioPlayableHandle.loop = isLoop;
-            internalAudioPlayableHandle.url = url;
-            internalAudioPlayableHandle.isCache = isCache;
-            internalAudioPlayableHandle.volume = volume;
-            internalAudioPlayableHandle.status = Status.None;
-            internalAudioPlayableHandle.Play();
-            return internalAudioPlayableHandle;
+            AudioHandle internalAudioHandle = Activator.CreateInstance<AudioHandle>();
+            internalAudioHandle.name = Path.GetFileName(url);
+            internalAudioHandle.loop = isLoop;
+            internalAudioHandle.url = url;
+            internalAudioHandle.isCache = isCache;
+            internalAudioHandle.volume = volume;
+            internalAudioHandle.status = Status.None;
+            internalAudioHandle.Play();
+            return internalAudioHandle;
         }
     }
 }

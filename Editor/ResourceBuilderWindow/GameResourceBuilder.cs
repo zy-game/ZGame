@@ -285,6 +285,12 @@ namespace ZEngine.Editor.ResourceBuilder
                             ResourceModuleOptions.instance.Saved();
                             this.Repaint();
                         });
+
+                        menu.AddItem(new GUIContent("Upload"), false, () =>
+                        {
+                            string output = Application.dataPath + "/../output/assets/" + Engine.GetPlatfrom();
+                            UploadAsset(output, new Dictionary<ResourceModuleManifest, List<ResourceBundleManifest>>() { { selection, selection.bundles } });
+                        });
                         menu.ShowAsContext();
                     }
 
@@ -351,6 +357,11 @@ namespace ZEngine.Editor.ResourceBuilder
                         {
                             selection.bundles.Remove(manifest);
                             ResourceModuleOptions.instance.Saved();
+                        });
+                        menu.AddItem(new GUIContent("Upload"), false, () =>
+                        {
+                            string output = Application.dataPath + "/../output/assets/" + Engine.GetPlatfrom();
+                            UploadAsset(output, new Dictionary<ResourceModuleManifest, List<ResourceBundleManifest>>() { { selection, new List<ResourceBundleManifest>() { manifest } } });
                         });
                         menu.ShowAsContext();
                     }
@@ -514,7 +525,6 @@ namespace ZEngine.Editor.ResourceBuilder
             if (ossClient.DoesBucketExist(options.bucket) is false)
             {
                 Aliyun.OSS.Bucket bucket = ossClient.CreateBucket(options.bucket);
-                Engine.Console.Log(bucket.ToString());
             }
 
             string key = String.Empty;
@@ -524,7 +534,6 @@ namespace ZEngine.Editor.ResourceBuilder
                 string bundleName = ($"{moduleManifest.title}_{file.name}.assetbundle").ToLower();
                 key = $"{Engine.GetPlatfrom()}/{bundleName}";
                 result = ossClient.PutObject(options.bucket, key, $"{output}/{bundleName}");
-                Engine.Console.Log(result.ETag);
                 now++;
                 EditorUtility.DisplayProgressBar("上传资源", "正在上传OSS...", now / count);
             }
@@ -538,7 +547,7 @@ namespace ZEngine.Editor.ResourceBuilder
         {
             float count = manifests.Length;
             float now = 0;
-            long durationSecond = 600; //每次请求签名有效时长，单位为秒
+            long durationSecond = 600;
             COSXML.Auth.QCloudCredentialProvider cosCredentialProvider = new COSXML.Auth.DefaultQCloudCredentialProvider(options.keyID, options.key, durationSecond);
             COSXML.CosXmlConfig config = new COSXML.CosXmlConfig.Builder().IsHttps(true).SetRegion(options.url).SetDebugLog(true).Build();
             COSXML.CosXmlServer cosClient = new COSXML.CosXmlServer(config, cosCredentialProvider);
@@ -550,7 +559,6 @@ namespace ZEngine.Editor.ResourceBuilder
             {
                 COSXML.Model.Bucket.PutBucketRequest bucketRequestrequest = new COSXML.Model.Bucket.PutBucketRequest(options.bucket);
                 COSXML.Model.Bucket.PutBucketResult bucketResult = cosClient.PutBucket(bucketRequestrequest);
-                Engine.Console.Log(result.GetResultInfo());
             }
 
 
@@ -560,7 +568,6 @@ namespace ZEngine.Editor.ResourceBuilder
                 key = ($"{Engine.GetPlatfrom()}/{bundleName}").ToLower();
                 request = new COSXML.Model.Object.PutObjectRequest(options.bucket, key, $"{output}/{bundleName}");
                 result = cosClient.PutObject(request);
-                Engine.Console.Log(result.eTag);
                 now++;
                 EditorUtility.DisplayProgressBar("上传资源", "正在上传COS...", now / count);
             }
