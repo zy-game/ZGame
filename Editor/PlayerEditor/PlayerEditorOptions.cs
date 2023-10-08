@@ -74,15 +74,15 @@ namespace ZEngine.Editor.PlayerEditor
         /// </summary>
         public List<int> skills;
 
-        /// <summary>
-        /// 角色分类
-        /// </summary>
-        public PlayerLavel level;
-
-        /// <summary>
-        /// 角色职业
-        /// </summary>
-        public Career career;
+        // /// <summary>
+        // /// 角色分类
+        // /// </summary>
+        // public PlayerLavel level;
+        //
+        // /// <summary>
+        // /// 角色职业
+        // /// </summary>
+        // public Career career;
 
         [NonSerialized] public Sprite icon;
         [NonSerialized] public GameObject playerPrefab;

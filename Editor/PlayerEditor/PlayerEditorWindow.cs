@@ -82,8 +82,8 @@ namespace ZEngine.Editor.PlayerEditor
 
             options.id = EditorGUILayout.IntField("角色编号", options.id);
             options.name = EditorGUILayout.TextField("角色名", options.name);
-            options.career = (Career)EditorGUILayout.EnumPopup("角色职业", options.career);
-            options.level = (PlayerLavel)EditorGUILayout.EnumPopup("角色分类", options.level);
+            // options.career = (Career)EditorGUILayout.EnumPopup("角色职业", options.career);
+            // options.level = (PlayerLavel)EditorGUILayout.EnumPopup("角色分类", options.level);
 
             if (options.icon == null && options.headIcon.IsNullOrEmpty() is false)
             {

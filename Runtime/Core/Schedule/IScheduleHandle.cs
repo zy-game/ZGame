@@ -28,9 +28,9 @@ namespace ZEngine
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        public static ICommonScheduleHandle Schedule(Func<ICommonScheduleHandle, IEnumerator> func)
+        public static IScheduleHandle Schedule(Func<IScheduleHandle, IEnumerator> func)
         {
-            return ICommonScheduleHandle<object>.InternalCommonScheduleHandle.Create(func);
+            return IScheduleHandle<object>.InternalScheduleHandle.Create(func);
         }
 
         /// <summary>
@@ -39,9 +39,20 @@ namespace ZEngine
         /// <param name="func"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static ICommonScheduleHandle Schedule<T>(Func<ICommonScheduleHandle<T>, IEnumerator> func)
+        public static IScheduleHandle<T> Schedule<T>(Func<IScheduleHandle<T>, IEnumerator> func)
         {
-            return ICommonScheduleHandle<T>.InternalCommonScheduleHandle.Create(func);
+            return IScheduleHandle<T>.InternalScheduleHandle.Create(func);
+        }
+
+        /// <summary>
+        /// 调度一个异步携程
+        /// </summary>
+        /// <param name="func"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static IScheduleHandle<T> Schedule<T>(IScheduleToken<T> token)
+        {
+            return IScheduleHandle<T>.InternalScheduleHandle.Create(token);
         }
     }
 
@@ -59,27 +70,27 @@ namespace ZEngine
         {
             Subscribe((ISubscriber)subscriber);
         }
-    }
 
-    public interface ICommonScheduleHandle : IScheduleHandle
-    {
-        void SetResult(object result);
-        void SetStatus(Status status);
-    }
-
-    public interface ICommonScheduleHandle<T> : ICommonScheduleHandle, IScheduleHandle<T>
-    {
-        class InternalCommonScheduleHandle : ICommonScheduleHandle<T>
+        class InternalScheduleHandle : IScheduleHandle<T>
         {
             public T result { get; set; }
             public Status status { get; set; }
             private IEnumerator enumerator;
+            private IScheduleToken<T> token;
             private ISubscriber subscriber;
 
-            internal static ICommonScheduleHandle<T> Create(Func<ICommonScheduleHandle<T>, IEnumerator> func)
+            internal static IScheduleHandle<T> Create(Func<IScheduleHandle<T>, IEnumerator> func)
             {
-                InternalCommonScheduleHandle internalCommonScheduleHandle = Activator.CreateInstance<InternalCommonScheduleHandle>();
+                InternalScheduleHandle internalCommonScheduleHandle = Activator.CreateInstance<InternalScheduleHandle>();
                 internalCommonScheduleHandle.enumerator = func(internalCommonScheduleHandle);
+                internalCommonScheduleHandle.Execute();
+                return internalCommonScheduleHandle;
+            }
+
+            internal static IScheduleHandle<T> Create(IScheduleToken<T> token)
+            {
+                InternalScheduleHandle internalCommonScheduleHandle = Activator.CreateInstance<InternalScheduleHandle>();
+                internalCommonScheduleHandle.token = token;
                 internalCommonScheduleHandle.Execute();
                 return internalCommonScheduleHandle;
             }
@@ -91,6 +102,8 @@ namespace ZEngine
                 subscriber?.Dispose();
                 subscriber = null;
                 result = default;
+                token?.Dispose();
+                token = null;
             }
 
             public void Execute(params object[] args)
@@ -106,7 +119,14 @@ namespace ZEngine
 
             private IEnumerator DOExecute()
             {
-                yield return enumerator;
+                if (token is not null)
+                {
+                    yield return WaitFor.Create(() => token.isComplate);
+                }
+                else
+                {
+                    yield return enumerator;
+                }
             }
 
             private void OnComplate()

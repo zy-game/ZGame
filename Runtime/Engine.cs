@@ -302,101 +302,13 @@ public sealed class Engine
     /// </summary>
     public sealed class Game
     {
-        /// <summary>
-        /// 打开或创建一个World
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static IWorld OpenWorld(WorldOptions options)
-            => GameManager.instance.OpenWorld(options);
-
-        /// <summary>
-        /// 获取指定名称的World
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static IWorld GetWorld(string name)
-            => GameManager.instance.Find(name);
-
-        /// <summary>
-        /// 关闭指定的World
-        /// </summary>
-        /// <param name="name"></param>
-        public static void CloseWorld(string name)
-            => GameManager.instance.CloseWorld(name);
-
-        /// <summary>
-        /// 创建实体对象
-        /// </summary>
-        /// <returns></returns>
-        public static IEntity CreateEntity()
-            => GameManager.instance.CreateEntity();
-
-        /// <summary>
-        /// 删除实体对象
-        /// </summary>
-        /// <param name="id"></param>
-        public static void DestroyEntity(int id)
-            => GameManager.instance.DestroyEntity(id);
-
-        /// <summary>
-        /// 查找实体对象
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public static IEntity FindEntity(int id)
-            => GameManager.instance.Find(id);
-
-        /// <summary>
-        /// 获取实体所有组件
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public static IComponent[] GetComponents(int id)
-            => GameManager.instance.GetComponents(id);
-
-        /// <summary>
-        /// 获取相同类型的组件列表
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static IComponent[] GetComponents(Type type)
-            => GameManager.instance.GetComponents(type);
-
-        /// <summary>
-        /// 加载游戏逻辑系统
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public static void LoadGameLogicSystem<T>() where T : ILogicSystem
-            => LoadGameLogicSystem(typeof(T));
-
-        /// <summary>
-        /// 加载游戏逻辑系统
-        /// </summary>
-        /// <param name="logicType"></param>
-        public static void LoadGameLogicSystem(Type logicType)
-            => GameManager.instance.LoadGameLogicSystem(logicType);
-
-        /// <summary>
-        /// 卸载游戏逻辑系统
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public static void UnloadGameLogicSystem<T>() where T : ILogicSystem
-            => UnloadGameLogicSystem(typeof(T));
-
-        /// <summary>
-        /// 卸载游戏逻辑系统
-        /// </summary>
-        /// <param name="logicType"></param>
-        public static void UnloadGameLogicSystem(Type logicType)
-            => GameManager.instance.UnloadGameLogicSystem(logicType);
-
+        
         /// <summary>
         /// 加载DLL
         /// </summary>
         /// <param name="gameEntryOptions"></param>
         /// <returns></returns>
-        public static IGameLogicLoadResult LoadGameLogic(GameEntryOptions gameEntryOptions)
+        public static IGameLoadHandle LoadGameLogic(GameEntryOptions gameEntryOptions)
             => GameManager.instance.LoadGameLogicAssembly(gameEntryOptions);
     }
 
@@ -636,7 +548,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IWebRequestScheduleHandle<T> Get<T>(string url, object data = default, Dictionary<string, object> header = default)
+        public static IWebRequestleHandle<T> Get<T>(string url, object data = default, Dictionary<string, object> header = default)
             => NetworkManager.instance.Get<T>(url, header);
 
         /// <summary>
@@ -647,7 +559,7 @@ public sealed class Engine
         /// <param name="header"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IWebRequestScheduleHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+        public static IWebRequestleHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
             => NetworkManager.instance.Post<T>(url, data, header);
 
         /// <summary>
@@ -655,7 +567,7 @@ public sealed class Engine
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IDownloadScheduleHandle Download(params DownloadOptions[] urlList)
+        public static IDownloadHandle Download(params DownloadOptions[] urlList)
             => NetworkManager.instance.Download(urlList);
 
         /// <summary>
@@ -682,8 +594,8 @@ public sealed class Engine
         /// <param name="messagePackage">需要写入的消息</param>
         /// <typeparam name="T">等待响应的消息类型</typeparam>
         /// <returns></returns>
-        public static ISubscriber<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
-            => NetworkManager.instance.WriteAndFlush<T>(address, messagePackage);
+        public static IScheduleHandle<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
+            => NetworkManager.instance.WriteAndFlushAsync<T>(address, messagePackage);
 
         /// <summary>
         /// 关闭网络连接

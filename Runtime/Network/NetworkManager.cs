@@ -48,9 +48,9 @@ namespace ZEngine.Network
         /// <param name="header">标头</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public IWebRequestScheduleHandle<T> Get<T>(string url, Dictionary<string, object> header = default)
+        public IWebRequestleHandle<T> Get<T>(string url, Dictionary<string, object> header = default)
         {
-            IWebRequestScheduleHandle<T> webRequestScheduleHandle = IWebRequestScheduleHandle<T>.CreateRequest(url, header);
+            IWebRequestleHandle<T> webRequestScheduleHandle = IWebRequestleHandle<T>.CreateRequest(url, header);
             webRequestScheduleHandle.Execute();
             return webRequestScheduleHandle;
         }
@@ -64,9 +64,9 @@ namespace ZEngine.Network
         /// <param name="header">标头</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public IWebRequestScheduleHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+        public IWebRequestleHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
         {
-            IWebRequestScheduleHandle<T> webRequestScheduleHandle = IWebRequestScheduleHandle<T>.CreatePost(url, data, header);
+            IWebRequestleHandle<T> webRequestScheduleHandle = IWebRequestleHandle<T>.CreatePost(url, data, header);
             webRequestScheduleHandle.Execute();
             return webRequestScheduleHandle;
         }
@@ -76,9 +76,9 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="urlList">下载列表</param>
         /// <returns></returns>
-        public IDownloadScheduleHandle Download(params DownloadOptions[] urlList)
+        public IDownloadHandle Download(params DownloadOptions[] urlList)
         {
-            IDownloadScheduleHandle downloadScheduleHandle = IDownloadScheduleHandle.Create(urlList);
+            IDownloadHandle downloadScheduleHandle = IDownloadHandle.Create(urlList);
             downloadScheduleHandle.Execute();
             return downloadScheduleHandle;
         }
@@ -131,7 +131,7 @@ namespace ZEngine.Network
         /// <param name="messagePackage">需要写入的消息</param>
         /// <typeparam name="T">等待响应的消息类型</typeparam>
         /// <returns></returns>
-        public ISubscriber<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
+        public IScheduleHandle<T> WriteAndFlushAsync<T>(string address, IMessaged messagePackage) where T : IMessaged
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
@@ -147,8 +147,9 @@ namespace ZEngine.Network
 
             MemoryStream memoryStream = new MemoryStream();
             Serializer.Serialize(memoryStream, messagePackage);
-            ISubscriber<T> subscriber = ISubscriber.Create<T>();
-            RPCHandle.instance.Subscribe(typeof(T), subscriber);
+            IScheduleToken<T> token = IScheduleToken<T>.Create();
+            IScheduleHandle<T> subscriber = IScheduleHandle.Schedule<T>(token);
+            RPCHandle.instance.Subscribe(typeof(T), token);
             channel.WriteAndFlush(memoryStream.ToArray());
             return subscriber;
         }

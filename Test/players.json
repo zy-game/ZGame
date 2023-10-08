@@ -1,1 +1,1 @@
-{"players":[{"id":10000000,"name":"未命名","headIcon":null,"prefab":null,"hp":0,"mp":0,"attack":0,"moveSpeed":0,"attackSpeed":0,"physiceDefense":0,"magicDefense":0,"skills":null,"level":0,"career":0}],"name":"","hideFlags":0}
+{"players":[{"id":10000000,"name":"未命名","headIcon":null,"prefab":null,"hp":0,"mp":0,"attack":0,"moveSpeed":0,"attackSpeed":0,"physiceDefense":0,"magicDefense":0,"skills":[],"level":0,"career":0}],"name":"","hideFlags":0}

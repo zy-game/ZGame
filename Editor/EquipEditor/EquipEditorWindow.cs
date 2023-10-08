@@ -29,7 +29,7 @@ namespace ZEngine.Editor.EquipEditor
 
         protected override MenuListItem[] GetMenuList()
         {
-            throw new NotImplementedException();
+            return default;
         }
 
         protected override void Actived()
@@ -39,7 +39,6 @@ namespace ZEngine.Editor.EquipEditor
                 EquipList.instance.optionsList = new List<EquipOptions>();
                 return;
             }
-
         }
 
         protected override void CreateNewItem()

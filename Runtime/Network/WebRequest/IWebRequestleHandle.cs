@@ -8,13 +8,13 @@ using UnityEngine.Networking;
 
 namespace ZEngine.Network
 {
-    public interface IWebRequestScheduleHandle<T> : IScheduleHandle<T>
+    public interface IWebRequestleHandle<T> : IScheduleHandle<T>
     {
         string url { get; }
         string name { get; }
         float progress { get; }
 
-        internal static IWebRequestScheduleHandle<T> CreateRequest(string url, Dictionary<string, object> header)
+        internal static IWebRequestleHandle<T> CreateRequest(string url, Dictionary<string, object> header)
         {
             InternalWebRequestScheduleHandle<T> internalWebRequestScheduleHandle = Activator.CreateInstance<InternalWebRequestScheduleHandle<T>>();
             internalWebRequestScheduleHandle.url = url;
@@ -24,7 +24,7 @@ namespace ZEngine.Network
             return internalWebRequestScheduleHandle;
         }
 
-        internal static IWebRequestScheduleHandle<T> CreatePost(string url, object data, Dictionary<string, object> header)
+        internal static IWebRequestleHandle<T> CreatePost(string url, object data, Dictionary<string, object> header)
         {
             InternalWebRequestScheduleHandle<T> internalWebRequestScheduleHandle = Activator.CreateInstance<InternalWebRequestScheduleHandle<T>>();
             internalWebRequestScheduleHandle.url = url;
@@ -35,7 +35,7 @@ namespace ZEngine.Network
             return internalWebRequestScheduleHandle;
         }
 
-        class InternalWebRequestScheduleHandle<T> : IWebRequestScheduleHandle<T>
+        class InternalWebRequestScheduleHandle<T> : IWebRequestleHandle<T>
         {
             public Status status { get; set; }
             public T result => (T)_data;

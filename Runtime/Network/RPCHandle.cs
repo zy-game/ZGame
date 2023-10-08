@@ -9,7 +9,7 @@ namespace ZEngine.Network
     {
         private List<IMessageHandle> handles = new List<IMessageHandle>();
         private Dictionary<uint, Type> opcode = new Dictionary<uint, Type>();
-        private Dictionary<Type, ISubscriber> waitings = new Dictionary<Type, ISubscriber>();
+        private Dictionary<Type, List<IToken>> subscribers = new Dictionary<Type, List<IToken>>();
 
         public RPCHandle()
         {
@@ -20,19 +20,24 @@ namespace ZEngine.Network
         {
             handles.Clear();
             opcode.Clear();
-            waitings.Clear();
+            subscribers.Clear();
         }
 
         public void Handle(IMessaged messaged)
         {
             Type source = messaged.GetType();
-            if (waitings.TryGetValue(source, out ISubscriber subscriber) is false)
+            if (subscribers.TryGetValue(source, out List<IToken> tokens) is false)
             {
                 return;
             }
 
-            subscriber.Execute(messaged);
-            waitings.Remove(source);
+            tokens.ForEach(x =>
+            {
+                x.Complate(messaged);
+                x.Dispose();
+            });
+            tokens.Clear();
+            subscribers.Remove(source);
         }
 
         public void Dispacher(IChannel channel, byte[] bytes)
@@ -52,15 +57,14 @@ namespace ZEngine.Network
             }
         }
 
-        public void Subscribe(Type type, ISubscriber source)
+        public void Subscribe(Type type, IToken source)
         {
-            if (waitings.TryGetValue(type, out ISubscriber subscriber) is false)
+            if (subscribers.TryGetValue(type, out List<IToken> tokens) is false)
             {
-                waitings.Add(type, source);
-                return;
+                subscribers.Add(type, tokens = new List<IToken>());
             }
 
-            subscriber.Merge(source);
+            tokens.Add(source);
         }
 
         public void Subscribe(Type type)

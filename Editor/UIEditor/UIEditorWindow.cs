@@ -16,27 +16,23 @@ namespace ZEngine.Editor.UIEditor
 
         protected override MenuListItem[] GetMenuList()
         {
-            throw new System.NotImplementedException();
+            return default;
         }
 
         protected override void Actived()
         {
-            throw new System.NotImplementedException();
         }
 
         protected override void CreateNewItem()
         {
-            throw new System.NotImplementedException();
         }
 
         protected override void DrawingItemDataView(object data, float width)
         {
-            throw new System.NotImplementedException();
         }
 
         protected override void SaveChanged()
         {
-            throw new System.NotImplementedException();
         }
     }
 }

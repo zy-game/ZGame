@@ -86,7 +86,7 @@ namespace ZEngine.Editor.SkillEditor
                 options._icon = AssetDatabase.LoadAssetAtPath<Texture2D>(options.icon);
             }
 
-            options.career = (Career)EditorGUILayout.EnumPopup("适用职业", options.career);
+            // options.career = (Career)EditorGUILayout.EnumPopup("适用职业", options.career);
             options._icon = (Texture2D)EditorGUILayout.ObjectField("技能图标", options._icon, typeof(Texture2D), false);
             if (options._icon != null)
             {

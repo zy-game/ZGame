@@ -1,39 +1,29 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace ZEngine.Network
 {
-    public sealed class DownloadOptions
-    {
-        public string url;
-        public object userData;
-        public int version;
-    }
-
-    public interface IDownloadScheduleHandle : IScheduleHandle<IDownloadScheduleHandle>
+    public interface IDownloadHandle : IScheduleHandle<IDownloadHandle>
     {
         HttpDownloadHandle[] Handles { get; }
         DownloadOptions[] options { get; }
 
         void SubscribeProgressChange(ISubscriber<float> subscribe);
 
-        internal static IDownloadScheduleHandle Create(params DownloadOptions[] options)
+        internal static IDownloadHandle Create(params DownloadOptions[] options)
         {
             InternalDownloadScheduleHandle internalDownloadScheduleHandle = Activator.CreateInstance<InternalDownloadScheduleHandle>();
             internalDownloadScheduleHandle.options = options;
             return internalDownloadScheduleHandle;
         }
 
-        class InternalDownloadScheduleHandle : IDownloadScheduleHandle
+        class InternalDownloadScheduleHandle : IDownloadHandle
         {
             public HttpDownloadHandle[] Handles { get; set; }
             public DownloadOptions[] options { get; set; }
             public Status status { get; set; }
-            public IDownloadScheduleHandle result => this;
+            public IDownloadHandle result => this;
 
             private ISubscriber<float> progerss;
             private ISubscriber subscriber;

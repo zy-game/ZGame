@@ -8,10 +8,6 @@ namespace ZEngine
         int id { get; }
     }
 
-    public interface IBuilder : IDisposable
-    {
-        void Build();
-    }
 
     /// <summary>
     /// 配置项
@@ -20,6 +16,9 @@ namespace ZEngine
     {
         int id { get; set; }
         string name { get; set; }
+        string icon { get; set; }
+        string prefab { get; set; }
+        string describe { get; set; }
     }
 
     /// <summary>
@@ -27,8 +26,7 @@ namespace ZEngine
     /// </summary>
     public interface IPlayerOptions : IOptions
     {
-        string icon { get; set; }
-        string prefab { get; set; }
+        List<ISkillOptions> skills { get; }
     }
 
     /// <summary>
@@ -36,21 +34,22 @@ namespace ZEngine
     /// </summary>
     public interface ISkillOptions : IOptions
     {
-        string icon { get; set; }
-        string prefab { get; set; }
+        float cd { get; set; }
+        float usege { get; set; }
+        ushort level { get; set; }
     }
 
     /// <summary>
     /// 地图数据
     /// </summary>
-    public interface IMapDataOptions : IOptions, IBuilder
+    public interface IMapDataOptions : IOptions
     {
     }
 
     /// <summary>
     /// 场景数据
     /// </summary>
-    public interface ISceneDataOptions : IOptions, IBuilder
+    public interface ISceneDataOptions : IOptions
     {
         IMapDataOptions mapData { get; set; }
     }

@@ -13,7 +13,7 @@ namespace ZEngine.Editor.AIEditor
 
         protected override MenuListItem[] GetMenuList()
         {
-            throw new System.NotImplementedException();
+            return default;
         }
 
         protected override void Actived()

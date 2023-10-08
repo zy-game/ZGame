@@ -9,25 +9,25 @@ using ZEngine.Resource;
 
 namespace ZEngine.Game
 {
-    public interface IGameLogicLoadResult : IScheduleHandle<IGameLogicLoadResult>
+    public interface IGameLoadHandle : IScheduleHandle<IGameLoadHandle>
     {
         Assembly assembly { get; }
         GameEntryOptions gameEntryOptions { get; }
 
-        public static IGameLogicLoadResult Create(GameEntryOptions gameEntryOptions)
+        public static IGameLoadHandle Create(GameEntryOptions gameEntryOptions)
         {
-            LogicModuleLoadResult logicModuleLoadResult = Activator.CreateInstance<LogicModuleLoadResult>();
-            logicModuleLoadResult.gameEntryOptions = gameEntryOptions;
-            return logicModuleLoadResult;
+            ModuleLoadHandle moduleLoadHandle = Activator.CreateInstance<ModuleLoadHandle>();
+            moduleLoadHandle.gameEntryOptions = gameEntryOptions;
+            return moduleLoadHandle;
         }
 
-        class LogicModuleLoadResult : IGameLogicLoadResult
+        class ModuleLoadHandle : IGameLoadHandle
         {
             public Status status { get; set; }
 
             public Assembly assembly { get; set; }
             public GameEntryOptions gameEntryOptions { get; set; }
-            public IGameLogicLoadResult result => this;
+            public IGameLoadHandle result => this;
             private ISubscriber subscriber;
 
             public void Dispose()

@@ -107,7 +107,7 @@ namespace ZEngine.Resource
                 for (int i = 0; i < options.Length; i++)
                 {
                     string moduleFilePath = Engine.GetHotfixPath(options[i].url.address, options[i].moduleName + ".ini");
-                    IWebRequestScheduleHandle<GameResourceModuleManifest> webRequestScheduleHandle = Engine.Network.Get<GameResourceModuleManifest>(moduleFilePath);
+                    IWebRequestleHandle<GameResourceModuleManifest> webRequestScheduleHandle = Engine.Network.Get<GameResourceModuleManifest>(moduleFilePath);
                     yield return webRequestScheduleHandle.WaitTo();
                     foreach (var VARIABLE in webRequestScheduleHandle.result.bundleList)
                     {
@@ -156,7 +156,7 @@ namespace ZEngine.Resource
                     userData = x,
                     version = x.bundle.version
                 });
-                IDownloadScheduleHandle downloadScheduleHandle = Engine.Network.Download(optionsList.ToArray());
+                IDownloadHandle downloadScheduleHandle = Engine.Network.Download(optionsList.ToArray());
                 downloadScheduleHandle.SubscribeProgressChange(progressSubsceibeHandle);
                 yield return new WaitUntil(() => downloadScheduleHandle.status == Status.Success || downloadScheduleHandle.status == Status.Failed);
 
