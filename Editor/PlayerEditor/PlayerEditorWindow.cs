@@ -41,10 +41,12 @@ namespace ZEngine.Editor.PlayerEditor
             }
 
             List<MenuListItem> items = new List<MenuListItem>();
+            int index = 0;
             foreach (var VARIABLE in PlayerEditorOptions.instance.players)
             {
                 items.Add(new MenuListItem()
                 {
+                    index = index++,
                     name = VARIABLE.name,
                     data = VARIABLE
                 });

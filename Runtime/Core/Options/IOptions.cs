@@ -53,4 +53,14 @@ namespace ZEngine
     {
         IMapDataOptions mapData { get; set; }
     }
+
+    public class OptionsName : Attribute
+    {
+        public string name;
+
+        public OptionsName(string name)
+        {
+            this.name = name;
+        }
+    }
 }

@@ -10,7 +10,7 @@ namespace ZEngine.Editor
     public abstract class EngineEditorWindow : EditorWindow
     {
         private string search;
-        private string SeleteName;
+        private int selete;
         private MenuListItem[] items;
         private Vector2 listScroll;
         private Vector2 manifestScroll;
@@ -27,6 +27,7 @@ namespace ZEngine.Editor
 
         protected class MenuListItem
         {
+            public int index;
             public string name;
             public string icon;
             public object data;
@@ -63,12 +64,17 @@ namespace ZEngine.Editor
             Actived();
         }
 
-        public void OnGUI()
+        private void OnGUI()
         {
             leftWidth = Mathf.Min(position.width / 4, 300);
             rightWidth = position.width - leftWidth - 18;
             Toolbar();
             DrawingSceneEditor();
+        }
+
+        private void OnDisable()
+        {
+            SaveChanged();
         }
 
         void Toolbar()
@@ -146,7 +152,7 @@ namespace ZEngine.Editor
 
                 Rect contains = EditorGUILayout.BeginVertical();
                 {
-                    this.BeginColor(items[i].name == SeleteName ? Color.cyan : GUI.color);
+                    this.BeginColor(items[i].index == selete ? Color.cyan : GUI.color);
                     {
                         GUILayout.BeginHorizontal();
                         {
@@ -158,14 +164,14 @@ namespace ZEngine.Editor
                     }
 
                     GUILayout.Space(5);
-                    this.BeginColor(items[i].name == SeleteName ? inColor : outColor);
+                    this.BeginColor(items[i].index == selete ? inColor : outColor);
                     {
                         GUILayout.Box("", GUI_STYLE_LINE, GUILayout.Width(leftWidth), GUILayout.Height(1));
                         this.EndColor();
                     }
                     if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
                     {
-                        SeleteName = items[i].name;
+                        selete = items[i].index;
                         this.Repaint();
                     }
 
@@ -193,13 +199,19 @@ namespace ZEngine.Editor
 
         private void DrawingSceneOptions()
         {
-            if (SeleteName.IsNullOrEmpty())
+            if (selete < 0)
             {
                 return;
             }
 
             EditorGUI.BeginChangeCheck();
-            var item = items.Where(x => x.name == SeleteName).FirstOrDefault();
+            var item = items.Where(x => x.index == selete).FirstOrDefault();
+            if (item is null || item.data is null)
+            {
+                EditorGUI.EndChangeCheck();
+                return;
+            }
+
             DrawingItemDataView(item.data, rightWidth - 20);
             if (EditorGUI.EndChangeCheck())
             {

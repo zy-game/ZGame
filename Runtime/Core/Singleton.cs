@@ -31,11 +31,11 @@ namespace ZEngine
                     return;
                 }
 
-                UnityBehaviour.instance.OnUpdate(_instance.OnUpdate);
-                UnityBehaviour.instance.OnApplicationQuiting(Dispose);
-                UnityBehaviour.instance.OnLateUpdate(_instance.OnLateUpdate);
-                UnityBehaviour.instance.OnFixedUpdate(_instance.OnFixedUpdate);
-                UnityBehaviour.instance.OnApplicationFocusChange(_instance.OnFocusChange);
+                UnityEngineContent.instance.OnUpdate(_instance.OnUpdate);
+                UnityEngineContent.instance.OnApplicationQuiting(Dispose);
+                UnityEngineContent.instance.OnLateUpdate(_instance.OnLateUpdate);
+                UnityEngineContent.instance.OnFixedUpdate(_instance.OnFixedUpdate);
+                UnityEngineContent.instance.OnApplicationFocusChange(_instance.OnFocusChange);
             }
 
             private static void Dispose()
@@ -46,11 +46,11 @@ namespace ZEngine
                 }
 
                 _instance.Dispose();
-                UnityBehaviour.instance.RemoveUpdate(_instance.OnUpdate);
-                UnityBehaviour.instance.RemoveUpdate(_instance.OnLateUpdate);
-                UnityBehaviour.instance.RemoveUpdate(_instance.OnFixedUpdate);
-                UnityBehaviour.instance.RemoveApplicationQuit(_instance.Dispose);
-                UnityBehaviour.instance.RemoveApplicationFocus(_instance.OnFocusChange);
+                UnityEngineContent.instance.RemoveUpdate(_instance.OnUpdate);
+                UnityEngineContent.instance.RemoveUpdate(_instance.OnLateUpdate);
+                UnityEngineContent.instance.RemoveUpdate(_instance.OnFixedUpdate);
+                UnityEngineContent.instance.RemoveApplicationQuit(_instance.Dispose);
+                UnityEngineContent.instance.RemoveApplicationFocus(_instance.OnFocusChange);
                 _instance = null;
             }
         }

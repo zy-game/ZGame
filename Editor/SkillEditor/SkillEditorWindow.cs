@@ -45,10 +45,12 @@ namespace ZEngine.Editor.SkillEditor
         protected override MenuListItem[] GetMenuList()
         {
             List<MenuListItem> items = new List<MenuListItem>();
+            int index = 0;
             foreach (var VARIABLE in SkillDataList.instance.optionsList)
             {
                 items.Add(new MenuListItem()
                 {
+                    index = index++,
                     name = VARIABLE.name,
                     data = VARIABLE
                 });

@@ -3,6 +3,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using ZEngine.Editor.PlayerEditor;
 
 namespace ZEngine.Editor
 {
@@ -19,6 +20,22 @@ namespace ZEngine.Editor
         public static void EndColor(this EditorWindow window)
         {
             GUI.color = _color;
+        }
+
+        public static Type FindType(this AppDomain domain, string name)
+        {
+            foreach (var VARIABLE in domain.GetAssemblies())
+            {
+                Type t = VARIABLE.GetType(name);
+                if (t is null)
+                {
+                    continue;
+                }
+
+                return t;
+            }
+
+            return default;
         }
     }
 
@@ -83,7 +100,7 @@ namespace ZEngine.Editor
                 menu.AddItem(new GUIContent("行为编辑器"), false, () => { AIEditor.AIEditorWindow.Open(); });
                 menu.AddItem(new GUIContent("地图编辑器"), false, () => { MapEditor.MapEditorWindow.Open(); });
                 menu.AddItem(new GUIContent("物品编辑器"), false, () => { EquipEditor.EquipEditorWindow.Open(); });
-                menu.AddItem(new GUIContent("角色编辑器"), false, () => { PlayerEditor.PlayerEditorWindow.Open(); });
+                menu.AddItem(new GUIContent("角色编辑器"), false, () => { EditorWindow.GetWindow<GamePlayerEditorWindow>(false, "角色编辑器", true); });
                 menu.AddItem(new GUIContent("技能编辑器"), false, () => { SkillEditor.SkillEditorWindow.Open(); });
                 menu.AddItem(new GUIContent("资源编辑器"), false, () => { ResourceBuilder.GameResourceBuilder.Open(); });
                 menu.ShowAsContext();

@@ -71,7 +71,7 @@ public static class Extension
 
     public static void OnDestroyEvent(this GameObject gameObject, UnityAction action)
     {
-        gameObject.TryGetComponent<UnityBehaviour>().OnDestroyGameObject(action);
+        gameObject.TryGetComponent<UnityEngineContent>().OnDestroyGameObject(action);
     }
 
     public static bool IsNullOrEmpty(this string value)
@@ -87,7 +87,7 @@ public static class Extension
             yield return enumerator;
         }
 
-        return UnityBehaviour.instance.StartCoroutine(Running());
+        return UnityEngineContent.instance.StartCoroutine(Running());
     }
 
     public static Coroutine StartCoroutine(this IEnumerator enumerator, Action complete)
@@ -100,16 +100,16 @@ public static class Extension
             complete();
         }
 
-        return UnityBehaviour.instance.StartCoroutine(Running());
+        return UnityEngineContent.instance.StartCoroutine(Running());
     }
 
     public static void StopAll()
     {
-        UnityBehaviour.instance.StopAllCoroutines();
+        UnityEngineContent.instance.StopAllCoroutines();
     }
 
     public static void StopCoroutine(this Coroutine coroutine)
     {
-        UnityBehaviour.instance.StopCoroutine(coroutine);
+        UnityEngineContent.instance.StopCoroutine(coroutine);
     }
 }

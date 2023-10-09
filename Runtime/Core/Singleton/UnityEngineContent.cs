@@ -4,7 +4,7 @@ using UnityEngine.Events;
 
 namespace ZEngine
 {
-    public sealed class UnityBehaviour : BehaviourSingleton<UnityBehaviour>
+    public sealed class UnityEngineContent : BehaviourSingleton<UnityEngineContent>
     {
         private UnityEvent applicationQuitCallback = new UnityEvent();
         private UnityEvent fixedUpdateCallback = new UnityEvent();
