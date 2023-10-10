@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -22,21 +23,7 @@ namespace ZEngine.Editor
             GUI.color = _color;
         }
 
-        public static Type FindType(this AppDomain domain, string name)
-        {
-            foreach (var VARIABLE in domain.GetAssemblies())
-            {
-                Type t = VARIABLE.GetType(name);
-                if (t is null)
-                {
-                    continue;
-                }
-
-                return t;
-            }
-
-            return default;
-        }
+       
     }
 
     [AttributeUsage(AttributeTargets.Class)]

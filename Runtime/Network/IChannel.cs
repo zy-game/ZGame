@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace ZEngine.Network
 {
@@ -7,8 +8,8 @@ namespace ZEngine.Network
         string address { get; }
 
         bool connected { get; }
-        void Close();
-        void Connect(string address, int id = 0);
-        void WriteAndFlush(byte[] bytes);
+        IScheduleHandle<IChannel> Close();
+        IScheduleHandle<IChannel> Connect(string address, int id = 0);
+        IScheduleHandle<int> WriteAndFlush(byte[] bytes);
     }
 }

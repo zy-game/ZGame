@@ -23,15 +23,14 @@ namespace ZEngine
         /// <param name="subscriber"></param>
         void Subscribe(ISubscriber subscriber);
 
+
         /// <summary>
         /// 调度一个携程函数
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
         public static IScheduleHandle Schedule(Func<IScheduleHandle, IEnumerator> func)
-        {
-            return IScheduleHandle<object>.InternalScheduleHandle.Create(func);
-        }
+            => IScheduleHandle<object>.InternalScheduleHandle.Create(func);
 
         /// <summary>
         /// 调度一个异步携程
@@ -40,9 +39,7 @@ namespace ZEngine
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static IScheduleHandle<T> Schedule<T>(Func<IScheduleHandle<T>, IEnumerator> func)
-        {
-            return IScheduleHandle<T>.InternalScheduleHandle.Create(func);
-        }
+            => IScheduleHandle<T>.InternalScheduleHandle.Create(func);
 
         /// <summary>
         /// 调度一个异步携程
@@ -50,10 +47,29 @@ namespace ZEngine
         /// <param name="func"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IScheduleHandle<T> Schedule<T>(IScheduleToken<T> token)
-        {
-            return IScheduleHandle<T>.InternalScheduleHandle.Create(token);
-        }
+        public static IScheduleHandle Schedule(IScheduleHandleToken token)
+            => IScheduleHandle<object>.InternalScheduleHandleWithToken.Create(token);
+
+        /// <summary>
+        /// 调度一个异步携程
+        /// </summary>
+        /// <param name="func"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static IScheduleHandle<T> Schedule<T>(IScheduleHandleToken<T> token)
+            => IScheduleHandle<T>.InternalScheduleHandleWithToken.Create(token);
+
+        public static IScheduleHandle Complate()
+            => IScheduleHandle<object>.InternalScheduleHandle.OnNormal(default, Status.Success);
+
+        public static IScheduleHandle<T> Complate<T>(T result)
+            => IScheduleHandle<T>.InternalScheduleHandle.OnNormal(result, Status.Success);
+
+        public static IScheduleHandle Failur()
+            => IScheduleHandle<object>.InternalScheduleHandle.OnNormal(default, Status.Failed);
+
+        public static IScheduleHandle<T> Failur<T>()
+            => IScheduleHandle<T>.InternalScheduleHandle.OnNormal(default, Status.Failed);
     }
 
     /// <summary>
@@ -71,26 +87,48 @@ namespace ZEngine
             Subscribe((ISubscriber)subscriber);
         }
 
+        class InternalScheduleHandleWithToken : IScheduleHandle<T>
+        {
+            public T result { get; }
+            public Status status { get; }
+            private IScheduleHandleToken token;
+
+            public void Dispose()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Execute(params object[] args)
+            {
+                throw new NotImplementedException();
+            }
+
+
+            public void Subscribe(ISubscriber subscriber)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         class InternalScheduleHandle : IScheduleHandle<T>
         {
             public T result { get; set; }
             public Status status { get; set; }
             private IEnumerator enumerator;
-            private IScheduleToken<T> token;
             private ISubscriber subscriber;
+
+            internal static IScheduleHandle<T> OnNormal(T result, Status status)
+            {
+                InternalScheduleHandle internalCommonScheduleHandle = Activator.CreateInstance<InternalScheduleHandle>();
+                internalCommonScheduleHandle.status = status;
+                internalCommonScheduleHandle.result = result;
+                return internalCommonScheduleHandle;
+            }
 
             internal static IScheduleHandle<T> Create(Func<IScheduleHandle<T>, IEnumerator> func)
             {
                 InternalScheduleHandle internalCommonScheduleHandle = Activator.CreateInstance<InternalScheduleHandle>();
                 internalCommonScheduleHandle.enumerator = func(internalCommonScheduleHandle);
-                internalCommonScheduleHandle.Execute();
-                return internalCommonScheduleHandle;
-            }
-
-            internal static IScheduleHandle<T> Create(IScheduleToken<T> token)
-            {
-                InternalScheduleHandle internalCommonScheduleHandle = Activator.CreateInstance<InternalScheduleHandle>();
-                internalCommonScheduleHandle.token = token;
                 internalCommonScheduleHandle.Execute();
                 return internalCommonScheduleHandle;
             }
@@ -102,8 +140,6 @@ namespace ZEngine
                 subscriber?.Dispose();
                 subscriber = null;
                 result = default;
-                token?.Dispose();
-                token = null;
             }
 
             public void Execute(params object[] args)
@@ -119,14 +155,7 @@ namespace ZEngine
 
             private IEnumerator DOExecute()
             {
-                if (token is not null)
-                {
-                    yield return WaitFor.Create(() => token.isComplate);
-                }
-                else
-                {
-                    yield return enumerator;
-                }
+                yield return enumerator;
             }
 
             private void OnComplate()

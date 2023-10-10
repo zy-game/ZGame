@@ -302,7 +302,6 @@ public sealed class Engine
     /// </summary>
     public sealed class Game
     {
-        
         /// <summary>
         /// 加载DLL
         /// </summary>
@@ -516,29 +515,29 @@ public sealed class Engine
         /// 订阅消息处理
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void SubscribeMessageHandle<T>() where T : IMessageHandle
-            => SubscribeMessageHandle(typeof(T));
+        public static void SubscribeMessageRecvieHandle<T>() where T : IMessageRecvierHandle
+            => SubscribeMessageRecvieHandle(typeof(T));
 
         /// <summary>
         /// 订阅消息处理
         /// </summary>
         /// <param name="type"></param>
-        public static void SubscribeMessageHandle(Type type)
-            => RPCHandle.instance.Subscribe(type);
+        public static void SubscribeMessageRecvieHandle(Type type)
+            => NetworkManager.instance.SubscribeMessageRecvieHandle(type);
 
         /// <summary>
         /// 取消消息订阅管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void UnsubscribeMessageHandle<T>() where T : IMessageHandle
-            => UnsubscribeMessageHandle(typeof(T));
+        public static void UnsubscribeMessageRecvieHandle<T>() where T : IMessageRecvierHandle
+            => UnsubscribeMessageRecvieHandle(typeof(T));
 
         /// <summary>
         /// 取消消息订阅管道
         /// </summary>
         /// <param name="type"></param>
-        public static void UnsubscribeMessageHandle(Type type)
-            => RPCHandle.instance.Unsubscribe(type);
+        public static void UnsubscribeMessageRecvieHandle(Type type)
+            => NetworkManager.instance.UnsubscribeMessageRecvieHandle(type);
 
         /// <summary>
         /// 请求数据
@@ -575,8 +574,8 @@ public sealed class Engine
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public static void Connect(string address, int id = 0)
-            => NetworkManager.instance.Connect(address, id);
+        public static void Connect<T>(string address, int id = 0) where T : IChannel
+            => NetworkManager.instance.Connect<T>(address, id);
 
         /// <summary>
         /// 写入网络消息，如果网络未连接则自动尝试链接，并在链接成功后写入消息
@@ -586,16 +585,6 @@ public sealed class Engine
         /// <returns></returns>
         public static void WriteAndFlush(string address, IMessaged messagePackage)
             => NetworkManager.instance.WriteAndFlush(address, messagePackage);
-
-        /// <summary>
-        /// 写入网络消息,并等待响应
-        /// </summary>
-        /// <param name="address">远程地址</param>
-        /// <param name="messagePackage">需要写入的消息</param>
-        /// <typeparam name="T">等待响应的消息类型</typeparam>
-        /// <returns></returns>
-        public static IScheduleHandle<T> WriteAndFlush<T>(string address, IMessaged messagePackage) where T : IMessaged
-            => NetworkManager.instance.WriteAndFlushAsync<T>(address, messagePackage);
 
         /// <summary>
         /// 关闭网络连接

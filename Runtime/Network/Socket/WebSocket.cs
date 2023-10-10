@@ -16,12 +16,13 @@ namespace ZEngine.Network
         public string address { get; private set; }
         public bool connected { get; set; }
 
-        public void Close()
+        public IScheduleHandle<IChannel> Close()
         {
             _websocket.Close();
+            return IScheduleHandle.Complate<IChannel>(this);
         }
 
-        public void Connect(string address, int id = 0)
+        public IScheduleHandle<IChannel> Connect(string address, int id = 0)
         {
             this.address = address;
             _websocket = new WebSocketSharp.WebSocket(address);
@@ -31,14 +32,16 @@ namespace ZEngine.Network
                 connected = false;
                 NetworkManager.instance.Close(address);
             };
-            _websocket.OnMessage += (object sender, MessageEventArgs e) => { RPCHandle.instance.Dispacher(this, e.RawData); };
+            _websocket.OnMessage += (object sender, MessageEventArgs e) => { NetworkManager.instance.Dispacher(this, e.RawData); };
             _websocket.OnClose += (s, e) => { connected = false; };
             _websocket.Connect();
+            return IScheduleHandle.Complate<IChannel>(this);
         }
 
-        public void WriteAndFlush(byte[] bytes)
+        public IScheduleHandle<int> WriteAndFlush(byte[] bytes)
         {
             _websocket.Send(bytes);
+            return IScheduleHandle.Complate<int>(bytes.Length);
         }
 
         public void Dispose()

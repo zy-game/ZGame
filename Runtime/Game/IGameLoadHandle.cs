@@ -74,7 +74,6 @@ namespace ZEngine.Game
 #if UNITY_EDITOR
                 if (HotfixOptions.instance.useHotfix == Switch.Off || HotfixOptions.instance.useScript == Switch.Off)
                 {
-                    RPCHandle.instance.RegisterMessageType(FindAllType<IMessaged>());
                     status = Status.Success;
                     yield break;
                 }
@@ -88,41 +87,8 @@ namespace ZEngine.Game
 
                 yield return LoadAOTDll();
                 yield return LoadLogicAssembly();
-                RPCHandle.instance.RegisterMessageType(FindAllType<IMessaged>());
-                status = Status.Success;
-            }
 
-            private Type[] FindAllType<T>()
-            {
-                List<Type> result = new List<Type>();
-                Type source = typeof(T);
-#if UNITY_EDITOR
-                if (HotfixOptions.instance.useHotfix == Switch.Off || HotfixOptions.instance.useScript == Switch.Off)
-                {
-                    foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
-                    {
-                        foreach (var VARIABLE in a.GetTypes())
-                        {
-                            if (source.IsAssignableFrom(VARIABLE) && VARIABLE.IsInterface == false && VARIABLE.IsAbstract == false)
-                            {
-                                result.Add(VARIABLE);
-                            }
-                        }
-                    }
-                }
-#endif
-                if (assembly is not null)
-                {
-                    foreach (var VARIABLE in assembly.GetTypes())
-                    {
-                        if (source.IsAssignableFrom(VARIABLE) && VARIABLE.IsInterface == false && VARIABLE.IsAbstract == false)
-                        {
-                            result.Add(VARIABLE);
-                        }
-                    }
-                }
-
-                return result.ToArray();
+                status = assembly == null ? Status.Failed : Status.Success;
             }
 
             public IEnumerator LoadLogicAssembly()

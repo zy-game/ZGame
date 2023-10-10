@@ -3,20 +3,49 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace ZEngine.Network
 {
     class NetworkManager : Singleton<NetworkManager>
     {
-        private Dictionary<uint, Type> map;
-        private Dictionary<string, IChannel> channels;
-        private Dictionary<Type, ISubscriber> waiting;
+        private List<IMessageRecvierHandle> handles = new List<IMessageRecvierHandle>();
+        private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
+        private Dictionary<Type, IScheduleHandleToken> wait = new Dictionary<Type, IScheduleHandleToken>();
+        private Queue<DispatcherData> messages = new Queue<DispatcherData>();
 
-        public NetworkManager()
+        class DispatcherData : IDisposable
         {
-            map = new Dictionary<uint, Type>();
-            channels = new Dictionary<string, IChannel>();
-            waiting = new Dictionary<Type, ISubscriber>();
+            public IChannel channel;
+            public byte[] bytes;
+
+            public void Dispose()
+            {
+                channel = null;
+                bytes = null;
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        protected override void OnUpdate()
+        {
+            if (messages.Count == 0)
+            {
+                return;
+            }
+
+            while (messages.Count > 0)
+            {
+                DispatcherData data = messages.Dequeue();
+                uint opcode = Crc32.GetCRC32Byte(data.bytes, 0, sizeof(uint));
+                MemoryStream memoryStream = new MemoryStream(data.bytes, sizeof(uint), data.bytes.Length - sizeof(uint));
+                for (int i = handles.Count - 1; i >= 0; i--)
+                {
+                    handles[i].OnHandleMessage(data.channel.address, opcode, memoryStream);
+                }
+
+                data.Dispose();
+            }
         }
 
         public override void Dispose()
@@ -28,13 +57,15 @@ namespace ZEngine.Network
                 VARIABLE.Dispose();
             }
 
-            map.Clear();
-            foreach (var VARIABLE in waiting.Values)
+            handles.ForEach(x => x.Dispose());
+            handles.Clear();
+            foreach (var VARIABLE in wait.Values)
             {
                 VARIABLE.Dispose();
             }
 
-            waiting.Clear();
+            wait.Clear();
+
             channels.Clear();
             Engine.Console.Log("关闭所有网络链接");
         }
@@ -88,15 +119,17 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public void Connect(string address, int id = 0)
+        public IScheduleHandle<IChannel> Connect<T>(string address, int id = 0) where T : IChannel
         {
             if (channels.TryGetValue(address, out IChannel channel))
             {
                 Engine.Console.Log("链接已存在：" + address);
-                return;
+                return IScheduleHandle.Failur<IChannel>();
             }
 
-            channel.Connect(address, id);
+            channel = Activator.CreateInstance<T>();
+            channels.Add(address, channel);
+            return channel.Connect(address, id);
         }
 
         /// <summary>
@@ -105,53 +138,67 @@ namespace ZEngine.Network
         /// <param name="address">远程地址</param>
         /// <param name="messagePackage">需要写入的消息</param>
         /// <returns></returns>
-        public void WriteAndFlush(string address, IMessaged messagePackage)
+        public IScheduleHandle<int> WriteAndFlush(string address, IMessaged messagePackage)
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
                 Engine.Console.Log("未找到指定的链接", address);
-                return;
+                return IScheduleHandle.Complate<int>(0);
             }
 
             if (channel.connected is false)
             {
                 Engine.Console.Error("连接已断开：", address);
-                return;
+                return IScheduleHandle.Complate<int>(0);
             }
 
             MemoryStream memoryStream = new MemoryStream();
             Serializer.Serialize(memoryStream, messagePackage);
-            channel.WriteAndFlush(memoryStream.ToArray());
+            return channel.WriteAndFlush(memoryStream.ToArray());
         }
 
-        /// <summary>
-        /// 写入网络消息,并等待响应
-        /// </summary>
-        /// <param name="address">远程地址</param>
-        /// <param name="messagePackage">需要写入的消息</param>
-        /// <typeparam name="T">等待响应的消息类型</typeparam>
-        /// <returns></returns>
-        public IScheduleHandle<T> WriteAndFlushAsync<T>(string address, IMessaged messagePackage) where T : IMessaged
+        public void SubscribeMessageRecvieHandle(Type types)
         {
-            if (!channels.TryGetValue(address, out IChannel channel))
+            if (typeof(IMessageRecvierHandle).IsAssignableFrom(types) is false)
             {
-                Engine.Console.Log("未找到指定的链接", address);
-                return default;
+                Engine.Console.Error(new NotImplementedException(types.FullName));
+                return;
             }
 
-            if (channel.connected is false)
+            if (handles.Find(x => x.GetType() == types) is not null)
             {
-                Engine.Console.Error("连接已断开：", address);
-                return default;
+                Engine.Console.Error("已经存在相同类型的消息处理管道", types);
+                return;
             }
 
-            MemoryStream memoryStream = new MemoryStream();
-            Serializer.Serialize(memoryStream, messagePackage);
-            IScheduleToken<T> token = IScheduleToken<T>.Create();
-            IScheduleHandle<T> subscriber = IScheduleHandle.Schedule<T>(token);
-            RPCHandle.instance.Subscribe(typeof(T), token);
-            channel.WriteAndFlush(memoryStream.ToArray());
-            return subscriber;
+            handles.Add((IMessageRecvierHandle)Activator.CreateInstance(types));
+        }
+
+        public void UnsubscribeMessageRecvieHandle(Type types)
+        {
+            if (typeof(IMessageRecvierHandle).IsAssignableFrom(types) is false)
+            {
+                Engine.Console.Error(new NotImplementedException(types.FullName));
+                return;
+            }
+
+            IMessageRecvierHandle messageRecvierHandle = handles.Find(x => x.GetType() == types);
+            if (messageRecvierHandle is null)
+            {
+                Engine.Console.Error("不存在消息处理管道", types);
+                return;
+            }
+
+            handles.Remove(messageRecvierHandle);
+        }
+
+        public void Dispacher(IChannel channel, byte[] bytes)
+        {
+            messages.Enqueue(new DispatcherData()
+            {
+                channel = channel,
+                bytes = bytes
+            });
         }
 
         /// <summary>

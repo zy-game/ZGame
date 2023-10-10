@@ -46,7 +46,6 @@ public class Startup : MonoBehaviour
 
         resourcePreloadScheduleHandle.Dispose();
         Engine.Console.Log("进入游戏");
-
         GameEntryOptions options = HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On);
         Engine.Game.LoadGameLogic(options).Subscribe(ISubscriber.Create<IGameLoadHandle>(args =>
         {
