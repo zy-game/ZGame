@@ -73,8 +73,8 @@ namespace ZEngine
 
                         return;
 #endif
-                        IRequestAssetObjectSchedule<T> schedule = Engine.Resource.LoadAsset<T>(options.path);
-                        _instance = schedule.result;
+                        IRequestAssetObjectResult<T> result = Launche.Resource.LoadAsset<T>(options.path);
+                        _instance = result.result;
                     }
                     else if (options.path.EndsWith("json"))
                     {
@@ -89,11 +89,11 @@ namespace ZEngine
                             json = "{}";
                         }
 
-                        _instance = Engine.Json.Parse<T>(json);
+                        _instance = Launche.Json.Parse<T>(json);
                         return;
 #endif
-                        IRequestAssetObjectSchedule<TextAsset> schedule = Engine.Resource.LoadAsset<TextAsset>(options.path);
-                        _instance = Engine.Json.Parse<T>(schedule.result.text);
+                        IRequestAssetObjectResult<TextAsset> result = Launche.Resource.LoadAsset<TextAsset>(options.path);
+                        _instance = Launche.Json.Parse<T>(result.result.text);
                     }
 
                     break;
@@ -136,7 +136,7 @@ namespace ZEngine
 #endif
                     }
 
-                    File.WriteAllText(options.path, Engine.Json.ToJson(_instance));
+                    File.WriteAllText(options.path, Launche.Json.ToJson(_instance));
                     break;
             }
 

@@ -8,7 +8,7 @@ namespace ZEngine.Network
     {
         void OnHandleMessage(string address, uint opcode, MemoryStream bodyData);
 
-        public static IMessageRecvierHandle Create(Type type, ISubscriber subscriber)
+        public static IMessageRecvierHandle Create(Type type, Action<IMessaged> subscriber)
         {
             InternalMessageRecvieHandle internalMessageRecvieHandle = Activator.CreateInstance<InternalMessageRecvieHandle>();
             internalMessageRecvieHandle.SetSubscribe(type, subscriber);
@@ -19,17 +19,16 @@ namespace ZEngine.Network
         {
             private uint crc;
             private Type msgType;
-            private ISubscriber subscriber;
+            private Action<IMessaged> subscriber;
 
             public void Dispose()
             {
                 crc = 0;
-                subscriber.Dispose();
                 subscriber = null;
                 GC.SuppressFinalize(this);
             }
 
-            public void SetSubscribe(Type type, ISubscriber subscriber)
+            public void SetSubscribe(Type type, Action<IMessaged> subscriber)
             {
                 crc = Crc32.GetCRC32Str(type.FullName);
                 this.subscriber = subscriber;
@@ -42,8 +41,7 @@ namespace ZEngine.Network
                     return;
                 }
 
-                IMessaged message = (IMessaged)RuntimeTypeModel.Default.Deserialize(bodyData, null, msgType);
-                subscriber.Execute(message);
+                subscriber?.Invoke((IMessaged)RuntimeTypeModel.Default.Deserialize(bodyData, null, msgType));
             }
         }
     }

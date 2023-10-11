@@ -67,37 +67,6 @@ public static class Extension
         return types.ToArray();
     }
 
-    /// <summary>
-    /// 不安全的等待一个调度器
-    /// </summary>
-    /// <param name="schecule"></param>
-    /// <returns></returns>
-    public static Task UnsafeWait(this IScheduleHandle schecule)
-    {
-        return Task.Factory.StartNew(async () =>
-        {
-            while (true)
-            {
-                if (schecule.status == Status.Failed || schecule.status == Status.Success)
-                {
-                    return;
-                }
-
-                await Task.Delay(100);
-            }
-        });
-    }
-
-    /// <summary>
-    /// 等待一个调度器执行完成
-    /// </summary>
-    /// <param name="schedule"></param>
-    /// <returns></returns>
-    public static WaitFor WaitTo(this IScheduleHandle schedule)
-    {
-        return WaitFor.Create(() => schedule.status == Status.Failed || schedule.status == Status.Success);
-    }
-
     public static T TryGetComponent<T>(this GameObject gameObject) where T : Component
     {
         T linker = gameObject.GetComponent<T>();

@@ -24,7 +24,7 @@ namespace ZEngine.Playable
                 return handle;
             }
 
-            if (Engine.Cache.TryGetValue<IPlayableHandle>(url, out handle))
+            if (Launche.Cache.TryGetValue<IPlayableHandle>(url, out handle))
             {
                 handle.Play();
             }
@@ -52,7 +52,7 @@ namespace ZEngine.Playable
                 return handle;
             }
 
-            if (Engine.Cache.TryGetValue<IPlayableHandle>(url, out handle))
+            if (Launche.Cache.TryGetValue<IPlayableHandle>(url, out handle))
             {
                 handle.Play();
             }
@@ -91,7 +91,7 @@ namespace ZEngine.Playable
             }
 
             workList.Remove(playableHandle);
-            Engine.Cache.Handle(playableHandle.url, playableHandle);
+            Launche.Cache.Handle(playableHandle.url, playableHandle);
         }
     }
 }

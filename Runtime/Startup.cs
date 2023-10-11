@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Text;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using Unity.Burst;
 using UnityEngine;
@@ -16,45 +19,69 @@ using ZEngine.Game;
 
 public class Startup : MonoBehaviour
 {
-    private void Start()
+    private async void Start()
     {
         GameObject.DontDestroyOnLoad(Camera.main.gameObject);
-        Engine.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
+        Launche.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
         HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
-        ICheckResourceUpdateScheduleHandle checkUpdateScheduleHandle = Engine.Resource.CheckModuleResourceUpdate(HotfixOptions.instance.preloads.ToArray());
-        checkUpdateScheduleHandle.SubscribeProgressChange(ISubscriber.Create<float>(Engine.Window.GetWindow<Loading>().SetProgress));
-        checkUpdateScheduleHandle.Subscribe(ISubscriber.Create<ICheckResourceUpdateScheduleHandle>(ResourceChekcUpdateComplete));
-    }
-
-    private void ResourceChekcUpdateComplete(ICheckResourceUpdateScheduleHandle checkResourceUpdateScheduleHandle)
-    {
-        checkResourceUpdateScheduleHandle.Dispose();
-        Engine.Window.GetWindow<Loading>().SetInfo("初始化默认资源").SetProgress(0);
-        IResourceModuleLoaderScheduleHandle resourceModuleLoaderScheduleHandle = Engine.Resource.LoaderResourceModule(HotfixOptions.instance.preloads.ToArray());
-        resourceModuleLoaderScheduleHandle.SubscribeProgressChange(ISubscriber.Create<float>(Engine.Window.GetWindow<Loading>().SetProgress));
-        resourceModuleLoaderScheduleHandle.Subscribe(ISubscriber.Create<IResourceModuleLoaderScheduleHandle>(ResourcePreloadComplete));
-    }
-
-
-    private void ResourcePreloadComplete(IResourceModuleLoaderScheduleHandle resourcePreloadScheduleHandle)
-    {
-        if (resourcePreloadScheduleHandle.status is not Status.Success)
+        IRequestResourceModuleUpdateResult requestResourceModuleUpdateResult = await Launche.Resource.CheckModuleResourceUpdate(Launche.Window.GetWindow<Loading>(), HotfixOptions.instance.preloads.ToArray());
+        if (requestResourceModuleUpdateResult.status is not Status.Success)
         {
-            Engine.Window.MsgBox("Tips", "资源加载失败！", Application.Quit);
+            requestResourceModuleUpdateResult.Dispose();
             return;
         }
 
-        resourcePreloadScheduleHandle.Dispose();
-        Engine.Console.Log("进入游戏");
-        GameEntryOptions options = HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On);
-        Engine.Game.LoadGameLogic(options).Subscribe(ISubscriber.Create<IGameLoadHandle>(args =>
+        requestResourceModuleUpdateResult.Dispose();
+        Launche.Window.GetWindow<Loading>().SetInfo("初始化默认资源").SetProgress(0);
+        IRequestResourceModuleResult requestResourceModuleResult = await Launche.Resource.LoaderResourceModule(Launche.Window.GetWindow<Loading>(), HotfixOptions.instance.preloads.ToArray());
+        if (requestResourceModuleResult.status is not Status.Success)
         {
-            if (args.status is Status.Success)
-            {
-                return;
-            }
+            requestResourceModuleResult.Dispose();
+            Launche.Window.MsgBox("Tips", "资源加载失败！", Application.Quit);
+            return;
+        }
 
-            Engine.Window.MsgBox("Error", "进入游戏失败", Engine.Quit);
-        }));
+        requestResourceModuleResult.Dispose();
+        Launche.Console.Log("进入游戏");
+        GameEntryOptions options = HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On);
+        IGameLogicLoadResult gameLogicLoadResult = await Launche.Game.LoadGameLogic(options);
+        if (gameLogicLoadResult.status is Status.Success)
+        {
+            gameLogicLoadResult.Dispose();
+            return;
+        }
+
+        string address = "127.0.0.1:28090";
+        gameLogicLoadResult.Dispose();
+        Launche.Network.SubscribeMessageRecvieHandle<Recvier>();
+        IChannel channel = await Launche.Network.Connect<TCPSocket>(address);
+
+        while (true)
+        {
+            Launche.Network.WriteAndFlush(address, new TestMessage());
+            await UniTask.Delay(10000);
+        }
+
+        // Launche.Window.MsgBox("Error", "进入游戏失败", Launche.Quit);
+    }
+}
+
+class Recvier : IMessageRecvierHandle
+{
+    public void Dispose()
+    {
+    }
+
+    public void OnHandleMessage(string address, uint opcode, MemoryStream bodyData)
+    {
+        Launche.Console.Log(opcode);
+    }
+}
+
+[Serializable]
+class TestMessage : IMessaged
+{
+    public void Dispose()
+    {
     }
 }

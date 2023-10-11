@@ -25,10 +25,10 @@ namespace ZEngine.Window
                 GameObject.DestroyImmediate(VARIABLE.gameObject);
             }
 
-            Engine.Cache.RemoveCacheArea<UIWindow>();
+            Launche.Cache.RemoveCacheArea<UIWindow>();
             windows.Clear();
             canvasMap.Clear();
-            Engine.Console.Log("关闭所有窗口");
+            Launche.Console.Log("关闭所有窗口");
         }
 
         public UIWindow OpenWindow(Type windowType)
@@ -38,7 +38,7 @@ namespace ZEngine.Window
                 return window;
             }
 
-            if (Engine.Cache.TryGetValue(windowType.Name, out window))
+            if (Launche.Cache.TryGetValue(windowType.Name, out window))
             {
                 window.OnEnable();
                 windows.Add(windowType, window);
@@ -48,22 +48,22 @@ namespace ZEngine.Window
             UIOptions options = windowType.GetCustomAttribute<UIOptions>();
             if (options is null)
             {
-                Engine.Console.Error(new ArgumentNullException(nameof(UIOptions)));
+                Launche.Console.Error(new ArgumentNullException(nameof(UIOptions)));
                 return default;
             }
 
-            IRequestAssetObjectSchedule<GameObject> requestAssetObjectSchedule = Engine.Resource.LoadAsset<GameObject>(options.path);
-            if (requestAssetObjectSchedule.result == null)
+            IRequestAssetObjectResult<GameObject> requestAssetObjectResult = Launche.Resource.LoadAsset<GameObject>(options.path);
+            if (requestAssetObjectResult.result == null)
             {
-                Engine.Console.Error(new NullReferenceException(options.path));
+                Launche.Console.Error(new NullReferenceException(options.path));
                 return default;
             }
 
             window = (UIWindow)Activator.CreateInstance(windowType);
-            window.SetGameObject(requestAssetObjectSchedule.Instantiate());
+            window.SetGameObject(requestAssetObjectResult.Instantiate());
             SetToLayer(options.layer, window.gameObject);
             windows.Add(windowType, window);
-            Engine.Console.Log("Create Window:", windowType);
+            Launche.Console.Log("Create Window:", windowType);
             window.OnAwake();
             Show(windowType);
             return window;
@@ -114,7 +114,7 @@ namespace ZEngine.Window
             UIWindow window = GetWindow(windowType);
             if (window is null)
             {
-                Engine.Console.Error("未找到指定类型的window:", windowType, windows.Count);
+                Launche.Console.Error("未找到指定类型的window:", windowType, windows.Count);
                 return;
             }
 
@@ -122,7 +122,7 @@ namespace ZEngine.Window
             windows.Remove(windowType);
             if (isCache)
             {
-                Engine.Cache.Handle(windowType.Name, window);
+                Launche.Cache.Handle(windowType.Name, window);
             }
             else
             {
@@ -135,7 +135,7 @@ namespace ZEngine.Window
             UIWindow window = GetWindow(type);
             if (window is null)
             {
-                Engine.Console.Log("Not Find Window Type:", type.Name);
+                Launche.Console.Log("Not Find Window Type:", type.Name);
                 return;
             }
 
@@ -147,7 +147,7 @@ namespace ZEngine.Window
             UIWindow window = GetWindow(type);
             if (window is null)
             {
-                Engine.Console.Log("Not Find Window Type:", type.Name);
+                Launche.Console.Log("Not Find Window Type:", type.Name);
                 return;
             }
 

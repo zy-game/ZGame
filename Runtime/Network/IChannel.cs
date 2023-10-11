@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 namespace ZEngine.Network
 {
@@ -8,8 +9,8 @@ namespace ZEngine.Network
         string address { get; }
 
         bool connected { get; }
-        IScheduleHandle<IChannel> Close();
-        IScheduleHandle<IChannel> Connect(string address, int id = 0);
-        IScheduleHandle<int> WriteAndFlush(byte[] bytes);
+        UniTask<IChannel> Close();
+        UniTask<IChannel> Connect(string address, int id = 0);
+        UniTask WriteAndFlush(byte[] bytes);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 namespace ZEngine.VFS
 {
@@ -51,12 +52,12 @@ namespace ZEngine.VFS
         /// </summary>
         public Switch use { get; private set; }
 
-        public void Write(byte[] bytes, int offset, int lenght, int version, int sort = 0)
+        public void Write(string name, byte[] bytes, int offset, int lenght, int version, int sort = 0)
         {
             VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
             if (handle is null)
             {
-                Engine.Console.Error(new FileNotFoundException(vfs));
+                Launche.Console.Error(new FileNotFoundException(vfs));
                 return;
             }
 
@@ -65,6 +66,26 @@ namespace ZEngine.VFS
             handle.fileStream.Write(bytes, offset, lenght);
             time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             fileLenght = lenght;
+            this.sort = sort;
+            this.name = name;
+            this.version = version;
+        }
+
+        public async UniTask WriteAsync(string name, byte[] bytes, int offset, int lenght, int version, int sort = 0)
+        {
+            VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
+            if (handle is null)
+            {
+                Launche.Console.Error(new FileNotFoundException(vfs));
+                return;
+            }
+
+            use = Switch.On;
+            handle.fileStream.Seek(this.offset, SeekOrigin.Begin);
+            await handle.fileStream.WriteAsync(bytes, offset, lenght);
+            time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            fileLenght = lenght;
+            this.name = name;
             this.sort = sort;
             this.version = version;
         }
@@ -75,18 +96,38 @@ namespace ZEngine.VFS
             VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
             if (handle is null)
             {
-                Engine.Console.Error(new FileNotFoundException(vfs));
+                Launche.Console.Error(new FileNotFoundException(vfs));
                 return;
             }
 
             if (bytes.Length < offset + lenght)
             {
-                Engine.Console.Error(new IndexOutOfRangeException());
+                Launche.Console.Error(new IndexOutOfRangeException());
                 return;
             }
 
             handle.fileStream.Seek(this.offset, SeekOrigin.Begin);
             handle.fileStream.Read(bytes, this.offset, lenght);
+            time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        }
+
+        public async UniTask ReadAsync(byte[] bytes, int offset, int lenght)
+        {
+            VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
+            if (handle is null)
+            {
+                Launche.Console.Error(new FileNotFoundException(vfs));
+                return;
+            }
+
+            if (bytes.Length < offset + lenght)
+            {
+                Launche.Console.Error(new IndexOutOfRangeException());
+                return;
+            }
+
+            handle.fileStream.Seek(this.offset, SeekOrigin.Begin);
+            await handle.fileStream.ReadAsync(bytes, this.offset, lenght);
             time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
 

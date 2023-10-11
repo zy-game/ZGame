@@ -288,7 +288,7 @@ namespace ZEngine.Editor.ResourceBuilder
 
                         menu.AddItem(new GUIContent("Upload"), false, () =>
                         {
-                            string output = Application.dataPath + "/../output/assets/" + Engine.GetPlatfrom();
+                            string output = Application.dataPath + "/../output/assets/" + Launche.GetPlatfrom();
                             UploadAsset(output, new Dictionary<ResourceModuleManifest, List<ResourceBundleManifest>>() { { selection, selection.bundles } });
                         });
                         menu.ShowAsContext();
@@ -360,7 +360,7 @@ namespace ZEngine.Editor.ResourceBuilder
                         });
                         menu.AddItem(new GUIContent("Upload"), false, () =>
                         {
-                            string output = Application.dataPath + "/../output/assets/" + Engine.GetPlatfrom();
+                            string output = Application.dataPath + "/../output/assets/" + Launche.GetPlatfrom();
                             UploadAsset(output, new Dictionary<ResourceModuleManifest, List<ResourceBundleManifest>>() { { selection, new List<ResourceBundleManifest>() { manifest } } });
                         });
                         menu.ShowAsContext();
@@ -410,7 +410,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 });
             }
 
-            string output = Application.dataPath + "/../output/assets/" + Engine.GetPlatfrom();
+            string output = Application.dataPath + "/../output/assets/" + Launche.GetPlatfrom();
             if (Directory.Exists(output) is false)
             {
                 Directory.CreateDirectory(output);
@@ -439,7 +439,7 @@ namespace ZEngine.Editor.ResourceBuilder
             }
             catch (Exception e)
             {
-                Engine.Console.Error(e);
+                Launche.Console.Error(e);
             }
         }
 
@@ -450,7 +450,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 GameResourceModuleManifest gameResourceModuleManifest = default;
                 if (File.Exists(output + $"/{VARIABLE.Key.title}.ini"))
                 {
-                    gameResourceModuleManifest = Engine.Json.Parse<GameResourceModuleManifest>(File.ReadAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini"));
+                    gameResourceModuleManifest = Launche.Json.Parse<GameResourceModuleManifest>(File.ReadAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini"));
                 }
 
                 if (gameResourceModuleManifest is null)
@@ -509,7 +509,7 @@ namespace ZEngine.Editor.ResourceBuilder
             }
             catch (Exception e)
             {
-                Engine.Console.Error(e);
+                Launche.Console.Error(e);
             }
 
             EditorUtility.ClearProgressBar();
@@ -532,13 +532,13 @@ namespace ZEngine.Editor.ResourceBuilder
             foreach (var file in manifests)
             {
                 string bundleName = ($"{moduleManifest.title}_{file.name}.assetbundle").ToLower();
-                key = $"{Engine.GetPlatfrom()}/{bundleName}";
+                key = $"{Launche.GetPlatfrom()}/{bundleName}";
                 result = ossClient.PutObject(options.bucket, key, $"{output}/{bundleName}");
                 now++;
                 EditorUtility.DisplayProgressBar("上传资源", "正在上传OSS...", now / count);
             }
 
-            key = $"{Engine.GetPlatfrom()}/{moduleManifest.title.ToLower()}.ini";
+            key = $"{Launche.GetPlatfrom()}/{moduleManifest.title.ToLower()}.ini";
             result = ossClient.PutObject(options.bucket, key, $"{output}/{moduleManifest.title.ToLower()}.ini");
             EditorUtility.DisplayProgressBar("上传资源", "正在上传配置文件...", now / count);
         }
@@ -565,14 +565,14 @@ namespace ZEngine.Editor.ResourceBuilder
             foreach (var file in manifests)
             {
                 string bundleName = ($"{moduleManifest.title}_{file.name}.assetbundle").ToLower();
-                key = ($"{Engine.GetPlatfrom()}/{bundleName}").ToLower();
+                key = ($"{Launche.GetPlatfrom()}/{bundleName}").ToLower();
                 request = new COSXML.Model.Object.PutObjectRequest(options.bucket, key, $"{output}/{bundleName}");
                 result = cosClient.PutObject(request);
                 now++;
                 EditorUtility.DisplayProgressBar("上传资源", "正在上传COS...", now / count);
             }
 
-            key = ($"{Engine.GetPlatfrom()}/{moduleManifest.title}.ini").ToLower();
+            key = ($"{Launche.GetPlatfrom()}/{moduleManifest.title}.ini").ToLower();
             request = new COSXML.Model.Object.PutObjectRequest(options.bucket, key, $"{output}/{moduleManifest.title.ToLower()}.ini");
             result = cosClient.PutObject(request);
             EditorUtility.DisplayProgressBar("上传资源", "正在上传配置文件...", now / count);

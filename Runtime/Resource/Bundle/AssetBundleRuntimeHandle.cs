@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -47,38 +48,39 @@ namespace ZEngine.Resource
             }
 
             temp = bundle.LoadAsset<T>(path);
+            if (temp == null)
+            {
+                return default;
+            }
+
             _handles.Add(temp);
             refCount++;
             return (T)temp;
         }
 
-        public IEnumerator LoadAsync<T>(string path, ISubscriber<T> subscribe) where T : Object
+        public async UniTask<T> LoadAsync<T>(string path) where T : Object
         {
             if (bundle is null)
             {
-                subscribe.Execute(default);
-                yield break;
+                return default;
             }
 
             Object temp = _handles.Find(x => x.name == Path.GetFileNameWithoutExtension(path));
             if (temp != null)
             {
                 refCount++;
-                subscribe.Execute(temp);
-                yield break;
+                return (T)temp;
             }
 
-            AssetBundleRequest request = bundle.LoadAssetAsync<T>(path);
-            yield return request;
-            if (request.isDone is false || request.asset is null)
+            temp = await bundle.LoadAssetAsync<T>(path);
+            if (temp == null)
             {
-                subscribe.Execute(default);
-                yield break;
+                return default;
             }
 
             refCount++;
-            _handles.Add(request.asset);
-            subscribe.Execute(request.asset);
+            _handles.Add(temp);
+            return (T)temp;
         }
 
         public void Unload(Object obj)

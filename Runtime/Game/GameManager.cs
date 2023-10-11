@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Unity.Collections.LowLevel.Unsafe;
 
 namespace ZEngine.Game
@@ -9,11 +10,11 @@ namespace ZEngine.Game
     /// </summary>
     class GameManager : Singleton<GameManager>
     {
-        public IGameLoadHandle LoadGameLogicAssembly(GameEntryOptions gameEntryOptions)
+        public UniTask<IGameLogicLoadResult> LoadGameLogicAssembly(GameEntryOptions gameEntryOptions)
         {
-            IGameLoadHandle gameLoadHandle = IGameLoadHandle.Create(gameEntryOptions);
-            gameLoadHandle.Execute();
-            return gameLoadHandle;
+            UniTaskCompletionSource<IGameLogicLoadResult> uniTaskCompletionSource = new UniTaskCompletionSource<IGameLogicLoadResult>();
+            IGameLogicLoadResult gameLogicLoadResult = IGameLogicLoadResult.Create(gameEntryOptions, uniTaskCompletionSource);
+            return uniTaskCompletionSource.Task;
         }
     }
 }

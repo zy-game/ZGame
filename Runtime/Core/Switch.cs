@@ -27,11 +27,6 @@
         None,
 
         /// <summary>
-        /// 正在执行
-        /// </summary>
-        Execute,
-
-        /// <summary>
         /// 成功
         /// </summary>
         Success,

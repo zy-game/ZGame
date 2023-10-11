@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace ZEngine.VFS
@@ -21,7 +22,7 @@ namespace ZEngine.VFS
             public void Dispose()
             {
                 time = 0;
-                Engine.Console.Log("Dispose File: " + name);
+                Launche.Console.Log("Dispose File: " + name);
                 name = String.Empty;
                 fileStream.Close();
                 fileStream.Dispose();
@@ -32,18 +33,18 @@ namespace ZEngine.VFS
         {
             base.Dispose();
             vfsList.ForEach(x => x.Dispose());
-            Engine.Console.Log("释放所有文件句柄");
+            Launche.Console.Log("释放所有文件句柄");
         }
 
         public VFSManager()
         {
-            string filePath = Engine.GetLocalFilePath("vfs");
+            string filePath = Launche.GetLocalFilePath("vfs");
             if (!File.Exists(filePath))
             {
                 return;
             }
 
-            dataList = Engine.Json.Parse<List<VFSData>>(File.ReadAllText(filePath));
+            dataList = Launche.Json.Parse<List<VFSData>>(File.ReadAllText(filePath));
         }
 
         /// <summary>
@@ -76,7 +77,7 @@ namespace ZEngine.VFS
             {
                 name = vfs,
                 time = Time.realtimeSinceStartup,
-                fileStream = new FileStream(Engine.GetLocalFilePath(vfs), FileMode.OpenOrCreate, FileAccess.ReadWrite)
+                fileStream = new FileStream(Launche.GetLocalFilePath(vfs), FileMode.OpenOrCreate, FileAccess.ReadWrite)
             });
             return handle;
         }
@@ -86,8 +87,8 @@ namespace ZEngine.VFS
         /// </summary>
         internal void SaveVFSData()
         {
-            string filePath = Engine.GetLocalFilePath("vfs");
-            File.WriteAllText(filePath, Engine.Json.ToJson(dataList));
+            string filePath = Launche.GetLocalFilePath("vfs");
+            File.WriteAllText(filePath, Launche.Json.ToJson(dataList));
         }
 
         /// <summary>
@@ -104,7 +105,7 @@ namespace ZEngine.VFS
                     VFSData data = dataList.Find(x => x.use == Switch.Off && x.length >= lenght);
                     if (data is null)
                     {
-                        VFSHandle handle = GetVFSHandle(Engine.RandomName());
+                        VFSHandle handle = GetVFSHandle(Launche.RandomName());
                         data = new VFSData()
                         {
                             vfs = handle.name,
@@ -125,7 +126,7 @@ namespace ZEngine.VFS
 
                     if (temp is null || temp.Count() < count)
                     {
-                        VFSHandle handle = GetVFSHandle(Engine.RandomName());
+                        VFSHandle handle = GetVFSHandle(Launche.RandomName());
                         for (int i = 0; i < VFSOptions.instance.Count; i++)
                         {
                             dataList.Add(new VFSData()
@@ -138,7 +139,7 @@ namespace ZEngine.VFS
                         }
 
                         SaveVFSData();
-                        Engine.Console.Log(dataList.Count);
+                        Launche.Console.Log(dataList.Count);
                         temp = dataList.Where(x => x.use is Switch.Off);
                     }
 
@@ -183,48 +184,94 @@ namespace ZEngine.VFS
                 return -1;
             }
 
-            Engine.Console.Log(fileName, vfsData.version);
+            Launche.Console.Log(fileName, vfsData.version);
             return vfsData.version;
         }
 
-        public IWriteFileScheduleResult WriteFile(string fileName, byte[] bytes, int version)
+        public IWriteFileResult WriteFile(string fileName, byte[] bytes, int version)
         {
             Delete(fileName);
-            IWriteFileScheduleResult writeFileScheduleResult = IWriteFileScheduleResult.Create(fileName, bytes, version);
-            writeFileScheduleResult.Execute();
-            return writeFileScheduleResult;
+            VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
+            int offset = 0;
+            int index = 0;
+            foreach (var VARIABLE in vfsDataList)
+            {
+                int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
+                VARIABLE.Write(fileName, bytes, offset, length, version, index);
+                offset += VARIABLE.length;
+                index++;
+            }
+
+            SaveVFSData();
+            return IWriteFileResult.Create(fileName, bytes, version);
         }
 
-        public IWriteFileScheduleHandle WriteFileAsync(string fileName, byte[] bytes, int version)
+        public async UniTask<IWriteFileResult> WriteFileAsync(string fileName, byte[] bytes, int version)
         {
             Delete(fileName);
-            IWriteFileScheduleHandle writeFileScheduleHandle = IWriteFileScheduleHandle.Create(fileName, bytes, version);
-            writeFileScheduleHandle.Execute();
-            return writeFileScheduleHandle;
+            VFSData[] vfsDataList = VFSManager.instance.GetVFSData(bytes.Length);
+            int offset = 0;
+            int index = 0;
+            foreach (var VARIABLE in vfsDataList)
+            {
+                int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
+                await VARIABLE.WriteAsync(fileName, bytes, offset, length, version, index);
+                offset += VARIABLE.length;
+                index++;
+            }
+
+            SaveVFSData();
+            return IWriteFileResult.Create(fileName, bytes, version);
         }
 
-        public IReadFileScheduleResult ReadFile(string fileName, int versionOptions)
+        public IReadFileResult ReadFile(string fileName, int versionOptions)
         {
             if (Exist(fileName) is false)
             {
                 return default;
             }
 
-            IReadFileScheduleResult readFileScheduleResult = IReadFileScheduleResult.Create(fileName, versionOptions);
-            readFileScheduleResult.Execute();
-            return readFileScheduleResult;
+            VFSData[] vfsDatas = GetFileData(fileName);
+            if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != versionOptions)
+            {
+                return null;
+            }
+
+            byte[] bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
+            long time = vfsDatas[0].time;
+            int offset = 0;
+            for (int i = 0; i < vfsDatas.Length; i++)
+            {
+                vfsDatas[i].Read(bytes, offset, vfsDatas[i].fileLenght);
+                offset += vfsDatas[i].fileLenght;
+            }
+
+            return IReadFileResult.Create(fileName, bytes, time, versionOptions);
         }
 
-        public IReadFileScheduleHandle ReadFileAsync(string fileName, int versionOptions)
+        public async UniTask<IReadFileResult> ReadFileAsync(string fileName, int versionOptions)
         {
             if (Exist(fileName) is false)
             {
                 return default;
             }
 
-            IReadFileScheduleHandle readFileScheduleHandle = IReadFileScheduleHandle.Create(fileName, versionOptions);
-            readFileScheduleHandle.Execute();
-            return readFileScheduleHandle;
+            VFSData[] vfsDatas = GetFileData(fileName);
+            if (vfsDatas is null || vfsDatas.Length is 0 || vfsDatas[0].version != versionOptions)
+            {
+                return default;
+            }
+
+            byte[] bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
+            long time = vfsDatas[0].time;
+            int offset = 0;
+            for (int i = 0; i < vfsDatas.Length; i++)
+            {
+                await vfsDatas[i].ReadAsync(bytes, offset, vfsDatas[i].fileLenght);
+                offset += vfsDatas[i].fileLenght;
+            }
+
+            return IReadFileResult.Create(fileName, bytes, time, versionOptions);
         }
     }
 }

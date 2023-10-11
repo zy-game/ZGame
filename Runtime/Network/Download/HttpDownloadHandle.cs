@@ -29,26 +29,22 @@ namespace ZEngine.Network
 
         private IEnumerator StartDownload()
         {
-            status = Status.Execute;
             startTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            string path = Engine.GetLocalFilePath(name);
+            string path = Launche.GetLocalFilePath(name);
             request = UnityWebRequest.Get(url);
             yield return request.SendWebRequest();
             useTime = DateTime.Now - DateTimeOffset.FromUnixTimeMilliseconds(startTime);
             if (request.result is not UnityWebRequest.Result.Success)
             {
-                Engine.Console.Error(request.error);
+                Launche.Console.Error(request.error);
                 status = Status.Failed;
                 yield break;
             }
 
-            Engine.Console.Log(request.url, version, request.result, "time:" + useTime.Seconds);
-            IWriteFileScheduleHandle writeFileScheduleHandle = Engine.FileSystem.WriteFileAsync(name, request.downloadHandler.data, version);
-            writeFileScheduleHandle.Subscribe(ISubscriber.Create(() =>
-            {
-                status = Status.Success;
-                Engine.Console.Log($"write {name} complate");
-            }));
+            Launche.Console.Log(request.url, version, request.result, "time:" + useTime.Seconds);
+            Launche.FileSystem.WriteFile(name, request.downloadHandler.data, version);
+            status = Status.Success;
+            Launche.Console.Log($"write {name} complate");
         }
 
         public bool IsComplete()

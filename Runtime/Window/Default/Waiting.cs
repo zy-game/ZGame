@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using DG.Tweening;
 using TMPro;
@@ -8,7 +9,7 @@ namespace ZEngine.Window
     [UIOptions("Resources/Wait", UIOptions.Layer.Top)]
     public class Waiting : UIWindow
     {
-        private ISubscriber subsceibe;
+        private Action subsceibe;
 
         protected override void Destroy()
         {
@@ -25,13 +26,14 @@ namespace ZEngine.Window
             IEnumerator Waiting()
             {
                 yield return WaitFor.Create(time);
-                Engine.Window.Close<Waiting>();
+                subsceibe?.Invoke();
+                Launche.Window.Close<Waiting>();
             }
 
             Waiting().StartCoroutine();
         }
 
-        public Waiting SetWait(string text, float timeout, ISubscriber subscribe)
+        public Waiting SetWait(string text, float timeout, Action subscribe)
         {
             this.GetChild("text").GetComponent<TMP_Text>().text = text;
             this.subsceibe = subscribe;

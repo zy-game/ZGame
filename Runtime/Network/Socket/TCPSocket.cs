@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 namespace ZEngine.Network
 {
@@ -15,83 +16,61 @@ namespace ZEngine.Network
         private SocketAsyncEventArgs recv;
         private SocketAsyncEventArgs send;
         private bool isSendWork = false;
-        private Queue<byte[]> waiting = new Queue<byte[]>();
+        private byte[] recBytes = new byte[1024 * 1024];
 
-        private CancellationTokenSource recvToken;
-        private CancellationTokenSource sendToken;
-
-
-        public async IScheduleHandle<IChannel> Connect(string address, int id = 0)
-        {
-            this.address = address;
-        }
-
-        private async void DOConnected()
+        public async UniTask<IChannel> Connect(string address, int id = 0)
         {
             UriBuilder builder = new UriBuilder(address);
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            await SocketTaskExtensions.ConnectAsync(socket, new IPEndPoint(IPAddress.Parse(builder.Host), builder.Port));
+            Launche.Console.Log("Connected", builder.Host, builder.Port);
+            await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse(builder.Host), builder.Port));
             if (connected is false)
             {
                 Dispose();
-                return;
+                Launche.Console.Error("链接失败");
+                return this;
             }
 
             Task.Factory.StartNew(OnStartRecvie);
+            return this;
         }
 
-        async void OnStartRecvie()
+
+        void OnStartRecvie()
         {
-            Memory<byte> recvBuf = new Memory<byte>(new byte[1024 * 1028]);
             while (connected)
             {
-                recvToken = new CancellationTokenSource();
-                int lenght = await socket.ReceiveAsync(recvBuf, SocketFlags.None, recvToken.Token);
+                // recvToken = new CancellationTokenSource();
+                int lenght = socket.Receive(recBytes, SocketFlags.None);
                 if (lenght <= 0)
                 {
-                    Engine.Console.Error("链接断开");
-                    Close();
+                    Launche.Console.Error(address, "发送了一个0字节的消息", lenght);
                     return;
                 }
 
-                Memory<byte> memory = recvBuf.Slice(0, lenght);
-                NetworkManager.instance.Dispacher(this, memory.ToArray());
+                byte[] bytes = new byte[lenght];
+                Array.Copy(recBytes, 0, bytes, 0, lenght);
+                NetworkManager.instance.Dispacher(this, bytes);
             }
         }
 
 
-        public IScheduleHandle<int> WriteAndFlush(byte[] bytes)
+        public async UniTask WriteAndFlush(byte[] bytes)
         {
-            IScheduleHandleToken<int> scheduleHandleToken = IScheduleHandleToken.Create<int>();
-            IScheduleHandle<int> scheduleHandle = IScheduleHandle.Schedule<int>(scheduleHandleToken);
-            DOWriteAndFlush(scheduleHandleToken, bytes);
-            return scheduleHandle;
-        }
-
-        private async void DOWriteAndFlush(IScheduleHandleToken<int> scheduleHandleToken, byte[] bytes)
-        {
-            sendToken = new CancellationTokenSource();
-            int result = await socket.SendAsync(new Memory<byte>(bytes), SocketFlags.None, sendToken.Token);
+            int result = await socket.SendAsync(new Memory<byte>(bytes), SocketFlags.None);
             if (result < bytes.Length)
             {
-                Engine.Console.Error("发送数据错误");
-                scheduleHandleToken.Complate(0);
+                Launche.Console.Error("发送数据错误");
                 return;
             }
-
-            scheduleHandleToken.Complate(result);
-            sendToken = null;
         }
 
-
-        public IScheduleHandle<IChannel> Close()
+        public UniTask<IChannel> Close()
         {
-            recvToken?.Cancel();
-            sendToken?.Cancel();
             socket.Disconnect(false);
             socket = null;
             Dispose();
-            return IScheduleHandle.Complate<IChannel>(this);
+            return UniTask.FromResult<IChannel>(this);
         }
 
         public void Dispose()
@@ -100,9 +79,6 @@ namespace ZEngine.Network
             socket = null;
             recv = null;
             send = null;
-            sendToken = null;
-            recvToken = null;
-            waiting.Clear();
             isSendWork = false;
         }
     }

@@ -19,11 +19,6 @@ public class WaitFor : CustomYieldInstruction, IDisposable
         return !state;
     }
 
-    public static WaitFor Create(IScheduleHandle schedule)
-    {
-        return Create(() => schedule.status == Status.Failed || schedule.status == Status.Success);
-    }
-
     public static void Create(Func<bool> func, Action complate)
     {
         IEnumerator Waiting()

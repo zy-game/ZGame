@@ -36,7 +36,6 @@ namespace ZEngine.Playable
                 source.loopPointReached += OnComplate;
             }
 
-            status = Status.Execute;
             source.isLooping = loop;
             if (url.StartsWith("http"))
             {
@@ -46,8 +45,8 @@ namespace ZEngine.Playable
             }
             else
             {
-                IRequestAssetObjectSchedule<VideoClip> requestAssetObjectSchedule = Engine.Resource.LoadAsset<VideoClip>(url);
-                requestAssetObjectSchedule.SetAssetObject<VideoPlayer>(source.gameObject);
+                IRequestAssetObjectResult<VideoClip> requestAssetObjectResult = Launche.Resource.LoadAsset<VideoClip>(url);
+                requestAssetObjectResult.SetAssetObject<VideoPlayer>(source.gameObject);
                 source.Play();
             }
         }
@@ -58,7 +57,7 @@ namespace ZEngine.Playable
             if (isCache == Switch.On)
             {
                 source.gameObject.SetActive(false);
-                Engine.Cache.Handle(url, this);
+                Launche.Cache.Handle(url, this);
             }
             else
             {

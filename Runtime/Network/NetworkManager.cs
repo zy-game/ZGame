@@ -2,8 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using Cysharp.Threading.Tasks;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using Unity.Plastic.Newtonsoft.Json;
 
 namespace ZEngine.Network
 {
@@ -11,21 +14,8 @@ namespace ZEngine.Network
     {
         private List<IMessageRecvierHandle> handles = new List<IMessageRecvierHandle>();
         private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
-        private Dictionary<Type, IScheduleHandleToken> wait = new Dictionary<Type, IScheduleHandleToken>();
-        private Queue<DispatcherData> messages = new Queue<DispatcherData>();
+        private Queue<Tuple<IChannel, byte[]>> messages = new Queue<Tuple<IChannel, byte[]>>();
 
-        class DispatcherData : IDisposable
-        {
-            public IChannel channel;
-            public byte[] bytes;
-
-            public void Dispose()
-            {
-                channel = null;
-                bytes = null;
-                GC.SuppressFinalize(this);
-            }
-        }
 
         protected override void OnUpdate()
         {
@@ -36,15 +26,15 @@ namespace ZEngine.Network
 
             while (messages.Count > 0)
             {
-                DispatcherData data = messages.Dequeue();
-                uint opcode = Crc32.GetCRC32Byte(data.bytes, 0, sizeof(uint));
-                MemoryStream memoryStream = new MemoryStream(data.bytes, sizeof(uint), data.bytes.Length - sizeof(uint));
+                Tuple<IChannel, byte[]> data = messages.Dequeue();
+                MemoryStream memoryStream = new MemoryStream(data.Item2);
+                BinaryReader reader = new BinaryReader(memoryStream);
+                uint opcode = reader.ReadUInt32();
+                string body = reader.ReadString();
                 for (int i = handles.Count - 1; i >= 0; i--)
                 {
-                    handles[i].OnHandleMessage(data.channel.address, opcode, memoryStream);
+                    handles[i].OnHandleMessage(data.Item1.address, opcode, new MemoryStream(UTF8Encoding.UTF8.GetBytes(body)));
                 }
-
-                data.Dispose();
             }
         }
 
@@ -59,15 +49,8 @@ namespace ZEngine.Network
 
             handles.ForEach(x => x.Dispose());
             handles.Clear();
-            foreach (var VARIABLE in wait.Values)
-            {
-                VARIABLE.Dispose();
-            }
-
-            wait.Clear();
-
             channels.Clear();
-            Engine.Console.Log("关闭所有网络链接");
+            Launche.Console.Log("关闭所有网络链接");
         }
 
         /// <summary>
@@ -79,11 +62,11 @@ namespace ZEngine.Network
         /// <param name="header">标头</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public IWebRequestleHandle<T> Get<T>(string url, Dictionary<string, object> header = default)
+        public UniTask<IWebRequestResult<T>> Get<T>(string url, Dictionary<string, object> header = default)
         {
-            IWebRequestleHandle<T> webRequestScheduleHandle = IWebRequestleHandle<T>.CreateRequest(url, header);
-            webRequestScheduleHandle.Execute();
-            return webRequestScheduleHandle;
+            UniTaskCompletionSource<IWebRequestResult<T>> uniTaskCompletionSource = new UniTaskCompletionSource<IWebRequestResult<T>>();
+            IWebRequestResult<T>.CreateRequest(url, header, uniTaskCompletionSource);
+            return uniTaskCompletionSource.Task;
         }
 
         /// <summary>
@@ -95,11 +78,11 @@ namespace ZEngine.Network
         /// <param name="header">标头</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public IWebRequestleHandle<T> Post<T>(string url, object data, Dictionary<string, object> header = default)
+        public UniTask<IWebRequestResult<T>> Post<T>(string url, object data, Dictionary<string, object> header = default)
         {
-            IWebRequestleHandle<T> webRequestScheduleHandle = IWebRequestleHandle<T>.CreatePost(url, data, header);
-            webRequestScheduleHandle.Execute();
-            return webRequestScheduleHandle;
+            UniTaskCompletionSource<IWebRequestResult<T>> uniTaskCompletionSource = new UniTaskCompletionSource<IWebRequestResult<T>>();
+            IWebRequestResult<T>.CreatePost(url, data, header, uniTaskCompletionSource);
+            return uniTaskCompletionSource.Task;
         }
 
         /// <summary>
@@ -107,11 +90,11 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="urlList">下载列表</param>
         /// <returns></returns>
-        public IDownloadHandle Download(params DownloadOptions[] urlList)
+        public UniTask<IDownloadResult> Download(IGameProgressHandle gameProgressHandle, params DownloadOptions[] urlList)
         {
-            IDownloadHandle downloadScheduleHandle = IDownloadHandle.Create(urlList);
-            downloadScheduleHandle.Execute();
-            return downloadScheduleHandle;
+            UniTaskCompletionSource<IDownloadResult> uniTaskCompletionSource = new UniTaskCompletionSource<IDownloadResult>();
+            IDownloadResult.Create(gameProgressHandle, urlList, uniTaskCompletionSource);
+            return uniTaskCompletionSource.Task;
         }
 
         /// <summary>
@@ -119,17 +102,15 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public IScheduleHandle<IChannel> Connect<T>(string address, int id = 0) where T : IChannel
+        public async UniTask<IChannel> Connect<T>(string address, int id = 0) where T : IChannel
         {
-            if (channels.TryGetValue(address, out IChannel channel))
+            if (channels.TryGetValue(address, out IChannel channel) is false)
             {
-                Engine.Console.Log("链接已存在：" + address);
-                return IScheduleHandle.Failur<IChannel>();
+                channels.Add(address, channel = Activator.CreateInstance<T>());
+                await channel.Connect(address, id);
             }
 
-            channel = Activator.CreateInstance<T>();
-            channels.Add(address, channel);
-            return channel.Connect(address, id);
+            return channel;
         }
 
         /// <summary>
@@ -138,36 +119,38 @@ namespace ZEngine.Network
         /// <param name="address">远程地址</param>
         /// <param name="messagePackage">需要写入的消息</param>
         /// <returns></returns>
-        public IScheduleHandle<int> WriteAndFlush(string address, IMessaged messagePackage)
+        public async void WriteAndFlush(string address, IMessaged messagePackage)
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
-                Engine.Console.Log("未找到指定的链接", address);
-                return IScheduleHandle.Complate<int>(0);
+                Launche.Console.Log("未找到指定的链接", address);
+                return;
             }
 
             if (channel.connected is false)
             {
-                Engine.Console.Error("连接已断开：", address);
-                return IScheduleHandle.Complate<int>(0);
+                Launche.Console.Error("连接已断开：", address);
+                return;
             }
 
             MemoryStream memoryStream = new MemoryStream();
-            Serializer.Serialize(memoryStream, messagePackage);
-            return channel.WriteAndFlush(memoryStream.ToArray());
+            BinaryWriter writer = new BinaryWriter(memoryStream);
+            writer.Write(Crc32.GetCRC32Str(messagePackage.GetType().FullName));
+            writer.Write(JsonConvert.SerializeObject(messagePackage));
+            await channel.WriteAndFlush(memoryStream.ToArray());
         }
 
         public void SubscribeMessageRecvieHandle(Type types)
         {
             if (typeof(IMessageRecvierHandle).IsAssignableFrom(types) is false)
             {
-                Engine.Console.Error(new NotImplementedException(types.FullName));
+                Launche.Console.Error(new NotImplementedException(types.FullName));
                 return;
             }
 
             if (handles.Find(x => x.GetType() == types) is not null)
             {
-                Engine.Console.Error("已经存在相同类型的消息处理管道", types);
+                Launche.Console.Error("已经存在相同类型的消息处理管道", types);
                 return;
             }
 
@@ -178,14 +161,14 @@ namespace ZEngine.Network
         {
             if (typeof(IMessageRecvierHandle).IsAssignableFrom(types) is false)
             {
-                Engine.Console.Error(new NotImplementedException(types.FullName));
+                Launche.Console.Error(new NotImplementedException(types.FullName));
                 return;
             }
 
             IMessageRecvierHandle messageRecvierHandle = handles.Find(x => x.GetType() == types);
             if (messageRecvierHandle is null)
             {
-                Engine.Console.Error("不存在消息处理管道", types);
+                Launche.Console.Error("不存在消息处理管道", types);
                 return;
             }
 
@@ -194,11 +177,7 @@ namespace ZEngine.Network
 
         public void Dispacher(IChannel channel, byte[] bytes)
         {
-            messages.Enqueue(new DispatcherData()
-            {
-                channel = channel,
-                bytes = bytes
-            });
+            messages.Enqueue(new Tuple<IChannel, byte[]>(channel, bytes));
         }
 
         /// <summary>
@@ -206,15 +185,15 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="address">远程地址</param>
         /// <returns></returns>
-        public void Close(string address)
+        public UniTask<IChannel> Close(string address)
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
-                Engine.Console.Log("未连接：", address);
-                return;
+                Launche.Console.Log("未连接：", address);
+                return UniTask.FromResult(channel);
             }
 
-            channel.Close();
+            return channel.Close();
         }
     }
 }

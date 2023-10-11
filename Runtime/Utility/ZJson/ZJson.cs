@@ -130,7 +130,7 @@ namespace ZEngine.ZJson
 
             public void WriteJson(JsonWrite builder, object value)
             {
-                Engine.Console.Log(value.GetType());
+                Launche.Console.Log(value.GetType());
             }
 
             public object ReadJson(JsonRead read, Type objectType)
@@ -176,7 +176,7 @@ namespace ZEngine.ZJson
                     return;
                 }
 
-                Engine.Console.Log(value.GetType());
+                Launche.Console.Log(value.GetType());
             }
 
             public object ReadJson(JsonRead read, Type objectType)
@@ -201,7 +201,7 @@ namespace ZEngine.ZJson
                     }
                 }
 
-                Engine.Console.Log(objectType, objectType.IsArray, typeof(IList).IsAssignableFrom(objectType));
+                Launche.Console.Log(objectType, objectType.IsArray, typeof(IList).IsAssignableFrom(objectType));
                 return default;
             }
         }
@@ -219,7 +219,7 @@ namespace ZEngine.ZJson
                     return;
                 }
 
-                Engine.Console.Log(value.GetType());
+                Launche.Console.Log(value.GetType());
             }
 
             public object ReadJson(JsonRead read, Type objectType)
@@ -230,7 +230,7 @@ namespace ZEngine.ZJson
                     return default;
                 }
 
-                Engine.Console.Log(objectType);
+                Launche.Console.Log(objectType);
                 return default;
             }
         }

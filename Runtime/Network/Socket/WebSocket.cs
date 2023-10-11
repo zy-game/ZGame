@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System;
 using System.Collections;
 using System.IO;
+using Cysharp.Threading.Tasks;
 using ProtoBuf;
 using ZEngine;
 using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
@@ -16,13 +17,13 @@ namespace ZEngine.Network
         public string address { get; private set; }
         public bool connected { get; set; }
 
-        public IScheduleHandle<IChannel> Close()
+        public UniTask<IChannel> Close()
         {
             _websocket.Close();
-            return IScheduleHandle.Complate<IChannel>(this);
+            return UniTask.FromResult<IChannel>(this);
         }
 
-        public IScheduleHandle<IChannel> Connect(string address, int id = 0)
+        public UniTask<IChannel> Connect(string address, int id = 0)
         {
             this.address = address;
             _websocket = new WebSocketSharp.WebSocket(address);
@@ -35,13 +36,13 @@ namespace ZEngine.Network
             _websocket.OnMessage += (object sender, MessageEventArgs e) => { NetworkManager.instance.Dispacher(this, e.RawData); };
             _websocket.OnClose += (s, e) => { connected = false; };
             _websocket.Connect();
-            return IScheduleHandle.Complate<IChannel>(this);
+            return UniTask.FromResult<IChannel>(this);
         }
 
-        public IScheduleHandle<int> WriteAndFlush(byte[] bytes)
+        public UniTask WriteAndFlush(byte[] bytes)
         {
             _websocket.Send(bytes);
-            return IScheduleHandle.Complate<int>(bytes.Length);
+            return UniTask.CompletedTask;
         }
 
         public void Dispose()

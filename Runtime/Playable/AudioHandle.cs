@@ -27,11 +27,10 @@ namespace ZEngine.Playable
 
             if (source.clip == null)
             {
-                IRequestAssetObjectSchedule<AudioClip> requestAssetObjectSchedule = Engine.Resource.LoadAsset<AudioClip>(url);
-                requestAssetObjectSchedule.SetAssetObject<AudioSource>(source.gameObject);
+                IRequestAssetObjectResult<AudioClip> requestAssetObjectResult = Launche.Resource.LoadAsset<AudioClip>(url);
+                requestAssetObjectResult.SetAssetObject<AudioSource>(source.gameObject);
             }
 
-            status = Status.Execute;
             source.loop = loop;
             source.Play();
             WaitFor.Create(source.clip.length + 1, OnComplate);
@@ -43,7 +42,7 @@ namespace ZEngine.Playable
             if (isCache == Switch.On)
             {
                 source.gameObject.SetActive(false);
-                Engine.Cache.Handle(url, this);
+                Launche.Cache.Handle(url, this);
             }
             else
             {

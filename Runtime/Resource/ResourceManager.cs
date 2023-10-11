@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using ZEngine.VFS;
@@ -16,7 +17,6 @@ namespace ZEngine.Resource
         // private List<CacheData> cacheList = new List<CacheData>();
         private List<GameResourceModuleManifest> moduleList = new List<GameResourceModuleManifest>();
         private List<AssetBundleRuntimeHandle> bundleLists = new List<AssetBundleRuntimeHandle>();
-        private Dictionary<string, IDisposable> loadAssetHandles = new Dictionary<string, IDisposable>();
 
 
         class CacheData : IDisposable
@@ -35,19 +35,11 @@ namespace ZEngine.Resource
         public override void Dispose()
         {
             base.Dispose();
-            Engine.Cache.RemoveCacheArea<AssetBundleRuntimeHandle>();
-            // cacheList.ForEach(x => x.Dispose());
-            // cacheList.Clear();
+            Launche.Cache.RemoveCacheArea<AssetBundleRuntimeHandle>();
             moduleList.Clear();
             bundleLists.ForEach(x => x.Dispose());
             bundleLists.Clear();
-            foreach (var loadAssetHandle in loadAssetHandles.Values)
-            {
-                loadAssetHandle.Dispose();
-            }
-
-            loadAssetHandles.Clear();
-            Engine.Console.Log("释放所有资源");
+            Launche.Console.Log("释放所有资源");
         }
 
         /// <summary>
@@ -82,7 +74,7 @@ namespace ZEngine.Resource
                 return runtimeAssetBundleHandle;
             }
 
-            if (Engine.Cache.TryGetValue(bundleName, out runtimeAssetBundleHandle))
+            if (Launche.Cache.TryGetValue(bundleName, out runtimeAssetBundleHandle))
             {
                 bundleLists.Add(runtimeAssetBundleHandle);
             }
@@ -180,11 +172,9 @@ namespace ZEngine.Resource
         /// 预加载资源模块
         /// </summary>
         /// <param name="options">预加载配置</param>
-        public IResourceModuleLoaderScheduleHandle LoaderResourceModule(params ModuleOptions[] options)
+        public UniTask<IRequestResourceModuleResult> LoadingResourceModule(IGameProgressHandle gameProgressHandle, params ModuleOptions[] options)
         {
-            IResourceModuleLoaderScheduleHandle resourceModuleLoaderScheduleHandle = IResourceModuleLoaderScheduleHandle.Create(options);
-            resourceModuleLoaderScheduleHandle.Execute();
-            return resourceModuleLoaderScheduleHandle;
+            return IRequestResourceModuleResult.Create(gameProgressHandle, options);
         }
 
         /// <summary>
@@ -192,11 +182,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="options">资源更新检查配置</param>
         /// <returns></returns>
-        public ICheckResourceUpdateScheduleHandle CheckModuleResourceUpdate(params ModuleOptions[] options)
+        public UniTask<IRequestResourceModuleUpdateResult> CheckModuleResourceUpdate(IGameProgressHandle gameProgressHandle, params ModuleOptions[] options)
         {
-            ICheckResourceUpdateScheduleHandle defaultCheckResourceUpdateScheduleHandle = ICheckResourceUpdateScheduleHandle.Create(options);
-            defaultCheckResourceUpdateScheduleHandle.Execute();
-            return defaultCheckResourceUpdateScheduleHandle;
+            return IRequestResourceModuleUpdateResult.Create(gameProgressHandle, options);
         }
 
         /// <summary>
@@ -204,11 +192,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public IRequestAssetObjectSchedule<T> LoadAsset<T>(string assetPath) where T : Object
+        public IRequestAssetObjectResult<T> LoadAsset<T>(string assetPath) where T : Object
         {
-            IRequestAssetObjectSchedule<T> requestAssetObjectSchedule = IRequestAssetObjectSchedule<T>.Create(assetPath);
-            requestAssetObjectSchedule.Execute();
-            return requestAssetObjectSchedule;
+            return IRequestAssetObjectResult<T>.Create(assetPath);
         }
 
         /// <summary>
@@ -216,18 +202,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public IRequestAssetObjectScheduleHandle<T> LoadAssetAsync<T>(string assetPath) where T : Object
+        public UniTask<IRequestAssetObjectResult<T>> LoadAssetAsync<T>(string assetPath) where T : Object
         {
-            if (loadAssetHandles.TryGetValue(assetPath, out IDisposable handle))
-            {
-                return (IRequestAssetObjectScheduleHandle<T>)handle;
-            }
-
-            loadAssetHandles.Add(assetPath, handle = IRequestAssetObjectScheduleHandle<T>.Create(assetPath));
-            IRequestAssetObjectScheduleHandle<T> requestAssetObjectSchedule = (IRequestAssetObjectScheduleHandle<T>)handle;
-            requestAssetObjectSchedule.Subscribe(ISubscriber.Create<IRequestAssetObjectScheduleHandle<T>>(args => { loadAssetHandles.Remove(assetPath); }));
-            requestAssetObjectSchedule.Execute();
-            return requestAssetObjectSchedule;
+            return IRequestAssetObjectResult<T>.CreateAsync(assetPath);
         }
 
         /// <summary>
@@ -236,7 +213,7 @@ namespace ZEngine.Resource
         /// <param name="target">资源句柄</param>
         public void Release(Object target)
         {
-            Engine.Console.Log("Release Asset Object ->", target.name);
+            Launche.Console.Log("Release Asset Object ->", target.name);
             AssetBundleRuntimeHandle runtimeAssetObjectHandle = bundleLists.Find(x => x.Contains(target));
             if (runtimeAssetObjectHandle is null)
             {
@@ -250,7 +227,7 @@ namespace ZEngine.Resource
             }
 
             bundleLists.Remove(runtimeAssetObjectHandle);
-            Engine.Cache.Handle(runtimeAssetObjectHandle.name, runtimeAssetObjectHandle);
+            Launche.Cache.Handle(runtimeAssetObjectHandle.name, runtimeAssetObjectHandle);
         }
     }
 }

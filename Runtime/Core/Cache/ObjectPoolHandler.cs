@@ -57,7 +57,7 @@ namespace ZEngine.Cache
             Handle temp = list.Find(x => x.key == key);
             if (temp is not null)
             {
-                Engine.Console.Error("已存在相同名字的缓存对象:", key);
+                Launche.Console.Error("已存在相同名字的缓存对象:", key);
                 return;
             }
 
