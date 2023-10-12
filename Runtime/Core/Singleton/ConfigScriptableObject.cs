@@ -73,8 +73,8 @@ namespace ZEngine
 
                         return;
 #endif
-                        IRequestAssetObjectResult<T> result = Launche.Resource.LoadAsset<T>(options.path);
-                        _instance = result.result;
+                        IRequestAssetObjectResult requestAssetObjectResult = ZGame.Resource.LoadAsset(options.path);
+                        _instance = requestAssetObjectResult.GetObject<T>();
                     }
                     else if (options.path.EndsWith("json"))
                     {
@@ -89,11 +89,11 @@ namespace ZEngine
                             json = "{}";
                         }
 
-                        _instance = Launche.Json.Parse<T>(json);
+                        _instance = ZGame.Json.Parse<T>(json);
                         return;
 #endif
-                        IRequestAssetObjectResult<TextAsset> result = Launche.Resource.LoadAsset<TextAsset>(options.path);
-                        _instance = Launche.Json.Parse<T>(result.result.text);
+                        IRequestAssetObjectResult result = ZGame.Resource.LoadAsset(options.path);
+                        _instance = ZGame.Json.Parse<T>(result.GetObject<TextAsset>().text);
                     }
 
                     break;
@@ -136,7 +136,7 @@ namespace ZEngine
 #endif
                     }
 
-                    File.WriteAllText(options.path, Launche.Json.ToJson(_instance));
+                    File.WriteAllText(options.path, ZGame.Json.ToJson(_instance));
                     break;
             }
 

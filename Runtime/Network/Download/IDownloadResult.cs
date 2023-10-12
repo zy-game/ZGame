@@ -11,7 +11,7 @@ namespace ZEngine.Network
         HttpDownloadHandle[] Handles { get; }
         DownloadOptions[] options { get; }
 
-        internal static IDownloadResult Create(IGameProgressHandle gameProgressHandle, DownloadOptions[] options, UniTaskCompletionSource<IDownloadResult> uniTaskCompletionSource)
+        internal static IDownloadResult Create(IProgressHandle gameProgressHandle, DownloadOptions[] options, UniTaskCompletionSource<IDownloadResult> uniTaskCompletionSource)
         {
             InternalDownloadResult internalDownloadResult = Activator.CreateInstance<InternalDownloadResult>();
             internalDownloadResult.uniTaskCompletionSource = uniTaskCompletionSource;
@@ -26,7 +26,7 @@ namespace ZEngine.Network
             public HttpDownloadHandle[] Handles { get; set; }
             public DownloadOptions[] options { get; set; }
             public Status status { get; set; }
-            public IGameProgressHandle gameProgressHandle;
+            public IProgressHandle gameProgressHandle;
             public UniTaskCompletionSource<IDownloadResult> uniTaskCompletionSource;
 
             private IEnumerator DOExecute()
@@ -43,7 +43,7 @@ namespace ZEngine.Network
                 }
 
                 status = Handles.Where(x => x.status == Status.Failed).Count() > 0 ? Status.Failed : Status.Success;
-                Launche.Console.Log("download ", status);
+                ZGame.Console.Log("download ", status);
                 uniTaskCompletionSource.TrySetResult(this);
             }
 

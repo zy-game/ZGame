@@ -33,7 +33,7 @@ namespace ZEngine.Resource
         }
 
 
-        public T Load<T>(string path) where T : Object
+        public Object Load(string path)
         {
             if (bundle is null)
             {
@@ -44,10 +44,10 @@ namespace ZEngine.Resource
             if (temp != null)
             {
                 refCount++;
-                return (T)temp;
+                return temp;
             }
 
-            temp = bundle.LoadAsset<T>(path);
+            temp = bundle.LoadAsset(path);
             if (temp == null)
             {
                 return default;
@@ -55,10 +55,10 @@ namespace ZEngine.Resource
 
             _handles.Add(temp);
             refCount++;
-            return (T)temp;
+            return temp;
         }
 
-        public async UniTask<T> LoadAsync<T>(string path) where T : Object
+        public async UniTask<Object> LoadAsync(string path)
         {
             if (bundle is null)
             {
@@ -69,10 +69,10 @@ namespace ZEngine.Resource
             if (temp != null)
             {
                 refCount++;
-                return (T)temp;
+                return temp;
             }
 
-            temp = await bundle.LoadAssetAsync<T>(path);
+            temp = await bundle.LoadAssetAsync(path);
             if (temp == null)
             {
                 return default;
@@ -80,7 +80,7 @@ namespace ZEngine.Resource
 
             refCount++;
             _handles.Add(temp);
-            return (T)temp;
+            return temp;
         }
 
         public void Unload(Object obj)

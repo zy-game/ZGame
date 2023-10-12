@@ -10,13 +10,13 @@ using ZEngine.Resource;
 
 namespace ZEngine.Game
 {
-    public interface IGameLogicLoadResult : IDisposable
+    public interface ILogicLoadResult : IDisposable
     {
         Status status { get; }
         Assembly assembly { get; }
         GameEntryOptions gameEntryOptions { get; }
 
-        public static IGameLogicLoadResult Create(GameEntryOptions gameEntryOptions, UniTaskCompletionSource<IGameLogicLoadResult> uniTaskCompletionSource)
+        internal static ILogicLoadResult Create(GameEntryOptions gameEntryOptions, UniTaskCompletionSource<ILogicLoadResult> uniTaskCompletionSource)
         {
             GameLogicLoadingResult gameLogicLoadingResult = Activator.CreateInstance<GameLogicLoadingResult>();
             gameLogicLoadingResult.gameEntryOptions = gameEntryOptions;
@@ -24,7 +24,7 @@ namespace ZEngine.Game
             return gameLogicLoadingResult;
         }
 
-        class GameLogicLoadingResult : IGameLogicLoadResult
+        class GameLogicLoadingResult : ILogicLoadResult
         {
             public Status status { get; set; }
             public Assembly assembly { get; set; }
@@ -38,7 +38,7 @@ namespace ZEngine.Game
                 GC.SuppressFinalize(this);
             }
 
-            public async void Execute(UniTaskCompletionSource<IGameLogicLoadResult> uniTaskCompletionSource)
+            public async void Execute(UniTaskCompletionSource<ILogicLoadResult> uniTaskCompletionSource)
             {
                 if (status is not Status.None)
                 {
@@ -56,7 +56,7 @@ namespace ZEngine.Game
 #endif
                 if (gameEntryOptions is null || gameEntryOptions.methodName.IsNullOrEmpty() || gameEntryOptions.isOn == Switch.Off)
                 {
-                    Launche.Console.Error("模块入口参数错误");
+                    ZGame.Console.Error("模块入口参数错误");
                     status = Status.Failed;
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
@@ -74,7 +74,7 @@ namespace ZEngine.Game
                 Type entryType = assembly.GetType(gameEntryOptions.methodName);
                 if (entryType is null)
                 {
-                    Launche.Console.Error("未找到入口函数：" + gameEntryOptions.methodName);
+                    ZGame.Console.Error("未找到入口函数：" + gameEntryOptions.methodName);
                     status = Status.Failed;
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
@@ -84,7 +84,7 @@ namespace ZEngine.Game
                 MethodInfo entry = entryType.GetMethod(methodName);
                 if (entry is null)
                 {
-                    Launche.Console.Error("未找到入口函数：" + gameEntryOptions.methodName);
+                    ZGame.Console.Error("未找到入口函数：" + gameEntryOptions.methodName);
                     status = Status.Failed;
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
@@ -97,8 +97,8 @@ namespace ZEngine.Game
 
             public async UniTask LoadLogicAssembly()
             {
-                IRequestAssetObjectResult<TextAsset> requestAssetObjectResult = default;
-                requestAssetObjectResult = await Launche.Resource.LoadAssetAsync<TextAsset>(gameEntryOptions.dllName);
+                IRequestAssetObjectResult requestAssetObjectResult = default;
+                requestAssetObjectResult = await ZGame.Resource.LoadAssetAsync(gameEntryOptions.dllName);
                 if (requestAssetObjectResult.status is not Status.Success)
                 {
                     status = Status.Failed;
@@ -107,30 +107,30 @@ namespace ZEngine.Game
 
                 try
                 {
-                    assembly = Assembly.Load(requestAssetObjectResult.result.bytes);
+                    assembly = Assembly.Load(requestAssetObjectResult.GetObject<TextAsset>().bytes);
                 }
                 catch (Exception e)
                 {
-                    Launche.Console.Error(e);
+                    ZGame.Console.Error(e);
                 }
             }
 
             public async UniTask LoadAOTDll()
             {
-                IRequestAssetObjectResult<TextAsset> requestAssetObjectResult = default;
+                IRequestAssetObjectResult requestAssetObjectResult = default;
                 if (gameEntryOptions.aotList is not null && gameEntryOptions.aotList.Count > 0)
                 {
                     HomologousImageMode mode = HomologousImageMode.SuperSet;
                     foreach (var item in gameEntryOptions.aotList)
                     {
-                        requestAssetObjectResult = await Launche.Resource.LoadAssetAsync<TextAsset>(item + ".bytes");
+                        requestAssetObjectResult = await ZGame.Resource.LoadAssetAsync(item + ".bytes");
                         if (requestAssetObjectResult.result == null)
                         {
                             status = Status.Failed;
                             return;
                         }
 
-                        LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(requestAssetObjectResult.result.bytes, mode);
+                        LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(requestAssetObjectResult.GetObject<TextAsset>().bytes, mode);
                         Debug.Log($"LoadMetadataForAOTAssembly:{item}. mode:{mode} ret:{err}");
                     }
                 }

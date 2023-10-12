@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace ZEngine.Window
 {
     [UIOptions("Resources/Loading", UIOptions.Layer.Low)]
-    public class Loading : UIWindow, IGameProgressHandle
+    public class Loading : UIWindow, IProgressHandle
     {
         private Slider slider;
 
@@ -33,12 +33,6 @@ namespace ZEngine.Window
             }
 
             slider.value = progress;
-        }
-
-        public void SetTextAndProgress(string text, float progress)
-        {
-            SetTextInfo(text);
-            SetProgress(progress);
         }
     }
 }

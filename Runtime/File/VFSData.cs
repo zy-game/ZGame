@@ -57,7 +57,7 @@ namespace ZEngine.VFS
             VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
             if (handle is null)
             {
-                Launche.Console.Error(new FileNotFoundException(vfs));
+                ZGame.Console.Error(new FileNotFoundException(vfs));
                 return;
             }
 
@@ -76,7 +76,7 @@ namespace ZEngine.VFS
             VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
             if (handle is null)
             {
-                Launche.Console.Error(new FileNotFoundException(vfs));
+                ZGame.Console.Error(new FileNotFoundException(vfs));
                 return;
             }
 
@@ -96,13 +96,13 @@ namespace ZEngine.VFS
             VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
             if (handle is null)
             {
-                Launche.Console.Error(new FileNotFoundException(vfs));
+                ZGame.Console.Error(new FileNotFoundException(vfs));
                 return;
             }
 
             if (bytes.Length < offset + lenght)
             {
-                Launche.Console.Error(new IndexOutOfRangeException());
+                ZGame.Console.Error(new IndexOutOfRangeException());
                 return;
             }
 
@@ -116,13 +116,13 @@ namespace ZEngine.VFS
             VFSManager.VFSHandle handle = VFSManager.instance.GetVFSHandle(vfs);
             if (handle is null)
             {
-                Launche.Console.Error(new FileNotFoundException(vfs));
+                ZGame.Console.Error(new FileNotFoundException(vfs));
                 return;
             }
 
             if (bytes.Length < offset + lenght)
             {
-                Launche.Console.Error(new IndexOutOfRangeException());
+                ZGame.Console.Error(new IndexOutOfRangeException());
                 return;
             }
 

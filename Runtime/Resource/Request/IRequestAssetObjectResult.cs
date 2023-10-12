@@ -7,105 +7,45 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    public interface IRequestAssetObjectResult<T> : IDisposable where T : Object
+    public interface IRequestAssetObjectResult : IDisposable
     {
-        T result { get; }
+        Object result { get; }
         string path { get; }
         Status status { get; }
-        GameAssetBundleManifest manifest { get; }
 
         void Release();
 
-        public GameObject Instantiate()
+
+        internal static IRequestAssetObjectResult Create(string path)
         {
-            return this.Instantiate(null, Vector3.zero, Vector3.zero, Vector3.zero);
-        }
-
-        public GameObject Instantiate(GameObject parent, Vector3 position, Vector3 rotation, Vector3 scale)
-        {
-            if (result == null || typeof(GameObject) != typeof(T))
-            {
-                return default;
-            }
-
-            GameObject gameObject = GameObject.Instantiate(result) as GameObject;
-            if (gameObject == null)
-            {
-                return default;
-            }
-
-            if (parent != null)
-            {
-                gameObject.transform.SetParent(parent.transform);
-            }
-
-            gameObject.transform.position = position;
-            gameObject.transform.rotation = Quaternion.Euler(rotation);
-            gameObject.transform.localScale = scale;
-            Object temp = result;
-            gameObject.OnDestroyEvent(() => { Launche.Resource.Release(temp); });
-            return gameObject;
-        }
-
-        public void SetAssetObject<T>(GameObject gameObject) where T : Component
-        {
-            if (result == null)
-            {
-                return;
-            }
-
-            T component = gameObject.GetComponent<T>();
-            switch (component)
-            {
-                case AudioSource audioSource:
-                    audioSource.clip = result as AudioClip;
-                    break;
-                case Image spriteImage:
-                    spriteImage.sprite = result as Sprite;
-                    break;
-                case RawImage rawImage:
-                    rawImage.texture = result as Texture2D;
-                    break;
-                case VideoPlayer videoPlayer:
-                    videoPlayer.clip = result as VideoClip;
-                    break;
-            }
-
-            Object temp = result;
-            gameObject.OnDestroyEvent(() => { Launche.Resource.Release(temp); });
-        }
-
-        internal static IRequestAssetObjectResult<T> Create(string path)
-        {
-            InternalRequestAssetObjectResult<T> internalRequestAssetObjectResult = Activator.CreateInstance<InternalRequestAssetObjectResult<T>>();
+            InternalRequestAssetObjectResult internalRequestAssetObjectResult = Activator.CreateInstance<InternalRequestAssetObjectResult>();
             internalRequestAssetObjectResult.path = path;
             internalRequestAssetObjectResult.Execute();
             return internalRequestAssetObjectResult;
         }
 
-        internal static UniTask<IRequestAssetObjectResult<T>> CreateAsync(string path)
+        internal static UniTask<IRequestAssetObjectResult> CreateAsync(string path)
         {
-            UniTaskCompletionSource<IRequestAssetObjectResult<T>> uniTaskCompletionSource = new UniTaskCompletionSource<IRequestAssetObjectResult<T>>();
-            InternalRequestAssetObjectResult<T> internalRequestAssetObjectResult = Activator.CreateInstance<InternalRequestAssetObjectResult<T>>();
+            UniTaskCompletionSource<IRequestAssetObjectResult> uniTaskCompletionSource = new UniTaskCompletionSource<IRequestAssetObjectResult>();
+            InternalRequestAssetObjectResult internalRequestAssetObjectResult = Activator.CreateInstance<InternalRequestAssetObjectResult>();
             internalRequestAssetObjectResult.path = path;
             internalRequestAssetObjectResult.ExecuteAsync(uniTaskCompletionSource);
             return uniTaskCompletionSource.Task;
         }
 
-        class InternalRequestAssetObjectResult<T> : IRequestAssetObjectResult<T> where T : Object
+        class InternalRequestAssetObjectResult : IRequestAssetObjectResult
         {
-            public T result { get; set; }
+            public Object result { get; set; }
             public string path { get; set; }
             public Status status { get; set; }
-            public GameAssetBundleManifest manifest { get; set; }
 
             private AssetBundleRuntimeHandle bundleHandle { get; set; }
 
-            public async void ExecuteAsync(UniTaskCompletionSource<IRequestAssetObjectResult<T>> uniTaskCompletionSource)
+            public async void ExecuteAsync(UniTaskCompletionSource<IRequestAssetObjectResult> uniTaskCompletionSource)
             {
                 if (path.IsNullOrEmpty())
                 {
-                    Launche.Console.Error("The Asset Path Is Null Or Empty");
+                    ZGame.Console.Error("The Asset Path Is Null Or Empty");
                     status = Status.Failed;
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
@@ -114,7 +54,7 @@ namespace ZEngine.Resource
                 if (path.StartsWith("Resources"))
                 {
                     string temp = path.Substring("Resources/".Length);
-                    result = (T)await Resources.LoadAsync<T>(temp);
+                    result = await Resources.LoadAsync(temp);
                     status = Status.Success;
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
@@ -122,7 +62,7 @@ namespace ZEngine.Resource
 #if UNITY_EDITOR
                 if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset == Switch.Off)
                 {
-                    result = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
+                    result = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(Object));
                     status = Status.Success;
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
@@ -131,7 +71,7 @@ namespace ZEngine.Resource
                 GameAssetBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
                 if (manifest is null)
                 {
-                    Launche.Console.Error("Not Find The Asset Bundle Manifest");
+                    ZGame.Console.Error("Not Find The Asset Bundle Manifest");
                     status = Status.Failed;
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
@@ -140,13 +80,13 @@ namespace ZEngine.Resource
                 bundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.owner, manifest.name);
                 if (bundleHandle is null)
                 {
-                    Launche.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
+                    ZGame.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
                     status = Status.Failed;
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
                 }
 
-                result = await bundleHandle.LoadAsync<T>(path);
+                result = await bundleHandle.LoadAsync(path);
                 status = Status.Success;
                 uniTaskCompletionSource.TrySetResult(this);
             }
@@ -156,29 +96,29 @@ namespace ZEngine.Resource
                 if (path.IsNullOrEmpty())
                 {
                     status = Status.Failed;
-                    Launche.Console.Error("资源路径不能为空");
+                    ZGame.Console.Error("资源路径不能为空");
                     return;
                 }
 
                 if (path.StartsWith("Resources"))
                 {
                     string temp = path.Substring("Resources/".Length);
-                    result = Resources.Load<T>(temp);
+                    result = Resources.Load(temp);
                     status = result == null ? Status.Failed : Status.Success;
                     return;
                 }
 #if UNITY_EDITOR
                 if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset == Switch.Off)
                 {
-                    result = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
+                    result = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(Object));
                     status = result == null ? Status.Failed : Status.Success;
                     return;
                 }
 #endif
-                manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
+                GameAssetBundleManifest manifest = ResourceManager.instance.GetBundleManifestWithAssetPath(path);
                 if (manifest is null)
                 {
-                    Launche.Console.Error("Not Find The Asset Bundle Manifest");
+                    ZGame.Console.Error("Not Find The Asset Bundle Manifest");
                     status = Status.Failed;
                     return;
                 }
@@ -186,12 +126,12 @@ namespace ZEngine.Resource
                 bundleHandle = ResourceManager.instance.GetRuntimeAssetBundleHandle(manifest.owner, manifest.name);
                 if (bundleHandle is null)
                 {
-                    Launche.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
+                    ZGame.Console.Error($"Not find the asset bundle:{manifest.name}.please check your is loaded the bundle");
                     status = Status.Failed;
                     return;
                 }
 
-                result = bundleHandle.Load<T>(path);
+                result = bundleHandle.Load(path);
                 status = result == null ? Status.Failed : Status.Success;
             }
 
@@ -202,16 +142,15 @@ namespace ZEngine.Resource
                     return;
                 }
 
-                Launche.Resource.Release(result);
+                ZGame.Resource.Release(result);
                 Dispose();
             }
 
             public void Dispose()
             {
-                Launche.Console.Log("Dispose Asset Object Load Handle ->", result.name);
+                ZGame.Console.Log("Dispose Asset Object Load Handle ->", result.name);
                 result = null;
                 path = String.Empty;
-                manifest = null;
                 bundleHandle = null;
                 GC.SuppressFinalize(this);
             }

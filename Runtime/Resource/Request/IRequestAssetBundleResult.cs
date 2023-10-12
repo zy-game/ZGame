@@ -58,13 +58,13 @@ namespace ZEngine.Resource
                 version = manifest.version;
                 if (manifest.unityVersion.Equals(Application.unityVersion) is false)
                 {
-                    Launche.Console.Error($"{manifest.name}引擎版本不一致 source:{manifest.unityVersion} current:{Application.unityVersion}");
+                    ZGame.Console.Error($"{manifest.name}引擎版本不一致 source:{manifest.unityVersion} current:{Application.unityVersion}");
                     status = Status.Failed;
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
                 }
 
-                IReadFileResult readFileScheduleHandle = await Launche.FileSystem.ReadFileAsync(name, version);
+                IReadFileResult readFileScheduleHandle = await ZGame.FileSystem.ReadFileAsync(name, version);
                 AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(readFileScheduleHandle.bytes);
                 if (assetBundle is null)
                 {
@@ -73,7 +73,7 @@ namespace ZEngine.Resource
                     return;
                 }
 
-                Launche.Console.Log("Load Asset Bundle:", name, readFileScheduleHandle.version, readFileScheduleHandle.bytes?.Length);
+                ZGame.Console.Log("Load Asset Bundle:", name, readFileScheduleHandle.version, readFileScheduleHandle.bytes?.Length);
                 bundle = AssetBundleRuntimeHandle.Create(manifest, assetBundle);
                 ResourceManager.instance.AddAssetBundleHandle(bundle);
                 status = Status.Success;

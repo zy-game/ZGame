@@ -35,11 +35,11 @@ namespace ZEngine.Resource
         public override void Dispose()
         {
             base.Dispose();
-            Launche.Cache.RemoveCacheArea<AssetBundleRuntimeHandle>();
+            ZGame.Cache.RemoveCacheArea<AssetBundleRuntimeHandle>();
             moduleList.Clear();
             bundleLists.ForEach(x => x.Dispose());
             bundleLists.Clear();
-            Launche.Console.Log("释放所有资源");
+            ZGame.Console.Log("释放所有资源");
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace ZEngine.Resource
                 return runtimeAssetBundleHandle;
             }
 
-            if (Launche.Cache.TryGetValue(bundleName, out runtimeAssetBundleHandle))
+            if (ZGame.Cache.TryGetValue(bundleName, out runtimeAssetBundleHandle))
             {
                 bundleLists.Add(runtimeAssetBundleHandle);
             }
@@ -172,9 +172,9 @@ namespace ZEngine.Resource
         /// 预加载资源模块
         /// </summary>
         /// <param name="options">预加载配置</param>
-        public UniTask<IRequestResourceModuleResult> LoadingResourceModule(IGameProgressHandle gameProgressHandle, params ModuleOptions[] options)
+        public UniTask<IRequestResourceModuleLoadResult> LoadingResourceModule(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
         {
-            return IRequestResourceModuleResult.Create(gameProgressHandle, options);
+            return IRequestResourceModuleLoadResult.Create(gameProgressHandle, options);
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="options">资源更新检查配置</param>
         /// <returns></returns>
-        public UniTask<IRequestResourceModuleUpdateResult> CheckModuleResourceUpdate(IGameProgressHandle gameProgressHandle, params ModuleOptions[] options)
+        public UniTask<IRequestResourceModuleUpdateResult> CheckModuleResourceUpdate(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
         {
             return IRequestResourceModuleUpdateResult.Create(gameProgressHandle, options);
         }
@@ -192,9 +192,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public IRequestAssetObjectResult<T> LoadAsset<T>(string assetPath) where T : Object
+        public IRequestAssetObjectResult LoadAsset(string assetPath)
         {
-            return IRequestAssetObjectResult<T>.Create(assetPath);
+            return IRequestAssetObjectResult.Create(assetPath);
         }
 
         /// <summary>
@@ -202,9 +202,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public UniTask<IRequestAssetObjectResult<T>> LoadAssetAsync<T>(string assetPath) where T : Object
+        public UniTask<IRequestAssetObjectResult> LoadAssetAsync(string assetPath)
         {
-            return IRequestAssetObjectResult<T>.CreateAsync(assetPath);
+            return IRequestAssetObjectResult.CreateAsync(assetPath);
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace ZEngine.Resource
         /// <param name="target">资源句柄</param>
         public void Release(Object target)
         {
-            Launche.Console.Log("Release Asset Object ->", target.name);
+            ZGame.Console.Log("Release Asset Object ->", target.name);
             AssetBundleRuntimeHandle runtimeAssetObjectHandle = bundleLists.Find(x => x.Contains(target));
             if (runtimeAssetObjectHandle is null)
             {
@@ -227,7 +227,7 @@ namespace ZEngine.Resource
             }
 
             bundleLists.Remove(runtimeAssetObjectHandle);
-            Launche.Cache.Handle(runtimeAssetObjectHandle.name, runtimeAssetObjectHandle);
+            ZGame.Cache.Handle(runtimeAssetObjectHandle.name, runtimeAssetObjectHandle);
         }
     }
 }

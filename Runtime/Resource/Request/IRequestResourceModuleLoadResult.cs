@@ -9,14 +9,14 @@ namespace ZEngine.Resource
     /// <summary>
     /// 资源预加载
     /// </summary>
-    public interface IRequestResourceModuleResult : IDisposable
+    public interface IRequestResourceModuleLoadResult : IDisposable
     {
         Status status { get; }
         ModuleOptions[] options { get; }
 
-        internal static UniTask<IRequestResourceModuleResult> Create(IGameProgressHandle gameProgressHandle, params ModuleOptions[] options)
+        internal static UniTask<IRequestResourceModuleLoadResult> Create(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
         {
-            UniTaskCompletionSource<IRequestResourceModuleResult> uniTaskCompletionSource = new UniTaskCompletionSource<IRequestResourceModuleResult>();
+            UniTaskCompletionSource<IRequestResourceModuleLoadResult> uniTaskCompletionSource = new UniTaskCompletionSource<IRequestResourceModuleLoadResult>();
             InternalRequestResourceModuleResult internalRequestResourceModuleResult = Activator.CreateInstance<InternalRequestResourceModuleResult>();
             internalRequestResourceModuleResult.uniTaskCompletionSource = uniTaskCompletionSource;
             internalRequestResourceModuleResult.gameProgressHandle = gameProgressHandle;
@@ -25,12 +25,12 @@ namespace ZEngine.Resource
             return uniTaskCompletionSource.Task;
         }
 
-        class InternalRequestResourceModuleResult : IRequestResourceModuleResult
+        class InternalRequestResourceModuleResult : IRequestResourceModuleLoadResult
         {
             public Status status { get; set; }
             public ModuleOptions[] options { get; set; }
-            public IGameProgressHandle gameProgressHandle;
-            public UniTaskCompletionSource<IRequestResourceModuleResult> uniTaskCompletionSource;
+            public IProgressHandle gameProgressHandle;
+            public UniTaskCompletionSource<IRequestResourceModuleLoadResult> uniTaskCompletionSource;
 
 
             public void Dispose()
@@ -38,6 +38,13 @@ namespace ZEngine.Resource
                 uniTaskCompletionSource = default;
                 options = Array.Empty<ModuleOptions>();
                 gameProgressHandle = null;
+            }
+
+            private void OnComplate(Status status)
+            {
+                this.gameProgressHandle.SetProgress(1);
+                this.status = status;
+                uniTaskCompletionSource.TrySetResult(this);
             }
 
             public async void Execute()
@@ -50,17 +57,13 @@ namespace ZEngine.Resource
 #if UNITY_EDITOR
                 if (HotfixOptions.instance.useHotfix is Switch.Off || HotfixOptions.instance.useAsset is Switch.Off)
                 {
-                    this.gameProgressHandle.SetProgress(1);
-                    status = Status.Success;
-                    uniTaskCompletionSource.TrySetResult(this);
+                    OnComplate(Status.Success);
                     return;
                 }
 #endif
                 if (options is null || options.Length is 0)
                 {
-                    status = Status.Success;
-                    this.gameProgressHandle.SetProgress(1);
-                    uniTaskCompletionSource.TrySetResult(this);
+                    OnComplate(Status.Success);
                     return;
                 }
 
@@ -68,21 +71,10 @@ namespace ZEngine.Resource
                 for (int i = 0; i < options.Length; i++)
                 {
                     GameResourceModuleManifest gameResourceModuleManifest = ResourceManager.instance.GetRuntimeModuleManifest(options[i].moduleName);
-                    if (gameResourceModuleManifest is null)
+                    if (gameResourceModuleManifest is null || gameResourceModuleManifest.bundleList is null || gameResourceModuleManifest.bundleList.Count is 0)
                     {
-                        Launche.Console.Log("获取资源模块信息失败，请确认在加载模块前已执行了模块更新检查", options[i].moduleName);
-                        this.gameProgressHandle.SetProgress(1);
-                        status = Status.Failed;
-                        uniTaskCompletionSource.TrySetResult(this);
-                        return;
-                    }
-
-                    if (gameResourceModuleManifest.bundleList is null || gameResourceModuleManifest.bundleList.Count is 0)
-                    {
-                        status = Status.Failed;
-                        Launche.Console.Error("Not Find Bundle List:", options[i].moduleName);
-                        this.gameProgressHandle.SetProgress(1);
-                        uniTaskCompletionSource.TrySetResult(this);
+                        ZGame.Console.Log("获取资源模块信息失败，请确认在加载模块前已执行了模块更新检查", options[i].moduleName);
+                        OnComplate(Status.Failed);
                         return;
                     }
 
@@ -97,15 +89,12 @@ namespace ZEngine.Resource
                     }
                 }
 
-                status = Status.Success;
                 for (int i = 0; i < runtimeBundleManifests.Count; i++)
                 {
                     IRequestAssetBundleResult requestAssetBundleExecuteHandles = await IRequestAssetBundleResult.Create(runtimeBundleManifests[i]);
                     if (requestAssetBundleExecuteHandles.status is not Status.Success)
                     {
-                        status = Status.Failed;
-                        this.gameProgressHandle.SetProgress(1);
-                        uniTaskCompletionSource.TrySetResult(this);
+                        OnComplate(Status.Failed);
                         return;
                     }
 
@@ -113,8 +102,7 @@ namespace ZEngine.Resource
                     requestAssetBundleExecuteHandles.Dispose();
                 }
 
-                this.gameProgressHandle.SetProgress(1);
-                uniTaskCompletionSource.TrySetResult(this);
+                OnComplate(Status.Success);
             }
         }
     }

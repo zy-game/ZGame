@@ -27,7 +27,7 @@ namespace ZEngine.Window
             {
                 yield return WaitFor.Create(time);
                 subsceibe?.Invoke();
-                Launche.Window.Close<Waiting>();
+                ZGame.Window.Close<Waiting>();
             }
 
             Waiting().StartCoroutine();

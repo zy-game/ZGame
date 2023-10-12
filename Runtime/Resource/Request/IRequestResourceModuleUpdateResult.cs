@@ -16,7 +16,7 @@ namespace ZEngine.Resource
         ModuleOptions[] options { get; }
         GameAssetBundleManifest[] bundles { get; }
 
-        internal static UniTask<IRequestResourceModuleUpdateResult> Create(IGameProgressHandle gameProgressHandle, params ModuleOptions[] options)
+        internal static UniTask<IRequestResourceModuleUpdateResult> Create(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
         {
             UniTaskCompletionSource<IRequestResourceModuleUpdateResult> uniTaskCompletionSource = new UniTaskCompletionSource<IRequestResourceModuleUpdateResult>();
             InternalRequestResourceModuleUpdateResult internalRequestResourceModuleUpdateResult = Activator.CreateInstance<InternalRequestResourceModuleUpdateResult>();
@@ -39,7 +39,7 @@ namespace ZEngine.Resource
             public Status status { get; set; }
             public ModuleOptions[] options { get; set; }
             public GameAssetBundleManifest[] bundles { get; set; }
-            public IGameProgressHandle gameProgressHandle;
+            public IProgressHandle gameProgressHandle;
             public UniTaskCompletionSource<IRequestResourceModuleUpdateResult> taskCompletionSource;
 
             public async void Execute()
@@ -62,26 +62,7 @@ namespace ZEngine.Resource
                 List<GameResourceModuleManifest> moduleManifests = new List<GameResourceModuleManifest>();
                 for (int i = 0; i < options.Length; i++)
                 {
-                    string moduleFilePath = Launche.GetHotfixPath(options[i].url.address, options[i].moduleName + ".ini");
-                    IWebRequestResult<GameResourceModuleManifest> webRequestResult = await Launche.Network.Get<GameResourceModuleManifest>(moduleFilePath);
-                    foreach (var VARIABLE in webRequestResult.result.bundleList)
-                    {
-                        int localVersion = Launche.FileSystem.GetFileVersion(VARIABLE.name);
-                        if (localVersion == VARIABLE.version)
-                        {
-                            continue;
-                        }
-
-                        updateBundleList.Add(new UpdateItem()
-                        {
-                            options = options[i].url,
-                            bundle = VARIABLE,
-                            module = webRequestResult.result
-                        });
-                    }
-
-                    moduleManifests.Add(webRequestResult.result);
-                    webRequestResult.Dispose();
+                    await GetNeedUpdateResourceModuleManifest(options[i], updateBundleList, moduleManifests);
                 }
 
                 bundles = updateBundleList.Select(x => x.bundle).ToArray();
@@ -94,7 +75,7 @@ namespace ZEngine.Resource
 
                 float size = updateBundleList.Sum(x => x.bundle.length) / 1024f / 1024f;
                 string message = $"检测到有{size.ToString("N")} MB资源更新，是否更新资源?";
-                if (await Launche.Window.MsgBoxAsync(message) is false)
+                if (await ZGame.Window.MsgBoxAsync(message) is false)
                 {
                     OnComplate(Status.Failed);
                     return;
@@ -102,30 +83,51 @@ namespace ZEngine.Resource
 
                 IEnumerable<DownloadOptions> optionsList = updateBundleList.Select(x => new DownloadOptions()
                 {
-                    url = $"{x.options.address}/{Launche.GetPlatfrom()}/{x.bundle.name}",
+                    url = $"{x.options.address}/{ZGame.GetPlatfrom()}/{x.bundle.name}",
                     userData = x,
                     version = x.bundle.version
                 });
-                IDownloadResult downloadResult = await Launche.Network.Download(gameProgressHandle, optionsList.ToArray());
+                IDownloadResult downloadResult = await ZGame.Network.Download(gameProgressHandle, optionsList.ToArray());
 
                 if (downloadResult.status is not Status.Success || downloadResult.Handles is null || downloadResult.Handles.Length is 0)
                 {
+                    ZGame.Console.Log(status);
                     downloadResult.Dispose();
                     OnComplate(Status.Failed);
-                    Launche.Console.Log(status);
                     return;
                 }
 
                 downloadResult.Dispose();
                 moduleManifests.ForEach(ResourceManager.instance.AddModuleManifest);
                 OnComplate(Status.Success);
-                Launche.Console.Log(status);
+                ZGame.Console.Log(status);
+            }
+
+            private async UniTask GetNeedUpdateResourceModuleManifest(ModuleOptions options, List<UpdateItem> updateBundleList, List<GameResourceModuleManifest> moduleManifests)
+            {
+                string moduleFilePath = ZGame.GetHotfixPath(options.url.address, options.moduleName + ".ini");
+                IWebRequestResult<GameResourceModuleManifest> webRequestResult = await ZGame.Network.Get<GameResourceModuleManifest>(moduleFilePath);
+                foreach (var VARIABLE in webRequestResult.result.bundleList)
+                {
+                    if (ZGame.FileSystem.CheckFileVersion(VARIABLE.name, VARIABLE.version))
+                    {
+                        continue;
+                    }
+
+                    updateBundleList.Add(new UpdateItem()
+                    {
+                        options = options.url,
+                        bundle = VARIABLE,
+                        module = webRequestResult.result
+                    });
+                }
+
+                webRequestResult.Dispose();
             }
 
             private void OnComplate(Status status)
             {
                 this.status = status;
-                gameProgressHandle.SetTextInfo("检查完成");
                 gameProgressHandle.SetProgress(1);
                 taskCompletionSource.TrySetResult(this);
             }

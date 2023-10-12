@@ -27,8 +27,7 @@ namespace ZEngine.Network
             while (messages.Count > 0)
             {
                 Tuple<IChannel, byte[]> data = messages.Dequeue();
-                MemoryStream memoryStream = new MemoryStream(data.Item2);
-                BinaryReader reader = new BinaryReader(memoryStream);
+                BinaryReader reader = new BinaryReader(new MemoryStream(data.Item2));
                 uint opcode = reader.ReadUInt32();
                 string body = reader.ReadString();
                 for (int i = handles.Count - 1; i >= 0; i--)
@@ -50,7 +49,7 @@ namespace ZEngine.Network
             handles.ForEach(x => x.Dispose());
             handles.Clear();
             channels.Clear();
-            Launche.Console.Log("关闭所有网络链接");
+            ZGame.Console.Log("关闭所有网络链接");
         }
 
         /// <summary>
@@ -90,7 +89,7 @@ namespace ZEngine.Network
         /// </summary>
         /// <param name="urlList">下载列表</param>
         /// <returns></returns>
-        public UniTask<IDownloadResult> Download(IGameProgressHandle gameProgressHandle, params DownloadOptions[] urlList)
+        public UniTask<IDownloadResult> Download(IProgressHandle gameProgressHandle, params DownloadOptions[] urlList)
         {
             UniTaskCompletionSource<IDownloadResult> uniTaskCompletionSource = new UniTaskCompletionSource<IDownloadResult>();
             IDownloadResult.Create(gameProgressHandle, urlList, uniTaskCompletionSource);
@@ -123,13 +122,13 @@ namespace ZEngine.Network
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
-                Launche.Console.Log("未找到指定的链接", address);
+                ZGame.Console.Log("未找到指定的链接", address);
                 return;
             }
 
             if (channel.connected is false)
             {
-                Launche.Console.Error("连接已断开：", address);
+                ZGame.Console.Error("连接已断开：", address);
                 return;
             }
 
@@ -144,13 +143,13 @@ namespace ZEngine.Network
         {
             if (typeof(IMessageRecvierHandle).IsAssignableFrom(types) is false)
             {
-                Launche.Console.Error(new NotImplementedException(types.FullName));
+                ZGame.Console.Error(new NotImplementedException(types.FullName));
                 return;
             }
 
             if (handles.Find(x => x.GetType() == types) is not null)
             {
-                Launche.Console.Error("已经存在相同类型的消息处理管道", types);
+                ZGame.Console.Error("已经存在相同类型的消息处理管道", types);
                 return;
             }
 
@@ -161,14 +160,14 @@ namespace ZEngine.Network
         {
             if (typeof(IMessageRecvierHandle).IsAssignableFrom(types) is false)
             {
-                Launche.Console.Error(new NotImplementedException(types.FullName));
+                ZGame.Console.Error(new NotImplementedException(types.FullName));
                 return;
             }
 
             IMessageRecvierHandle messageRecvierHandle = handles.Find(x => x.GetType() == types);
             if (messageRecvierHandle is null)
             {
-                Launche.Console.Error("不存在消息处理管道", types);
+                ZGame.Console.Error("不存在消息处理管道", types);
                 return;
             }
 
@@ -189,7 +188,7 @@ namespace ZEngine.Network
         {
             if (!channels.TryGetValue(address, out IChannel channel))
             {
-                Launche.Console.Log("未连接：", address);
+                ZGame.Console.Log("未连接：", address);
                 return UniTask.FromResult(channel);
             }
 

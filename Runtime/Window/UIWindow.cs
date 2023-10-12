@@ -8,29 +8,45 @@ using UnityEngine.UI;
 
 namespace ZEngine.Window
 {
-    public interface IAsyncWindow : IDisposable
-    {
-        object result { get; }
-        IEnumerator GetCoroutine();
-    }
-
     public abstract class UIWindow : IDisposable
     {
         private Dictionary<string, GameObject> childList = new Dictionary<string, GameObject>();
+        private Dictionary<string, IUIBindPipeline> bindPipelines = new Dictionary<string, IUIBindPipeline>();
         public GameObject gameObject { get; private set; }
 
-        internal void SetGameObject(GameObject value)
+        internal void SetGameObject(GameObject value, IUIWindowOptions windowOptions)
         {
             this.gameObject = value;
-            foreach (var VARIABLE in this.gameObject.GetComponentsInChildren<RectTransform>(true))
+            if (windowOptions is null)
             {
-                if (childList.ContainsKey(VARIABLE.name))
-                {
-                    continue;
-                }
-
-                childList.Add(VARIABLE.name, VARIABLE.gameObject);
+                return;
             }
+
+            windowOptions.Initialize(this);
+        }
+
+        internal void SetBindPipeline(string path, IUIBindPipeline pipeline)
+        {
+            if (bindPipelines.ContainsKey(path))
+            {
+                return;
+            }
+
+            bindPipelines.Add(path, pipeline);
+        }
+
+        public virtual void OnEvent(string eventName, params object[] args)
+        {
+        }
+
+        public virtual void OnNotifyChanged(string path, object args)
+        {
+            if (bindPipelines.TryGetValue(path, out IUIBindPipeline bindPipeline) is false)
+            {
+                return;
+            }
+
+            bindPipeline.OnChangeValue(args);
         }
 
         public void OnClick(string name, UnityAction callback)
@@ -160,7 +176,13 @@ namespace ZEngine.Window
                 return gameObject;
             }
 
-            return default;
+            Transform transform = gameObject.transform.Find(name);
+            if (transform != null)
+            {
+                childList.Add(name, transform.gameObject);
+            }
+
+            return transform.gameObject;
         }
 
         public void Dispose()

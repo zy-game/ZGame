@@ -6,7 +6,7 @@ namespace ZEngine.Resource
     /// <summary>
     /// 场景资源加载
     /// </summary>
-    public interface IRequestSceneResult : IDisposable
+    public interface IRequestSceneObjectResult : IDisposable
     {
     }
 }

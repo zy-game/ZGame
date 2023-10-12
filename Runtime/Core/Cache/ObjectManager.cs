@@ -19,7 +19,7 @@ namespace ZEngine.Cache
         {
             if (handlers.Find(x => x.GetType() == handleType) is not null)
             {
-                Launche.Console.Error("已经存在了相同的缓存管道");
+                ZGame.Console.Error("已经存在了相同的缓存管道");
                 return;
             }
 

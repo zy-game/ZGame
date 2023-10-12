@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace ZEngine.Window
 {
     [UIOptions("Resources/Msgbox", UIOptions.Layer.Top)]
-    public class MsgBox : UIWindow, IAsyncWindow
+    public class MsgBox : UIWindow
     {
         private Action ok;
         private Action cancel;
@@ -54,7 +54,7 @@ namespace ZEngine.Window
             complete = true;
             ok?.Invoke();
             result = true;
-            Launche.Window.Close<MsgBox>();
+            ZGame.Window.Close<MsgBox>();
         }
 
         private void Cancel()
@@ -62,13 +62,7 @@ namespace ZEngine.Window
             complete = true;
             cancel?.Invoke();
             result = false;
-            Launche.Window.Close<MsgBox>();
-        }
-
-
-        public IEnumerator GetCoroutine()
-        {
-            yield return WaitFor.Create(() => complete is true);
+            ZGame.Window.Close<MsgBox>();
         }
     }
 }

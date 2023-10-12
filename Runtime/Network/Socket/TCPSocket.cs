@@ -22,12 +22,12 @@ namespace ZEngine.Network
         {
             UriBuilder builder = new UriBuilder(address);
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            Launche.Console.Log("Connected", builder.Host, builder.Port);
+            ZGame.Console.Log("Connected", builder.Host, builder.Port);
             await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse(builder.Host), builder.Port));
             if (connected is false)
             {
                 Dispose();
-                Launche.Console.Error("链接失败");
+                ZGame.Console.Error("链接失败");
                 return this;
             }
 
@@ -44,7 +44,7 @@ namespace ZEngine.Network
                 int lenght = socket.Receive(recBytes, SocketFlags.None);
                 if (lenght <= 0)
                 {
-                    Launche.Console.Error(address, "发送了一个0字节的消息", lenght);
+                    ZGame.Console.Error(address, "发送了一个0字节的消息", lenght);
                     return;
                 }
 
@@ -60,7 +60,7 @@ namespace ZEngine.Network
             int result = await socket.SendAsync(new Memory<byte>(bytes), SocketFlags.None);
             if (result < bytes.Length)
             {
-                Launche.Console.Error("发送数据错误");
+                ZGame.Console.Error("发送数据错误");
                 return;
             }
         }

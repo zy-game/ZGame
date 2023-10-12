@@ -55,7 +55,7 @@ namespace ZEngine.Network
             {
                 if (request is null)
                 {
-                    Launche.Console.Error(new NullReferenceException("request"));
+                    ZGame.Console.Error(new NullReferenceException("request"));
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
                 }
@@ -69,10 +69,10 @@ namespace ZEngine.Network
                 }
 
                 await request.SendWebRequest().ToUniTask();
-                Launche.Console.Log(request.url, request.result);
+                ZGame.Console.Log(request.url, request.result);
                 if (request.result is not UnityWebRequest.Result.Success)
                 {
-                    Launche.Console.Error(request.error);
+                    ZGame.Console.Error(request.error);
                     uniTaskCompletionSource.TrySetResult(this);
                     return;
                 }

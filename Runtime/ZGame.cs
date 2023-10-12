@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
+using Runtime.Language;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Internal;
@@ -19,18 +20,18 @@ using ZEngine.Utility;
 using ZEngine.ZJson;
 using Object = UnityEngine.Object;
 
-public sealed class Launche
+public sealed class ZGame
 {
     /// <summary>
     /// 退出播放
     /// </summary>
     public static void Quit()
     {
-        Extension.StopAll();
+        EnumeratorExtension.StopAll();
 #if UNITY_EDITOR
         EditorApplication.isPlaying = false;
 #else
-            Application.Quit();
+        Application.Quit();
 #endif
     }
 
@@ -84,7 +85,7 @@ public sealed class Launche
     /// <returns></returns>
     public static string GetHotfixPath(string url, string name)
     {
-        return $"{url}/{Launche.GetPlatfrom()}/{name}";
+        return $"{url}/{ZGame.GetPlatfrom()}/{name}";
     }
 
     /// <summary>
@@ -95,6 +96,20 @@ public sealed class Launche
     public static string GetLocalFilePath(string fileName)
     {
         return $"{Application.persistentDataPath}/{fileName}";
+    }
+
+    /// <summary>
+    /// 本地化
+    /// </summary>
+    public sealed class Localization
+    {
+        /// <summary>
+        /// 获取本地化配置
+        /// </summary>
+        /// <param name="id">配置ID</param>
+        /// <returns></returns>
+        public static ILanguageOptions GetLocalizationOptions(int id)
+            => LocalizationManager.instance.Switch(id);
     }
 
     /// <summary>
@@ -174,42 +189,42 @@ public sealed class Launche
         /// </summary>
         /// <param name="message"></param>
         public static void Log(object message)
-            => Debug.Log($"[INFO] {message}");
+            => Consoler.instance.Log($"[INFO] {message}");
 
         /// <summary>
         /// 在控制台输出一条日志
         /// </summary>
         /// <param name="message"></param>
         public static void Log(params object[] message)
-            => Debug.Log($"[INFO] {string.Join(" ", message)}");
+            => Consoler.instance.Log($"[INFO] {string.Join(" ", message)}");
 
         /// <summary>
         /// 输出警告信息
         /// </summary>
         /// <param name="message"></param>
         public static void Warning(object message)
-            => Debug.LogWarning($"[WARNING] {message}");
+            => Consoler.instance.Warning($"[WARNING] {message}");
 
         /// <summary>
         /// 输出警告信息
         /// </summary>
         /// <param name="message"></param>
         public static void Warning(params object[] message)
-            => Debug.LogWarning($"[WARNING] {string.Join(" ", message)}");
+            => Consoler.instance.Warning($"[WARNING] {string.Join(" ", message)}");
 
         /// <summary>
         /// 输出错误信息
         /// </summary>
         /// <param name="message"></param>
         public static void Error(object message)
-            => Debug.LogError($"[ERROR] {message}");
+            => Consoler.instance.Error($"[ERROR] {message}");
 
         /// <summary>
         /// 输出错误信息
         /// </summary>
         /// <param name="message"></param>
         public static void Error(params object[] message)
-            => Debug.LogError($"[ERROR] {string.Join(" ", message)}");
+            => Consoler.instance.Error($"[ERROR] {string.Join(" ", message)}");
     }
 
     /// <summary>
@@ -266,6 +281,15 @@ public sealed class Launche
             => VFSManager.instance.GetFileVersion(fileName);
 
         /// <summary>
+        /// 检查文件版本是否一致
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static bool CheckFileVersion(string fileName, int version)
+            => GetFileVersion(fileName) == version;
+
+        /// <summary>
         /// 写入文件数据
         /// </summary>
         /// <param name="fileName"></param>
@@ -308,7 +332,7 @@ public sealed class Launche
         /// </summary>
         /// <param name="gameEntryOptions"></param>
         /// <returns></returns>
-        public static UniTask<IGameLogicLoadResult> LoadGameLogic(GameEntryOptions gameEntryOptions)
+        public static UniTask<ILogicLoadResult> LoadGameLogic(GameEntryOptions gameEntryOptions)
             => GameManager.instance.LoadGameLogicAssembly(gameEntryOptions);
     }
 
@@ -322,16 +346,16 @@ public sealed class Launche
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static IRequestAssetObjectResult<T> LoadAsset<T>(string assetPath) where T : Object
-            => ResourceManager.instance.LoadAsset<T>(assetPath);
+        public static IRequestAssetObjectResult LoadAsset(string assetPath)
+            => ResourceManager.instance.LoadAsset(assetPath);
 
         /// <summary>
         /// 异步加载资源
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static UniTask<IRequestAssetObjectResult<T>> LoadAssetAsync<T>(string assetPath) where T : Object
-            => ResourceManager.instance.LoadAssetAsync<T>(assetPath);
+        public static UniTask<IRequestAssetObjectResult> LoadAssetAsync(string assetPath)
+            => ResourceManager.instance.LoadAssetAsync(assetPath);
 
         /// <summary>
         /// 回收资源
@@ -343,7 +367,7 @@ public sealed class Launche
         /// <summary>
         /// 预加载资源模块
         /// </summary>
-        public static UniTask<IRequestResourceModuleResult> LoaderResourceModule(IGameProgressHandle gameProgressHandle, params ModuleOptions[] options)
+        public static UniTask<IRequestResourceModuleLoadResult> LoaderResourceModule(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
             => ResourceManager.instance.LoadingResourceModule(gameProgressHandle, options);
 
         /// <summary>
@@ -351,7 +375,7 @@ public sealed class Launche
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static UniTask<IRequestResourceModuleUpdateResult> CheckModuleResourceUpdate(IGameProgressHandle gameProgressHandle, params ModuleOptions[] options)
+        public static UniTask<IRequestResourceModuleUpdateResult> CheckModuleResourceUpdate(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
             => ResourceManager.instance.CheckModuleResourceUpdate(gameProgressHandle, options);
     }
 
@@ -577,7 +601,7 @@ public sealed class Launche
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static UniTask<IDownloadResult> Download(IGameProgressHandle gameProgressHandle, params DownloadOptions[] urlList)
+        public static UniTask<IDownloadResult> Download(IProgressHandle gameProgressHandle, params DownloadOptions[] urlList)
             => NetworkManager.instance.Download(gameProgressHandle, urlList);
 
         /// <summary>

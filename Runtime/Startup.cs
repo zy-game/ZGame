@@ -22,9 +22,9 @@ public class Startup : MonoBehaviour
     private async void Start()
     {
         GameObject.DontDestroyOnLoad(Camera.main.gameObject);
-        Launche.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
+        ZGame.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
         HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
-        IRequestResourceModuleUpdateResult requestResourceModuleUpdateResult = await Launche.Resource.CheckModuleResourceUpdate(Launche.Window.GetWindow<Loading>(), HotfixOptions.instance.preloads.ToArray());
+        IRequestResourceModuleUpdateResult requestResourceModuleUpdateResult = await ZGame.Resource.CheckModuleResourceUpdate(ZGame.Window.GetWindow<Loading>(), HotfixOptions.instance.preloads.ToArray());
         if (requestResourceModuleUpdateResult.status is not Status.Success)
         {
             requestResourceModuleUpdateResult.Dispose();
@@ -32,19 +32,19 @@ public class Startup : MonoBehaviour
         }
 
         requestResourceModuleUpdateResult.Dispose();
-        Launche.Window.GetWindow<Loading>().SetInfo("初始化默认资源").SetProgress(0);
-        IRequestResourceModuleResult requestResourceModuleResult = await Launche.Resource.LoaderResourceModule(Launche.Window.GetWindow<Loading>(), HotfixOptions.instance.preloads.ToArray());
+        ZGame.Window.GetWindow<Loading>().SetInfo("初始化默认资源").SetProgress(0);
+        IRequestResourceModuleLoadResult requestResourceModuleResult = await ZGame.Resource.LoaderResourceModule(ZGame.Window.GetWindow<Loading>(), HotfixOptions.instance.preloads.ToArray());
         if (requestResourceModuleResult.status is not Status.Success)
         {
             requestResourceModuleResult.Dispose();
-            Launche.Window.MsgBox("Tips", "资源加载失败！", Application.Quit);
+            ZGame.Window.MsgBox("Tips", "资源加载失败！", Application.Quit);
             return;
         }
 
         requestResourceModuleResult.Dispose();
-        Launche.Console.Log("进入游戏");
+        ZGame.Console.Log("进入游戏");
         GameEntryOptions options = HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On);
-        IGameLogicLoadResult gameLogicLoadResult = await Launche.Game.LoadGameLogic(options);
+        ILogicLoadResult gameLogicLoadResult = await ZGame.Game.LoadGameLogic(options);
         if (gameLogicLoadResult.status is Status.Success)
         {
             gameLogicLoadResult.Dispose();
@@ -53,12 +53,12 @@ public class Startup : MonoBehaviour
 
         string address = "127.0.0.1:28090";
         gameLogicLoadResult.Dispose();
-        Launche.Network.SubscribeMessageRecvieHandle<Recvier>();
-        IChannel channel = await Launche.Network.Connect<TCPSocket>(address);
+        ZGame.Network.SubscribeMessageRecvieHandle<Recvier>();
+        IChannel channel = await ZGame.Network.Connect<TCPSocket>(address);
 
         while (true)
         {
-            Launche.Network.WriteAndFlush(address, new TestMessage());
+            ZGame.Network.WriteAndFlush(address, new TestMessage());
             await UniTask.Delay(10000);
         }
 
@@ -74,7 +74,7 @@ class Recvier : IMessageRecvierHandle
 
     public void OnHandleMessage(string address, uint opcode, MemoryStream bodyData)
     {
-        Launche.Console.Log(opcode);
+        ZGame.Console.Log(opcode);
     }
 }
 

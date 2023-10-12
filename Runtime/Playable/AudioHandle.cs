@@ -27,7 +27,7 @@ namespace ZEngine.Playable
 
             if (source.clip == null)
             {
-                IRequestAssetObjectResult<AudioClip> requestAssetObjectResult = Launche.Resource.LoadAsset<AudioClip>(url);
+                IRequestAssetObjectResult requestAssetObjectResult = ZGame.Resource.LoadAsset(url);
                 requestAssetObjectResult.SetAssetObject<AudioSource>(source.gameObject);
             }
 
@@ -42,7 +42,7 @@ namespace ZEngine.Playable
             if (isCache == Switch.On)
             {
                 source.gameObject.SetActive(false);
-                Launche.Cache.Handle(url, this);
+                ZGame.Cache.Handle(url, this);
             }
             else
             {

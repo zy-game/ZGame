@@ -7,6 +7,7 @@ using ZEngine.Editor.PlayerEditor;
 
 namespace ZEngine.Editor
 {
+   
     public abstract class EngineEditorWindow : EditorWindow
     {
         private string search;

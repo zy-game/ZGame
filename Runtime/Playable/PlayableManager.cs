@@ -24,7 +24,7 @@ namespace ZEngine.Playable
                 return handle;
             }
 
-            if (Launche.Cache.TryGetValue<IPlayableHandle>(url, out handle))
+            if (ZGame.Cache.TryGetValue<IPlayableHandle>(url, out handle))
             {
                 handle.Play();
             }
@@ -52,7 +52,7 @@ namespace ZEngine.Playable
                 return handle;
             }
 
-            if (Launche.Cache.TryGetValue<IPlayableHandle>(url, out handle))
+            if (ZGame.Cache.TryGetValue<IPlayableHandle>(url, out handle))
             {
                 handle.Play();
             }
@@ -91,7 +91,7 @@ namespace ZEngine.Playable
             }
 
             workList.Remove(playableHandle);
-            Launche.Cache.Handle(playableHandle.url, playableHandle);
+            ZGame.Cache.Handle(playableHandle.url, playableHandle);
         }
     }
 }

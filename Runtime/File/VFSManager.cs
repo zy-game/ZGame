@@ -22,7 +22,7 @@ namespace ZEngine.VFS
             public void Dispose()
             {
                 time = 0;
-                Launche.Console.Log("Dispose File: " + name);
+                ZGame.Console.Log("Dispose File: " + name);
                 name = String.Empty;
                 fileStream.Close();
                 fileStream.Dispose();
@@ -33,18 +33,18 @@ namespace ZEngine.VFS
         {
             base.Dispose();
             vfsList.ForEach(x => x.Dispose());
-            Launche.Console.Log("释放所有文件句柄");
+            ZGame.Console.Log("释放所有文件句柄");
         }
 
         public VFSManager()
         {
-            string filePath = Launche.GetLocalFilePath("vfs");
+            string filePath = ZGame.GetLocalFilePath("vfs");
             if (!File.Exists(filePath))
             {
                 return;
             }
 
-            dataList = Launche.Json.Parse<List<VFSData>>(File.ReadAllText(filePath));
+            dataList = ZGame.Json.Parse<List<VFSData>>(File.ReadAllText(filePath));
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace ZEngine.VFS
             {
                 name = vfs,
                 time = Time.realtimeSinceStartup,
-                fileStream = new FileStream(Launche.GetLocalFilePath(vfs), FileMode.OpenOrCreate, FileAccess.ReadWrite)
+                fileStream = new FileStream(ZGame.GetLocalFilePath(vfs), FileMode.OpenOrCreate, FileAccess.ReadWrite)
             });
             return handle;
         }
@@ -87,8 +87,8 @@ namespace ZEngine.VFS
         /// </summary>
         internal void SaveVFSData()
         {
-            string filePath = Launche.GetLocalFilePath("vfs");
-            File.WriteAllText(filePath, Launche.Json.ToJson(dataList));
+            string filePath = ZGame.GetLocalFilePath("vfs");
+            File.WriteAllText(filePath, ZGame.Json.ToJson(dataList));
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace ZEngine.VFS
                     VFSData data = dataList.Find(x => x.use == Switch.Off && x.length >= lenght);
                     if (data is null)
                     {
-                        VFSHandle handle = GetVFSHandle(Launche.RandomName());
+                        VFSHandle handle = GetVFSHandle(ZGame.RandomName());
                         data = new VFSData()
                         {
                             vfs = handle.name,
@@ -126,7 +126,7 @@ namespace ZEngine.VFS
 
                     if (temp is null || temp.Count() < count)
                     {
-                        VFSHandle handle = GetVFSHandle(Launche.RandomName());
+                        VFSHandle handle = GetVFSHandle(ZGame.RandomName());
                         for (int i = 0; i < VFSOptions.instance.Count; i++)
                         {
                             dataList.Add(new VFSData()
@@ -139,7 +139,7 @@ namespace ZEngine.VFS
                         }
 
                         SaveVFSData();
-                        Launche.Console.Log(dataList.Count);
+                        ZGame.Console.Log(dataList.Count);
                         temp = dataList.Where(x => x.use is Switch.Off);
                     }
 
@@ -184,7 +184,7 @@ namespace ZEngine.VFS
                 return -1;
             }
 
-            Launche.Console.Log(fileName, vfsData.version);
+            ZGame.Console.Log(fileName, vfsData.version);
             return vfsData.version;
         }
 
