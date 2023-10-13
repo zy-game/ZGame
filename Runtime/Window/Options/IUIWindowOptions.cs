@@ -46,7 +46,6 @@ namespace ZEngine.Window
             public Dictionary<string, int> info;
             public Dictionary<string, UIBindType> binds;
 
-
             public void Dispose()
             {
                 info.Clear();
@@ -75,7 +74,7 @@ namespace ZEngine.Window
 
                 foreach (var VARIABLE in binds)
                 {
-                    window.SetBindPipeline(VARIABLE.Key, IUIBindPipeline.Create(window.GetChild(VARIABLE.Key), VARIABLE.Value));
+                    window.SetBindPipeline(VARIABLE.Key, IUIBindPipeline.Create(window, VARIABLE.Key, VARIABLE.Value));
                 }
             }
 

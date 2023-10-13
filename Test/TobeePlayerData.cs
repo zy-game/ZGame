@@ -18,6 +18,16 @@ namespace Test
         public string icon { get; set; }
         public string prefab { get; set; }
         public string describe { get; set; }
+        public void Deserialized(string body)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public string Serialized()
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void Save(string path)
         {
             throw new System.NotImplementedException();

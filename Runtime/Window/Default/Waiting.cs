@@ -11,11 +11,6 @@ namespace ZEngine.Window
     {
         private Action subsceibe;
 
-        protected override void Destroy()
-        {
-            base.Destroy();
-        }
-
         public void Timeout(float time)
         {
             if (time == 0)

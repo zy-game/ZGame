@@ -39,7 +39,8 @@ namespace ZEngine.Window
 
             if (ZGame.Cache.TryGetValue(windowType.Name, out window))
             {
-                window.OnEnable();
+                window.gameObject.SetActive(true);
+                window.Enable();
                 windows.Add(windowType, window);
                 return window;
             }
@@ -62,8 +63,8 @@ namespace ZEngine.Window
             window.SetGameObject(requestAssetObjectResult.Instantiate(), IUIWindowOptions.Create(options.localization));
             UILayerManager.instance.SetLayer((byte)options.layer, window.gameObject);
             windows.Add(windowType, window);
-            window.OnAwake();
-            window.OnEnable();
+            window.Awake();
+            window.Enable();
             return window;
         }
 
@@ -108,7 +109,8 @@ namespace ZEngine.Window
                 return;
             }
 
-            window.OnEnable();
+            window.gameObject.SetActive(true);
+            window.Enable();
         }
 
         public void Hide(Type type)
@@ -120,7 +122,8 @@ namespace ZEngine.Window
                 return;
             }
 
-            window.OnDiable();
+            window.gameObject.SetActive(false);
+            window.Disable();
         }
     }
 }

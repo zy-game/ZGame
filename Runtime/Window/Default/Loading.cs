@@ -8,7 +8,7 @@ namespace ZEngine.Window
     {
         private Slider slider;
 
-        protected override void Awake()
+        public override void Awake()
         {
             slider = this.GetChild("Slider").GetComponent<Slider>();
         }
