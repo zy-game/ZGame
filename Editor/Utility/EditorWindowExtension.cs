@@ -90,6 +90,8 @@ namespace ZEngine.Editor
                 menu.AddItem(new GUIContent("角色编辑器"), false, () => { EditorWindow.GetWindow<GamePlayerEditorWindow>(false, "角色编辑器", true); });
                 menu.AddItem(new GUIContent("技能编辑器"), false, () => { SkillEditor.SkillEditorWindow.Open(); });
                 menu.AddItem(new GUIContent("资源编辑器"), false, () => { ResourceBuilder.GameResourceBuilder.Open(); });
+                
+               
                 menu.ShowAsContext();
             }
 

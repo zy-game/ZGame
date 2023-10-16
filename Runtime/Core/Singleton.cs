@@ -47,8 +47,8 @@ namespace ZEngine
 
                 _instance.Dispose();
                 BehaviourSingleton.RemoveUpdate(_instance.OnUpdate);
-                BehaviourSingleton.RemoveUpdate(_instance.OnLateUpdate);
-                BehaviourSingleton.RemoveUpdate(_instance.OnFixedUpdate);
+                BehaviourSingleton.RemoveLateUpdate(_instance.OnLateUpdate);
+                BehaviourSingleton.RemoveFixedUpdate(_instance.OnFixedUpdate);
                 BehaviourSingleton.RemoveApplicationQuit(_instance.Dispose);
                 BehaviourSingleton.RemoveApplicationFocus(_instance.OnFocusChange);
                 _instance = null;

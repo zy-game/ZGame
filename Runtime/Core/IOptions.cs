@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace ZEngine
 {
@@ -15,201 +17,171 @@ namespace ZEngine
         string name { get; }
         string describe { get; }
 
-        public static T Deserialize<T>(string body) where T : IOptions
+        public static void SerializeToFile(object data, string path)
+        {
+            string json = Serialize(data);
+            if (json.IsNullOrEmpty())
+            {
+                return;
+            }
+
+            File.WriteAllText(path, json);
+        }
+
+        public static string Serialize(object options)
+        {
+            if (options is null)
+            {
+                return String.Empty;
+            }
+
+            return JsonConvert.SerializeObject(options, new JsonSerializerSettings()
+            {
+                Converters = new List<JsonConverter>()
+                {
+                    new OPtionsConverter()
+                }
+            });
+        }
+
+        public static T Deserialize<T>(string body)
         {
             if (body.IsNullOrEmpty())
             {
                 return default;
             }
 
-            body = body.Replace("\n\r\\", "");
-            int index = 0;
-            Type type = typeof(T);
-            if (body.StartsWith("{") && body.EndsWith("}"))
+            return JsonConvert.DeserializeObject<T>(body, new JsonSerializerSettings()
             {
-                return (T)ReadObject(type, body, ref index);
-            }
-
-            object result = default;
-            if (body.StartsWith("[") && body.EndsWith("]"))
-            {
-                if (type.IsArray || typeof(IList).IsAssignableFrom(type))
+                Converters = new List<JsonConverter>()
                 {
-                    List<T> map = ReadArray<T>(body);
-                    result = type.IsArray ? map.ToArray() : map;
+                    new OPtionsConverter()
                 }
-            }
-
-            return (T)result;
+            });
         }
 
-        private static List<T> ReadArray<T>(string body)
+        public static T DeserializeFileData<T>(string path)
         {
-            List<T> list = new List<T>();
-            int index = 1;
-            while (index < body.Length)
-            {
-                list.Add((T)ReadObject(typeof(T), body, ref index));
-            }
-
-            return list;
-        }
-
-        private static object ReadObject(Type objType, string body, ref int index)
-        {
-            int count = 0;
-            if (body[index].Equals('{') is false)
+            if (File.Exists(path) is false)
             {
                 return default;
             }
 
-            object result = Activator.CreateInstance(objType);
-            List<FieldData> fieldDatas = new List<FieldData>();
-            index++;
-            bool isStart = false;
-            while (true)
+            return Deserialize<T>(File.ReadAllText(path));
+        }
+
+        public class OPtionsConverter : JsonConverter
+        {
+            /// <summary>
+            ///     写入Json数据
+            /// </summary>
+            /// <param name="writer"></param>
+            /// <param name="value"></param>
+            /// <param name="serializer"></param>
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
-                if (body[index].Equals('{'))
+                string json = string.Empty;
+                Type type = value.GetType();
+                if (type.IsArray is false && typeof(IList).IsAssignableFrom(type) is false)
                 {
-                    index++;
-                    isStart = true;
-                    continue;
+                    OpData opData = new OpData();
+                    opData.type = value.GetType().FullName;
+                    opData.value = JsonConvert.SerializeObject(value);
+                    json = JsonConvert.SerializeObject(opData);
+                    writer.WriteValue(json);
+                    return;
                 }
 
-                if (body[index].Equals('}'))
+                IList list = type.IsArray ? ((Array)value) : (IList)value;
+                List<OpData> opDatas = new List<OpData>();
+                for (int i = 0; i < list.Count; i++)
                 {
-                    index++;
-                    if (isStart is false)
+                    opDatas.Add(new OpData()
                     {
-                        break;
+                        type = list[i].GetType().FullName,
+                        value = JsonConvert.SerializeObject(list[i])
+                    });
+                }
+
+                json = JsonConvert.SerializeObject(opDatas);
+                writer.WriteValue(json);
+            }
+
+            /// <summary>
+            ///     读Json数据
+            /// </summary>
+            /// <param name="reader"></param>
+            /// <param name="objectType"></param>
+            /// <param name="existingValue"></param>
+            /// <param name="serializer"></param>
+            /// <returns></returns>
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                string strValue = reader.Value.ToString();
+                IList list = default;
+                if (objectType.IsArray is false && typeof(IList).IsAssignableFrom(objectType) is false)
+                {
+                    OpData opData = JsonConvert.DeserializeObject<OpData>(strValue);
+                    Type type = AppDomain.CurrentDomain.FindType(opData.type);
+                    if (type is null)
+                    {
+                        return default;
                     }
 
-                    isStart = false;
-                    continue;
+                    return JsonConvert.DeserializeObject(opData.value, type);
                 }
 
-                if (body[index].Equals(','))
+                Type m = objectType.IsArray ? objectType.GetElementType() : objectType.GetGenericArguments()[0];
+                list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(m));
+                List<OpData> listOpData = JsonConvert.DeserializeObject<List<OpData>>(strValue);
+                for (int i = 0; i < listOpData.Count; i++)
                 {
-                    index++;
-                    continue;
+                    Type target = AppDomain.CurrentDomain.FindType(listOpData[i].type);
+                    if (target is null)
+                    {
+                        ZGame.Console.Log("没找到类型：", listOpData[i].type);
+                        continue;
+                    }
+
+                    object v = JsonConvert.DeserializeObject(listOpData[i].value, target);
+                    list.Add(v);
                 }
 
-                string name = ReadString(body, ref index);
-                index++;
-                string type = ReadString(body, ref index);
-                index++;
-                string value = ReadString(body, ref index);
-                FieldInfo fieldInfo = objType.GetField(name);
-                if (fieldInfo is not null)
+                if (objectType.IsArray is false)
                 {
-                    fieldInfo.SetValue(result, Convert.ChangeType(value, fieldInfo.FieldType));
-                    continue;
+                    return list;
                 }
 
-                PropertyInfo propertyInfo = objType.GetProperty(name);
-                if (propertyInfo is not null)
-                {
-                    propertyInfo.SetValue(result, Convert.ChangeType(value, propertyInfo.PropertyType));
-                }
+                Array array = Array.CreateInstance(objectType.GetElementType(), list.Count);
+                list.CopyTo(array, 0);
+                return array;
             }
 
-            return result;
-        }
-
-        private static string ReadString(string body, ref int index)
-        {
-            if (body[index].Equals('"') is false)
+            /// <summary>
+            ///     是否可以转换
+            /// </summary>
+            /// <param name="objectType"></param>
+            /// <returns></returns>
+            public override bool CanConvert(Type objectType)
             {
-                return String.Empty;
+                if (objectType.IsArray && typeof(IOptions).IsAssignableFrom(objectType.GetElementType()))
+                {
+                    return true;
+                }
+
+                if (typeof(IList).IsAssignableFrom(objectType) && typeof(IOptions).IsAssignableFrom(objectType.GetGenericArguments()[0]))
+                {
+                    return true;
+                }
+
+                return objectType == typeof(IOptions);
             }
 
-            body = body.Replace("\n\r\\", "");
-            index++;
-            int nextSplit = body.IndexOf('"', index);
-            int count = nextSplit - index;
-            string result = body.Substring(index, count);
-            if (result.IsNullOrEmpty())
+            class OpData
             {
-                index--;
-                return String.Empty;
+                public string type;
+                public string value;
             }
-
-            index = index + count + 1;
-            return result;
-        }
-
-        public static string Serialize(string path, IOptions options)
-        {
-            return String.Empty;
-        }
-
-        class FieldData
-        {
-            public string name;
-            public string type;
-            public string value;
-        }
-    }
-
-    public enum Localtion
-    {
-        /// <summary>
-        /// 内部配置选项，在打包时会将不在Resources目录下的配置拷贝至Resources中
-        /// </summary>
-        Internal,
-
-        /// <summary>
-        /// 项目级配置选项,在打包时这个配置不会被打进包内
-        /// </summary>
-        Project,
-
-        /// <summary>
-        /// 热更配置项，这个配置只存在包内，在加载时只会从Bundle包中加载
-        /// </summary>
-        Packaged,
-    }
-
-    [AttributeUsage(AttributeTargets.Class)]
-    public class ConfigAttribute : Attribute
-    {
-        internal string path;
-        internal Localtion localtion;
-
-        public ConfigAttribute(Localtion localtion, string path = "")
-        {
-            this.path = path;
-            this.localtion = localtion;
-        }
-    }
-
-    public class InternalConfigAttribute : ConfigAttribute
-    {
-        public InternalConfigAttribute() : base(Localtion.Internal)
-        {
-        }
-    }
-
-    public class ProjectConfigAttribute : ConfigAttribute
-    {
-        public ProjectConfigAttribute() : base(Localtion.Project)
-        {
-        }
-    }
-
-    public class PackageConfigAttribute : ConfigAttribute
-    {
-        public PackageConfigAttribute(string path) : base(Localtion.Packaged, path)
-        {
-        }
-    }
-
-    public class OptionsName : Attribute
-    {
-        public string name;
-
-        public OptionsName(string name)
-        {
-            this.name = name;
         }
     }
 }

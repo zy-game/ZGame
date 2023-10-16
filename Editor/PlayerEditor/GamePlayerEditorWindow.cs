@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using ZEngine.Game;
@@ -17,7 +18,6 @@ namespace ZEngine.Editor.PlayerEditor
 
         protected override void Actived()
         {
-            string config_path = Application.dataPath + "/../UserSettings/players.ini";
             List<string> temp = new List<string>();
             foreach (var VARIABLE in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -31,41 +31,21 @@ namespace ZEngine.Editor.PlayerEditor
             }
 
             typeList = temp.ToArray();
-            options = new List<IPlayerOptions>();
-            if (File.Exists(config_path) is false)
-            {
-                return;
-            }
-
-
-            List<dynamic> cfg = Newtonsoft.Json.JsonConvert.DeserializeObject<List<dynamic>>(File.ReadAllText(config_path));
-            foreach (var VARIABLE in cfg)
-            {
-                string tyName = VARIABLE.type.ToString();
-                Type t = AppDomain.CurrentDomain.FindType(tyName);
-                if (t is null)
-                {
-                    continue;
-                }
-
-                options.Add(Newtonsoft.Json.JsonConvert.DeserializeObject(VARIABLE.data.ToString(), t));
-            }
+            options = IOptions.DeserializeFileData<List<IPlayerOptions>>(Application.dataPath + "/../UserSettings/players.ini"); // new List<IPlayerOptions>();
+            // string config_path = Application.dataPath + "/../UserSettings/players.ini";
+            // if (File.Exists(config_path) is false)
+            // {
+            //     return;
+            // }
+            //
+            // options = IOptions.Deserialize<List<IPlayerOptions>>(File.ReadAllText(config_path));
         }
 
         protected override void SaveChanged()
         {
-            string config_path = Application.dataPath + "/../UserSettings/players.ini";
-            List<dynamic> cfg = new List<dynamic>();
-            foreach (var VARIABLE in options)
-            {
-                cfg.Add(new
-                {
-                    type = VARIABLE.GetType().FullName,
-                    data = Newtonsoft.Json.JsonConvert.SerializeObject(VARIABLE)
-                });
-            }
-
-            File.WriteAllText(config_path, Newtonsoft.Json.JsonConvert.SerializeObject(cfg));
+            // string config_path = Application.dataPath + "/../UserSettings/players.ini";
+            // File.WriteAllText(config_path, IOptions.Serialize(options));
+            IOptions.SerializeToFile(options, Application.dataPath + "/../UserSettings/players.ini");
         }
 
         protected override void OnDrawingToolbarMenu()
@@ -75,9 +55,18 @@ namespace ZEngine.Editor.PlayerEditor
 
         protected override void CreateNewItem()
         {
-            IPlayerOptions playerOptions = (IPlayerOptions)Activator.CreateInstance(AppDomain.CurrentDomain.FindType(typeList[seleteType]));
-            playerOptions.id = 10000000 + options.Count;
-            playerOptions.name = "未命名" + options.Count;
+            Type optionsType = AppDomain.CurrentDomain.FindType(typeList[seleteType]);
+            MethodInfo methodInfo = optionsType.GetMethod("Create", BindingFlags.Static);
+            IPlayerOptions playerOptions = default;
+            if (methodInfo is not null)
+            {
+                playerOptions = (IPlayerOptions)methodInfo.Invoke(null, new object[] { });
+            }
+            else
+            {
+                playerOptions = (IPlayerOptions)Activator.CreateInstance(optionsType);
+            }
+
             options.Add(playerOptions);
             SaveChanged();
         }

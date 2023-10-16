@@ -7,7 +7,10 @@ namespace ZEngine
     {
         public Consoler()
         {
-            BehaviourSingleton.OnGUICall(OnGUI);
+            if (Application.isPlaying)
+            {
+                BehaviourSingleton.OnGUICall(OnGUI);
+            }
         }
 
         private void OnGUI()
