@@ -45,8 +45,8 @@ namespace ZEngine.Playable
             }
             else
             {
-                IRequestAssetObjectResult requestAssetObjectResult = ZGame.Resource.LoadAsset(url);
-                requestAssetObjectResult.SetAssetObject<VideoPlayer>(source.gameObject);
+                IRequestResourceObjectResult requestResourceObjectResult = ZGame.Resource.LoadAsset(url);
+                requestResourceObjectResult.SetAssetObject<VideoPlayer>(source.gameObject);
                 source.Play();
             }
         }
@@ -57,7 +57,7 @@ namespace ZEngine.Playable
             if (isCache == Switch.On)
             {
                 source.gameObject.SetActive(false);
-                ZGame.Cache.Handle(url, this);
+                ZGame.Cache.Enqueue(url, this);
             }
             else
             {

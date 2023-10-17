@@ -73,8 +73,8 @@ namespace ZEngine
 
                         return;
 #endif
-                        IRequestAssetObjectResult requestAssetObjectResult = ZGame.Resource.LoadAsset(options.path);
-                        _instance = requestAssetObjectResult.GetObject<T>();
+                        IRequestResourceObjectResult requestResourceObjectResult = ZGame.Resource.LoadAsset(options.path);
+                        _instance = requestResourceObjectResult.GetObject<T>();
                     }
                     else if (options.path.EndsWith("json"))
                     {
@@ -92,7 +92,7 @@ namespace ZEngine
                         _instance = ZGame.Json.Parse<T>(json);
                         return;
 #endif
-                        IRequestAssetObjectResult result = ZGame.Resource.LoadAsset(options.path);
+                        IRequestResourceObjectResult result = ZGame.Resource.LoadAsset(options.path);
                         _instance = ZGame.Json.Parse<T>(result.GetObject<TextAsset>().text);
                     }
 

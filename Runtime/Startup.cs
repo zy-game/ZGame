@@ -44,25 +44,24 @@ public class Startup : MonoBehaviour
         requestResourceModuleResult.Dispose();
         ZGame.Console.Log("进入游戏");
         GameEntryOptions options = HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On);
-        ILogicLoadResult gameLogicLoadResult = await ZGame.Game.LoadGameLogic(options);
-        if (gameLogicLoadResult.status is Status.Success)
+        ILogicModuleLoadResult gameLogicModuleLoadResult = await ZGame.Game.LoadGameLogic(options);
+        if (gameLogicModuleLoadResult.status is Status.Success)
         {
-            gameLogicLoadResult.Dispose();
+            gameLogicModuleLoadResult.Dispose();
             return;
         }
 
-        string address = "127.0.0.1:28090";
-        gameLogicLoadResult.Dispose();
-        ZGame.Network.SubscribeMessageRecvieHandle<Recvier>();
-        IChannel channel = await ZGame.Network.Connect<TCPSocket>(address);
+        gameLogicModuleLoadResult.Dispose();
+        // ZGame.Network.SubscribeMessageRecvieHandle<Recvier>();
+        // IChannel channel = await ZGame.Network.Connect<TCPSocket>("127.0.0.1:28090");
+        //
+        // while (true)
+        // {
+        //     ZGame.Network.WriteAndFlush("127.0.0.1:28090", new TestMessage());
+        //     await UniTask.Delay(10000);
+        // }
 
-        while (true)
-        {
-            ZGame.Network.WriteAndFlush(address, new TestMessage());
-            await UniTask.Delay(10000);
-        }
-
-        // Launche.Window.MsgBox("Error", "进入游戏失败", Launche.Quit);
+        ZGame.Window.MsgBox("Error", "进入游戏失败", ZGame.Quit);
     }
 }
 

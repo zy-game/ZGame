@@ -10,10 +10,10 @@ namespace ZEngine.Game
     /// </summary>
     class GameManager : Singleton<GameManager>
     {
-        public UniTask<ILogicLoadResult> LoadGameLogicAssembly(GameEntryOptions gameEntryOptions)
+        public UniTask<ILogicModuleLoadResult> LoadGameLogicAssembly(GameEntryOptions gameEntryOptions)
         {
-            UniTaskCompletionSource<ILogicLoadResult> uniTaskCompletionSource = new UniTaskCompletionSource<ILogicLoadResult>();
-            ILogicLoadResult gameLogicLoadResult = ILogicLoadResult.Create(gameEntryOptions, uniTaskCompletionSource);
+            UniTaskCompletionSource<ILogicModuleLoadResult> uniTaskCompletionSource = new UniTaskCompletionSource<ILogicModuleLoadResult>();
+            ILogicModuleLoadResult gameLogicModuleLoadResult = ILogicModuleLoadResult.Create(gameEntryOptions, uniTaskCompletionSource);
             return uniTaskCompletionSource.Task;
         }
     }

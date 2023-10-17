@@ -33,6 +33,18 @@ namespace ZEngine.Editor.PlayerEditor
             PlayerEditorOptions.instance.Saved();
         }
 
+        protected override void OnDrawingToolbarMenu()
+        {
+            if (GUILayout.Button("+", EditorStyles.toolbarButton))
+            {
+                PlayerOptions playerOptions = new PlayerOptions();
+                playerOptions.name = "未命名";
+                playerOptions.id = 10000000 + PlayerEditorOptions.instance.players.Count;
+                PlayerEditorOptions.instance.players.Add(playerOptions);
+                SaveChanged();
+            }
+        }
+
         protected override MenuListItem[] GetMenuList()
         {
             if (PlayerEditorOptions.instance.players is null || PlayerEditorOptions.instance.players.Count is 0)
@@ -46,7 +58,6 @@ namespace ZEngine.Editor.PlayerEditor
             {
                 items.Add(new MenuListItem()
                 {
-                    index = index++,
                     name = VARIABLE.name,
                     data = VARIABLE
                 });
@@ -62,15 +73,6 @@ namespace ZEngine.Editor.PlayerEditor
             {
                 PlayerEditorOptions.instance.players = new List<PlayerOptions>();
             }
-        }
-
-        protected override void CreateNewItem()
-        {
-            PlayerOptions playerOptions = new PlayerOptions();
-            playerOptions.name = "未命名";
-            playerOptions.id = 10000000 + PlayerEditorOptions.instance.players.Count;
-            PlayerEditorOptions.instance.players.Add(playerOptions);
-            SaveChanged();
         }
 
         protected override void DrawingItemDataView(object data, float width)
@@ -140,7 +142,7 @@ namespace ZEngine.Editor.PlayerEditor
                 GUILayout.Label($"技能描述：{skillOptions.describe}");
                 GUILayout.EndVertical();
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button(String.Empty, GUI_STYLE_MINUS))
+                if (GUILayout.Button(String.Empty, CustomWindowStyle.GUI_STYLE_MINUS))
                 {
                     options.skills.Remove(options.skills[i]);
                     this.Repaint();

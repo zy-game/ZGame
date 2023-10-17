@@ -50,7 +50,7 @@ namespace ZEngine.Cache
             handlers.Remove(cacheHandler);
         }
 
-        public void Handle(string key, object value)
+        public void Enqueue(string key, object value)
         {
             Type valueType = value.GetType();
             IObjectPoolHandle cacheHandler = handlers.Find(x => x.cacheType == valueType);

@@ -19,15 +19,15 @@ namespace ZEngine.Window
             this.ok = ok;
             complete = false;
             this.cancel = cancel;
-            this.GetChild("text").GetComponent<TMP_Text>().text = text;
-            this.GetChild("Tips").GetComponent<TMP_Text>().text = tips;
-            this.GetChild("ok").GetComponent<Button>().onClick.RemoveAllListeners();
-            this.GetChild("cancel").GetComponent<Button>().onClick.RemoveAllListeners();
-            this.GetChild("ok").GetComponent<Button>().onClick.AddListener(OK);
-            this.GetChild("cancel").GetComponent<Button>().onClick.AddListener(Cancel);
-            this.GetChild("cancel").SetActive(cancel is not null);
-            this.GetChild("okText").GetComponent<TMP_Text>().text = okText;
-            this.GetChild("cancelText").GetComponent<TMP_Text>().text = cancelText;
+            this.GetChild("Panel/Image/text").GetComponent<TMP_Text>().text = text;
+            this.GetChild("Panel/Image/Tips").GetComponent<TMP_Text>().text = tips;
+            this.GetChild("Panel/Image/GameObject/ok").GetComponent<Button>().onClick.RemoveAllListeners();
+            this.GetChild("Panel/Image/GameObject/cancel").GetComponent<Button>().onClick.RemoveAllListeners();
+            this.GetChild("Panel/Image/GameObject/ok").GetComponent<Button>().onClick.AddListener(OK);
+            this.GetChild("Panel/Image/GameObject/cancel").GetComponent<Button>().onClick.AddListener(Cancel);
+            this.GetChild("Panel/Image/GameObject/cancel").SetActive(cancel is not null);
+            this.GetChild("Panel/Image/GameObject/ok/okText").GetComponent<TMP_Text>().text = okText;
+            this.GetChild("Panel/Image/GameObject/cancel/cancelText").GetComponent<TMP_Text>().text = cancelText;
             return this;
         }
 
@@ -37,15 +37,15 @@ namespace ZEngine.Window
             this.ok = () => uniTaskCompletionSource.TrySetResult(true);
             complete = false;
             this.cancel = () => uniTaskCompletionSource.TrySetResult(false);
-            this.GetChild("text").GetComponent<TMP_Text>().text = text;
-            this.GetChild("Tips").GetComponent<TMP_Text>().text = tips;
-            this.GetChild("ok").GetComponent<Button>().onClick.RemoveAllListeners();
-            this.GetChild("cancel").GetComponent<Button>().onClick.RemoveAllListeners();
-            this.GetChild("ok").GetComponent<Button>().onClick.AddListener(OK);
-            this.GetChild("cancel").GetComponent<Button>().onClick.AddListener(Cancel);
-            this.GetChild("cancel").SetActive(cancel is not null);
-            this.GetChild("okText").GetComponent<TMP_Text>().text = okText;
-            this.GetChild("cancelText").GetComponent<TMP_Text>().text = cancelText;
+            this.GetChild("Panel/Image/text").GetComponent<TMP_Text>().text = text;
+            this.GetChild("Panel/Image/Tips").GetComponent<TMP_Text>().text = tips;
+            this.GetChild("Panel/Image/GameObject/ok").GetComponent<Button>().onClick.RemoveAllListeners();
+            this.GetChild("Panel/Image/GameObject/cancel").GetComponent<Button>().onClick.RemoveAllListeners();
+            this.GetChild("Panel/Image/GameObject/ok").GetComponent<Button>().onClick.AddListener(OK);
+            this.GetChild("Panel/Image/GameObject/cancel").GetComponent<Button>().onClick.AddListener(Cancel);
+            this.GetChild("Panel/Image/GameObject/cancel").SetActive(cancel is not null);
+            this.GetChild("Panel/Image/GameObject/ok/okText").GetComponent<TMP_Text>().text = okText;
+            this.GetChild("Panel/Image/GameObject/cancel/cancelText").GetComponent<TMP_Text>().text = cancelText;
             return uniTaskCompletionSource.Task;
         }
 

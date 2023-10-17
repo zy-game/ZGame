@@ -27,7 +27,7 @@ namespace ZEngine.Editor.PlayerEditor
                 GUILayout.Label(VARIABLE.name);
                 GUILayout.EndVertical();
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button(String.Empty, EngineEditorWindow.GUI_STYLE_ADD_BUTTON))
+                if (GUILayout.Button(String.Empty, CustomWindowStyle.GUI_STYLE_ADD_BUTTON))
                 {
                     var item = options.skills.Find(x => x == VARIABLE.id);
                     if (item > 0)

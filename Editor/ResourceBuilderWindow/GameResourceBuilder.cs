@@ -201,7 +201,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical(EngineEditorWindow.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(300), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(CustomWindowStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(300), GUILayout.Height(position.height - 30));
                     {
                         listScroll = GUILayout.BeginScrollView(listScroll);
                         {
@@ -217,7 +217,7 @@ namespace ZEngine.Editor.ResourceBuilder
                 GUILayout.BeginVertical();
                 {
                     GUILayout.Space(5);
-                    GUILayout.BeginVertical(EngineEditorWindow.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width - 310), GUILayout.Height(position.height - 30));
+                    GUILayout.BeginVertical(CustomWindowStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width - 310), GUILayout.Height(position.height - 30));
                     {
                         manifestScroll = GUILayout.BeginScrollView(manifestScroll, false, true);
                         {
@@ -251,24 +251,19 @@ namespace ZEngine.Editor.ResourceBuilder
 
                 Rect contains = EditorGUILayout.BeginVertical();
                 {
-                    this.BeginColor(moduleManifest == selection ? Color.cyan : GUI.color);
+                    this.BeginColor(moduleManifest == selection ? Color.cyan : GUI.color, () =>
                     {
                         GUILayout.BeginHorizontal();
                         {
-                            GUILayout.Label($"{moduleManifest.title}", EngineEditorWindow.GUI_STYLE_TITLE_LABLE);
+                            GUILayout.Label($"{moduleManifest.title}", CustomWindowStyle.GUI_STYLE_TITLE_LABLE);
                             GUILayout.FlexibleSpace();
                             GUILayout.EndHorizontal();
                         }
-                        this.EndColor();
-                    }
-
+                    });
 
                     GUILayout.Space(5);
-                    this.BeginColor(moduleManifest == selection ? inColor : outColor);
-                    {
-                        GUILayout.Box("", "WhiteBackground", GUILayout.Width(300), GUILayout.Height(1));
-                        this.EndColor();
-                    }
+                    this.BeginColor(moduleManifest == selection ? inColor : outColor, () => GUILayout.Box("", "WhiteBackground", GUILayout.Width(300), GUILayout.Height(1)));
+
                     if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
                     {
                         selection = moduleManifest;
@@ -331,18 +326,15 @@ namespace ZEngine.Editor.ResourceBuilder
                             manifest.isOn = GUILayout.Toggle(manifest.isOn, "");
                             GUILayout.EndVertical();
                             string name = (manifest.name.IsNullOrEmpty() ? $"Empty" : manifest.name) + $"({AssetDatabase.GetAssetPath(manifest.folder)})";
-                            GUILayout.Label(name, EngineEditorWindow.GUI_STYLE_TITLE_LABLE);
+                            GUILayout.Label(name, CustomWindowStyle.GUI_STYLE_TITLE_LABLE);
                             GUILayout.FlexibleSpace();
                             GUILayout.Label($"v:{manifest.version.ToString()}");
                         }
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.Space(5);
-                    this.BeginColor(new Color(0, 0, 0, .2f));
-                    {
-                        GUILayout.Box("", "WhiteBackground", GUILayout.Height(1));
-                        this.EndColor();
-                    }
+                    this.BeginColor(new Color(0, 0, 0, .2f), () => { GUILayout.Box("", "WhiteBackground", GUILayout.Height(1)); });
+
                     if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
                     {
                         manifest.foldout = !manifest.foldout;
@@ -447,42 +439,42 @@ namespace ZEngine.Editor.ResourceBuilder
         {
             foreach (var VARIABLE in map)
             {
-                GameResourceModuleManifest gameResourceModuleManifest = default;
+                Resource.ResourceModuleManifest resourceModuleManifest = default;
                 if (File.Exists(output + $"/{VARIABLE.Key.title}.ini"))
                 {
-                    gameResourceModuleManifest = ZGame.Json.Parse<GameResourceModuleManifest>(File.ReadAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini"));
+                    resourceModuleManifest = ZGame.Json.Parse<Resource.ResourceModuleManifest>(File.ReadAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini"));
                 }
 
-                if (gameResourceModuleManifest is null)
+                if (resourceModuleManifest is null)
                 {
-                    gameResourceModuleManifest = GameResourceModuleManifest.Create(VARIABLE.Key.title.ToLower());
+                    resourceModuleManifest = Resource.ResourceModuleManifest.Create(VARIABLE.Key.title.ToLower());
                 }
 
-                gameResourceModuleManifest.version = VARIABLE.Key.version;
+                resourceModuleManifest.version = VARIABLE.Key.version;
                 foreach (var manifest in VARIABLE.Value)
                 {
                     string bundleName = ($"{VARIABLE.Key.title}_{manifest.name}.assetbundle").ToLower();
                     manifest.version++;
-                    GameAssetBundleManifest gameAssetBundleManifest = gameResourceModuleManifest.bundleList.Find(x => x.name == bundleName);
-                    if (gameAssetBundleManifest is null)
+                    Resource.ResourceBundleManifest resourceBundleManifest = resourceModuleManifest.bundleList.Find(x => x.name == bundleName);
+                    if (resourceBundleManifest is null)
                     {
-                        gameAssetBundleManifest = GameAssetBundleManifest.Create(gameResourceModuleManifest.name, bundleName);
-                        gameResourceModuleManifest.bundleList.Add(gameAssetBundleManifest);
+                        resourceBundleManifest = Resource.ResourceBundleManifest.Create(resourceModuleManifest.name, bundleName);
+                        resourceModuleManifest.bundleList.Add(resourceBundleManifest);
                     }
 
-                    string filePath = output + "/" + gameAssetBundleManifest.name;
-                    string hash = bundleManifest.GetAssetBundleHash(gameAssetBundleManifest.name).ToString();
-                    string[] dependencies = bundleManifest.GetAllDependencies(gameAssetBundleManifest.name);
+                    string filePath = output + "/" + resourceBundleManifest.name;
+                    string hash = bundleManifest.GetAssetBundleHash(resourceBundleManifest.name).ToString();
+                    string[] dependencies = bundleManifest.GetAllDependencies(resourceBundleManifest.name);
                     BuildPipeline.GetCRCForAssetBundle(filePath, out uint crc);
-                    gameAssetBundleManifest.Refersh(manifest.version, (int)new FileInfo(filePath).Length, dependencies, hash, crc);
+                    resourceBundleManifest.Refersh(manifest.version, (int)new FileInfo(filePath).Length, dependencies, hash, crc);
                     foreach (var file in manifest.files)
                     {
                         string path = AssetDatabase.GetAssetPath(file);
-                        gameAssetBundleManifest.files.Add(GameAssetObjectManifest.Create(file.name, path, AssetDatabase.AssetPathToGUID(path)));
+                        resourceBundleManifest.files.Add(ResourceObjectManifest.Create(file.name, path, AssetDatabase.AssetPathToGUID(path)));
                     }
                 }
 
-                File.WriteAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini", JsonConvert.SerializeObject(gameResourceModuleManifest));
+                File.WriteAllText(output + $"/{VARIABLE.Key.title.ToLower()}.ini", JsonConvert.SerializeObject(resourceModuleManifest));
             }
         }
 

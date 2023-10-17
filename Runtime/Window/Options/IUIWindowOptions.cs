@@ -22,13 +22,13 @@ namespace ZEngine.Window
 
         public static IUIWindowOptions Create(string optionsPath)
         {
-            IRequestAssetObjectResult requestAssetObjectResult = ZGame.Resource.LoadAsset(optionsPath);
-            if (requestAssetObjectResult.status is not Status.Success)
+            IRequestResourceObjectResult requestResourceObjectResult = ZGame.Resource.LoadAsset(optionsPath);
+            if (requestResourceObjectResult.status is not Status.Success)
             {
                 return default;
             }
 
-            return JsonConvert.DeserializeObject<UIWindowOptions>(requestAssetObjectResult.GetObject<TextAsset>().text);
+            return JsonConvert.DeserializeObject<UIWindowOptions>(requestResourceObjectResult.GetObject<TextAsset>().text);
         }
 
         public static void Save(IUIWindowOptions options, string savePath)

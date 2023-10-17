@@ -98,6 +98,102 @@ public sealed class ZGame
         return $"{Application.persistentDataPath}/{fileName}";
     }
 
+    public sealed class Data
+    {
+        /// <summary>
+        /// 添加运行时数据句柄
+        /// </summary>
+        /// <param name="runtimeDatableHandle"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void Add<T>(T runtimeDatableHandle) where T : IRuntimeDatableHandle
+            => DatableManager.instance.Add(runtimeDatableHandle);
+
+        /// <summary>
+        /// 获取运行时数据句柄
+        /// </summary>
+        /// <param name="name"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T GetRuntimeDatableHandle<T>(string name) where T : IRuntimeDatableHandle
+            => DatableManager.instance.GetRuntimeDatableHandle<T>(name);
+
+        /// <summary>
+        /// 是否存在数据句柄
+        /// </summary>
+        /// <param name="name"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static bool Equals<T>(string name) where T : IRuntimeDatableHandle
+            => GetRuntimeDatableHandle<T>(name) != null;
+
+        /// <summary>
+        /// 尝试获取数据句柄
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="result"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static bool TryGetValue<T>(string name, out T result) where T : IRuntimeDatableHandle
+            => DatableManager.instance.TryGetValue<T>(name, out result);
+
+        /// <summary>
+        /// 回收数据句柄
+        /// </summary>
+        /// <param name="name"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void Release<T>(string name, bool isCache = false) where T : IRuntimeDatableHandle
+            => DatableManager.instance.Release<T>(name, isCache);
+
+        /// <summary>
+        /// 回收数据句柄
+        /// </summary>
+        /// <param name="runtimeDatableHandle"></param>
+        public static void Release(IRuntimeDatableHandle runtimeDatableHandle, bool isCache = false)
+            => DatableManager.instance.Release(runtimeDatableHandle, isCache);
+
+        /// <summary>
+        /// 清理所有相同类型的数据
+        /// </summary>
+        /// <param name="isCache"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void Clear<T>(bool isCache = false) where T : IRuntimeDatableHandle
+            => DatableManager.instance.Clear<T>(isCache);
+
+        /// <summary>
+        /// 查找数据句柄
+        /// </summary>
+        /// <param name="comper"></param>
+        /// <returns></returns>
+        public static IRuntimeDatableHandle Find(Func<IRuntimeDatableHandle, bool> comper)
+            => DatableManager.instance.Find(comper);
+
+        /// <summary>
+        /// 查找数据句柄
+        /// </summary>
+        /// <param name="comper"></param>
+        /// <returns></returns>
+        public static IRuntimeDatableHandle[] Where(Func<IRuntimeDatableHandle, bool> comper)
+            => DatableManager.instance.Where(comper);
+
+        /// <summary>
+        /// 查找数据句柄
+        /// </summary>
+        /// <param name="comper"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T Find<T>(Func<T, bool> comper) where T : IRuntimeDatableHandle
+            => DatableManager.instance.Find(comper);
+
+        /// <summary>
+        /// 查找数据句柄
+        /// </summary>
+        /// <param name="comper"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T[] Where<T>(Func<T, bool> comper) where T : IRuntimeDatableHandle
+            => DatableManager.instance.Where(comper);
+    }
+
     /// <summary>
     /// 本地化
     /// </summary>
@@ -122,8 +218,8 @@ public sealed class ZGame
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public static void Handle(string key, object value)
-            => ObjectManager.instance.Handle(key, value);
+        public static void Enqueue(string key, object value)
+            => ObjectManager.instance.Enqueue(key, value);
 
         /// <summary>
         /// 尝试获取缓存对象
@@ -189,42 +285,42 @@ public sealed class ZGame
         /// </summary>
         /// <param name="message"></param>
         public static void Log(object message)
-            => Consoler.instance.Log($"[INFO] {message}");
+            => ConsoleCommand.instance.Log($"[INFO] {message}");
 
         /// <summary>
         /// 在控制台输出一条日志
         /// </summary>
         /// <param name="message"></param>
         public static void Log(params object[] message)
-            => Consoler.instance.Log($"[INFO] {string.Join(" ", message)}");
+            => ConsoleCommand.instance.Log($"[INFO] {string.Join(" ", message)}");
 
         /// <summary>
         /// 输出警告信息
         /// </summary>
         /// <param name="message"></param>
         public static void Warning(object message)
-            => Consoler.instance.Warning($"[WARNING] {message}");
+            => ConsoleCommand.instance.Warning($"[WARNING] {message}");
 
         /// <summary>
         /// 输出警告信息
         /// </summary>
         /// <param name="message"></param>
         public static void Warning(params object[] message)
-            => Consoler.instance.Warning($"[WARNING] {string.Join(" ", message)}");
+            => ConsoleCommand.instance.Warning($"[WARNING] {string.Join(" ", message)}");
 
         /// <summary>
         /// 输出错误信息
         /// </summary>
         /// <param name="message"></param>
         public static void Error(object message)
-            => Consoler.instance.Error($"[ERROR] {message}");
+            => ConsoleCommand.instance.Error($"[ERROR] {message}");
 
         /// <summary>
         /// 输出错误信息
         /// </summary>
         /// <param name="message"></param>
         public static void Error(params object[] message)
-            => Consoler.instance.Error($"[ERROR] {string.Join(" ", message)}");
+            => ConsoleCommand.instance.Error($"[ERROR] {string.Join(" ", message)}");
     }
 
     /// <summary>
@@ -332,7 +428,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="gameEntryOptions"></param>
         /// <returns></returns>
-        public static UniTask<ILogicLoadResult> LoadGameLogic(GameEntryOptions gameEntryOptions)
+        public static UniTask<ILogicModuleLoadResult> LoadGameLogic(GameEntryOptions gameEntryOptions)
             => GameManager.instance.LoadGameLogicAssembly(gameEntryOptions);
     }
 
@@ -346,7 +442,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static IRequestAssetObjectResult LoadAsset(string assetPath)
+        public static IRequestResourceObjectResult LoadAsset(string assetPath)
             => ResourceManager.instance.LoadAsset(assetPath);
 
         /// <summary>
@@ -354,7 +450,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public static UniTask<IRequestAssetObjectResult> LoadAssetAsync(string assetPath)
+        public static UniTask<IRequestResourceObjectResult> LoadAssetAsync(string assetPath)
             => ResourceManager.instance.LoadAssetAsync(assetPath);
 
         /// <summary>
@@ -369,6 +465,15 @@ public sealed class ZGame
         /// </summary>
         public static UniTask<IRequestResourceModuleLoadResult> LoaderResourceModule(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
             => ResourceManager.instance.LoadingResourceModule(gameProgressHandle, options);
+
+        /// <summary>
+        /// 加载单个资源包
+        /// </summary>
+        /// <param name="progressHandle"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public static UniTask<IRequestResourceBundleResult> LoadResourceBundle(IProgressHandle progressHandle, params string[] url)
+            => default;
 
         /// <summary>
         /// 检查资源是否需要更新

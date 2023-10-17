@@ -14,158 +14,13 @@ namespace ZEngine.Resource
     /// </summary>
     internal class ResourceManager : Singleton<ResourceManager>
     {
-        // private List<CacheData> cacheList = new List<CacheData>();
-        private List<GameResourceModuleManifest> moduleList = new List<GameResourceModuleManifest>();
-        private List<AssetBundleRuntimeHandle> bundleLists = new List<AssetBundleRuntimeHandle>();
-
-
-        class CacheData : IDisposable
-        {
-            public float timeout;
-            public AssetBundleRuntimeHandle bundle;
-
-            public void Dispose()
-            {
-                timeout = 0;
-                bundle.Dispose();
-                bundle = null;
-            }
-        }
-
         public override void Dispose()
         {
             base.Dispose();
-            ZGame.Cache.RemoveCacheArea<AssetBundleRuntimeHandle>();
-            moduleList.Clear();
-            bundleLists.ForEach(x => x.Dispose());
-            bundleLists.Clear();
+            ZGame.Cache.RemoveCacheArea<RuntimeAssetBundleHandle>();
+            ZGame.Data.Clear<ResourceModuleManifest>();
+            ZGame.Data.Clear<RuntimeAssetBundleHandle>();
             ZGame.Console.Log("释放所有资源");
-        }
-
-        /// <summary>
-        /// 添加资源包
-        /// </summary>
-        /// <param name="bundleHandle"></param>
-        internal void AddAssetBundleHandle(AssetBundleRuntimeHandle bundleHandle)
-        {
-            bundleLists.Add(bundleHandle);
-        }
-
-        /// <summary>
-        /// 是否已加载指定的资源包
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        internal bool HasLoadAssetBundle(string module, string name)
-        {
-            return GetRuntimeAssetBundleHandle(module, name) is not null;
-        }
-
-        /// <summary>
-        /// 获取已加载的资源包
-        /// </summary>
-        /// <param name="bundleName"></param>
-        /// <returns></returns>
-        internal AssetBundleRuntimeHandle GetRuntimeAssetBundleHandle(string module, string bundleName)
-        {
-            AssetBundleRuntimeHandle runtimeAssetBundleHandle = bundleLists.Find(x => x.name == bundleName && x.module == module);
-            if (runtimeAssetBundleHandle is not null)
-            {
-                return runtimeAssetBundleHandle;
-            }
-
-            if (ZGame.Cache.TryGetValue(bundleName, out runtimeAssetBundleHandle))
-            {
-                bundleLists.Add(runtimeAssetBundleHandle);
-            }
-
-
-            return runtimeAssetBundleHandle;
-        }
-
-        /// <summary>
-        /// 获取资源模块版本数据
-        /// </summary>
-        /// <param name="moduleName">模块名</param>
-        /// <returns></returns>
-        public GameResourceModuleManifest GetRuntimeModuleManifest(string moduleName)
-        {
-            GameResourceModuleManifest manifest = moduleList.Find(x => x.name == moduleName);
-            if (manifest is null)
-            {
-                return default;
-            }
-
-            return manifest;
-        }
-
-        /// <summary>
-        /// 添加资源模块数据
-        /// </summary>
-        /// <param name="manifest"></param>
-        public void AddModuleManifest(GameResourceModuleManifest manifest)
-        {
-            if (moduleList.Find(x => x.name == manifest.name) is not null)
-            {
-                return;
-            }
-
-            moduleList.Add(manifest);
-        }
-
-        /// <summary>
-        /// 移除资源模块数据
-        /// </summary>
-        /// <param name="manifest"></param>
-        public void RemoveModuleManifest(GameResourceModuleManifest manifest)
-        {
-            if (moduleList.Find(x => x.name == manifest.name) is null)
-            {
-                return;
-            }
-
-            moduleList.Remove(manifest);
-        }
-
-        /// <summary>
-        /// 获取资源包版本数据
-        /// </summary>
-        /// <param name="bundleName">资源包名</param>
-        /// <returns></returns>
-        public GameAssetBundleManifest GetRuntimeBundleManifest(string bundleName)
-        {
-            GameAssetBundleManifest gameAssetBundleManifest = default;
-            foreach (var module in moduleList)
-            {
-                gameAssetBundleManifest = module.bundleList.Find(x => x.name == bundleName);
-                if (gameAssetBundleManifest is not null)
-                {
-                    break;
-                }
-            }
-
-            return gameAssetBundleManifest;
-        }
-
-        /// <summary>
-        /// 获取资源包信息
-        /// </summary>
-        /// <param name="assetPath">资源路径</param>
-        /// <returns></returns>
-        public GameAssetBundleManifest GetBundleManifestWithAssetPath(string assetPath)
-        {
-            foreach (var module in moduleList)
-            {
-                GameAssetBundleManifest bundleManifest = module.GetBundleManifestWithAsset(assetPath);
-                if (bundleManifest is null)
-                {
-                    continue;
-                }
-
-                return bundleManifest;
-            }
-
-            return default;
         }
 
         /// <summary>
@@ -175,6 +30,17 @@ namespace ZEngine.Resource
         public UniTask<IRequestResourceModuleLoadResult> LoadingResourceModule(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
         {
             return IRequestResourceModuleLoadResult.Create(gameProgressHandle, options);
+        }
+
+        /// <summary>
+        /// 加载网络资源包
+        /// </summary>
+        /// <param name="progressHandle"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public UniTask<IRequestNetworkResourceBundleResult> LoadNetworkResourceBundleAsync(IProgressHandle progressHandle, params string[] args)
+        {
+            return IRequestNetworkResourceBundleResult.Create(progressHandle, args);
         }
 
         /// <summary>
@@ -192,9 +58,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public IRequestAssetObjectResult LoadAsset(string assetPath)
+        public IRequestResourceObjectResult LoadAsset(string assetPath)
         {
-            return IRequestAssetObjectResult.Create(assetPath);
+            return IRequestResourceObjectResult.Create(assetPath);
         }
 
         /// <summary>
@@ -202,9 +68,9 @@ namespace ZEngine.Resource
         /// </summary>
         /// <param name="assetPath">资源路径</param>
         /// <returns></returns>
-        public UniTask<IRequestAssetObjectResult> LoadAssetAsync(string assetPath)
+        public UniTask<IRequestResourceObjectResult> LoadAssetAsync(string assetPath)
         {
-            return IRequestAssetObjectResult.CreateAsync(assetPath);
+            return IRequestResourceObjectResult.CreateAsync(assetPath);
         }
 
         /// <summary>
@@ -214,20 +80,19 @@ namespace ZEngine.Resource
         public void Release(Object target)
         {
             ZGame.Console.Log("Release Asset Object ->", target.name);
-            AssetBundleRuntimeHandle runtimeAssetObjectHandle = bundleLists.Find(x => x.Contains(target));
-            if (runtimeAssetObjectHandle is null)
+            RuntimeAssetBundleHandle runtimeAssetBundleHandle = ZGame.Data.Find<RuntimeAssetBundleHandle>(x => x.Contains(target));
+            if (runtimeAssetBundleHandle is null)
             {
                 return;
             }
 
-            runtimeAssetObjectHandle.Unload(target);
-            if (runtimeAssetObjectHandle.refCount is not 0)
+            runtimeAssetBundleHandle.Unload(target);
+            if (runtimeAssetBundleHandle.refCount is not 0)
             {
                 return;
             }
 
-            bundleLists.Remove(runtimeAssetObjectHandle);
-            ZGame.Cache.Handle(runtimeAssetObjectHandle.name, runtimeAssetObjectHandle);
+            ZGame.Data.Release(runtimeAssetBundleHandle);
         }
     }
 }

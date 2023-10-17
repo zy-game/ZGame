@@ -31,15 +31,22 @@ namespace ZEngine.Editor.SkillEditor
         private Rect frameLayout;
         internal SkillMachineEditor stateEditor;
         private SkillLayerData seletion;
-        private const string GUI_STYLE_FRAME_LINE = "OverrideMargin"; // new GUIStyle("OverrideMargin");
-        private const string GUI_STYLE_LAYER_BACKGROUND = "MeTransitionSelect"; // new GUIStyle("MeTransitionSelect");
-        private const string GUI_STYLE_LAYER_RANGE_SLIDER = "MeTransitionSelect"; // new GUIStyle("SelectionRect");
-        private const string GUI_STYLE_LAYER_RANGE_SLIDER_SELECTION = "OL SelectedRow";
+
 
 
         protected override void SaveChanged()
         {
             SkillDataList.instance.Saved();
+        }
+
+        protected override void OnDrawingToolbarMenu()
+        {
+            if (GUILayout.Button("+", EditorStyles.toolbarButton))
+            {
+                SkillOptions options = new SkillOptions() { name = "未命名" };
+                SkillDataList.instance.optionsList.Add(options);
+                SaveChanged();
+            }
         }
 
         protected override MenuListItem[] GetMenuList()
@@ -50,7 +57,6 @@ namespace ZEngine.Editor.SkillEditor
             {
                 items.Add(new MenuListItem()
                 {
-                    index = index++,
                     name = VARIABLE.name,
                     data = VARIABLE
                 });
@@ -67,14 +73,6 @@ namespace ZEngine.Editor.SkillEditor
                 return;
             }
         }
-
-        protected override void CreateNewItem()
-        {
-            SkillOptions options = new SkillOptions() { name = "未命名" };
-            SkillDataList.instance.optionsList.Add(options);
-            SaveChanged();
-        }
-
 
         protected override void DrawingItemDataView(object data, float width)
         {
@@ -142,9 +140,9 @@ namespace ZEngine.Editor.SkillEditor
 
             GUILayout.BeginHorizontal();
             {
-                GUILayout.BeginVertical(GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(layerWidth));
+                GUILayout.BeginVertical(CustomWindowStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(layerWidth));
                 {
-                    GUILayout.BeginHorizontal(GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(layerWidth));
+                    GUILayout.BeginHorizontal(CustomWindowStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(layerWidth));
                     {
                         DrawingLayerContoller();
                     }
@@ -166,7 +164,7 @@ namespace ZEngine.Editor.SkillEditor
                 }
 
 
-                Rect temp = EditorGUILayout.BeginVertical(GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(axisWidth));
+                Rect temp = EditorGUILayout.BeginVertical(CustomWindowStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(axisWidth));
                 {
                     if (Rect.zero.Equals(temp) is false)
                     {
@@ -175,7 +173,7 @@ namespace ZEngine.Editor.SkillEditor
 
                     if (stateEditor is null)
                     {
-                        Rect keyRange = EditorGUILayout.BeginHorizontal(GUI_STYLE_BOX_BACKGROUND, GUILayout.Height(29));
+                        Rect keyRange = EditorGUILayout.BeginHorizontal(CustomWindowStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Height(29));
                         {
                             DrawingTimeAxisTilet(options, axisWidth);
                         }
@@ -217,7 +215,7 @@ namespace ZEngine.Editor.SkillEditor
         private void DrawingCurrentFrameLine(Rect layout)
         {
             float offset = layout.x + layerWidth + frameCountSpace * currentFrameIndex + currentFrameIndex;
-            GUI.Box(new Rect(GetFrameIndexOffset(layout.x, currentFrameIndex), layout.y + layout.height + 5, 2, position.height - layout.y - 40), "", GUI_STYLE_FRAME_LINE);
+            GUI.Box(new Rect(GetFrameIndexOffset(layout.x, currentFrameIndex), layout.y + layout.height + 5, 2, position.height - layout.y - 40), "", CustomWindowStyle.GUI_STYLE_FRAME_LINE);
         }
 
         private float GetFrameIndexOffset(float offset, int index)
@@ -245,7 +243,7 @@ namespace ZEngine.Editor.SkillEditor
             }
 
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("", GUI_STYLE_ADD_BUTTON))
+            if (GUILayout.Button("", CustomWindowStyle.GUI_STYLE_ADD_BUTTON))
             {
                 GenericMenu menu = new GenericMenu();
                 menu.AddItem(new GUIContent("Input Checker"), false, () => { });
@@ -264,13 +262,13 @@ namespace ZEngine.Editor.SkillEditor
                 if (i % 5 == 0)
                 {
                     GUIContent line = new GUIContent(String.Empty);
-                    GUILayout.Box(line, GUI_STYLE_FRAME_LINE, GUILayout.Height(15), GUILayout.Width(1));
+                    GUILayout.Box(line, CustomWindowStyle.GUI_STYLE_FRAME_LINE, GUILayout.Height(15), GUILayout.Width(1));
                     Rect spaceLable = GUILayoutUtility.GetLastRect();
                     GUI.Label(new Rect(spaceLable.x, spaceLable.y, 30, 20), i.ToString());
                 }
                 else
                 {
-                    GUILayout.Box("", GUI_STYLE_FRAME_LINE, GUILayout.Height(3), GUILayout.Width(1));
+                    GUILayout.Box("", CustomWindowStyle.GUI_STYLE_FRAME_LINE, GUILayout.Height(3), GUILayout.Width(1));
                 }
 
                 GUILayout.Space(frameCountSpace);
@@ -279,7 +277,7 @@ namespace ZEngine.Editor.SkillEditor
 
         private void DrawingTimeLayer(SkillLayerData skillLayerData, float width)
         {
-            Rect layout = EditorGUILayout.BeginHorizontal(GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(width), GUILayout.Height(30));
+            Rect layout = EditorGUILayout.BeginHorizontal(CustomWindowStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(width), GUILayout.Height(30));
             skillLayerData.name = GUILayout.TextField(skillLayerData.name, EditorStyles.toolbarTextField);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -287,13 +285,13 @@ namespace ZEngine.Editor.SkillEditor
 
         private void DrawingTimeAxis(SkillLayerData skillLayerData, float width, Rect keyRect, Rect range)
         {
-            Rect sliderLayout = EditorGUILayout.BeginHorizontal(GUI_STYLE_LAYER_BACKGROUND, GUILayout.Width(width), GUILayout.Height(28));
+            Rect sliderLayout = EditorGUILayout.BeginHorizontal(CustomWindowStyle.GUI_STYLE_LAYER_BACKGROUND, GUILayout.Width(width), GUILayout.Height(28));
             float left_offset = GetFrameIndexOffset(0, skillLayerData.startFrameIndex);
             float right_offset = GetFrameIndexOffset(0, skillLayerData.endFrameIndex);
             int count = skillLayerData.endFrameIndex - skillLayerData.startFrameIndex <= 0 ? 1 : skillLayerData.endFrameIndex - skillLayerData.startFrameIndex;
             float sliderWidth = frameCountSpace * count + 1;
             Rect boxRect = new Rect(left_offset, sliderLayout.y, right_offset - left_offset, sliderLayout.height);
-            GUI.Box(boxRect, String.Empty, seletion == skillLayerData ? GUI_STYLE_LAYER_RANGE_SLIDER_SELECTION : GUI_STYLE_LAYER_RANGE_SLIDER);
+            GUI.Box(boxRect, String.Empty, seletion == skillLayerData ? CustomWindowStyle.GUI_STYLE_LAYER_RANGE_SLIDER_SELECTION : CustomWindowStyle.GUI_STYLE_LAYER_RANGE_SLIDER);
             if (Event.current.type == EventType.MouseDown && boxRect.Contains(Event.current.mousePosition))
             {
                 if (Event.current.button == 1)

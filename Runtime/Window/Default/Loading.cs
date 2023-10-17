@@ -10,12 +10,12 @@ namespace ZEngine.Window
 
         public override void Awake()
         {
-            slider = this.GetChild("Slider").GetComponent<Slider>();
+            slider = this.GetChild("Panel/Slider").GetComponent<Slider>();
         }
 
         public Loading SetInfo(string info)
         {
-            GetChild("Text (TMP)").GetComponent<TMP_Text>().text = info;
+            GetChild("Panel/Text (TMP)").GetComponent<TMP_Text>().text = info;
             return this;
         }
 

@@ -30,7 +30,7 @@ namespace ZEngine.Window
         {
         }
 
-        internal void SetGameObject(GameObject value, IUIWindowOptions windowOptions)
+        internal void SetGameObject(GameObject value, IUIWindowOptions windowOptions = null)
         {
             this.gameObject = value;
             if (windowOptions is null)
@@ -60,7 +60,7 @@ namespace ZEngine.Window
                 return;
             }
 
-            bindPipeline.OnChangeValue(args);
+            bindPipeline.OnChange(args);
         }
 
 
@@ -71,7 +71,7 @@ namespace ZEngine.Window
                 return gameObject;
             }
 
-            Transform transform = gameObject.transform.Find(name);
+            Transform transform = this.gameObject.transform.Find(name);
             if (transform != null)
             {
                 childList.Add(name, transform.gameObject);

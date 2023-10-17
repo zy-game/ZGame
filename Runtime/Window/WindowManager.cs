@@ -52,15 +52,15 @@ namespace ZEngine.Window
                 return default;
             }
 
-            IRequestAssetObjectResult requestAssetObjectResult = ZGame.Resource.LoadAsset(options.path);
-            if (requestAssetObjectResult.result == null)
+            IRequestResourceObjectResult requestResourceObjectResult = ZGame.Resource.LoadAsset(options.path);
+            if (requestResourceObjectResult.result == null)
             {
                 ZGame.Console.Error(new NullReferenceException(options.path));
                 return default;
             }
 
             window = (UIWindow)Activator.CreateInstance(windowType);
-            window.SetGameObject(requestAssetObjectResult.Instantiate(), IUIWindowOptions.Create(options.localization));
+            window.SetGameObject(requestResourceObjectResult.Instantiate());
             UILayerManager.instance.SetLayer((byte)options.layer, window.gameObject);
             windows.Add(windowType, window);
             window.Awake();
@@ -92,7 +92,7 @@ namespace ZEngine.Window
             windows.Remove(windowType);
             if (isCache)
             {
-                ZGame.Cache.Handle(windowType.Name, window);
+                ZGame.Cache.Enqueue(windowType.Name, window);
             }
             else
             {

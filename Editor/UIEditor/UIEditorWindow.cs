@@ -23,10 +23,6 @@ namespace ZEngine.Editor.UIEditor
         {
         }
 
-        protected override void CreateNewItem()
-        {
-        }
-
         protected override void DrawingItemDataView(object data, float width)
         {
         }

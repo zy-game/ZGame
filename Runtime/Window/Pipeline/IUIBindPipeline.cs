@@ -28,7 +28,10 @@ namespace ZEngine.Window
         string name { get; }
         object value { get; }
         GameObject gameObject { get; }
-        void OnChangeValue(object args);
+
+        void Active();
+        void Inactive();
+        void OnChange(object args);
 
         public static IUIBindPipeline Create(UIWindow window, string path, UIBindType type)
         {
@@ -78,10 +81,11 @@ namespace ZEngine.Window
                 this.window = window;
                 this.name = gameObject.name;
                 this.gameObject = window.GetChild(path);
-                OnActive();
+                Active();
             }
 
-            private void OnActive()
+
+            public void Active()
             {
                 if (gameObject == null)
                 {
@@ -146,7 +150,11 @@ namespace ZEngine.Window
                 }
             }
 
-            public void OnChangeValue(object args)
+            public void Inactive()
+            {
+            }
+
+            public void OnChange(object args)
             {
                 if (gameObject == null)
                 {

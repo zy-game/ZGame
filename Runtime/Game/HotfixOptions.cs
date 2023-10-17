@@ -24,7 +24,6 @@ namespace ZEngine
         public string moduleName;
         [NonSerialized] public URLOptions url;
     }
-
     
     [Serializable]
     public class GameEntryOptions

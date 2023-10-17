@@ -4,6 +4,9 @@ using Cysharp.Threading.Tasks;
 
 namespace ZEngine.Network
 {
+    /// <summary>
+    /// 网络管道
+    /// </summary>
     public interface IChannel : IDisposable
     {
         string address { get; }

@@ -10,11 +10,14 @@ using ZEngine.Window;
 
 namespace ZEngine.Resource
 {
+    /// <summary>
+    /// 检查资源模块更新结果
+    /// </summary>
     public interface IRequestResourceModuleUpdateResult : IDisposable
     {
         Status status { get; }
         ModuleOptions[] options { get; }
-        GameAssetBundleManifest[] bundles { get; }
+        ResourceBundleManifest[] bundles { get; }
 
         internal static UniTask<IRequestResourceModuleUpdateResult> Create(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
         {
@@ -32,13 +35,13 @@ namespace ZEngine.Resource
             class UpdateItem
             {
                 public URLOptions options;
-                public GameResourceModuleManifest module;
-                public GameAssetBundleManifest bundle;
+                public ResourceModuleManifest module;
+                public ResourceBundleManifest bundle;
             }
 
             public Status status { get; set; }
             public ModuleOptions[] options { get; set; }
-            public GameAssetBundleManifest[] bundles { get; set; }
+            public ResourceBundleManifest[] bundles { get; set; }
             public IProgressHandle gameProgressHandle;
             public UniTaskCompletionSource<IRequestResourceModuleUpdateResult> taskCompletionSource;
 
@@ -59,7 +62,7 @@ namespace ZEngine.Resource
                 }
 
                 List<UpdateItem> updateBundleList = new List<UpdateItem>();
-                List<GameResourceModuleManifest> moduleManifests = new List<GameResourceModuleManifest>();
+                List<ResourceModuleManifest> moduleManifests = new List<ResourceModuleManifest>();
                 for (int i = 0; i < options.Length; i++)
                 {
                     await GetNeedUpdateResourceModuleManifest(options[i], updateBundleList, moduleManifests);
@@ -68,7 +71,7 @@ namespace ZEngine.Resource
                 bundles = updateBundleList.Select(x => x.bundle).ToArray();
                 if (updateBundleList.Count is 0)
                 {
-                    moduleManifests.ForEach(ResourceManager.instance.AddModuleManifest);
+                    moduleManifests.ForEach(ZGame.Data.Add);
                     OnComplate(Status.Success);
                     return;
                 }
@@ -98,15 +101,15 @@ namespace ZEngine.Resource
                 }
 
                 downloadResult.Dispose();
-                moduleManifests.ForEach(ResourceManager.instance.AddModuleManifest);
+                moduleManifests.ForEach(ZGame.Data.Add);
                 OnComplate(Status.Success);
                 ZGame.Console.Log(status);
             }
 
-            private async UniTask GetNeedUpdateResourceModuleManifest(ModuleOptions options, List<UpdateItem> updateBundleList, List<GameResourceModuleManifest> moduleManifests)
+            private async UniTask GetNeedUpdateResourceModuleManifest(ModuleOptions options, List<UpdateItem> updateBundleList, List<ResourceModuleManifest> moduleManifests)
             {
                 string moduleFilePath = ZGame.GetHotfixPath(options.url.address, options.moduleName + ".ini");
-                IWebRequestResult<GameResourceModuleManifest> webRequestResult = await ZGame.Network.Get<GameResourceModuleManifest>(moduleFilePath);
+                IWebRequestResult<ResourceModuleManifest> webRequestResult = await ZGame.Network.Get<ResourceModuleManifest>(moduleFilePath);
                 foreach (var VARIABLE in webRequestResult.result.bundleList)
                 {
                     if (ZGame.FileSystem.CheckFileVersion(VARIABLE.name, VARIABLE.version))
@@ -122,6 +125,7 @@ namespace ZEngine.Resource
                     });
                 }
 
+                moduleManifests.Add(webRequestResult.result);
                 webRequestResult.Dispose();
             }
 
@@ -135,7 +139,7 @@ namespace ZEngine.Resource
             public void Dispose()
             {
                 gameProgressHandle = null;
-                bundles = Array.Empty<GameAssetBundleManifest>();
+                bundles = Array.Empty<ResourceBundleManifest>();
                 options = Array.Empty<ModuleOptions>();
             }
         }

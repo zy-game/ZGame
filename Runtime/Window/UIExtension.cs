@@ -15,7 +15,7 @@ namespace ZEngine.Window
         /// <returns></returns>
         public static ICountdownPipeline Countdown(this UIWindow window, float count, float interval, Action<ICountdownPipeline> callback)
         {
-            return default;
+            return ICountdownPipeline.Create(window, count, interval, callback);
         }
     }
 }

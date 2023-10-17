@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 namespace ZEngine.Resource
 {
     /// <summary>
-    /// 资源预加载
+    /// 资源模块加载结果
     /// </summary>
     public interface IRequestResourceModuleLoadResult : IDisposable
     {
@@ -67,20 +67,20 @@ namespace ZEngine.Resource
                     return;
                 }
 
-                List<GameAssetBundleManifest> runtimeBundleManifests = new List<GameAssetBundleManifest>();
+                List<ResourceBundleManifest> runtimeBundleManifests = new List<ResourceBundleManifest>();
                 for (int i = 0; i < options.Length; i++)
                 {
-                    GameResourceModuleManifest gameResourceModuleManifest = ResourceManager.instance.GetRuntimeModuleManifest(options[i].moduleName);
-                    if (gameResourceModuleManifest is null || gameResourceModuleManifest.bundleList is null || gameResourceModuleManifest.bundleList.Count is 0)
+                    ResourceModuleManifest resourceModuleManifest = ZGame.Data.GetRuntimeDatableHandle<ResourceModuleManifest>(options[i].moduleName); 
+                    if (resourceModuleManifest is null || resourceModuleManifest.bundleList is null || resourceModuleManifest.bundleList.Count is 0)
                     {
                         ZGame.Console.Log("获取资源模块信息失败，请确认在加载模块前已执行了模块更新检查", options[i].moduleName);
                         OnComplate(Status.Failed);
                         return;
                     }
 
-                    foreach (var UPPER in gameResourceModuleManifest.bundleList)
+                    foreach (var UPPER in resourceModuleManifest.bundleList)
                     {
-                        if (ResourceManager.instance.HasLoadAssetBundle(gameResourceModuleManifest.name, UPPER.name))
+                        if (ZGame.Data.Equals<RuntimeAssetBundleHandle>(UPPER.name))
                         {
                             continue;
                         }
@@ -91,7 +91,7 @@ namespace ZEngine.Resource
 
                 for (int i = 0; i < runtimeBundleManifests.Count; i++)
                 {
-                    IRequestAssetBundleResult requestAssetBundleExecuteHandles = await IRequestAssetBundleResult.Create(runtimeBundleManifests[i]);
+                    IRequestResourceBundleResult requestAssetBundleExecuteHandles = await IRequestResourceBundleResult.Create(runtimeBundleManifests[i]);
                     if (requestAssetBundleExecuteHandles.status is not Status.Success)
                     {
                         OnComplate(Status.Failed);

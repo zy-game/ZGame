@@ -8,6 +8,7 @@ namespace ZEngine.Network
     public interface IDownloadResult : IDisposable
     {
         Status status { get; }
+        float progress { get; }
         HttpDownloadHandle[] Handles { get; }
         DownloadOptions[] options { get; }
 
@@ -23,9 +24,10 @@ namespace ZEngine.Network
 
         class InternalDownloadResult : IDownloadResult
         {
-            public HttpDownloadHandle[] Handles { get; set; }
-            public DownloadOptions[] options { get; set; }
             public Status status { get; set; }
+            public float progress { get; set; }
+            public DownloadOptions[] options { get; set; }
+            public HttpDownloadHandle[] Handles { get; set; }
             public IProgressHandle gameProgressHandle;
             public UniTaskCompletionSource<IDownloadResult> uniTaskCompletionSource;
 
@@ -33,7 +35,8 @@ namespace ZEngine.Network
             {
                 while (true)
                 {
-                    this.gameProgressHandle?.SetProgress(Handles.Sum(x => x.progress) / (float)Handles.Length);
+                    this.progress = Handles.Sum(x => x.progress) / (float)Handles.Length;
+                    this.gameProgressHandle?.SetProgress(progress);
                     if (Handles.Where(x => x.IsComplete() is false).Count() <= 0)
                     {
                         break;

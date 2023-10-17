@@ -91,7 +91,7 @@ namespace ZEngine.Playable
             }
 
             workList.Remove(playableHandle);
-            ZGame.Cache.Handle(playableHandle.url, playableHandle);
+            ZGame.Cache.Enqueue(playableHandle.url, playableHandle);
         }
     }
 }

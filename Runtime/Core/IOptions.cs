@@ -39,7 +39,7 @@ namespace ZEngine
             {
                 Converters = new List<JsonConverter>()
                 {
-                    new OPtionsConverter()
+                    new OptionsConverter()
                 }
             });
         }
@@ -55,7 +55,7 @@ namespace ZEngine
             {
                 Converters = new List<JsonConverter>()
                 {
-                    new OPtionsConverter()
+                    new OptionsConverter()
                 }
             });
         }
@@ -70,7 +70,7 @@ namespace ZEngine
             return Deserialize<T>(File.ReadAllText(path));
         }
 
-        public class OPtionsConverter : JsonConverter
+        public class OptionsConverter : JsonConverter
         {
             /// <summary>
             ///     写入Json数据

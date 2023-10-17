@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEngine;
 using ZEngine.Editor;
 
 namespace ZEngine.Editor.EquipEditor
@@ -27,6 +28,16 @@ namespace ZEngine.Editor.EquipEditor
             GetWindow<EquipEditorWindow>(false, "物品编辑器", true);
         }
 
+        protected override void OnDrawingToolbarMenu()
+        {
+            if (GUILayout.Button("+", EditorStyles.toolbarButton))
+            {
+                EquipOptions options = new EquipOptions() { name = "未命名" };
+                EquipList.instance.optionsList.Add(options);
+                SaveChanged();
+            }
+        }
+
         protected override MenuListItem[] GetMenuList()
         {
             return default;
@@ -39,13 +50,6 @@ namespace ZEngine.Editor.EquipEditor
                 EquipList.instance.optionsList = new List<EquipOptions>();
                 return;
             }
-        }
-
-        protected override void CreateNewItem()
-        {
-            EquipOptions options = new EquipOptions() { name = "未命名" };
-            EquipList.instance.optionsList.Add(options);
-            SaveChanged();
         }
 
         protected override void DrawingItemDataView(object data, float width)
