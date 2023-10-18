@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace ZEngine
 {
-    class ConsoleCommand : Singleton<ConsoleCommand>
+    class Console : Singleton<Console>
     {
-        public ConsoleCommand()
+        public Console()
         {
             if (Application.isPlaying)
             {

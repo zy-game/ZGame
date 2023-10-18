@@ -12,7 +12,7 @@ namespace ZEngine.Window
     {
         private List<IUIComponentBindPipeline> bindPipelines = new List<IUIComponentBindPipeline>();
         private Dictionary<string, GameObject> childList = new Dictionary<string, GameObject>();
-        public GameObject gameObject { get; private set; }
+        public GameObject gameObject { get; internal set; }
 
         public virtual void Awake()
         {
@@ -30,39 +30,6 @@ namespace ZEngine.Window
         {
         }
 
-        internal void SetGameObject(GameObject value, IUIWindowOptions windowOptions = null)
-        {
-            this.gameObject = value;
-            if (windowOptions is null)
-            {
-                return;
-            }
-
-            windowOptions.Initialize(this);
-        }
-
-        internal void SetBindPipeline(string path, IUIComponentBindPipeline pipeline)
-        {
-            IUIComponentBindPipeline bindPipeline = bindPipelines.Find(x => x.path == path);
-            if (bindPipeline is not null)
-            {
-                return;
-            }
-
-            bindPipelines.Add(pipeline);
-        }
-
-        public virtual void OnNotifyChanged(string path, object args)
-        {
-            IUIComponentBindPipeline bindPipeline = bindPipelines.Find(x => x.path == path);
-            if (bindPipeline is null)
-            {
-                return;
-            }
-
-        }
-
-
         public GameObject GetChild(string name)
         {
             if (childList.TryGetValue(name, out GameObject gameObject))
@@ -77,6 +44,11 @@ namespace ZEngine.Window
             }
 
             return transform.gameObject;
+        }
+
+        public T GetBindPipeline<T>(string path)
+        {
+            return default;
         }
 
         public virtual void Dispose()

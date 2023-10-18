@@ -6,8 +6,6 @@ namespace ZEngine.Window
 {
     public interface IUISliderBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<float>, IEventBindPipeline<IUISliderBindPipeline>
     {
-        void SetValueWithoutNotify(float value);
-
         public static IUISliderBindPipeline Create(UIWindow window, string path)
         {
             GameObject gameObject = window.GetChild(path);
@@ -69,7 +67,29 @@ namespace ZEngine.Window
                 Invoke(value);
             }
 
-            public void SetValueWithoutNotify(float value)
+            public void Enable()
+            {
+                if (this.gameObject == null)
+                {
+                    return;
+                }
+
+                this.gameObject.SetActive(true);
+                Active();
+            }
+
+            public void Disable()
+            {
+                if (this.gameObject == null)
+                {
+                    return;
+                }
+
+                this.gameObject.SetActive(false);
+                Inactive();
+            }
+
+            public void SetValueWithoutNotify(object value)
             {
                 if (gameObject == null)
                 {
@@ -81,27 +101,8 @@ namespace ZEngine.Window
                     return;
                 }
 
-                slider.SetValueWithoutNotify(value);
-            }
-
-            public void Enable()
-            {
-                if (this.gameObject == null)
-                {
-                    return;
-                }
-
-                this.gameObject.SetActive(true);
-            }
-
-            public void Disable()
-            {
-                if (this.gameObject == null)
-                {
-                    return;
-                }
-
-                this.gameObject.SetActive(false);
+                this.value = (float)value;
+                slider.SetValueWithoutNotify(this.value);
             }
 
             public void Dispose()

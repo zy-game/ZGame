@@ -5,7 +5,7 @@ using ZEngine.Resource;
 
 namespace ZEngine.Window
 {
-    public interface IUISpriteBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<Sprite>
+    public interface IUISpriteBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<Sprite>, IEventBindPipeline<IUISpriteBindPipeline>
     {
         public static IUISpriteBindPipeline Create(UIWindow window, string path)
         {
@@ -63,6 +63,7 @@ namespace ZEngine.Window
             public UIWindow window { get; set; }
             public GameObject gameObject { get; set; }
             public Image image { get; set; }
+            public event Action<IUISpriteBindPipeline, object> Callback;
 
             public void Active()
             {
@@ -75,6 +76,12 @@ namespace ZEngine.Window
             }
 
             public void SetValue(Sprite value)
+            {
+                SetValueWithoutNotify(value);
+                Invoke(this.value);
+            }
+
+            public void SetValueWithoutNotify(object value)
             {
                 if (gameObject == null)
                 {
@@ -91,7 +98,7 @@ namespace ZEngine.Window
                     ZGame.Resource.Release(this.value);
                 }
 
-                this.value = value;
+                this.value = (Sprite)value;
                 image.sprite = this.value;
             }
 
@@ -103,6 +110,7 @@ namespace ZEngine.Window
                 }
 
                 this.gameObject.SetActive(true);
+                Active();
             }
 
             public void Disable()
@@ -113,6 +121,7 @@ namespace ZEngine.Window
                 }
 
                 this.gameObject.SetActive(false);
+                Inactive();
             }
 
             public void Dispose()
@@ -125,6 +134,26 @@ namespace ZEngine.Window
                 this.value = null;
                 this.image = null;
                 this.actived = false;
+            }
+
+            public void AddListener(Action<IUISpriteBindPipeline, object> callback)
+            {
+                this.Callback += callback;
+            }
+
+            public void RemoveListener(Action<IUISpriteBindPipeline, object> callback)
+            {
+                this.Callback -= callback;
+            }
+
+            public void Invoke(object args)
+            {
+                if (this.actived is false)
+                {
+                    return;
+                }
+
+                this.Callback?.Invoke(this, args);
             }
         }
     }

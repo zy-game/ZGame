@@ -9,7 +9,7 @@ namespace ZEngine.Resource
     /// 资源包数据
     /// </summary>
     [Serializable]
-    public sealed class ResourceBundleManifest : IRuntimeDatableHandle
+    public sealed class ResourceBundleManifest : IDatableHandle
     {
         /// <summary>
         /// 资源包名

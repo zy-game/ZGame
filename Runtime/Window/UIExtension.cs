@@ -13,9 +13,9 @@ namespace ZEngine.Window
         /// <param name="format">格式化样式</param>
         /// <param name="callback">刷新回调</param>
         /// <returns></returns>
-        public static IUITimingBindPipeline Countdown(this UIWindow window, float count, float interval, Action<IUITimingBindPipeline> callback)
+        public static IUITimingBindPipeline Countdown(this UIWindow window, string path, float time, float interval, string text)
         {
-            return IUITimingBindPipeline.Create(window, count, interval, callback);
+            return IUITimingBindPipeline.Create(window, path, time, interval, text);
         }
     }
 }

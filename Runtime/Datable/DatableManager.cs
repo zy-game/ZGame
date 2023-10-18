@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,13 +6,13 @@ namespace ZEngine
 {
     class DatableManager : Singleton<DatableManager>
     {
-        private static Dictionary<Type, List<IRuntimeDatableHandle>> _handles = new Dictionary<Type, List<IRuntimeDatableHandle>>();
+        private static Dictionary<Type, List<IDatableHandle>> _handles = new Dictionary<Type, List<IDatableHandle>>();
 
-        public void Add<T>(T runtimeDatableHandle) where T : IRuntimeDatableHandle
+        public void Add<T>(T runtimeDatableHandle) where T : IDatableHandle
         {
-            if (_handles.TryGetValue(typeof(T), out List<IRuntimeDatableHandle> list) is false)
+            if (_handles.TryGetValue(typeof(T), out List<IDatableHandle> list) is false)
             {
-                _handles.Add(typeof(T), list = new List<IRuntimeDatableHandle>());
+                _handles.Add(typeof(T), list = new List<IDatableHandle>());
             }
 
             list.Add(runtimeDatableHandle);
@@ -20,7 +20,7 @@ namespace ZEngine
 
         public bool TryGetValue<T>(string name, out T runtimeDatableHandle)
         {
-            if (_handles.TryGetValue(typeof(T), out List<IRuntimeDatableHandle> list) is false)
+            if (_handles.TryGetValue(typeof(T), out List<IDatableHandle> list) is false)
             {
                 runtimeDatableHandle = default;
                 return false;
@@ -30,7 +30,7 @@ namespace ZEngine
             return runtimeDatableHandle != null;
         }
 
-        public T GetRuntimeDatableHandle<T>(string name) where T : IRuntimeDatableHandle
+        public T GetRuntimeDatableHandle<T>(string name) where T : IDatableHandle
         {
             if (TryGetValue<T>(name, out T runtimeDatableHandle) is false)
             {
@@ -40,19 +40,19 @@ namespace ZEngine
             return runtimeDatableHandle;
         }
 
-        public void Release<T>(string name, bool isCache = false) where T : IRuntimeDatableHandle
+        public void Release<T>(string name, bool isCache = false) where T : IDatableHandle
         {
             Release(GetRuntimeDatableHandle<T>(name), isCache);
         }
 
-        public void Release(IRuntimeDatableHandle runtimeDatableHandle, bool isCache = false)
+        public void Release(IDatableHandle runtimeDatableHandle, bool isCache = false)
         {
             if (runtimeDatableHandle is null)
             {
                 return;
             }
 
-            if (_handles.TryGetValue(runtimeDatableHandle.GetType(), out List<IRuntimeDatableHandle> list) is false)
+            if (_handles.TryGetValue(runtimeDatableHandle.GetType(), out List<IDatableHandle> list) is false)
             {
                 return;
             }
@@ -67,16 +67,16 @@ namespace ZEngine
             runtimeDatableHandle.Dispose();
         }
 
-        public void Clear<T>(bool isCache) where T : IRuntimeDatableHandle
+        public void Clear<T>(bool isCache) where T : IDatableHandle
         {
-            if (_handles.TryGetValue(typeof(T), out List<IRuntimeDatableHandle> list) is false)
+            if (_handles.TryGetValue(typeof(T), out List<IDatableHandle> list) is false)
             {
                 return;
             }
 
             for (int i = list.Count - 1; i >= 0; i--)
             {
-                IRuntimeDatableHandle runtimeDatableHandle = list[i];
+                IDatableHandle runtimeDatableHandle = list[i];
                 if (isCache)
                 {
                     ZGame.Cache.Enqueue(runtimeDatableHandle.name, runtimeDatableHandle);
@@ -89,9 +89,9 @@ namespace ZEngine
             list.Clear();
         }
 
-        public IRuntimeDatableHandle Find(Func<IRuntimeDatableHandle, bool> comper)
+        public IDatableHandle Find(Func<IDatableHandle, bool> comper)
         {
-            List<IRuntimeDatableHandle> result = new List<IRuntimeDatableHandle>();
+            List<IDatableHandle> result = new List<IDatableHandle>();
             foreach (var VARIABLE in _handles.Values)
             {
                 result.AddRange(VARIABLE.Where(comper));
@@ -100,9 +100,9 @@ namespace ZEngine
             return result.FirstOrDefault();
         }
 
-        public IRuntimeDatableHandle[] Where(Func<IRuntimeDatableHandle, bool> comper)
+        public IDatableHandle[] Where(Func<IDatableHandle, bool> comper)
         {
-            List<IRuntimeDatableHandle> result = new List<IRuntimeDatableHandle>();
+            List<IDatableHandle> result = new List<IDatableHandle>();
             foreach (var VARIABLE in _handles.Values)
             {
                 result.AddRange(VARIABLE.Where(comper));
@@ -113,7 +113,7 @@ namespace ZEngine
 
         public T Find<T>(Func<T, bool> comper)
         {
-            if (_handles.TryGetValue(typeof(T), out List<IRuntimeDatableHandle> list))
+            if (_handles.TryGetValue(typeof(T), out List<IDatableHandle> list))
             {
                 return (T)list.Find(x => comper((T)x));
             }
@@ -123,8 +123,8 @@ namespace ZEngine
 
         public T[] Where<T>(Func<T, bool> comper)
         {
-            List<IRuntimeDatableHandle> temp = new List<IRuntimeDatableHandle>();
-            if (_handles.TryGetValue(typeof(T), out List<IRuntimeDatableHandle> list))
+            List<IDatableHandle> temp = new List<IDatableHandle>();
+            if (_handles.TryGetValue(typeof(T), out List<IDatableHandle> list))
             {
                 temp.AddRange(list.Where(x => comper((T)x)));
             }
@@ -137,10 +137,5 @@ namespace ZEngine
 
             return result;
         }
-    }
-
-    public interface IRuntimeDatableHandle : IDisposable
-    {
-        string name { get; }
     }
 }

@@ -49,6 +49,7 @@ namespace ZEngine.Window
                 }
 
                 this.gameObject.SetActive(true);
+                Active();
             }
 
             public void Disable()
@@ -59,6 +60,11 @@ namespace ZEngine.Window
                 }
 
                 this.gameObject.SetActive(false);
+                Inactive();
+            }
+
+            public void SetValueWithoutNotify(object value)
+            {
             }
 
             public void Active()

@@ -9,7 +9,7 @@ namespace ZEngine.Resource
     /// 模块数据
     /// </summary>
     [Serializable]
-    public sealed class ResourceModuleManifest : IRuntimeDatableHandle
+    public sealed class ResourceModuleManifest : IDatableHandle
     {
         /// <summary>
         /// 模块名

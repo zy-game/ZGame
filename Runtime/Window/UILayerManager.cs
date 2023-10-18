@@ -43,8 +43,18 @@ namespace ZEngine.Window
             rectTransform.anchoredPosition = Vector2.zero;
         }
 
-        public void ClearLayer(byte layer)
+        public void Clear(byte layer = 0)
         {
+            if (layer == 0)
+            {
+                foreach (var VARIABLE in layers.Values)
+                {
+                    GameObject.DestroyImmediate(VARIABLE.gameObject);
+                }
+
+                return;
+            }
+
             if (layers.TryGetValue(layer, out Canvas canvas) is false)
             {
                 return;

@@ -22,42 +22,28 @@ using Object = UnityEngine.Object;
 
 public sealed class ZGame
 {
+    public static void Initialize()
+        => Custom.Initialize();
+
     /// <summary>
     /// 退出播放
     /// </summary>
     public static void Quit()
-    {
-        EnumeratorExtension.StopAll();
-#if UNITY_EDITOR
-        EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
-    }
+        => Custom.Quit();
 
     /// <summary>
     /// 获取当前运行时平台名(小写)
     /// </summary>
     /// <returns></returns>
     public static string GetPlatfrom()
-    {
-#if UNITY_ANDROID
-            return "android";
-#elif UNITY_IPHONE
-            return "ios";
-#else
-        return "windows";
-#endif
-    }
+        => Custom.GetPlatfrom();
 
     /// <summary>
     /// 获取随机名
     /// </summary>
     /// <returns></returns>
     public static string RandomName()
-    {
-        return Guid.NewGuid().ToString().Replace("-", "");
-    }
+        => Custom.RandomName();
 
     /// <summary>
     /// 获取随机数
@@ -66,7 +52,7 @@ public sealed class ZGame
     /// <param name="r"></param>
     /// <returns></returns>
     public static float Random(float l, float r)
-        => UnityEngine.Random.Range(l, r);
+        => Custom.Random(l, r);
 
     /// <summary>
     /// 获取随机数
@@ -75,7 +61,7 @@ public sealed class ZGame
     /// <param name="r"></param>
     /// <returns></returns>
     public static int Random(int l, int r)
-        => UnityEngine.Random.Range(l, r);
+        => Custom.Random(l, r);
 
     /// <summary>
     /// 获取热更资源路径
@@ -84,9 +70,7 @@ public sealed class ZGame
     /// <param name="name"></param>
     /// <returns></returns>
     public static string GetHotfixPath(string url, string name)
-    {
-        return $"{url}/{ZGame.GetPlatfrom()}/{name}";
-    }
+        => Custom.GetHotfixPath(url, name);
 
     /// <summary>
     /// 获取本地缓存文件路径
@@ -94,9 +78,7 @@ public sealed class ZGame
     /// <param name="fileName">文件名，不包含扩展名</param>
     /// <returns></returns>
     public static string GetLocalFilePath(string fileName)
-    {
-        return $"{Application.persistentDataPath}/{fileName}";
-    }
+        => Custom.GetLocalFilePath(fileName);
 
     public sealed class Data
     {
@@ -105,7 +87,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="runtimeDatableHandle"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Add<T>(T runtimeDatableHandle) where T : IRuntimeDatableHandle
+        public static void Add<T>(T runtimeDatableHandle) where T : IDatableHandle
             => DatableManager.instance.Add(runtimeDatableHandle);
 
         /// <summary>
@@ -114,7 +96,7 @@ public sealed class ZGame
         /// <param name="name"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T GetRuntimeDatableHandle<T>(string name) where T : IRuntimeDatableHandle
+        public static T GetRuntimeDatableHandle<T>(string name) where T : IDatableHandle
             => DatableManager.instance.GetRuntimeDatableHandle<T>(name);
 
         /// <summary>
@@ -123,7 +105,7 @@ public sealed class ZGame
         /// <param name="name"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static bool Equals<T>(string name) where T : IRuntimeDatableHandle
+        public static bool Equals<T>(string name) where T : IDatableHandle
             => GetRuntimeDatableHandle<T>(name) != null;
 
         /// <summary>
@@ -133,7 +115,7 @@ public sealed class ZGame
         /// <param name="result"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static bool TryGetValue<T>(string name, out T result) where T : IRuntimeDatableHandle
+        public static bool TryGetValue<T>(string name, out T result) where T : IDatableHandle
             => DatableManager.instance.TryGetValue<T>(name, out result);
 
         /// <summary>
@@ -141,14 +123,14 @@ public sealed class ZGame
         /// </summary>
         /// <param name="name"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Release<T>(string name, bool isCache = false) where T : IRuntimeDatableHandle
+        public static void Release<T>(string name, bool isCache = false) where T : IDatableHandle
             => DatableManager.instance.Release<T>(name, isCache);
 
         /// <summary>
         /// 回收数据句柄
         /// </summary>
         /// <param name="runtimeDatableHandle"></param>
-        public static void Release(IRuntimeDatableHandle runtimeDatableHandle, bool isCache = false)
+        public static void Release(IDatableHandle runtimeDatableHandle, bool isCache = false)
             => DatableManager.instance.Release(runtimeDatableHandle, isCache);
 
         /// <summary>
@@ -156,7 +138,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="isCache"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Clear<T>(bool isCache = false) where T : IRuntimeDatableHandle
+        public static void Clear<T>(bool isCache = false) where T : IDatableHandle
             => DatableManager.instance.Clear<T>(isCache);
 
         /// <summary>
@@ -164,7 +146,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="comper"></param>
         /// <returns></returns>
-        public static IRuntimeDatableHandle Find(Func<IRuntimeDatableHandle, bool> comper)
+        public static IDatableHandle Find(Func<IDatableHandle, bool> comper)
             => DatableManager.instance.Find(comper);
 
         /// <summary>
@@ -172,7 +154,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="comper"></param>
         /// <returns></returns>
-        public static IRuntimeDatableHandle[] Where(Func<IRuntimeDatableHandle, bool> comper)
+        public static IDatableHandle[] Where(Func<IDatableHandle, bool> comper)
             => DatableManager.instance.Where(comper);
 
         /// <summary>
@@ -181,7 +163,7 @@ public sealed class ZGame
         /// <param name="comper"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T Find<T>(Func<T, bool> comper) where T : IRuntimeDatableHandle
+        public static T Find<T>(Func<T, bool> comper) where T : IDatableHandle
             => DatableManager.instance.Find(comper);
 
         /// <summary>
@@ -190,7 +172,7 @@ public sealed class ZGame
         /// <param name="comper"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T[] Where<T>(Func<T, bool> comper) where T : IRuntimeDatableHandle
+        public static T[] Where<T>(Func<T, bool> comper) where T : IDatableHandle
             => DatableManager.instance.Where(comper);
     }
 
@@ -285,42 +267,42 @@ public sealed class ZGame
         /// </summary>
         /// <param name="message"></param>
         public static void Log(object message)
-            => ConsoleCommand.instance.Log($"[INFO] {message}");
+            => ZEngine.Console.instance.Log($"[INFO] {message}");
 
         /// <summary>
         /// 在控制台输出一条日志
         /// </summary>
         /// <param name="message"></param>
         public static void Log(params object[] message)
-            => ConsoleCommand.instance.Log($"[INFO] {string.Join(" ", message)}");
+            => ZEngine.Console.instance.Log($"[INFO] {string.Join(" ", message)}");
 
         /// <summary>
         /// 输出警告信息
         /// </summary>
         /// <param name="message"></param>
         public static void Warning(object message)
-            => ConsoleCommand.instance.Warning($"[WARNING] {message}");
+            => ZEngine.Console.instance.Warning($"[WARNING] {message}");
 
         /// <summary>
         /// 输出警告信息
         /// </summary>
         /// <param name="message"></param>
         public static void Warning(params object[] message)
-            => ConsoleCommand.instance.Warning($"[WARNING] {string.Join(" ", message)}");
+            => ZEngine.Console.instance.Warning($"[WARNING] {string.Join(" ", message)}");
 
         /// <summary>
         /// 输出错误信息
         /// </summary>
         /// <param name="message"></param>
         public static void Error(object message)
-            => ConsoleCommand.instance.Error($"[ERROR] {message}");
+            => ZEngine.Console.instance.Error($"[ERROR] {message}");
 
         /// <summary>
         /// 输出错误信息
         /// </summary>
         /// <param name="message"></param>
         public static void Error(params object[] message)
-            => ConsoleCommand.instance.Error($"[ERROR] {string.Join(" ", message)}");
+            => ZEngine.Console.instance.Error($"[ERROR] {string.Join(" ", message)}");
     }
 
     /// <summary>
@@ -644,6 +626,26 @@ public sealed class ZGame
         /// <param name="type"></param>
         public static void Hide(Type type)
             => WindowManager.instance.Hide(type);
+
+        /// <summary>
+        /// UI事件
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="args"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void OnNotify<T>(string name, params object[] args) where T : UIWindow
+            => WindowManager.instance.OnEvent(typeof(T), name, args);
+
+        /// <summary>
+        /// UI事件
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="args"></param>
+        public static void OnNotify(string name, params object[] args)
+            => WindowManager.instance.OnEvent(null, name, args);
+
+        public static void Clear()
+            => WindowManager.instance.Clear();
     }
 
     /// <summary>

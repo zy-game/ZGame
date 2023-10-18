@@ -7,8 +7,6 @@ namespace ZEngine.Window
 {
     public interface IUIInputFieldBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<string>, IEventBindPipeline<IUIInputFieldBindPipeline>
     {
-        void SetTextWithoutNotify(string value);
-
         public static IUIInputFieldBindPipeline Create(UIWindow window, string path)
         {
             GameObject gameObject = window.GetChild(path);
@@ -28,6 +26,7 @@ namespace ZEngine.Window
             inputFieldBindPipelineHandle.path = path;
             inputFieldBindPipelineHandle.name = gameObject.name;
             inputFieldBindPipelineHandle.gameObject = gameObject;
+            inputFieldBindPipelineHandle.inputField = tmpInputField;
             tmpInputField.onEndEdit.RemoveAllListeners();
             tmpInputField.onEndEdit.AddListener(args => inputFieldBindPipelineHandle.SetValue(args));
             inputFieldBindPipelineHandle.Active();
@@ -37,7 +36,7 @@ namespace ZEngine.Window
         public static IUIInputFieldBindPipeline Create(UIWindow window, string path, string text, Action<IUIInputFieldBindPipeline, object> callback)
         {
             IUIInputFieldBindPipeline inputFieldBindPipeline = Create(window, path);
-            inputFieldBindPipeline.SetTextWithoutNotify(text);
+            inputFieldBindPipeline.SetValueWithoutNotify(text);
             inputFieldBindPipeline.AddListener(callback);
             return inputFieldBindPipeline;
         }
@@ -50,6 +49,7 @@ namespace ZEngine.Window
             public UIWindow window { get; set; }
             public GameObject gameObject { get; set; }
             public string value { get; set; }
+            public TMP_InputField inputField { get; set; }
             private event Action<IUIInputFieldBindPipeline, object> callback;
 
             public void Active()
@@ -70,6 +70,7 @@ namespace ZEngine.Window
                 }
 
                 this.gameObject.SetActive(true);
+                Active();
             }
 
             public void Disable()
@@ -80,6 +81,7 @@ namespace ZEngine.Window
                 }
 
                 this.gameObject.SetActive(false);
+                Inactive();
             }
 
             public void AddListener(Action<IUIInputFieldBindPipeline, object> callback)
@@ -116,25 +118,24 @@ namespace ZEngine.Window
 
             public void SetValue(string value)
             {
-                SetTextWithoutNotify(value);
+                SetValueWithoutNotify(value);
                 Invoke(value);
             }
 
-            public void SetTextWithoutNotify(string value)
+            public void SetValueWithoutNotify(object value)
             {
                 if (gameObject == null)
                 {
                     return;
                 }
 
-                this.value = value;
-                TMP_InputField tmpInputField = gameObject.GetComponent<TMP_InputField>();
-                if (tmpInputField == null)
+                if (inputField == null)
                 {
                     return;
                 }
 
-                tmpInputField.SetTextWithoutNotify(value);
+                this.value = value.ToString();
+                inputField.SetTextWithoutNotify(this.value);
             }
         }
     }

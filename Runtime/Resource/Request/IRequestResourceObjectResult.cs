@@ -12,9 +12,8 @@ namespace ZEngine.Resource
         Object result { get; }
         string path { get; }
         Status status { get; }
-
         void Release();
-
+        bool EnsureLoadAssetSuccessfuly();
 
         internal static IRequestResourceObjectResult Create(string path)
         {
@@ -107,7 +106,7 @@ namespace ZEngine.Resource
                 }
 #endif
 
-                bundleHandle =ZGame.Data.Find<RuntimeAssetBundleHandle>(x => x.Contains(path));
+                bundleHandle = ZGame.Data.Find<RuntimeAssetBundleHandle>(x => x.Contains(path));
                 if (bundleHandle is null)
                 {
                     ZGame.Console.Error($"未找到资源,请确认资源包是否已经加载", path);
@@ -128,6 +127,11 @@ namespace ZEngine.Resource
 
                 ZGame.Resource.Release(result);
                 Dispose();
+            }
+
+            public bool EnsureLoadAssetSuccessfuly()
+            {
+                return status == Status.Success;
             }
 
             public void Dispose()

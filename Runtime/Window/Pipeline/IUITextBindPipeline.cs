@@ -1,59 +1,131 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ZEngine.Window
 {
-    public interface IUITextBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<object>
+    public interface IUITextBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<object>, IEventBindPipeline<IUITextBindPipeline>
     {
         public static IUITextBindPipeline Create(UIWindow window, string path)
         {
-            return new TextBindPipelineHandle(window, path);
+            GameObject gameObject = window.GetChild(path);
+            if (gameObject == null)
+            {
+                return default;
+            }
+
+            TMP_Text tmpText = gameObject.GetComponent<TMP_Text>();
+            if (tmpText == null)
+            {
+                return default;
+            }
+
+            TextBindPipelineHandle textBindPipelineHandle = new TextBindPipelineHandle();
+            textBindPipelineHandle.window = window;
+            textBindPipelineHandle.path = path;
+            textBindPipelineHandle.name = gameObject.name;
+            textBindPipelineHandle.gameObject = gameObject;
+            textBindPipelineHandle.text = tmpText;
+            textBindPipelineHandle.Active();
+            return textBindPipelineHandle;
         }
 
-        class TextBindPipelineHandle : IUITextBindPipeline
+        public
+            class TextBindPipelineHandle : IUITextBindPipeline
         {
-            public Text text { get; set; }
+            public TMP_Text text { get; set; }
             public string path { get; set; }
             public string name { get; set; }
-            public bool actived { get; }
+            public bool actived { get; set; }
             public object value { get; set; }
             public UIWindow window { get; set; }
             public GameObject gameObject { get; set; }
+            public event Action<IUITextBindPipeline, object> callback;
+
+            public void SetValue(object value)
+            {
+                SetValueWithoutNotify(value);
+                Invoke(value);
+            }
 
             public void Enable()
             {
-                throw new NotImplementedException();
+                if (gameObject == null)
+                {
+                    return;
+                }
+
+                gameObject.SetActive(true);
+                Active();
             }
 
             public void Disable()
             {
-                throw new NotImplementedException();
+                if (gameObject == null)
+                {
+                    return;
+                }
+
+                gameObject.SetActive(false);
+                Inactive();
             }
 
-            public void SetValue(object value)
+            public void SetValueWithoutNotify(object value)
             {
-                throw new NotImplementedException();
+                if (gameObject == null)
+                {
+                    return;
+                }
+
+                if (text == null)
+                {
+                    return;
+                }
+
+                this.value = value;
+                text.text = value.ToString();
             }
 
             public void Dispose()
             {
-                throw new NotImplementedException();
+                this.name = String.Empty;
+                this.path = String.Empty;
+                this.window = null;
+                this.gameObject = null;
+                this.value = default;
+                this.text = null;
+                this.actived = false;
             }
 
             public void Active()
             {
-                throw new NotImplementedException();
+                this.actived = true;
             }
 
             public void Inactive()
             {
-                throw new NotImplementedException();
+                this.actived = false;
             }
 
-            public void OnChange(object args)
+            public void AddListener(Action<IUITextBindPipeline, object> callback)
             {
-                throw new NotImplementedException();
+                this.callback += callback;
+            }
+
+            public void RemoveListener(Action<IUITextBindPipeline, object> callback)
+            {
+                this.callback -= callback;
+            }
+
+            public void Invoke(object args)
+            {
+                if (actived is false)
+                {
+                    return;
+                }
+
+                this.callback?.Invoke(this, value);
             }
         }
     }

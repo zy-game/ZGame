@@ -9,26 +9,6 @@ namespace ZEngine.Window
     class WindowManager : Singleton<WindowManager>
     {
         private Dictionary<Type, UIWindow> windows = new Dictionary<Type, UIWindow>();
-        private Dictionary<UIOptions.Layer, Canvas> canvasMap = new Dictionary<UIOptions.Layer, Canvas>();
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            foreach (var VARIABLE in windows.Values)
-            {
-                VARIABLE.Dispose();
-            }
-
-            foreach (var VARIABLE in canvasMap.Values)
-            {
-                GameObject.DestroyImmediate(VARIABLE.gameObject);
-            }
-
-            ZGame.Cache.RemoveCacheArea<UIWindow>();
-            windows.Clear();
-            canvasMap.Clear();
-            ZGame.Console.Log("关闭所有窗口");
-        }
 
         public UIWindow OpenWindow(Type windowType)
         {
@@ -53,14 +33,14 @@ namespace ZEngine.Window
             }
 
             IRequestResourceObjectResult requestResourceObjectResult = ZGame.Resource.LoadAsset(options.path);
-            if (requestResourceObjectResult.result == null)
+            if (requestResourceObjectResult.EnsureLoadAssetSuccessfuly() is false)
             {
                 ZGame.Console.Error(new NullReferenceException(options.path));
                 return default;
             }
 
             window = (UIWindow)Activator.CreateInstance(windowType);
-            window.SetGameObject(requestResourceObjectResult.Instantiate());
+            window.gameObject = requestResourceObjectResult.Instantiate();
             UILayerManager.instance.SetLayer((byte)options.layer, window.gameObject);
             windows.Add(windowType, window);
             window.Awake();
@@ -124,6 +104,43 @@ namespace ZEngine.Window
 
             window.gameObject.SetActive(false);
             window.Disable();
+        }
+
+        public void OnEvent(Type type, string name, params object[] args)
+        {
+            if (type is null)
+            {
+                foreach (var VARIABLE in windows.Values)
+                {
+                    VARIABLE.OnEvent(name, args);
+                }
+
+                return;
+            }
+
+            if (windows.TryGetValue(type, out UIWindow window) is false)
+            {
+                return;
+            }
+
+            window.OnEvent(name, args);
+        }
+
+        public void Clear()
+        {
+            foreach (var VARIABLE in windows.Values)
+            {
+                VARIABLE.Dispose();
+            }
+
+            windows.Clear();
+            ZGame.Cache.RemoveCacheArea<UIWindow>();
+        }
+
+        public override void Dispose()
+        {
+            Clear();
+            UILayerManager.instance.Clear();
         }
     }
 }
