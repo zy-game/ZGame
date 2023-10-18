@@ -70,6 +70,12 @@ namespace ZEngine
             return Deserialize<T>(File.ReadAllText(path));
         }
 
+        class OpData
+        {
+            public string type;
+            public string value;
+        }
+
         public class OptionsConverter : JsonConverter
         {
             /// <summary>
@@ -175,12 +181,6 @@ namespace ZEngine
                 }
 
                 return objectType == typeof(IOptions);
-            }
-
-            class OpData
-            {
-                public string type;
-                public string value;
             }
         }
     }

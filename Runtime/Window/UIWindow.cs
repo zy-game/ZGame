@@ -10,8 +10,8 @@ namespace ZEngine.Window
 {
     public abstract class UIWindow : IDisposable
     {
+        private List<IUIComponentBindPipeline> bindPipelines = new List<IUIComponentBindPipeline>();
         private Dictionary<string, GameObject> childList = new Dictionary<string, GameObject>();
-        private List<IUIBindPipeline> bindPipelines = new List<IUIBindPipeline>();
         public GameObject gameObject { get; private set; }
 
         public virtual void Awake()
@@ -41,9 +41,9 @@ namespace ZEngine.Window
             windowOptions.Initialize(this);
         }
 
-        internal void SetBindPipeline(string path, IUIBindPipeline pipeline)
+        internal void SetBindPipeline(string path, IUIComponentBindPipeline pipeline)
         {
-            IUIBindPipeline bindPipeline = bindPipelines.Find(x => x.path == path);
+            IUIComponentBindPipeline bindPipeline = bindPipelines.Find(x => x.path == path);
             if (bindPipeline is not null)
             {
                 return;
@@ -54,13 +54,12 @@ namespace ZEngine.Window
 
         public virtual void OnNotifyChanged(string path, object args)
         {
-            IUIBindPipeline bindPipeline = bindPipelines.Find(x => x.path == path);
+            IUIComponentBindPipeline bindPipeline = bindPipelines.Find(x => x.path == path);
             if (bindPipeline is null)
             {
                 return;
             }
 
-            bindPipeline.OnChange(args);
         }
 
 

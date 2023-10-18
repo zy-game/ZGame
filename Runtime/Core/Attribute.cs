@@ -2,6 +2,8 @@ using System;
 
 namespace ZEngine
 {
+
+
     [AttributeUsage(AttributeTargets.Class)]
     public class ConfigAttribute : Attribute
     {

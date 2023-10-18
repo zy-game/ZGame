@@ -22,6 +22,11 @@ namespace ZEngine.Window
 
         public static IUIWindowOptions Create(string optionsPath)
         {
+            if (optionsPath.IsNullOrEmpty())
+            {
+                return default;
+            }
+
             IRequestResourceObjectResult requestResourceObjectResult = ZGame.Resource.LoadAsset(optionsPath);
             if (requestResourceObjectResult.status is not Status.Success)
             {
@@ -74,7 +79,7 @@ namespace ZEngine.Window
 
                 foreach (var VARIABLE in binds)
                 {
-                    window.SetBindPipeline(VARIABLE.Key, IUIBindPipeline.Create(window, VARIABLE.Key, VARIABLE.Value));
+                    window.SetBindPipeline(VARIABLE.Key, IUIComponentBindPipeline.Create(window, VARIABLE.Key, VARIABLE.Value));
                 }
             }
 

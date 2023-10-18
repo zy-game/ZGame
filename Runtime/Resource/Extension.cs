@@ -75,5 +75,10 @@ namespace ZEngine
             Object temp = requestResourceObjectResult.result;
             gameObject.OnDestroyEvent(() => { ZGame.Resource.Release(temp); });
         }
+
+        public static void SetSprite(this IRequestResourceObjectResult requestResourceObjectResult, GameObject gameObject)
+        {
+            
+        }
     }
 }
