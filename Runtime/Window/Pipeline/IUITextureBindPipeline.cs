@@ -5,7 +5,7 @@ using ZEngine.Resource;
 
 namespace ZEngine.Window
 {
-    public interface IUITextureBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<Texture>, IEventBindPipeline<IUITextureBindPipeline>
+    public interface IUITextureBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<Texture>
     {
         public static IUITextureBindPipeline Create(UIWindow window, string path)
         {
@@ -64,7 +64,7 @@ namespace ZEngine.Window
             public GameObject gameObject { get; set; }
             public Texture value { get; set; }
             public RawImage image { get; set; }
-            public event Action<IUITextureBindPipeline, object> Callback;
+            public event Action<Texture> Callback;
 
             public void Dispose()
             {
@@ -110,7 +110,7 @@ namespace ZEngine.Window
                 Inactive();
             }
 
-            public void SetValueWithoutNotify(object value)
+            public void SetValueWithoutNotify(Texture value)
             {
                 if (gameObject == null)
                 {
@@ -132,24 +132,24 @@ namespace ZEngine.Window
                 Invoke(value);
             }
 
-            public void AddListener(Action<IUITextureBindPipeline, object> callback)
+            public void AddListener(Action<Texture> callback)
             {
                 this.Callback += callback;
             }
 
-            public void RemoveListener(Action<IUITextureBindPipeline, object> callback)
+            public void RemoveListener(Action<Texture> callback)
             {
                 this.Callback -= callback;
             }
 
-            public void Invoke(object args)
+            public void Invoke(Texture args)
             {
                 if (actived is false)
                 {
                     return;
                 }
 
-                this.Callback?.Invoke(this, args);
+                this.Callback?.Invoke(args);
             }
         }
     }

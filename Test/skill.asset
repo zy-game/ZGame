@@ -12,24 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb11d02256994789a57d671408f2ea0e, type: 3}
   m_Name: skill
   m_EditorClassIdentifier: 
-  optionsList:
-  - id: 10001
-    name: "\u70C8\u7130\u707C\u70E7"
-    cd: 0
-    use: 0
-    maxlevel: 0
-    icon: Assets/Test/New Folder/07765a20.5be5bd44-dd27-46f7-86bd-c3ef016d14ad.png
-    skillType: 1
-    useType: 1
-    describe: 
-    career: 0
-    path_prefab: 
-    path_hit: 
-    path_buffer: 
-    layerDatas:
-    - index: 0
-      name: Layer_0
-      state: 1
-      type: 0
-      startFrameIndex: 26
-      endFrameIndex: 40
+  optionsList: []

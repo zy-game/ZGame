@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEditor;
 using UnityEngine;
+using ZEngine.Game;
 
 namespace ZEngine
 {
@@ -8,6 +9,9 @@ namespace ZEngine
     {
         public static void Initialize()
         {
+            Console.instance.ShowConsole();
+            GameManager.instance.Initialize();
+
             ITiming.Default = ITiming.Create(30);
         }
 

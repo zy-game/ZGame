@@ -13,7 +13,6 @@ namespace ZEngine.Window
     /// </summary>
     public interface IUIBindOptions : IOptions
     {
-        void Initialize(UIWindow window);
         public static IUIBindOptions Create(string path)
         {
             return default;

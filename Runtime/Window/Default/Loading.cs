@@ -6,33 +6,30 @@ namespace ZEngine.Window
     [UIOptions("Resources/Loading", UIOptions.Layer.Low)]
     public class Loading : UIWindow, IProgressHandle
     {
-        private Slider slider;
+        // private Slider slider;
+        private IUITextBindPipeline textBindPipeline;
+        private IUISliderBindPipeline sliderBindPipeline;
 
         public override void Awake()
         {
-            slider = this.GetChild("Panel/Slider").GetComponent<Slider>();
+            textBindPipeline = this.BindText("Panel/Text (TMP)");
+            sliderBindPipeline = this.BindSlider("Panel/Slider", 0);
         }
 
-        public Loading SetInfo(string info)
+        public IProgressHandle SetInfo(string text)
         {
-            GetChild("Panel/Text (TMP)").GetComponent<TMP_Text>().text = info;
+            textBindPipeline.SetValue(text);
             return this;
         }
 
-
-        public void SetTextInfo(string text)
+        public IProgressHandle SetProgress(float progress)
         {
-            SetInfo(text);
-        }
-
-        public void SetProgress(float progress)
-        {
-            if (slider == null)
+            if (sliderBindPipeline is not null)
             {
-                return;
+                sliderBindPipeline.SetValue(progress);
             }
 
-            slider.value = progress;
+            return this;
         }
     }
 }

@@ -73,13 +73,13 @@ namespace ZEngine.Window
             public void Active()
             {
                 this.actived = true;
-                BehaviourSingleton.OnUpdate(Update);
+                Behaviour.OnUpdate(Update);
             }
 
             public void Inactive()
             {
                 this.actived = false;
-                BehaviourSingleton.RemoveUpdate(Update);
+                Behaviour.RemoveUpdate(Update);
             }
 
 

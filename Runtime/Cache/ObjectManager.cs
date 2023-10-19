@@ -6,7 +6,6 @@ namespace ZEngine.Cache
     public class ObjectManager : Singleton<ObjectManager>
     {
         private List<IObjectPoolHandle> handlers = new List<IObjectPoolHandle>();
-
         protected override void OnUpdate()
         {
             for (int i = 0; i < handlers.Count; i++)

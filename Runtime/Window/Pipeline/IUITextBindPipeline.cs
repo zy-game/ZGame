@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace ZEngine.Window
 {
-    public interface IUITextBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<object>, IEventBindPipeline<IUITextBindPipeline>
+    public interface IUITextBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<object>
     {
         public static IUITextBindPipeline Create(UIWindow window, string path)
         {
@@ -31,8 +31,7 @@ namespace ZEngine.Window
             return textBindPipelineHandle;
         }
 
-        public
-            class TextBindPipelineHandle : IUITextBindPipeline
+        public class TextBindPipelineHandle : IUITextBindPipeline
         {
             public TMP_Text text { get; set; }
             public string path { get; set; }
@@ -41,12 +40,12 @@ namespace ZEngine.Window
             public object value { get; set; }
             public UIWindow window { get; set; }
             public GameObject gameObject { get; set; }
-            public event Action<IUITextBindPipeline, object> callback;
+            public event Action<object> callback;
 
             public void SetValue(object value)
             {
                 SetValueWithoutNotify(value);
-                Invoke(value);
+                Invoke(this);
             }
 
             public void Enable()
@@ -108,12 +107,12 @@ namespace ZEngine.Window
                 this.actived = false;
             }
 
-            public void AddListener(Action<IUITextBindPipeline, object> callback)
+            public void AddListener(Action<object> callback)
             {
                 this.callback += callback;
             }
 
-            public void RemoveListener(Action<IUITextBindPipeline, object> callback)
+            public void RemoveListener(Action<object> callback)
             {
                 this.callback -= callback;
             }
@@ -125,7 +124,7 @@ namespace ZEngine.Window
                     return;
                 }
 
-                this.callback?.Invoke(this, value);
+                this.callback?.Invoke(args);
             }
         }
     }

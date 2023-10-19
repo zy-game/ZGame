@@ -3,18 +3,32 @@ using UnityEngine;
 
 namespace ZEngine
 {
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class CommandMethod : Attribute
+    {
+        internal string command;
+
+        public CommandMethod(string command)
+        {
+            this.command = command;
+        }
+    }
+
     class Console : Singleton<Console>
     {
-        public Console()
+        private GUISkin skin;
+
+        public void ShowConsole()
         {
-            if (Application.isPlaying)
-            {
-                BehaviourSingleton.OnGUICall(OnGUI);
-            }
+            skin = Resources.Load<GUISkin>("New GUISkin");
+            Behaviour.OnGUICall(OnGUI);
         }
 
         private void OnGUI()
         {
+            GUILayout.BeginHorizontal(skin.box, GUILayout.Width(60), GUILayout.Height(40));
+            GUILayout.Button("Open", skin.button);
+            GUILayout.EndHorizontal();
         }
 
         /// <summary>

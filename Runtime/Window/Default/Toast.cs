@@ -19,7 +19,7 @@ namespace ZEngine.Window
             handle.transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack);
             this.GetChild("Text (TMP)").GetComponent<TMP_Text>().text = text;
             this.GetChild("Text (TMP)").GetComponent<AutoSize>().Refersh();
-            WaitFor.Create(3f, () => ZGame.Window.Close<Toast>());
+            ITiming.Default.DelayCall(3f, () => ZGame.Window.Close<Toast>());
             return this;
         }
     }

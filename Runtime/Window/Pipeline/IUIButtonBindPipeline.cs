@@ -31,6 +31,18 @@ namespace ZEngine.Window
             return buttonBindPipelineHandle;
         }
 
+        public static IUIButtonBindPipeline Create(UIWindow window, string path, Action<IUIButtonBindPipeline> callback)
+        {
+            IUIButtonBindPipeline buttonBindPipeline = Create(window, path);
+            if (buttonBindPipeline is null)
+            {
+                return default;
+            }
+
+            buttonBindPipeline.AddListener(callback);
+            return buttonBindPipeline;
+        }
+
         class ButtonBindPipelineHandle : IUIButtonBindPipeline
         {
             public string path { get; set; }
@@ -39,7 +51,7 @@ namespace ZEngine.Window
             public GameObject gameObject { get; set; }
             public bool actived { get; set; }
 
-            private event Action<IUIButtonBindPipeline, object> callback;
+            private event Action<IUIButtonBindPipeline> callback;
 
             public void Enable()
             {
@@ -77,24 +89,24 @@ namespace ZEngine.Window
                 this.actived = false;
             }
 
-            public void AddListener(Action<IUIButtonBindPipeline, object> callback)
+            public void AddListener(Action<IUIButtonBindPipeline> callback)
             {
                 this.callback += callback;
             }
 
-            public void RemoveListener(Action<IUIButtonBindPipeline, object> callback)
+            public void RemoveListener(Action<IUIButtonBindPipeline> callback)
             {
                 this.callback -= callback;
             }
 
-            public void Invoke(object args)
+            public void Invoke(IUIButtonBindPipeline args)
             {
                 if (this.actived is false)
                 {
                     return;
                 }
 
-                this.callback?.Invoke(this, args);
+                this.callback?.Invoke(this);
             }
 
             public void Dispose()

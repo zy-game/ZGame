@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace ZEngine.Window
 {
-    public interface IUIToggleBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<bool>, IEventBindPipeline<IUIToggleBindPipeline>
+    public interface IUIToggleBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<bool>
     {
         public static IUIToggleBindPipeline Create(UIWindow window, string path)
         {
@@ -32,6 +32,17 @@ namespace ZEngine.Window
             return toggleBindPipelineHandle;
         }
 
+        public static IUIToggleBindPipeline Create(UIWindow window, string path, Action<bool> callback)
+        {
+            IUIToggleBindPipeline toggleBindPipeline = Create(window, path);
+            if (toggleBindPipeline is not null)
+            {
+                toggleBindPipeline.AddListener(callback);
+            }
+
+            return toggleBindPipeline;
+        }
+
         class ToggleBindPipelineHandle : IUIToggleBindPipeline
         {
             public string path { get; set; }
@@ -41,7 +52,7 @@ namespace ZEngine.Window
             public UIWindow window { get; set; }
             public GameObject gameObject { get; set; }
             public Toggle toggle { get; set; }
-            public event Action<IUIToggleBindPipeline, object> Callback;
+            public event Action<bool> Callback;
 
             public void SetValue(bool value)
             {
@@ -71,7 +82,7 @@ namespace ZEngine.Window
                 Inactive();
             }
 
-            public void SetValueWithoutNotify(object value)
+            public void SetValueWithoutNotify(bool value)
             {
                 if (gameObject == null)
                 {
@@ -108,24 +119,24 @@ namespace ZEngine.Window
                 this.actived = false;
             }
 
-            public void AddListener(Action<IUIToggleBindPipeline, object> callback)
+            public void AddListener(Action<bool> callback)
             {
                 this.Callback += callback;
             }
 
-            public void RemoveListener(Action<IUIToggleBindPipeline, object> callback)
+            public void RemoveListener(Action<bool> callback)
             {
                 this.Callback -= callback;
             }
 
-            public void Invoke(object args)
+            public void Invoke(bool args)
             {
                 if (actived is false)
                 {
                     return;
                 }
 
-                this.Callback?.Invoke(this, args);
+                this.Callback?.Invoke(args);
             }
         }
     }

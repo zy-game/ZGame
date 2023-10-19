@@ -31,11 +31,11 @@ namespace ZEngine
                     return;
                 }
 
-                BehaviourSingleton.OnUpdate(_instance.OnUpdate);
-                BehaviourSingleton.OnApplicationQuiting(Dispose);
-                BehaviourSingleton.OnLateUpdate(_instance.OnLateUpdate);
-                BehaviourSingleton.OnFixedUpdate(_instance.OnFixedUpdate);
-                BehaviourSingleton.OnApplicationFocusChange(_instance.OnFocusChange);
+                Behaviour.OnUpdate(_instance.OnUpdate);
+                Behaviour.OnApplicationQuiting(Dispose);
+                Behaviour.OnLateUpdate(_instance.OnLateUpdate);
+                Behaviour.OnFixedUpdate(_instance.OnFixedUpdate);
+                Behaviour.OnApplicationFocusChange(_instance.OnFocusChange);
             }
 
             private static void Dispose()
@@ -46,11 +46,11 @@ namespace ZEngine
                 }
 
                 _instance.Dispose();
-                BehaviourSingleton.RemoveUpdate(_instance.OnUpdate);
-                BehaviourSingleton.RemoveLateUpdate(_instance.OnLateUpdate);
-                BehaviourSingleton.RemoveFixedUpdate(_instance.OnFixedUpdate);
-                BehaviourSingleton.RemoveApplicationQuit(_instance.Dispose);
-                BehaviourSingleton.RemoveApplicationFocus(_instance.OnFocusChange);
+                Behaviour.RemoveUpdate(_instance.OnUpdate);
+                Behaviour.RemoveLateUpdate(_instance.OnLateUpdate);
+                Behaviour.RemoveFixedUpdate(_instance.OnFixedUpdate);
+                Behaviour.RemoveApplicationQuit(_instance.Dispose);
+                Behaviour.RemoveApplicationFocus(_instance.OnFocusChange);
                 _instance = null;
             }
         }

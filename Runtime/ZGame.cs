@@ -15,7 +15,6 @@ using ZEngine.Network;
 using ZEngine.Resource;
 using ZEngine.Window;
 using ZEngine.Game;
-using ZEngine.Playable;
 using ZEngine.Utility;
 using ZEngine.ZJson;
 using Object = UnityEngine.Object;
@@ -187,7 +186,7 @@ public sealed class ZGame
         /// <param name="id">配置ID</param>
         /// <returns></returns>
         public static ILanguageOptions GetLocalizationOptions(int id)
-            => LocalizationManager.instance.Switch(id);
+            => LanguageManager.instance.Switch(id);
     }
 
     /// <summary>
@@ -464,41 +463,6 @@ public sealed class ZGame
         /// <returns></returns>
         public static UniTask<IRequestResourceModuleUpdateResult> CheckModuleResourceUpdate(IProgressHandle gameProgressHandle, params ModuleOptions[] options)
             => ResourceManager.instance.CheckModuleResourceUpdate(gameProgressHandle, options);
-    }
-
-    /// <summary>
-    /// 播放器
-    /// </summary>
-    public sealed class Playable
-    {
-        /// <summary>
-        /// 播放视频
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="volume"></param>
-        /// <param name="isFullScene"></param>
-        /// <param name="isLoop"></param>
-        /// <returns></returns>
-        public static IPlayableHandle PlayVideo(string url, float volume = 1, RenderTexture scene = null, bool isLoop = false, Switch isCache = Switch.Off)
-            => PlayableManager.instance.PlayVideo(url, volume, scene, isLoop, isCache);
-
-        /// <summary>
-        /// 播放音效
-        /// </summary>
-        /// <param name="soundName"></param>
-        /// <param name="volume"></param>
-        /// <param name="isLoop"></param>
-        /// <returns></returns>
-        public static IPlayableHandle PlaySound(string url, float volume = 1, bool isLoop = false, Switch isCache = Switch.Off)
-            => PlayableManager.instance.PlaySound(url, volume, isLoop, isCache);
-
-        /// <summary>
-        /// 获取播放器
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static IPlayableHandle GetPlayableHandle(string name)
-            => PlayableManager.instance.GetPlayableHandle(name);
     }
 
     /// <summary>

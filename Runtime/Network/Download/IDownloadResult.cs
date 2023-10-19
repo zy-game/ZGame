@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace ZEngine.Network
 {
@@ -42,7 +43,7 @@ namespace ZEngine.Network
                         break;
                     }
 
-                    yield return WaitFor.Create(0.05f);
+                    yield return new WaitForSeconds(0.05f);
                 }
 
                 status = Handles.Where(x => x.status == Status.Failed).Count() > 0 ? Status.Failed : Status.Success;

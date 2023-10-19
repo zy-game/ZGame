@@ -11,57 +11,57 @@ namespace ZEngine.Window
     {
         private Action ok;
         private Action cancel;
-        private bool complete;
-        public object result { get; set; }
+        private IUITextBindPipeline infoTextBindPipeline;
+        private IUITextBindPipeline titleTextBindPipeline;
+        private IUIButtonBindPipeline okButtonBindPipeline;
+        private IUIButtonBindPipeline cancelButtonBindPipeline;
+        private IUITextBindPipeline okButtonTextBindPipeline;
+        private IUITextBindPipeline cancelButtonTextBindpipeline;
+
+        public override void Awake()
+        {
+            infoTextBindPipeline = IUITextBindPipeline.Create(this, "Panel/Image/text");
+            titleTextBindPipeline = IUITextBindPipeline.Create(this, "Panel/Image/Tips");
+            okButtonBindPipeline = IUIButtonBindPipeline.Create(this, "Panel/Image/GameObject/ok");
+            cancelButtonBindPipeline = IUIButtonBindPipeline.Create(this, "Panel/Image/GameObject/cancel");
+            okButtonTextBindPipeline = IUITextBindPipeline.Create(this, "Panel/Image/GameObject/ok/okText");
+            cancelButtonTextBindpipeline = IUITextBindPipeline.Create(this, "Panel/Image/GameObject/cancel/cancelText");
+        }
 
         public MsgBox SetBox(string tips, string text, Action ok, Action cancel, string okText, string cancelText)
         {
             this.ok = ok;
-            complete = false;
             this.cancel = cancel;
-            this.GetChild("Panel/Image/text").GetComponent<TMP_Text>().text = text;
-            this.GetChild("Panel/Image/Tips").GetComponent<TMP_Text>().text = tips;
-            this.GetChild("Panel/Image/GameObject/ok").GetComponent<Button>().onClick.RemoveAllListeners();
-            this.GetChild("Panel/Image/GameObject/cancel").GetComponent<Button>().onClick.RemoveAllListeners();
-            this.GetChild("Panel/Image/GameObject/ok").GetComponent<Button>().onClick.AddListener(OK);
-            this.GetChild("Panel/Image/GameObject/cancel").GetComponent<Button>().onClick.AddListener(Cancel);
-            this.GetChild("Panel/Image/GameObject/cancel").SetActive(cancel is not null);
-            this.GetChild("Panel/Image/GameObject/ok/okText").GetComponent<TMP_Text>().text = okText;
-            this.GetChild("Panel/Image/GameObject/cancel/cancelText").GetComponent<TMP_Text>().text = cancelText;
+            infoTextBindPipeline.SetValue(text);
+            titleTextBindPipeline.SetValue(tips);
+            okButtonTextBindPipeline.SetValue(okText);
+            cancelButtonTextBindpipeline.SetValue(cancelText);
+            okButtonBindPipeline.AddListener(OK);
+            cancelButtonBindPipeline.AddListener(Cancel);
+            if (cancel is null)
+            {
+                cancelButtonBindPipeline.Disable();
+            }
+
             return this;
         }
 
         public UniTask<bool> SetBox(string tips, string text, string okText, string cancelText)
         {
             UniTaskCompletionSource<bool> uniTaskCompletionSource = new UniTaskCompletionSource<bool>();
-            this.ok = () => uniTaskCompletionSource.TrySetResult(true);
-            complete = false;
-            this.cancel = () => uniTaskCompletionSource.TrySetResult(false);
-            this.GetChild("Panel/Image/text").GetComponent<TMP_Text>().text = text;
-            this.GetChild("Panel/Image/Tips").GetComponent<TMP_Text>().text = tips;
-            this.GetChild("Panel/Image/GameObject/ok").GetComponent<Button>().onClick.RemoveAllListeners();
-            this.GetChild("Panel/Image/GameObject/cancel").GetComponent<Button>().onClick.RemoveAllListeners();
-            this.GetChild("Panel/Image/GameObject/ok").GetComponent<Button>().onClick.AddListener(OK);
-            this.GetChild("Panel/Image/GameObject/cancel").GetComponent<Button>().onClick.AddListener(Cancel);
-            this.GetChild("Panel/Image/GameObject/cancel").SetActive(cancel is not null);
-            this.GetChild("Panel/Image/GameObject/ok/okText").GetComponent<TMP_Text>().text = okText;
-            this.GetChild("Panel/Image/GameObject/cancel/cancelText").GetComponent<TMP_Text>().text = cancelText;
+            SetBox(tips, text, () => uniTaskCompletionSource.TrySetResult(true), () => uniTaskCompletionSource.TrySetResult(false), okText, cancelText);
             return uniTaskCompletionSource.Task;
         }
 
-        private void OK()
+        private void OK(IUIButtonBindPipeline buttonBindPipeline)
         {
-            complete = true;
             ok?.Invoke();
-            result = true;
             ZGame.Window.Close<MsgBox>();
         }
 
-        private void Cancel()
+        private void Cancel(IUIButtonBindPipeline buttonBindPipeline)
         {
-            complete = true;
             cancel?.Invoke();
-            result = false;
             ZGame.Window.Close<MsgBox>();
         }
     }

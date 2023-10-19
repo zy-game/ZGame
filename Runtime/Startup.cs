@@ -22,7 +22,6 @@ public class Startup : MonoBehaviour
     private async void Start()
     {
         ZGame.Initialize();
-        GameObject.DontDestroyOnLoad(Camera.main.gameObject);
         ZGame.Window.OpenWindow<Loading>().SetInfo("检查资源更新").SetProgress(0);
         HotfixOptions.instance.preloads.ForEach(x => x.url = HotfixOptions.instance.address.Find(x => x.state == Switch.On));
         IRequestResourceModuleUpdateResult requestResourceModuleUpdateResult = await ZGame.Resource.CheckModuleResourceUpdate(ZGame.Window.GetWindow<Loading>(), HotfixOptions.instance.preloads.ToArray());

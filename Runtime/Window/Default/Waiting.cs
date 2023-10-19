@@ -13,19 +13,13 @@ namespace ZEngine.Window
 
         public void Timeout(float time)
         {
-            if (time == 0)
-            {
-                return;
-            }
+            ITiming.Default.DelayCall(time, Invoke);
+        }
 
-            IEnumerator Waiting()
-            {
-                yield return WaitFor.Create(time);
-                subsceibe?.Invoke();
-                ZGame.Window.Close<Waiting>();
-            }
-
-            Waiting().StartCoroutine();
+        private void Invoke()
+        {
+            subsceibe?.Invoke();
+            ZGame.Window.Close<Waiting>();
         }
 
         public Waiting SetWait(string text, float timeout, Action subscribe)

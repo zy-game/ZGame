@@ -13,6 +13,5 @@ namespace ZEngine.Window
         GameObject gameObject { get; }
         void Enable();
         void Disable();
-        void SetValueWithoutNotify(object value);
     }
 }

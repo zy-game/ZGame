@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace ZEngine.Window
 {
-    public interface IUIInputFieldBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<string>, IEventBindPipeline<IUIInputFieldBindPipeline>
+    public interface IUIInputFieldBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<string>
     {
         public static IUIInputFieldBindPipeline Create(UIWindow window, string path)
         {
@@ -33,7 +33,7 @@ namespace ZEngine.Window
             return inputFieldBindPipelineHandle;
         }
 
-        public static IUIInputFieldBindPipeline Create(UIWindow window, string path, string text, Action<IUIInputFieldBindPipeline, object> callback)
+        public static IUIInputFieldBindPipeline Create(UIWindow window, string path, string text, Action<string> callback)
         {
             IUIInputFieldBindPipeline inputFieldBindPipeline = Create(window, path);
             inputFieldBindPipeline.SetValueWithoutNotify(text);
@@ -50,7 +50,7 @@ namespace ZEngine.Window
             public GameObject gameObject { get; set; }
             public string value { get; set; }
             public TMP_InputField inputField { get; set; }
-            private event Action<IUIInputFieldBindPipeline, object> callback;
+            private event Action<string> callback;
 
             public void Active()
             {
@@ -84,25 +84,24 @@ namespace ZEngine.Window
                 Inactive();
             }
 
-            public void AddListener(Action<IUIInputFieldBindPipeline, object> callback)
+            public void AddListener(Action<string> callback)
             {
                 this.callback += callback;
             }
 
-            public void RemoveListener(Action<IUIInputFieldBindPipeline, object> callback)
+            public void RemoveListener(Action<string> callback)
             {
                 this.callback -= callback;
             }
 
-            public void Invoke(object args)
+            public void Invoke(string args)
             {
                 if (this.actived is false)
                 {
                     return;
                 }
 
-                this.value = args?.ToString();
-                this.callback?.Invoke(this, args);
+                this.callback?.Invoke(args);
             }
 
             public void Dispose()
@@ -122,7 +121,7 @@ namespace ZEngine.Window
                 Invoke(value);
             }
 
-            public void SetValueWithoutNotify(object value)
+            public void SetValueWithoutNotify(string value)
             {
                 if (gameObject == null)
                 {

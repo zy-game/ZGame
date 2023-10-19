@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Runtime.Language;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -24,10 +25,11 @@ namespace ZEngine
         public string moduleName;
         [NonSerialized] public URLOptions url;
     }
-    
+
     [Serializable]
     public class GameEntryOptions
     {
+        [Header("默认语言")] public LanguageDefine define;
         [Header("是否启用")] public Switch isOn;
         [Header("代码文件名")] public string dllName;
         [Header("元数据列表")] public List<string> aotList;

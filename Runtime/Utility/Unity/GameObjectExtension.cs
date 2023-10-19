@@ -31,7 +31,7 @@ namespace ZEngine
 
         public static void OnDestroyEvent(this GameObject gameObject, UnityAction action)
         {
-            BehaviourSingleton.OnDestroyGameObject(gameObject, action);
+            Behaviour.OnDestroyGameObject(gameObject, action);
         }
     }
 }

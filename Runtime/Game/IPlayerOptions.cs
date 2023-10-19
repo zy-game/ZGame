@@ -2,7 +2,10 @@ using System.Collections.Generic;
 
 namespace ZEngine.Game
 {
-    public interface IGameObjectOptions : IOptions
+    /// <summary>
+    /// 资源对象配置
+    /// </summary>
+    public interface IObjectOptions : IOptions
     {
         string icon { get; set; }
         string prefab { get; set; }
@@ -11,7 +14,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 角色数据接口
     /// </summary>
-    public interface IPlayerOptions : IGameObjectOptions
+    public interface IPlayerOptions : IObjectOptions
     {
         List<ISkillOptions> skills { get; }
     }
@@ -19,7 +22,7 @@ namespace ZEngine.Game
     /// <summary>
     /// 道具配置
     /// </summary>
-    public interface IPropOptions : IGameObjectOptions
+    public interface IPropOptions : IObjectOptions
     {
         int propType { get; }
     }
@@ -27,24 +30,36 @@ namespace ZEngine.Game
     /// <summary>
     /// 技能数据
     /// </summary>
-    public interface ISkillOptions : IGameObjectOptions
+    public interface ISkillOptions : IObjectOptions
     {
         float cd { get; set; }
         float usege { get; set; }
         ushort level { get; set; }
+        List<ISkillEventLayerOptions> layers { get; set; }
+    }
+
+    public enum SkillEventLayerType : byte
+    {
+    }
+
+    public interface ISkillEventLayerOptions : IOptions
+    {
+        int startFrame { get; }
+        int endFrame { get; }
+        SkillEventLayerType layerType { get; }
     }
 
     /// <summary>
     /// 地图数据
     /// </summary>
-    public interface IMapDataOptions : IGameObjectOptions
+    public interface IMapDataOptions : IObjectOptions
     {
     }
 
     /// <summary>
     /// 场景数据
     /// </summary>
-    public interface ISceneDataOptions : IGameObjectOptions
+    public interface ISceneDataOptions : IObjectOptions
     {
         IMapDataOptions mapData { get; set; }
     }

@@ -76,7 +76,7 @@ namespace ZEngine
             public string value;
         }
 
-        public class OptionsConverter : JsonConverter
+        class OptionsConverter : JsonConverter
         {
             /// <summary>
             ///     写入Json数据

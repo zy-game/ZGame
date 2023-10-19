@@ -13,17 +13,17 @@ namespace ZEngine
                 yield return enumerator;
             }
 
-            return BehaviourSingleton.instance.StartCoroutine(Running());
+            return Behaviour.instance.StartCoroutine(Running());
         }
 
         public static void StopAll()
         {
-            BehaviourSingleton.instance.StopAllCoroutines();
+            Behaviour.instance.StopAllCoroutines();
         }
 
         public static void StopCoroutine(this Coroutine coroutine)
         {
-            BehaviourSingleton.instance.StopCoroutine(coroutine);
+            Behaviour.instance.StopCoroutine(coroutine);
         }
     }
 }

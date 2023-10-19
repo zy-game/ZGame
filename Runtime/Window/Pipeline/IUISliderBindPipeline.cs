@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace ZEngine.Window
 {
-    public interface IUISliderBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<float>, IEventBindPipeline<IUISliderBindPipeline>
+    public interface IUISliderBindPipeline : IUIComponentBindPipeline, IValueBindPipeline<float>
     {
         public static IUISliderBindPipeline Create(UIWindow window, string path)
         {
@@ -32,7 +32,7 @@ namespace ZEngine.Window
             return sliderBindPipelineHandle;
         }
 
-        public static IUISliderBindPipeline Create(UIWindow window, string path, float value, Action<IUISliderBindPipeline, object> callback)
+        public static IUISliderBindPipeline Create(UIWindow window, string path, float value, Action<float> callback)
         {
             IUISliderBindPipeline sliderBindPipeline = Create(window, path);
             sliderBindPipeline.SetValueWithoutNotify(value);
@@ -49,7 +49,7 @@ namespace ZEngine.Window
             public UIWindow window { get; set; }
             public GameObject gameObject { get; set; }
             public Slider slider { get; set; }
-            public event Action<IUISliderBindPipeline, object> Callback;
+            public event Action<float> Callback;
 
             public void Active()
             {
@@ -89,7 +89,7 @@ namespace ZEngine.Window
                 Inactive();
             }
 
-            public void SetValueWithoutNotify(object value)
+            public void SetValueWithoutNotify(float value)
             {
                 if (gameObject == null)
                 {
@@ -117,24 +117,24 @@ namespace ZEngine.Window
                 this.actived = false;
             }
 
-            public void AddListener(Action<IUISliderBindPipeline, object> callback)
+            public void AddListener(Action<float> callback)
             {
                 this.Callback += callback;
             }
 
-            public void RemoveListener(Action<IUISliderBindPipeline, object> callback)
+            public void RemoveListener(Action<float> callback)
             {
                 this.Callback -= callback;
             }
 
-            public void Invoke(object args)
+            public void Invoke(float args)
             {
                 if (this.actived is false)
                 {
                     return;
                 }
 
-                this.Callback?.Invoke(this, args);
+                this.Callback?.Invoke(args);
             }
         }
     }

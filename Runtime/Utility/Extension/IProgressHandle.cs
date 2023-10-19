@@ -4,8 +4,8 @@ namespace ZEngine
 {
     public interface IProgressHandle : IDisposable
     {
-        void SetTextInfo(string text);
-        void SetProgress(float progress);
+        IProgressHandle SetInfo(string text);
+        IProgressHandle SetProgress(float progress);
 
         public static IProgressHandle Empty => new InternalProgressHandle(_ => { });
 
@@ -28,13 +28,15 @@ namespace ZEngine
                 this.callback = null;
             }
 
-            public void SetTextInfo(string text)
+            public IProgressHandle SetInfo(string text)
             {
+                return this;
             }
 
-            public void SetProgress(float progress)
+            public IProgressHandle SetProgress(float progress)
             {
                 this.callback?.Invoke(progress);
+                return this;
             }
         }
     }

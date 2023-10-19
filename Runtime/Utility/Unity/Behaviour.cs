@@ -4,25 +4,25 @@ using UnityEngine.Events;
 
 namespace ZEngine
 {
-    public class BehaviourSingleton : MonoBehaviour
+    public class Behaviour : MonoBehaviour
     {
-        public static BehaviourSingleton instance => SingletonHandle.GetInstance();
+        public static Behaviour instance => SingletonHandle.GetInstance();
 
         internal class SingletonHandle
         {
-            private static BehaviourSingleton _instance;
+            private static Behaviour _instance;
             private static GameObject gameObject;
 
-            public static BehaviourSingleton GetInstance()
+            public static Behaviour GetInstance()
             {
                 if (_instance is not null)
                 {
                     return _instance;
                 }
 
-                gameObject = new GameObject(typeof(BehaviourSingleton).Name);
+                gameObject = new GameObject(typeof(Behaviour).Name);
                 GameObject.DontDestroyOnLoad(gameObject);
-                _instance = gameObject.AddComponent<BehaviourSingleton>();
+                _instance = gameObject.AddComponent<Behaviour>();
                 return _instance;
             }
         }
@@ -47,12 +47,12 @@ namespace ZEngine
 
         public static void OnDestroyGameObject(GameObject gameObject, UnityAction action)
         {
-            gameObject.TryGetComponent<BehaviourSingleton>().destroyGameObjectCallback.AddListener(action);
+            gameObject.TryGetComponent<Behaviour>().destroyGameObjectCallback.AddListener(action);
         }
 
         public static void RemoveDestroyGameObject(GameObject gameObject, UnityAction action)
         {
-            gameObject.TryGetComponent<BehaviourSingleton>().destroyGameObjectCallback.RemoveListener(action);
+            gameObject.TryGetComponent<Behaviour>().destroyGameObjectCallback.RemoveListener(action);
         }
 
         public static void OnUpdate(UnityAction action)
