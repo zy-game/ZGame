@@ -34,5 +34,9 @@ namespace Test
         }
 
         public List<ISkillOptions> skills { get; }
+        public IPlayer Build()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

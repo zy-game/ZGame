@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 using ZEngine.Game;
+using ZEngine.Language;
 
 namespace ZEngine
 {
@@ -10,8 +11,7 @@ namespace ZEngine
         public static void Initialize()
         {
             Console.instance.ShowConsole();
-            GameManager.instance.Initialize();
-
+            ZGame.Localization.SwitchLanguage(LanguageDefine.ZH);
             ITiming.Default = ITiming.Create(30);
         }
 

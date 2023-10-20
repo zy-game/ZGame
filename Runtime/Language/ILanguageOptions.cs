@@ -1,7 +1,7 @@
 using UnityEngine;
 using ZEngine;
 
-namespace Runtime.Language
+namespace ZEngine.Language
 {
     /// <summary>
     /// 多语言配置
@@ -10,6 +10,7 @@ namespace Runtime.Language
     {
         LanguageType type { get; }
         void SetLanguage(Transform transform);
+        void Reset(string text, LanguageType type);
 
         public static ILanguageOptions Create(int id, string text, LanguageType type)
         {

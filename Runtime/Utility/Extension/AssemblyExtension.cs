@@ -6,6 +6,19 @@ namespace ZEngine
 {
     public static class AssemblyExtension
     {
+        public static Assembly Find(this AppDomain domain, string name)
+        {
+            foreach (var VARIABLE in domain.GetAssemblies())
+            {
+                if (VARIABLE.GetName().Name == name)
+                {
+                    return VARIABLE;
+                }
+            }
+
+            return default;
+        }
+
         public static Type FindType(this AppDomain domain, string name)
         {
             foreach (var VARIABLE in domain.GetAssemblies())

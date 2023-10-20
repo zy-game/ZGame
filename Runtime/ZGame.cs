@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
-using Runtime.Language;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Internal;
@@ -15,6 +14,7 @@ using ZEngine.Network;
 using ZEngine.Resource;
 using ZEngine.Window;
 using ZEngine.Game;
+using ZEngine.Language;
 using ZEngine.Utility;
 using ZEngine.ZJson;
 using Object = UnityEngine.Object;
@@ -187,6 +187,13 @@ public sealed class ZGame
         /// <returns></returns>
         public static ILanguageOptions GetLocalizationOptions(int id)
             => LanguageManager.instance.Switch(id);
+
+        /// <summary>
+        /// 切换语言类型
+        /// </summary>
+        /// <param name="define"></param>
+        public static UniTask SwitchLanguage(LanguageDefine define)
+            => LanguageManager.instance.SwitchLanguage(define);
     }
 
     /// <summary>
@@ -409,8 +416,8 @@ public sealed class ZGame
         /// </summary>
         /// <param name="gameEntryOptions"></param>
         /// <returns></returns>
-        public static UniTask<ILogicModuleLoadResult> LoadGameLogic(GameEntryOptions gameEntryOptions)
-            => GameManager.instance.LoadGameLogicAssembly(gameEntryOptions);
+        public static UniTask<IDllImportReslt> LoadGameLogic(GameEntryOptions gameEntryOptions)
+            => DllImport.instance.Import(gameEntryOptions);
     }
 
     /// <summary>

@@ -44,7 +44,7 @@ public class Startup : MonoBehaviour
         requestResourceModuleResult.Dispose();
         ZGame.Console.Log("进入游戏");
         GameEntryOptions options = HotfixOptions.instance.entryList.Find(x => x.isOn == Switch.On);
-        ILogicModuleLoadResult gameLogicModuleLoadResult = await ZGame.Game.LoadGameLogic(options);
+        IDllImportReslt gameLogicModuleLoadResult = await ZGame.Game.LoadGameLogic(options);
         if (gameLogicModuleLoadResult.status is Status.Success)
         {
             gameLogicModuleLoadResult.Dispose();
