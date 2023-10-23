@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -18,8 +19,8 @@ namespace ZEngine.Resource
         {
             base.Dispose();
             ZGame.Cache.RemoveCacheArea<RuntimeAssetBundleHandle>();
-            ZGame.Data.Clear<ResourceModuleManifest>();
-            ZGame.Data.Clear<RuntimeAssetBundleHandle>();
+            ZGame.Datable.Clear<ResourceModuleManifest>();
+            ZGame.Datable.Clear<RuntimeAssetBundleHandle>();
             ZGame.Console.Log("释放所有资源");
         }
 
@@ -80,7 +81,7 @@ namespace ZEngine.Resource
         public void Release(Object target)
         {
             ZGame.Console.Log("Release Asset Object ->", target.name);
-            RuntimeAssetBundleHandle runtimeAssetBundleHandle = ZGame.Data.Find<RuntimeAssetBundleHandle>(x => x.Contains(target));
+            RuntimeAssetBundleHandle runtimeAssetBundleHandle = ZGame.Datable.GetDatable<RuntimeAssetBundleHandle>(x => x.Contains(target));
             if (runtimeAssetBundleHandle is null)
             {
                 return;
@@ -92,7 +93,7 @@ namespace ZEngine.Resource
                 return;
             }
 
-            ZGame.Data.Release(runtimeAssetBundleHandle);
+            ZGame.Datable.Release(runtimeAssetBundleHandle.name, true);
         }
     }
 }

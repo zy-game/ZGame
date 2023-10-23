@@ -83,4 +83,6 @@ class TestMessage : IMessaged
     public void Dispose()
     {
     }
+
+    public long id { get; }
 }

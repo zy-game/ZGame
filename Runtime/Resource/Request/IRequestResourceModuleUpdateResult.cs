@@ -71,7 +71,7 @@ namespace ZEngine.Resource
                 bundles = updateBundleList.Select(x => x.bundle).ToArray();
                 if (updateBundleList.Count is 0)
                 {
-                    moduleManifests.ForEach(ZGame.Data.Add);
+                    moduleManifests.ForEach(x => ZGame.Datable.Add(x.name, x));
                     OnComplate(Status.Success);
                     return;
                 }
@@ -101,7 +101,7 @@ namespace ZEngine.Resource
                 }
 
                 downloadResult.Dispose();
-                moduleManifests.ForEach(ZGame.Data.Add);
+                moduleManifests.ForEach(x => ZGame.Datable.Add(x.name, x));
                 OnComplate(Status.Success);
                 ZGame.Console.Log(status);
             }

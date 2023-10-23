@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 
 namespace ZEngine.Resource
 {
-    internal sealed class RuntimeAssetBundleHandle : IDatableHandle
+    internal sealed class RuntimeAssetBundleHandle : IDisposable
     {
         public string name { get; private set; }
         public uint refCount { get; private set; }

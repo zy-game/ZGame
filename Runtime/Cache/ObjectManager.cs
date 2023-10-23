@@ -5,7 +5,7 @@ namespace ZEngine.Cache
 {
     public class ObjectManager : Singleton<ObjectManager>
     {
-        private List<IObjectPoolHandle> handlers = new List<IObjectPoolHandle>();
+        private List<IObjectPoolPipeline> handlers = new List<IObjectPoolPipeline>();
         protected override void OnUpdate()
         {
             for (int i = 0; i < handlers.Count; i++)
@@ -22,12 +22,12 @@ namespace ZEngine.Cache
                 return;
             }
 
-            handlers.Add((IObjectPoolHandle)Activator.CreateInstance(handleType));
+            handlers.Add((IObjectPoolPipeline)Activator.CreateInstance(handleType));
         }
 
         public void RemoveCacheHandle(Type handleType)
         {
-            IObjectPoolHandle cacheHandler = handlers.Find(x => x.GetType() == handleType);
+            IObjectPoolPipeline cacheHandler = handlers.Find(x => x.GetType() == handleType);
             if (cacheHandler is null)
             {
                 return;
@@ -39,7 +39,7 @@ namespace ZEngine.Cache
 
         public void RemoveCacheArea(Type type)
         {
-            IObjectPoolHandle cacheHandler = handlers.Find(x => x.cacheType == type);
+            IObjectPoolPipeline cacheHandler = handlers.Find(x => x.cacheType == type);
             if (cacheHandler is null)
             {
                 return;
@@ -49,23 +49,23 @@ namespace ZEngine.Cache
             handlers.Remove(cacheHandler);
         }
 
-        public void Enqueue(string key, object value)
+        public void Enqueue(object key, object value)
         {
             Type valueType = value.GetType();
-            IObjectPoolHandle cacheHandler = handlers.Find(x => x.cacheType == valueType);
+            IObjectPoolPipeline cacheHandler = handlers.Find(x => x.cacheType == valueType);
             if (cacheHandler is null)
             {
-                cacheHandler = ObjectPoolHandler.Create(valueType);
+                cacheHandler = IObjectPoolPipeline.Create(valueType);
             }
 
             cacheHandler.Release(key, value);
         }
 
-        public bool TryGetValue<T>(string key, out T value)
+        public bool TryGetValue<T>(object key, out T value)
         {
             value = default;
             Type valueType = typeof(T);
-            IObjectPoolHandle cacheHandler = handlers.Find(x => x.cacheType == valueType);
+            IObjectPoolPipeline cacheHandler = handlers.Find(x => x.cacheType == valueType);
             if (cacheHandler is null)
             {
                 return false;

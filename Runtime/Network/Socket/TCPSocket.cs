@@ -50,7 +50,7 @@ namespace ZEngine.Network
 
                 byte[] bytes = new byte[lenght];
                 Array.Copy(recBytes, 0, bytes, 0, lenght);
-                NetworkManager.instance.Dispacher(this, bytes);
+                IMessageRecvierHandle.PublishMessage(this, bytes);
             }
         }
 

@@ -34,7 +34,7 @@ namespace Test
         }
 
         public List<ISkillOptions> skills { get; }
-        public IPlayer Build()
+        public IGameEntity Build()
         {
             throw new System.NotImplementedException();
         }

@@ -10,8 +10,8 @@ namespace ZEngine.Game
         IGameScene scene { get; }
 
         void OpenScene(ISceneOptions options);
-        IPlayer CreatePlayer(IPlayerOptions options);
+        IGameEntity CreatePlayer(IPlayerOptions options);
         void RemovePlayer(int guid);
-        IPlayer FindPlayer(int guid);
+        IGameEntity FindPlayer(int guid);
     }
 }

@@ -9,7 +9,7 @@ namespace ZEngine.Resource
     /// 模块数据
     /// </summary>
     [Serializable]
-    public sealed class ResourceModuleManifest : IDatableHandle
+    public sealed class ResourceModuleManifest : IDisposable
     {
         /// <summary>
         /// 模块名

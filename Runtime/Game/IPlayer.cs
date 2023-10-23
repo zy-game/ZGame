@@ -5,35 +5,19 @@ using ZEngine.Network;
 
 namespace ZEngine.Game
 {
-    public interface ISyncMsg : IMessaged
-    {
-        int guid { get; }
-        byte command { get; }
-    }
-
-    public interface ISynchor : IDisposable
-    {
-        /// <summary>
-        /// 网络ID
-        /// </summary>
-        int guid { get; }
-
-        IPlayer player { get; }
-
-        void Sync();
-    }
+    
 
     /// <summary>
-    /// 角色对象
+    /// 游戏实体对象
     /// </summary>
-    public interface IPlayer : IDisposable
+    public interface IGameEntity : IDisposable
     {
         int guid { get; }
 
         /// <summary>
         /// 网络同步句柄
         /// </summary>
-        ISynchor synchor { get; }
+        ISynchro synchor { get; }
 
         /// <summary>
         /// 角色持有的状态机

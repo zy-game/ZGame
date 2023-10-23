@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -67,7 +68,7 @@ namespace ZEngine.Resource
                     return;
                 }
 #endif
-                bundleHandle = ZGame.Data.Find<RuntimeAssetBundleHandle>(x => x.Contains(path));
+                bundleHandle = ZGame.Datable.GetDatable<RuntimeAssetBundleHandle>(x => x.Contains(path));
                 if (bundleHandle is null)
                 {
                     ZGame.Console.Error($"未找到资源,请确认资源包是否已经加载", path);
@@ -106,7 +107,7 @@ namespace ZEngine.Resource
                 }
 #endif
 
-                bundleHandle = ZGame.Data.Find<RuntimeAssetBundleHandle>(x => x.Contains(path));
+                bundleHandle = ZGame.Datable.GetDatable<RuntimeAssetBundleHandle>(x => x.Contains(path));
                 if (bundleHandle is null)
                 {
                     ZGame.Console.Error($"未找到资源,请确认资源包是否已经加载", path);

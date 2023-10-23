@@ -42,7 +42,7 @@ namespace ZEngine.Resource
                     }
 
                     ZGame.Console.Log("Load Asset Bundle:", VARIABLE.url);
-                    ZGame.Data.Add(RuntimeAssetBundleHandle.Create(null, assetBundle));
+                    ZGame.Datable.Add(assetBundle.name, RuntimeAssetBundleHandle.Create(null, assetBundle));
                 }
 
                 status = Status.Success;

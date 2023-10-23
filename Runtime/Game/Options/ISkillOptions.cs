@@ -14,15 +14,12 @@ namespace ZEngine.Game
         string prefab { get; set; }
         List<ISkillEventOptions> layers { get; set; }
     }
-    
-    public enum SkillEventType : byte
-    {
-    }
 
     public interface ISkillEventOptions : IOptions
     {
-        int startFrame { get; }
-        int endFrame { get; }
-        SkillEventType eventType { get; }
+        int offset { get; }
+        int lenght { get; }
+
+        void Execute();
     }
 }

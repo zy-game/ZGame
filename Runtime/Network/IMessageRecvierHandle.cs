@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using ProtoBuf.Meta;
 
 namespace ZEngine.Network
@@ -13,6 +14,48 @@ namespace ZEngine.Network
             InternalMessageRecvieHandle internalMessageRecvieHandle = Activator.CreateInstance<InternalMessageRecvieHandle>();
             internalMessageRecvieHandle.SetSubscribe(type, subscriber);
             return internalMessageRecvieHandle;
+        }
+
+        public static IMessageRecvierHandle Create(Type recvieHandleType)
+        {
+            if (typeof(IMessageRecvierHandle).IsAssignableFrom(recvieHandleType) is false)
+            {
+                ZGame.Console.Error(new NotImplementedException(recvieHandleType.FullName));
+                return default;
+            }
+
+            IMessageRecvierHandle messageRecvierHandle = ZGame.Datable.GetDatables(recvieHandleType).FirstOrDefault();
+            if (messageRecvierHandle is not null)
+            {
+                ZGame.Console.Error("已存在消息处理管道", recvieHandleType);
+                return default;
+            }
+
+            messageRecvierHandle = Activator.CreateInstance(recvieHandleType) as IMessageRecvierHandle;
+            ZGame.Datable.Add(messageRecvierHandle);
+            return messageRecvierHandle;
+        }
+
+        public static void Release(Type recvieHandleType)
+        {
+            if (typeof(IMessageRecvierHandle).IsAssignableFrom(recvieHandleType) is false)
+            {
+                ZGame.Console.Error(new NotImplementedException(recvieHandleType.FullName));
+                return;
+            }
+
+            IMessageRecvierHandle messageRecvierHandle = (IMessageRecvierHandle)ZGame.Datable.GetDatables<IMessageRecvierHandle>(recvieHandleType).FirstOrDefault();
+            if (messageRecvierHandle is null)
+            {
+                ZGame.Console.Error("不存在消息处理管道", recvieHandleType);
+                return;
+            }
+
+            ZGame.Datable.Release(messageRecvierHandle);
+        }
+
+        public static void PublishMessage(IChannel channel, byte[] bytes)
+        {
         }
 
         class InternalMessageRecvieHandle : IMessageRecvierHandle

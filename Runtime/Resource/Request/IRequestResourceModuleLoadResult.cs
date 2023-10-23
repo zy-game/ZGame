@@ -70,7 +70,7 @@ namespace ZEngine.Resource
                 List<ResourceBundleManifest> runtimeBundleManifests = new List<ResourceBundleManifest>();
                 for (int i = 0; i < options.Length; i++)
                 {
-                    ResourceModuleManifest resourceModuleManifest = ZGame.Data.GetRuntimeDatableHandle<ResourceModuleManifest>(options[i].moduleName); 
+                    ResourceModuleManifest resourceModuleManifest = ZGame.Datable.GetDatable<ResourceModuleManifest>(options[i].moduleName); 
                     if (resourceModuleManifest is null || resourceModuleManifest.bundleList is null || resourceModuleManifest.bundleList.Count is 0)
                     {
                         ZGame.Console.Log("获取资源模块信息失败，请确认在加载模块前已执行了模块更新检查", options[i].moduleName);
@@ -80,7 +80,7 @@ namespace ZEngine.Resource
 
                     foreach (var UPPER in resourceModuleManifest.bundleList)
                     {
-                        if (ZGame.Data.Equals<RuntimeAssetBundleHandle>(UPPER.name))
+                        if (ZGame.Datable.Equals<RuntimeAssetBundleHandle>(UPPER.name))
                         {
                             continue;
                         }

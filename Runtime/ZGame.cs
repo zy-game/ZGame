@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEditor;
@@ -79,33 +80,23 @@ public sealed class ZGame
     public static string GetLocalFilePath(string fileName)
         => Custom.GetLocalFilePath(fileName);
 
-    public sealed class Data
+    public sealed class Datable
     {
         /// <summary>
         /// 添加运行时数据句柄
         /// </summary>
         /// <param name="runtimeDatableHandle"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Add<T>(T runtimeDatableHandle) where T : IDatableHandle
-            => DatableManager.instance.Add(runtimeDatableHandle);
+        public static void Add(object runtimeDatableHandle)
+            => DatableManager.instance.Add(runtimeDatableHandle, runtimeDatableHandle);
 
         /// <summary>
-        /// 获取运行时数据句柄
+        /// 添加运行时数据句柄
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="runtimeDatableHandle"></param>
         /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T GetRuntimeDatableHandle<T>(string name) where T : IDatableHandle
-            => DatableManager.instance.GetRuntimeDatableHandle<T>(name);
-
-        /// <summary>
-        /// 是否存在数据句柄
-        /// </summary>
-        /// <param name="name"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static bool Equals<T>(string name) where T : IDatableHandle
-            => GetRuntimeDatableHandle<T>(name) != null;
+        public static void Add(object key, object runtimeDatableHandle)
+            => DatableManager.instance.Add(key, runtimeDatableHandle);
 
         /// <summary>
         /// 尝试获取数据句柄
@@ -114,65 +105,68 @@ public sealed class ZGame
         /// <param name="result"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static bool TryGetValue<T>(string name, out T result) where T : IDatableHandle
-            => DatableManager.instance.TryGetValue<T>(name, out result);
+        public static bool TryGetValue<T>(object key, out T result)
+            => DatableManager.instance.TryGetValue<T>(key, out result);
+
+        /// <summary>
+        /// 获取运行时数据句柄
+        /// </summary>
+        /// <param name="name"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T GetDatable<T>(object key)
+            => DatableManager.instance.GetDatable<T>(key);
+
+        /// <summary>
+        /// 获取运行时数据句柄
+        /// </summary>
+        /// <param name="name"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T GetDatable<T>(Func<T, bool> func)
+            => DatableManager.instance.GetDatable<T>(func);
+
+        /// <summary>
+        /// 获取运行时数据句柄
+        /// </summary>
+        /// <param name="name"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static List<T> GetDatables<T>()
+            => DatableManager.instance.GetDatables<T>();
+
+        /// <summary>
+        /// 是否存在数据句柄
+        /// </summary>
+        /// <param name="name"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static bool Equals<T>(object key)
+            => GetDatable<T>(key) != null;
 
         /// <summary>
         /// 回收数据句柄
         /// </summary>
         /// <param name="name"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Release<T>(string name, bool isCache = false) where T : IDatableHandle
-            => DatableManager.instance.Release<T>(name, isCache);
-
-        /// <summary>
-        /// 回收数据句柄
-        /// </summary>
-        /// <param name="runtimeDatableHandle"></param>
-        public static void Release(IDatableHandle runtimeDatableHandle, bool isCache = false)
-            => DatableManager.instance.Release(runtimeDatableHandle, isCache);
+        public static void Release(object key, bool isCache = false)
+            => DatableManager.instance.Release(key, isCache);
 
         /// <summary>
         /// 清理所有相同类型的数据
         /// </summary>
         /// <param name="isCache"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Clear<T>(bool isCache = false) where T : IDatableHandle
-            => DatableManager.instance.Clear<T>(isCache);
+        public static void Clear<T>(bool isCache = false)
+            => Clear(typeof(T), isCache);
 
         /// <summary>
-        /// 查找数据句柄
+        /// 清理所有相同类型的数据
         /// </summary>
-        /// <param name="comper"></param>
-        /// <returns></returns>
-        public static IDatableHandle Find(Func<IDatableHandle, bool> comper)
-            => DatableManager.instance.Find(comper);
-
-        /// <summary>
-        /// 查找数据句柄
-        /// </summary>
-        /// <param name="comper"></param>
-        /// <returns></returns>
-        public static IDatableHandle[] Where(Func<IDatableHandle, bool> comper)
-            => DatableManager.instance.Where(comper);
-
-        /// <summary>
-        /// 查找数据句柄
-        /// </summary>
-        /// <param name="comper"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T Find<T>(Func<T, bool> comper) where T : IDatableHandle
-            => DatableManager.instance.Find(comper);
-
-        /// <summary>
-        /// 查找数据句柄
-        /// </summary>
-        /// <param name="comper"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T[] Where<T>(Func<T, bool> comper) where T : IDatableHandle
-            => DatableManager.instance.Where(comper);
+        /// <param name="type"></param>
+        /// <param name="isCache"></param>
+        public static void Clear(Type type, bool isCache = false)
+            => DatableManager.instance.Clear(type, isCache);
     }
 
     /// <summary>
@@ -206,7 +200,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public static void Enqueue(string key, object value)
+        public static void Enqueue(object key, object value)
             => ObjectManager.instance.Enqueue(key, value);
 
         /// <summary>
@@ -223,7 +217,7 @@ public sealed class ZGame
         /// 设置缓存管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void SetCacheHandle<T>() where T : IObjectPoolHandle
+        public static void SetCacheHandle<T>() where T : IObjectPoolPipeline
             => ObjectManager.instance.SetCacheHandle(typeof(T));
 
         /// <summary>
@@ -237,7 +231,7 @@ public sealed class ZGame
         /// 移除缓存管道
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void RemoveCacheHandle<T>() where T : IObjectPoolHandle
+        public static void RemoveCacheHandle<T>() where T : IObjectPoolPipeline
             => ObjectManager.instance.RemoveCacheHandle(typeof(T));
 
         /// <summary>
@@ -636,7 +630,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="type"></param>
         public static void SubscribeMessageRecvieHandle(Type type)
-            => NetworkManager.instance.SubscribeMessageRecvieHandle(type);
+            => IMessageRecvierHandle.Create(type);
 
         /// <summary>
         /// 取消消息订阅管道
@@ -650,7 +644,7 @@ public sealed class ZGame
         /// </summary>
         /// <param name="type"></param>
         public static void UnsubscribeMessageRecvieHandle(Type type)
-            => NetworkManager.instance.UnsubscribeMessageRecvieHandle(type);
+            => IMessageRecvierHandle.Release(type);
 
         /// <summary>
         /// 请求数据

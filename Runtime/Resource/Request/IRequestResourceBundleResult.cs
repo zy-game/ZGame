@@ -72,7 +72,7 @@ namespace ZEngine.Resource
                 }
 
                 ZGame.Console.Log("Load Asset Bundle:", name, readFileScheduleHandle.version, readFileScheduleHandle.bytes?.Length);
-                ZGame.Data.Add(RuntimeAssetBundleHandle.Create(manifest, assetBundle));
+                ZGame.Datable.Add(assetBundle.name, RuntimeAssetBundleHandle.Create(manifest, assetBundle));
                 status = Status.Success;
                 uniTaskCompletionSource.TrySetResult(this);
             }

@@ -19,6 +19,11 @@ namespace ZEngine.Game
         /// 装备等级
         /// </summary>
         uint level { get; }
+
+        /// <summary>
+        /// 品质
+        /// </summary>
+        byte quality { get; }
     }
 
     /// <summary>
@@ -30,7 +35,6 @@ namespace ZEngine.Game
         /// 职业
         /// </summary>
         byte work { get; }
-        
     }
 
     /// <summary>

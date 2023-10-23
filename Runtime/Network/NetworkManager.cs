@@ -12,43 +12,34 @@ namespace ZEngine.Network
 {
     class NetworkManager : Singleton<NetworkManager>
     {
-        private List<IMessageRecvierHandle> handles = new List<IMessageRecvierHandle>();
-        private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
-        private Queue<Tuple<IChannel, byte[]>> messages = new Queue<Tuple<IChannel, byte[]>>();
+        // private List<IMessageRecvierHandle> handles = new List<IMessageRecvierHandle>();
+        // private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
+        // private Queue<Tuple<IChannel, byte[]>> messages = new Queue<Tuple<IChannel, byte[]>>();
 
 
-        protected override void OnUpdate()
-        {
-            if (messages.Count == 0)
-            {
-                return;
-            }
-
-            while (messages.Count > 0)
-            {
-                Tuple<IChannel, byte[]> data = messages.Dequeue();
-                BinaryReader reader = new BinaryReader(new MemoryStream(data.Item2));
-                uint opcode = reader.ReadUInt32();
-                string body = reader.ReadString();
-                for (int i = handles.Count - 1; i >= 0; i--)
-                {
-                    handles[i].OnHandleMessage(data.Item1.address, opcode, new MemoryStream(UTF8Encoding.UTF8.GetBytes(body)));
-                }
-            }
-        }
+        // protected override void OnUpdate()
+        // {
+        //     if (messages.Count == 0)
+        //     {
+        //         return;
+        //     }
+        //
+        //     while (messages.Count > 0)
+        //     {
+        //         Tuple<IChannel, byte[]> data = messages.Dequeue();
+        //         BinaryReader reader = new BinaryReader(new MemoryStream(data.Item2));
+        //         uint opcode = reader.ReadUInt32();
+        //         string body = reader.ReadString();
+        //         for (int i = handles.Count - 1; i >= 0; i--)
+        //         {
+        //             handles[i].OnHandleMessage(data.Item1.address, opcode, new MemoryStream(UTF8Encoding.UTF8.GetBytes(body)));
+        //         }
+        //     }
+        // }
 
         public override void Dispose()
         {
-            base.Dispose();
-            foreach (var VARIABLE in channels.Values)
-            {
-                VARIABLE.Close();
-                VARIABLE.Dispose();
-            }
-
-            handles.ForEach(x => x.Dispose());
-            handles.Clear();
-            channels.Clear();
+            ZGame.Datable.Clear<IChannel>();
             ZGame.Console.Log("关闭所有网络链接");
         }
 
@@ -103,9 +94,9 @@ namespace ZEngine.Network
         /// <returns></returns>
         public async UniTask<IChannel> Connect<T>(string address, int id = 0) where T : IChannel
         {
-            if (channels.TryGetValue(address, out IChannel channel) is false)
+            if (ZGame.Datable.TryGetValue(address, out IChannel channel) is false)
             {
-                channels.Add(address, channel = Activator.CreateInstance<T>());
+                ZGame.Datable.Add(address, channel = Activator.CreateInstance<T>());
                 await channel.Connect(address, id);
             }
 
@@ -120,7 +111,7 @@ namespace ZEngine.Network
         /// <returns></returns>
         public async void WriteAndFlush(string address, IMessaged messagePackage)
         {
-            if (!channels.TryGetValue(address, out IChannel channel))
+            if (ZGame.Datable.TryGetValue(address, out IChannel channel) is false)
             {
                 ZGame.Console.Log("未找到指定的链接", address);
                 return;
@@ -132,51 +123,7 @@ namespace ZEngine.Network
                 return;
             }
 
-            MemoryStream memoryStream = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(memoryStream);
-            writer.Write(Crc32.GetCRC32Str(messagePackage.GetType().FullName));
-            writer.Write(JsonConvert.SerializeObject(messagePackage));
-            await channel.WriteAndFlush(memoryStream.ToArray());
-        }
-
-        public void SubscribeMessageRecvieHandle(Type types)
-        {
-            if (typeof(IMessageRecvierHandle).IsAssignableFrom(types) is false)
-            {
-                ZGame.Console.Error(new NotImplementedException(types.FullName));
-                return;
-            }
-
-            if (handles.Find(x => x.GetType() == types) is not null)
-            {
-                ZGame.Console.Error("已经存在相同类型的消息处理管道", types);
-                return;
-            }
-
-            handles.Add((IMessageRecvierHandle)Activator.CreateInstance(types));
-        }
-
-        public void UnsubscribeMessageRecvieHandle(Type types)
-        {
-            if (typeof(IMessageRecvierHandle).IsAssignableFrom(types) is false)
-            {
-                ZGame.Console.Error(new NotImplementedException(types.FullName));
-                return;
-            }
-
-            IMessageRecvierHandle messageRecvierHandle = handles.Find(x => x.GetType() == types);
-            if (messageRecvierHandle is null)
-            {
-                ZGame.Console.Error("不存在消息处理管道", types);
-                return;
-            }
-
-            handles.Remove(messageRecvierHandle);
-        }
-
-        public void Dispacher(IChannel channel, byte[] bytes)
-        {
-            messages.Enqueue(new Tuple<IChannel, byte[]>(channel, bytes));
+            await channel.WriteAndFlush(IMessaged.Serialize(messagePackage));
         }
 
         /// <summary>
@@ -186,7 +133,7 @@ namespace ZEngine.Network
         /// <returns></returns>
         public UniTask<IChannel> Close(string address)
         {
-            if (!channels.TryGetValue(address, out IChannel channel))
+            if (!ZGame.Datable.TryGetValue(address, out IChannel channel))
             {
                 ZGame.Console.Log("未连接：", address);
                 return UniTask.FromResult(channel);
