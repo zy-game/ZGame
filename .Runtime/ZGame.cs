@@ -127,15 +127,6 @@ public sealed class ZGame
             => DatableManager.instance.GetDatable<T>(func);
 
         /// <summary>
-        /// 获取运行时数据句柄
-        /// </summary>
-        /// <param name="name"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static List<T> GetDatables<T>()
-            => DatableManager.instance.GetDatables<T>();
-
-        /// <summary>
         /// 是否存在数据句柄
         /// </summary>
         /// <param name="name"></param>

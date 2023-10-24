@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using UnityEditor;
+using UnityEditor.PackageManager;
+using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 using UnityEngine.UIElements;
 using ZEngine.Editor.PlayerEditor;
@@ -62,7 +65,7 @@ namespace ZEngine.Editor
                 menu.AddItem(new GUIContent("技能编辑器"), false, () => { SkillEditor.SkillEditorWindow.Open(); });
                 menu.AddItem(new GUIContent("资源编辑器"), false, () => { ResourceBuilder.GameResourceBuilder.Open(); });
 
-
+                menu.AddItem(new GUIContent("Update"), false, TestUpdatePackage);
                 menu.ShowAsContext();
             }
 
@@ -72,6 +75,36 @@ namespace ZEngine.Editor
             }
 
             GUILayout.EndHorizontal();
+        }
+
+        static async void TestUpdatePackage()
+        {
+            ListRequest request = Client.List();
+            while (request.IsCompleted == false)
+            {
+                Debug.Log("===========");
+                await Task.Delay(1000);
+            }
+
+
+            foreach (var VARIABLE in request.Result)
+            {
+                Debug.Log(VARIABLE.name + ":" + VARIABLE.version);
+            }
+
+            SearchRequest searchRequest = Client.SearchAll();
+            while (searchRequest.IsCompleted == false)
+            {
+                Debug.Log("===========");
+                await Task.Delay(1000);
+            }
+
+            foreach (var VARIABLE in searchRequest.Result)
+            {
+                Debug.Log(VARIABLE.name + ":" + VARIABLE.version);
+            }
+
+            Client.Add("https://gitee.com/focus-creative-games/hybridclr_unity.git");
         }
     }
 }

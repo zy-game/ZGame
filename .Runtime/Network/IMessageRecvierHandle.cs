@@ -24,7 +24,7 @@ namespace ZEngine.Network
                 return default;
             }
 
-            IMessageRecvierHandle messageRecvierHandle = ZGame.Datable.GetDatables(recvieHandleType).FirstOrDefault();
+            IMessageRecvierHandle messageRecvierHandle = ZGame.Datable.GetDatable<IMessageRecvierHandle>(x => x.GetType().Equals(recvieHandleType));
             if (messageRecvierHandle is not null)
             {
                 ZGame.Console.Error("已存在消息处理管道", recvieHandleType);
@@ -44,7 +44,7 @@ namespace ZEngine.Network
                 return;
             }
 
-            IMessageRecvierHandle messageRecvierHandle = (IMessageRecvierHandle)ZGame.Datable.GetDatables<IMessageRecvierHandle>(recvieHandleType).FirstOrDefault();
+            IMessageRecvierHandle messageRecvierHandle = ZGame.Datable.GetDatable<IMessageRecvierHandle>(x => x.GetType().Equals(recvieHandleType));
             if (messageRecvierHandle is null)
             {
                 ZGame.Console.Error("不存在消息处理管道", recvieHandleType);
