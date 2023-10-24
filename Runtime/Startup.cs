@@ -3,22 +3,22 @@ using UnityEngine;
 using ZGame;
 using ZGame.Game;
 using ZGame.Localization;
-using ZGame.Options;
 using ZGame.Resource;
 using ZGame.Window;
 
 public class Startup : MonoBehaviour
 {
+    public string module;
+
     private void Start()
     {
-        GlobalOptions globalOptions = ISystem.Require<IOptionsSystem>().GetOptions<GlobalOptions>();
-        if (globalOptions is null)
+        if (string.IsNullOrEmpty(module))
         {
             ISystem.Require<IWindowSystem>().Open<IMessageBox>().Setup("加载公共配置失败", IEvent.Builder(ISystem.Quit));
             return;
         }
 
-        ISystem.Require<IResourceSystem>().CheckResourceGroupStatus(globalOptions.startboot, IEvent.Builder<ICheckResourceGroupStatusResult>(CheckResourceGroupStatusComplation));
+        ISystem.Require<IResourceSystem>().CheckResourceGroupStatus(module, IEvent.Builder<ICheckResourceGroupStatusResult>(CheckResourceGroupStatusComplation));
     }
 
     private void CheckResourceGroupStatusComplation(ICheckResourceGroupStatusResult checkResourceGroupStatusResult)
@@ -40,7 +40,7 @@ public class Startup : MonoBehaviour
             return;
         }
 
-        ISystem.Require<IGameSystem>().EntryGame(ISystem.Require<IOptionsSystem>().GetOptions<IGameEntryOptions>(), IEvent.Builder<IEntryGameResult>(EntryGameComplations));
+        ISystem.Require<IGameSystem>().EntryGame(IOptions.Requery<IGameEntryOptions>(), IEvent.Builder<IEntryGameResult>(EntryGameComplations));
     }
 
     private void EntryGameComplations(IEntryGameResult entryGameResult)

@@ -1,8 +1,6 @@
 namespace ZGame.Resource
 {
-    public interface IModuleOptions : IOptions
-    {
-    }
+
 
     public interface IPackageFileInfoOptions : IOptions
     {
@@ -22,7 +20,7 @@ namespace ZGame.Resource
 
     public interface IUpdateResourceGroupResult : IRequest<IUpdateResourceGroupResult>
     {
-        IModuleOptions module { get; }
+        string module { get; }
         IPackageManifest[] packages { get; }
     }
 
@@ -31,9 +29,9 @@ namespace ZGame.Resource
         /// <summary>
         /// 检查资源组更新
         /// </summary>
-        /// <param name="group"></param>
+        /// <param name="module"></param>
         /// <param name="eventPipeline"></param>
-        void CheckResourceGroupStatus(IModuleOptions options, IEvent<ICheckResourceGroupStatusResult> eventPipeline);
+        void CheckResourceGroupStatus(string module, IEvent<ICheckResourceGroupStatusResult> eventPipeline);
 
         /// <summary>
         /// 更新资源组

@@ -9,5 +9,10 @@ namespace ZGame
         uint version { get; }
         void Active();
         void Inactive();
+
+        public static T Requery<T>() where T : IOptions
+        {
+            return default;
+        }
     }
 }
