@@ -27,6 +27,7 @@ namespace ZGame
                 message = String.Empty;
             }
 
+            public string guid { get; } = ID.New();
             public int errorCode { get; set; }
             public string message { get; set; }
         }

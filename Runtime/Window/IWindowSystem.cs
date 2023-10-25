@@ -1,32 +1,76 @@
 using System;
+using UnityEngine;
 
 namespace ZGame.Window
 {
+    public interface IUIBindComponent : IEntity
+    {
+    }
+
     public interface IGameWindow : IEntity
     {
+        string name { get; }
+        GameObject gameObject { get; }
     }
 
     public interface IMessageBox : IGameWindow
     {
-        public IMessageBox Setup(string message)
-            => Setup(message, IEvent.Empty);
+        IMessageBox Setup(string title, string message, string okString, Action ok, string cancelString = "", Action cancel = null);
 
-        public IMessageBox Setup(string message, IEvent ok, IEvent cancel = null)
-            => Setup("Tips", message, ok, cancel);
+        public static IMessageBox Create(string message)
+            => Create(message, () => { });
 
-        public IMessageBox Setup(string title, string message, IEvent ok, IEvent cancel = null)
-            => Setup(title, message, "OK", ok, cancel is null ? "" : "Cancel", cancel);
+        public static IMessageBox Create(string message, Action ok, Action cancel = null)
+            => Create("Tips", message, ok, cancel);
 
-        IMessageBox Setup(string title, string message, string okString, IEvent ok, string cancelString = "", IEvent cancel = null);
+        public static IMessageBox Create(string title, string message, Action ok, Action cancel = null)
+            => Create(title, message, "OK", ok, "Cancel", cancel);
+
+        public static IMessageBox Create(string title, string message, string okString, Action ok, string cancelString, Action cancel = null)
+            => SystemManager.windowSystem.Open<DefaultMessageBoxer>().Setup(title, message, okString, ok, cancelString, cancel);
+
+        class DefaultMessageBoxer : IMessageBox
+        {
+            public string guid { get; } = ID.New();
+            public string name { get; }
+            public GameObject gameObject { get; }
+
+            public void Dispose()
+            {
+                throw new NotImplementedException();
+            }
+
+            public IMessageBox Setup(string title, string message, string okString, Action ok, string cancelString = "", Action cancel = null)
+            {
+                throw new NotImplementedException();
+            }
+        }
+    }
+
+    public interface IWaiting : IGameWindow
+    {
+        public static IWaiting Create(float timeout = 0)
+        {
+            return default;
+        }
     }
 
     public interface ITips : IGameWindow
     {
+        public static ITips Create(string tips)
+        {
+            return default;
+        }
     }
 
-    public interface IProgress : IGameWindow
+    public interface ILoading : IGameWindow
     {
         void SetProgress(float progress);
+
+        public static ILoading Create()
+        {
+            return default;
+        }
     }
 
     public static class Extension

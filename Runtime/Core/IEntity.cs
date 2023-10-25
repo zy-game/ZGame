@@ -1,14 +1,13 @@
 using UnityEngine;
+using System;
 
 namespace ZGame
 {
-    using System;
-
     /// <summary>
     /// 实体对象
     /// </summary>
     public interface IEntity : IDisposable
     {
-
+        string guid { get; }
     }
 }

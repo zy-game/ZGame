@@ -1,24 +1,24 @@
+using System;
+
 namespace ZGame.Resource
 {
-
-
-    public interface IPackageFileInfoOptions : IOptions
+    public interface IFileInfoOptions : IOptions
     {
         string name { get; }
         string path { get; }
     }
 
-    public interface IPackageManifest : IRuntimeOptions
+    public interface IPackageManifest : IOptions
     {
-        IPackageFileInfoOptions[] files { get; }
+        IFileInfoOptions[] files { get; }
     }
 
-    public interface ICheckResourceGroupStatusResult : IRequest<ICheckResourceGroupStatusResult>
+    public interface ICheckResourceGroupStatusResult : IRequest
     {
         IPackageManifest[] packages { get; }
     }
 
-    public interface IUpdateResourceGroupResult : IRequest<IUpdateResourceGroupResult>
+    public interface IUpdateResourceGroupResult : IRequest
     {
         string module { get; }
         IPackageManifest[] packages { get; }
@@ -31,13 +31,13 @@ namespace ZGame.Resource
         /// </summary>
         /// <param name="module"></param>
         /// <param name="eventPipeline"></param>
-        void CheckResourceGroupStatus(string module, IEvent<ICheckResourceGroupStatusResult> eventPipeline);
+        void CheckResourceGroupStatus(string module, Action<ICheckResourceGroupStatusResult> eventPipeline);
 
         /// <summary>
         /// 更新资源组
         /// </summary>
         /// <param name="checkResourceGroupStatusResult"></param>
         /// <param name="pipeline"></param>
-        void UpdateResourceGroup(ICheckResourceGroupStatusResult checkResourceGroupStatusResult, IEvent<IUpdateResourceGroupResult> pipeline);
+        void UpdateResourceGroup(ICheckResourceGroupStatusResult checkResourceGroupStatusResult, Action<IUpdateResourceGroupResult> pipeline);
     }
 }

@@ -9,38 +9,45 @@ using ZGame.Window;
 public class Startup : MonoBehaviour
 {
     public string module;
+    public string dataSystem;
+    public string gameSystem;
+    public string networkSystem;
+    public string objectSystem;
+    public string resourceSystem;
+    public string windowSystem;
+    public string localizetionSystem;
 
     private void Start()
     {
         if (string.IsNullOrEmpty(module))
         {
-            ISystem.Require<IWindowSystem>().Open<IMessageBox>().Setup("加载公共配置失败", IEvent.Builder(ISystem.Quit));
+            IMessageBox.Create("加载公共配置失败", SystemManager.Quit);
             return;
         }
 
-        ISystem.Require<IResourceSystem>().CheckResourceGroupStatus(module, IEvent.Builder<ICheckResourceGroupStatusResult>(CheckResourceGroupStatusComplation));
+        SystemManager.resourceSystem.CheckResourceGroupStatus(module, CheckResourceGroupStatusComplation);
     }
 
     private void CheckResourceGroupStatusComplation(ICheckResourceGroupStatusResult checkResourceGroupStatusResult)
     {
         if (checkResourceGroupStatusResult.EnsureRequestSuccessfuly() is false)
         {
-            ISystem.Require<IWindowSystem>().Open<IMessageBox>().Setup("检测资源失败", IEvent.Builder(ISystem.Quit));
+            IMessageBox.Create("检测资源失败", SystemManager.Quit);
             return;
         }
 
-        ISystem.Require<IResourceSystem>().UpdateResourceGroup(checkResourceGroupStatusResult, IEvent.Builder<IUpdateResourceGroupResult>(UpdateResourceGroupComlation));
+        SystemManager.resourceSystem.UpdateResourceGroup(checkResourceGroupStatusResult, UpdateResourceGroupComlation);
     }
 
     private void UpdateResourceGroupComlation(IUpdateResourceGroupResult updateResourceGroupResult)
     {
         if (updateResourceGroupResult.EnsureRequestSuccessfuly() is false)
         {
-            ISystem.Require<IWindowSystem>().Open<IMessageBox>().Setup("更新失败", IEvent.Builder(ISystem.Quit));
+            IMessageBox.Create("更新失败", SystemManager.Quit);
             return;
         }
 
-        ISystem.Require<IGameSystem>().EntryGame(IOptions.Requery<IGameEntryOptions>(), IEvent.Builder<IEntryGameResult>(EntryGameComplations));
+        SystemManager.gameSystem.EntryGame(IOptions.Requery<IGameEntryOptions>(), EntryGameComplations);
     }
 
     private void EntryGameComplations(IEntryGameResult entryGameResult)
@@ -50,6 +57,6 @@ public class Startup : MonoBehaviour
             return;
         }
 
-        ISystem.Require<IWindowSystem>().Open<IMessageBox>().Setup("进入游戏失败", IEvent.Builder(ISystem.Quit));
+        IMessageBox.Create("进入游戏失败", SystemManager.Quit);
     }
 }
