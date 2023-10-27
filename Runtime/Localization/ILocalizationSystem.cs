@@ -18,7 +18,7 @@ namespace ZGame.Localization
         LanguageType type { get; }
     }
 
-    public interface ILocalizationSystem : ISystem
+    public interface ILocalizationSystem : IManager
     {
         ILanguageOptions GetLanguage(int guid);
         void SwitchLanguage(Language language);

@@ -1,10 +1,10 @@
 using System;
+using Cysharp.Threading.Tasks;
 
 namespace ZGame.Resource
 {
     public interface IFileInfoOptions : IOptions
     {
-        string name { get; }
         string path { get; }
     }
 
@@ -13,31 +13,43 @@ namespace ZGame.Resource
         IFileInfoOptions[] files { get; }
     }
 
-    public interface ICheckResourceGroupStatusResult : IRequest
+    public interface IPackageGroupOptions : IOptions
     {
         IPackageManifest[] packages { get; }
     }
 
-    public interface IUpdateResourceGroupResult : IRequest
+    public interface ILoadResourceObjectResult : IRequest
     {
-        string module { get; }
-        IPackageManifest[] packages { get; }
+        UnityEngine.Object asset { get; }
     }
 
-    public interface IResourceSystem : ISystem
+    public static class Extension
     {
-        /// <summary>
-        /// 检查资源组更新
-        /// </summary>
-        /// <param name="module"></param>
-        /// <param name="eventPipeline"></param>
-        void CheckResourceGroupStatus(string module, Action<ICheckResourceGroupStatusResult> eventPipeline);
+    }
+
+    public interface IResourceSystem : IManager
+    {
 
         /// <summary>
-        /// 更新资源组
+        /// 加载资源
         /// </summary>
-        /// <param name="checkResourceGroupStatusResult"></param>
-        /// <param name="pipeline"></param>
-        void UpdateResourceGroup(ICheckResourceGroupStatusResult checkResourceGroupStatusResult, Action<IUpdateResourceGroupResult> pipeline);
+        /// <param name="path"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        ILoadResourceObjectResult LoadAsset(string path);
+
+        /// <summary>
+        /// 加载资源
+        /// </summary>
+        /// <param name="path"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        UniTask<ILoadResourceObjectResult> LoadAssetAsync(string path);
+
+        /// <summary>
+        /// 回收资源对象
+        /// </summary>
+        /// <param name="obj"></param>
+        void Release(UnityEngine.Object obj);
     }
 }

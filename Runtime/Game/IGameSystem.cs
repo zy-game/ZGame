@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 
 namespace ZGame.Game
 {
@@ -8,11 +9,10 @@ namespace ZGame.Game
 
     public interface IGameEntryOptions : IOptions
     {
-        
     }
 
-    public interface IGameSystem : ISystem
+    public interface IGameSystem : IManager
     {
-        void EntryGame(IGameEntryOptions options, Action<IEntryGameResult> pipeline);
+        UniTask<IEntryGameResult> EntryGame(IGameEntryOptions options);
     }
 }
