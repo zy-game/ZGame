@@ -1,8 +1,9 @@
+using System;
 using Cysharp.Threading.Tasks;
 
 namespace ZGame.Networking
 {
-    public interface IChannel : IEntity
+    public interface IChannel : IDisposable
     {
         string address { get; }
         bool connected { get; }

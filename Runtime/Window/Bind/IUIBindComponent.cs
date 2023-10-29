@@ -1,6 +1,8 @@
+using System;
+
 namespace ZGame.Window
 {
-    public interface IUIBindComponent : IEntity
+    public interface IUIBindComponent : IDisposable
     {
     }
 }

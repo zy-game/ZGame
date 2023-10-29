@@ -11,7 +11,6 @@ namespace ZGame.Networking
 {
     public class TCPChannel : IChannel
     {
-        public string guid { get; } = ID.New();
         public string address { get; set; }
         public bool connected => socket == null ? false : socket.Connected;
 

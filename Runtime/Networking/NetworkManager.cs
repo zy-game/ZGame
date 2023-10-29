@@ -1,18 +1,49 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
+using System.Net.Sockets;
 using Cysharp.Threading.Tasks;
-using Newtonsoft.Json;
 using ProtoBuf;
+using ProtoBuf.Meta;
 using UnityEngine;
 using UnityEngine.Networking;
 
 namespace ZGame.Networking
 {
-    public class NetworkManager : INetworkManager
+    public class DownloadOptions : IDisposable
     {
-        public string guid { get; } = ID.New();
+        public string name;
+        public string url;
+        public int version;
+
+        public void Dispose()
+        {
+        }
+    }
+
+    public class DownloadHandle : IDisposable
+    {
+        public void Dispose()
+        {
+            name = String.Empty;
+            url = String.Empty;
+            bytes = Array.Empty<byte>();
+            GC.SuppressFinalize(this);
+        }
+
+        public string name;
+        public float progress;
+        public bool isDone;
+        public string url;
+        public byte[] bytes;
+        public int version;
+        public string error;
+    }
+
+    public class NetworkManager : IManager
+    {
         private List<IDispatcher> messageRecvierPipelines = new List<IDispatcher>();
         private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
 
@@ -87,11 +118,64 @@ namespace ZGame.Networking
             return await webRequestPipeline.PostAsync<T>(header, data);
         }
 
-        public UniTask<IDownloadPipelineHandle> Download(Action<float> progress, params string[] args)
+        public async UniTask<DownloadHandle[]> Download(Action<float> progress, params DownloadOptions[] args)
         {
-            UniTaskCompletionSource<IDownloadPipelineHandle> taskCompletionSource = new UniTaskCompletionSource<IDownloadPipelineHandle>();
-            IDownloadPipelineHandle.Create(progress, taskCompletionSource, args);
-            return taskCompletionSource.Task;
+            if (args is null || args.Length == 0)
+            {
+                return default;
+            }
+
+            UniTaskCompletionSource<DownloadHandle[]> taskCompletionSource = new UniTaskCompletionSource<DownloadHandle[]>();
+            DownloadHandle[] handles = new DownloadHandle[args.Length];
+            for (int i = 0; i < args.Length; i++)
+            {
+                handles[i] = new DownloadHandle()
+                {
+                    name = args[i].name,
+                    url = args[i].url,
+                    isDone = false,
+                    progress = 0,
+                    version = args[i].version,
+                    bytes = Array.Empty<byte>()
+                };
+                Behaviour.instance.StartCoroutine(Download(handles[i]));
+            }
+
+            Behaviour.instance.StartCoroutine(UpdateProgress());
+
+            IEnumerator UpdateProgress()
+            {
+                while (handles.Where(x => x.isDone == false).Count() > 0)
+                {
+                    progress?.Invoke(handles.Sum(x => x.progress));
+                    yield return new WaitForSeconds(0.1f);
+                }
+
+                taskCompletionSource.TrySetResult(handles);
+            }
+
+            IEnumerator Download(DownloadHandle downloadData)
+            {
+                UnityWebRequest request = UnityWebRequest.Get(downloadData.url);
+                request.SendWebRequest();
+                while (!request.isDone)
+                {
+                    downloadData.progress = request.downloadProgress;
+                    yield return new WaitForSeconds(0.01f);
+                }
+
+                downloadData.isDone = true;
+                if (request.result is not UnityWebRequest.Result.Success)
+                {
+                    downloadData.error = request.downloadHandler.text;
+                    yield break;
+                }
+
+                downloadData.bytes = request.downloadHandler.data;
+                CoreApi.File.Write(downloadData.name, downloadData.bytes, downloadData.version);
+            }
+
+            return await taskCompletionSource.Task;
         }
 
         public void SubscribeMessageRecvier(Type type)

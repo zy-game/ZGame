@@ -6,7 +6,6 @@ namespace ZGame.Networking
 {
     class WebChannel : IChannel
     {
-        public string guid { get; } = ID.New();
         public string address { get; }
         public bool connected { get; set; }
         private WebSocket webSocket;

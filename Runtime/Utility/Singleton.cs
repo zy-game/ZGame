@@ -2,7 +2,7 @@ using System;
 
 namespace ZGame
 {
-    public class Singleton<T> where T : IEntity
+    public class Singleton<T> where T : class, new()
     {
         public static T instance => SinglePipeline.GetInstance();
 

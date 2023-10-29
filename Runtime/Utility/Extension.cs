@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace ZGame
 {
@@ -19,6 +22,30 @@ namespace ZGame
 
                 return _instance;
             }
+        }
+    }
+
+    public sealed class GameObjectDestoryCallback
+    {
+        class Listener : MonoBehaviour
+        {
+            public UnityEvent callback = new UnityEvent();
+
+            private void OnDestroy()
+            {
+                callback.Invoke();
+            }
+        }
+
+        public static void Create(GameObject gameObject, UnityAction callback)
+        {
+            Listener listener = gameObject.GetComponent<Listener>();
+            if (listener == null)
+            {
+                listener = gameObject.AddComponent<Listener>();
+            }
+
+            listener.callback.AddListener(callback);
         }
     }
 
@@ -57,6 +84,40 @@ namespace ZGame
             }
 
             return (T)Activator.CreateInstance(type);
+        }
+
+        public static List<Type> GetAllTypes<T>(this AppDomain domain)
+        {
+            List<Type> result = new List<Type>();
+            Type baseType = typeof(T);
+            foreach (var VARIABLE in domain.GetAssemblies())
+            {
+                foreach (var VARIABLE2 in VARIABLE.GetTypes())
+                {
+                    if (baseType.IsAssignableFrom(VARIABLE2) && VARIABLE2.IsInterface is false && VARIABLE2.IsAbstract is false)
+                    {
+                        result.Add(VARIABLE2);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public static Type FindType(this Assembly assembly, string name)
+        {
+            if (assembly is not null)
+            {
+                foreach (var VARIABLE in assembly.GetTypes())
+                {
+                    if (VARIABLE.Name == name)
+                    {
+                        return VARIABLE;
+                    }
+                }
+            }
+
+            return default;
         }
     }
 }

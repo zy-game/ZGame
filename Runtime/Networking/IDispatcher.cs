@@ -5,7 +5,7 @@ using ProtoBuf;
 
 namespace ZGame.Networking
 {
-    public interface IDispatcher : IEntity
+    public interface IDispatcher : IDisposable
     {
         void RecvieHandle(IChannel channel, uint opcode, MemoryStream memoryStream);
 
@@ -23,7 +23,7 @@ namespace ZGame.Networking
         {
             private Action<T> callback;
             private uint opcode;
-            public string guid { get; } = ID.New();
+
 
             public ActionMessageRecvier(Action<T> callback)
             {
@@ -45,7 +45,7 @@ namespace ZGame.Networking
                 }
 
                 callback?.Invoke(Serializer.Deserialize<T>(memoryStream));
-                CoreApi.networkSystem.UnsubscribeMessageRecvier<ActionMessageRecvier<T>>();
+                CoreApi.Network.UnsubscribeMessageRecvier(typeof(ActionMessageRecvier<T>));
             }
         }
     }

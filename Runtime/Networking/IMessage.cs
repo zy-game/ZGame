@@ -1,6 +1,8 @@
+using System;
+
 namespace ZGame.Networking
 {
-    public interface IMessage : IEntity
+    public interface IMessage : IDisposable
     {
     }
 }

@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Cysharp.Threading.Tasks;
@@ -6,7 +8,7 @@ using UnityEngine.Networking;
 
 namespace ZGame.Networking
 {
-    public interface IWebRequestPipeline : IRequest
+    public interface IWebRequestPipeline : IDisposable
     {
         string url { get; }
         UniTask<T> GetAsync<T>();
@@ -19,8 +21,6 @@ namespace ZGame.Networking
 
         class WebRequestPipelineHandle : IWebRequestPipeline
         {
-            public string guid { get; }
-            public IError error { get; }
             public string url { get; }
             public UnityWebRequest request;
 
@@ -29,22 +29,35 @@ namespace ZGame.Networking
                 this.url = url;
             }
 
-            public async UniTask<T> GetAsync<T>()
+            IEnumerator Start<T>(UniTaskCompletionSource<T> taskCompletionSource)
             {
-                request = UnityWebRequest.Get(url);
-                await request.SendWebRequest().ToUniTask();
+                yield return request.SendWebRequest();
                 if (request.result is not UnityWebRequest.Result.Success)
                 {
-                    return default;
+                    taskCompletionSource.TrySetResult(default);
+                    yield break;
                 }
 
-                return GetData<T>();
+                taskCompletionSource.TrySetResult(GetData<T>());
+            }
+
+            public async UniTask<T> GetAsync<T>()
+            {
+                UniTaskCompletionSource<T> taskCompletionSource = new UniTaskCompletionSource<T>();
+                request = UnityWebRequest.Get(url);
+                request.timeout = 5;
+                request.useHttpContinue = true;
+                Behaviour.instance.StartCoroutine(Start(taskCompletionSource));
+                return await taskCompletionSource.Task;
             }
 
             public async UniTask<T> PostAsync<T>(Dictionary<string, string> headers, object data)
             {
+                UniTaskCompletionSource<T> taskCompletionSource = new UniTaskCompletionSource<T>();
                 string str = JsonConvert.SerializeObject(data);
                 request = UnityWebRequest.PostWwwForm(url, str);
+                request.timeout = 5;
+                request.useHttpContinue = true;
                 request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str));
                 if (headers is not null)
                 {
@@ -54,13 +67,8 @@ namespace ZGame.Networking
                     }
                 }
 
-                await request.SendWebRequest().ToUniTask();
-                if (request.result is not UnityWebRequest.Result.Success)
-                {
-                    return default;
-                }
-
-                return GetData<T>();
+                Behaviour.instance.StartCoroutine(Start(taskCompletionSource));
+                return await taskCompletionSource.Task;
             }
 
 

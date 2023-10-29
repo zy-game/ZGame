@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ZGame
 {
-    public interface IManager : IEntity
+    public interface IManager : IDisposable
     {
     }
 }
