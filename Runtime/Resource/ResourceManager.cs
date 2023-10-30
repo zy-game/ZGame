@@ -16,6 +16,7 @@ namespace ZGame.Resource
         public IAssetLoadingPipeline AssetDatabaseResourceLoadingPipeline;
         public IPackageUpdatePipeline PackageUpdatePipeline;
         public IPackageLoadingPipeline PackageLoadingPipeline;
+        private List<AssetBundleHandle> _handles = new List<AssetBundleHandle>();
 
         public ResourceManager()
         {
@@ -27,28 +28,79 @@ namespace ZGame.Resource
             PackageLoadingPipeline = new DefaultPackageLoadingPipeline();
         }
 
+
+        public AssetBundleHandle FindAssetBundleHandle(AssetObjectHandle obj)
+        {
+            return _handles.Find(x => x.Contains(obj));
+        }
+
+        public AssetBundleHandle FindAssetBundleHandle(string path)
+        {
+            return _handles.Find(x => x.Contains(path));
+        }
+
+        public void RemoveAssetBundleHandle(string name)
+        {
+            AssetBundleHandle handle = _handles.Find(x => x.name == name);
+            if (handle is null)
+            {
+                return;
+            }
+
+            _handles.Remove(handle);
+        }
+
+        public void AddAssetBundleHandle(AssetBundle bundle)
+        {
+            _handles.Add(new AssetBundleHandle(bundle));
+        }
+
         /// <summary>
         /// 加载资源
         /// </summary>
         /// <param name="path">资源路径</param>
         /// <returns>资源加载结果</returns>
-        public ResObject LoadAsset(string path)
+        public AssetObjectHandle LoadAsset(string path)
         {
             if (path.StartsWith("Resources"))
             {
+                if (ResourcesLodaingPipeline is null)
+                {
+                    Debug.LogError(new NullReferenceException(nameof(ResourcesLodaingPipeline)));
+                    return default;
+                }
+
                 return ResourcesLodaingPipeline.LoadAsset(path);
             }
 
             if (path.StartsWith("http"))
             {
+                if (NetworkResourceLoadingPipeline is null)
+                {
+                    Debug.LogError(new NullReferenceException(nameof(NetworkResourceLoadingPipeline)));
+                    return default;
+                }
+
                 return NetworkResourceLoadingPipeline.LoadAsset(path);
             }
 #if UNITY_EDITOR
             if (CoreApi.IsHotfix is false)
             {
+                if (AssetDatabaseResourceLoadingPipeline is null)
+                {
+                    Debug.LogError(new NullReferenceException(nameof(AssetDatabaseResourceLoadingPipeline)));
+                    return default;
+                }
+
                 return AssetDatabaseResourceLoadingPipeline.LoadAsset(path);
             }
 #endif
+            if (AssetBundleResourceLoadingPipeline is null)
+            {
+                Debug.LogError(new NullReferenceException(nameof(AssetBundleResourceLoadingPipeline)));
+                return default;
+            }
+
             return AssetBundleResourceLoadingPipeline.LoadAsset(path);
         }
 
@@ -57,28 +109,52 @@ namespace ZGame.Resource
         /// </summary>
         /// <param name="path">资源路径</param>
         /// <returns>资源加载任务</returns>
-        public async UniTask<ResObject> LoadAssetAsync(string path)
+        public async UniTask<AssetObjectHandle> LoadAssetAsync(string path)
         {
             if (path.StartsWith("Resources"))
             {
+                if (NetworkResourceLoadingPipeline is null)
+                {
+                    Debug.LogError(new NullReferenceException(nameof(NetworkResourceLoadingPipeline)));
+                    return default;
+                }
+
                 return await ResourcesLodaingPipeline.LoadAssetAsync(path);
             }
 
             if (path.StartsWith("http"))
             {
+                if (NetworkResourceLoadingPipeline is null)
+                {
+                    Debug.LogError(new NullReferenceException(nameof(NetworkResourceLoadingPipeline)));
+                    return default;
+                }
+
                 return await NetworkResourceLoadingPipeline.LoadAssetAsync(path);
             }
 #if UNITY_EDITOR
             if (CoreApi.IsHotfix is false)
             {
+                if (AssetDatabaseResourceLoadingPipeline is null)
+                {
+                    Debug.LogError(new NullReferenceException(nameof(AssetDatabaseResourceLoadingPipeline)));
+                    return default;
+                }
+
                 return await AssetDatabaseResourceLoadingPipeline.LoadAssetAsync(path);
             }
 #endif
+            if (AssetBundleResourceLoadingPipeline is null)
+            {
+                Debug.LogError(new NullReferenceException(nameof(AssetBundleResourceLoadingPipeline)));
+                return default;
+            }
+
             return await AssetBundleResourceLoadingPipeline.LoadAssetAsync(path);
         }
 
         /// <summary>
-        /// 加载包列表
+        /// 加载资源模块
         /// </summary>
         /// <param name="groupName">资源组名</param>
         /// <param name="progressUpdate">加载进度会回调</param>
@@ -104,7 +180,30 @@ namespace ZGame.Resource
                 return ErrorCode.NOT_FIND;
             }
 
-            return await PackageUpdatePipeline.StartUpdate(manifest, progressUpdate);
+            if (PackageLoadingPipeline is null)
+            {
+                Debug.LogError(new NullReferenceException(nameof(PackageLoadingPipeline)));
+                return ErrorCode.LOAD_ASSET_BUNDLE_FAIL;
+            }
+
+            return await PackageLoadingPipeline.LoadingModulePackageList(manifest, progressUpdate);
+        }
+
+        /// <summary>
+        /// 加载资源包列表
+        /// </summary>
+        /// <param name="progressCallback"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public async UniTask<ErrorCode> LoadingOhterPackageList(Action<float> progressCallback, params string[] args)
+        {
+            if (PackageLoadingPipeline is null)
+            {
+                Debug.LogError(new NullReferenceException(nameof(PackageLoadingPipeline)));
+                return ErrorCode.LOAD_ASSET_BUNDLE_FAIL;
+            }
+
+            return await PackageLoadingPipeline.LoadingPackageList(progressCallback, args);
         }
 
         /// <summary>
@@ -135,28 +234,45 @@ namespace ZGame.Resource
                 return ErrorCode.NOT_FIND;
             }
 
-            return await PackageLoadingPipeline.LoadingModulePackageList(progressUpdate, manifest);
+            if (PackageUpdatePipeline is null)
+            {
+                Debug.LogError(new NullReferenceException(nameof(PackageUpdatePipeline)));
+                return ErrorCode.UPDATE_RESOURCE_FAIL;
+            }
+
+            return await PackageUpdatePipeline.StartUpdate(manifest, progressUpdate);
+        }
+
+        public async UniTask<ErrorCode> UpdateResourceList(Action<float> progressCallback, params string[] args)
+        {
+            if (PackageUpdatePipeline is null)
+            {
+                Debug.LogError(new NullReferenceException(nameof(PackageUpdatePipeline)));
+                return ErrorCode.UPDATE_RESOURCE_FAIL;
+            }
+
+            return await PackageUpdatePipeline.StartUpdate(progressCallback, args);
         }
 
         /// <summary>
         /// 回收资源
         /// </summary>
         /// <param name="obj"></param>
-        public void Release(ResObject obj)
+        public void Release(AssetObjectHandle obj)
         {
-            ResourcesLodaingPipeline.Release(obj);
-            AssetBundleResourceLoadingPipeline.Release(obj);
-            AssetDatabaseResourceLoadingPipeline.Release(obj);
+            ResourcesLodaingPipeline?.Release(obj);
+            AssetBundleResourceLoadingPipeline?.Release(obj);
+            AssetDatabaseResourceLoadingPipeline?.Release(obj);
         }
 
         public void Dispose()
         {
-            ResourcesLodaingPipeline.Dispose();
-            AssetBundleResourceLoadingPipeline.Dispose();
-            NetworkResourceLoadingPipeline.Dispose();
-            AssetDatabaseResourceLoadingPipeline.Dispose();
-            PackageUpdatePipeline.Dispose();
-            PackageLoadingPipeline.Dispose();
+            ResourcesLodaingPipeline?.Dispose();
+            AssetBundleResourceLoadingPipeline?.Dispose();
+            NetworkResourceLoadingPipeline?.Dispose();
+            AssetDatabaseResourceLoadingPipeline?.Dispose();
+            PackageUpdatePipeline?.Dispose();
+            PackageLoadingPipeline?.Dispose();
 
             ResourcesLodaingPipeline = null;
             NetworkResourceLoadingPipeline = null;

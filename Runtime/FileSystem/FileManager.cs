@@ -48,7 +48,7 @@ namespace ZGame.FileSystem
             Saved();
         }
 
-        public bool EnsureFileVersion(string fileName, int version)
+        public bool EqualsVersion(string fileName, int version)
         {
             VFSData vfsData = segments.Find(x => x.name == fileName);
             if (vfsData is null)

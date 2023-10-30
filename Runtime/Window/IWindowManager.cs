@@ -27,7 +27,7 @@ namespace ZGame.Window
                 return default;
             }
 
-            ResObject resObject = CoreApi.Resource.LoadAsset(reference.path);
+            AssetObjectHandle resObject = CoreApi.Resource.LoadAsset(reference.path);
             if (resObject is null)
             {
                 return default;

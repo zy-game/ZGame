@@ -5,21 +5,21 @@ using UnityEngine;
 
 namespace ZGame.Resource
 {
-    class RuntimeAssetBundleHandle : IDisposable
+    public class AssetBundleHandle : IDisposable
     {
         public string name => bundle?.name;
         private AssetBundle bundle;
-        private List<ResObject> _results;
+        private List<AssetObjectHandle> _results;
         public int refCount { get; private set; }
 
-        public RuntimeAssetBundleHandle(AssetBundle bundle)
+        internal AssetBundleHandle(AssetBundle bundle)
         {
             this.bundle = bundle;
-            _results = new List<ResObject>();
+            _results = new List<AssetObjectHandle>();
             refCount = 0;
         }
 
-        public bool Contains(UnityEngine.Object obj)
+        public bool Contains(AssetObjectHandle obj)
         {
             return _results.Find(x => x.Equals(obj)) != null;
         }
@@ -34,7 +34,7 @@ namespace ZGame.Resource
             return bundle.Contains(path);
         }
 
-        public void Unload(UnityEngine.Object obj)
+        public void Unload(AssetObjectHandle obj)
         {
             if (Contains(obj) is false)
             {
@@ -44,40 +44,40 @@ namespace ZGame.Resource
             refCount--;
         }
 
-        public ResObject Load(string path)
+        public AssetObjectHandle Load(string path)
         {
             if (Contains(path) is false)
             {
                 return default;
             }
 
-            ResObject resObject = _results.Find(x => x.path.Equals(path));
+            AssetObjectHandle resObject = _results.Find(x => x.path.Equals(path));
             if (resObject is not null)
             {
                 return resObject;
             }
 
             UnityEngine.Object obj = bundle.LoadAsset(path);
-            resObject = new ResObject(obj, path);
+            resObject = new AssetObjectHandle(obj, path);
             _results.Add(resObject);
             return resObject;
         }
 
-        public async UniTask<ResObject> LoadAsync(string path)
+        public async UniTask<AssetObjectHandle> LoadAsync(string path)
         {
             if (Contains(path) is false)
             {
                 return default;
             }
 
-            ResObject resObject = _results.Find(x => x.path.Equals(path));
+            AssetObjectHandle resObject = _results.Find(x => x.path.Equals(path));
             if (resObject is not null)
             {
                 return resObject;
             }
 
             UnityEngine.Object result = await bundle.LoadAssetAsync<UnityEngine.Object>(path).ToUniTask();
-            resObject = new ResObject(result, path);
+            resObject = new AssetObjectHandle(result, path);
             _results.Add(resObject);
             return resObject;
         }

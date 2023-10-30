@@ -11,5 +11,6 @@ namespace ZGame
         DOWNLOAD_FAIL = 407,
         LOAD_ASSET_BUNDLE_FAIL = 408,
         PARAMETER_IS_EMPTY = 409,
+        READ_FILE_FAIL = 410,
     }
 }

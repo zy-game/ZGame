@@ -3,14 +3,14 @@ using UnityEngine;
 
 namespace ZGame.Resource
 {
-    public sealed class ResObject : IDisposable
+    public sealed class AssetObjectHandle : IDisposable
     {
         private UnityEngine.Object obj;
         public int refCount => count;
         public string path { get; }
         private int count;
 
-        public ResObject(UnityEngine.Object obj, string path)
+        public AssetObjectHandle(UnityEngine.Object obj, string path)
         {
             this.obj = obj;
             this.path = path;
