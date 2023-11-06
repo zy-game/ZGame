@@ -1,9 +1,9 @@
 namespace ZGame.Window
 {
     [PrefabReference("Resources/Toast",998)]
-    public class GameTipsPopup : GameWindow
+    public class Tips : GameWindow
     {
-        public static GameTipsPopup Create(string tips)
+        public static Tips Create(string tips)
         {
             return default;
         }

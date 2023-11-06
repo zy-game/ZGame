@@ -18,7 +18,7 @@ namespace ZGame.Resource
             ResourceModuleManifest manifest = _manifests.Find(x => x.name == name);
             if (manifest is null)
             {
-                manifest = await CoreApi.Network.Get<ResourceModuleManifest>(CoreApi.GetNetworkResourceUrl(name + ".ini"));
+                manifest = await Engine.Network.Get<ResourceModuleManifest>(Engine.Resource.GetNetworkResourceUrl(name + ".ini"));
                 if (manifest is null)
                 {
                     return default;

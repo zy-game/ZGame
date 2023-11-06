@@ -18,7 +18,7 @@ namespace ZGame.Localization
 
         public async void SwitchLanguage(Language language)
         {
-            List<LanguageOptions> languageOptionsList = await CoreApi.Network.Get<List<LanguageOptions>>(CoreApi.GetNetworkResourceUrl("language_" + language + ".ini"));
+            List<LanguageOptions> languageOptionsList = await Engine.Network.Get<List<LanguageOptions>>(Engine.Resource.GetNetworkResourceUrl("language_" + language + ".ini"));
             if (languageOptionsList is null)
             {
                 return;

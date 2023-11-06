@@ -27,7 +27,7 @@ namespace ZGame.Window
                 return default;
             }
 
-            AssetObjectHandle resObject = CoreApi.Resource.LoadAsset(reference.path);
+            AssetObjectHandle resObject = Engine.Resource.LoadAsset(reference.path);
             if (resObject is null)
             {
                 return default;
@@ -43,7 +43,7 @@ namespace ZGame.Window
             layer.Setup(gameWindow.gameObject, Vector3.zero, Vector3.zero, Vector3.one);
             gameWindow.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
             gameWindow.Awake();
-            gameWindow.Enable();
+            Active(type);
             return gameWindow;
         }
 

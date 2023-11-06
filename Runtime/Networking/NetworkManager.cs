@@ -46,6 +46,7 @@ namespace ZGame.Networking
     {
         private List<IDispatcher> messageRecvierPipelines = new List<IDispatcher>();
         private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
+        
 
         public async UniTask<IChannel> Connect(string address)
         {
@@ -172,7 +173,7 @@ namespace ZGame.Networking
                 }
 
                 downloadData.bytes = request.downloadHandler.data;
-                CoreApi.File.Write(downloadData.name, downloadData.bytes, downloadData.version);
+                Engine.File.Write(downloadData.name, downloadData.bytes, downloadData.version);
             }
 
             return await taskCompletionSource.Task;

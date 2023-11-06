@@ -17,9 +17,11 @@ namespace ZGame.Resource
         public IPackageUpdatePipeline PackageUpdatePipeline;
         public IPackageLoadingPipeline PackageLoadingPipeline;
         private List<AssetBundleHandle> _handles = new List<AssetBundleHandle>();
+        private string address;
 
-        public ResourceManager()
+        public ResourceManager(string rootUrl)
         {
+            this.address = rootUrl;
             ResourcesLodaingPipeline = new ResourcesLoadingPipeline();
             NetworkResourceLoadingPipeline = new NetworkResourceLoadingPipeline();
             AssetDatabaseResourceLoadingPipeline = new AssetDatabaseLoadingPipeline();
@@ -29,17 +31,17 @@ namespace ZGame.Resource
         }
 
 
-        public AssetBundleHandle FindAssetBundleHandle(AssetObjectHandle obj)
+        internal AssetBundleHandle FindAssetBundleHandle(AssetObjectHandle obj)
         {
             return _handles.Find(x => x.Contains(obj));
         }
 
-        public AssetBundleHandle FindAssetBundleHandle(string path)
+        internal AssetBundleHandle FindAssetBundleHandle(string path)
         {
             return _handles.Find(x => x.Contains(path));
         }
 
-        public void RemoveAssetBundleHandle(string name)
+        internal void RemoveAssetBundleHandle(string name)
         {
             AssetBundleHandle handle = _handles.Find(x => x.name == name);
             if (handle is null)
@@ -50,9 +52,19 @@ namespace ZGame.Resource
             _handles.Remove(handle);
         }
 
-        public void AddAssetBundleHandle(AssetBundle bundle)
+        internal void AddAssetBundleHandle(AssetBundle bundle)
         {
             _handles.Add(new AssetBundleHandle(bundle));
+        }
+
+        /// <summary>
+        /// 获取文件资源地址
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public string GetNetworkResourceUrl(string fileName)
+        {
+            return $"{address}/{Engine.GetPlatformName()}/{fileName}";
         }
 
         /// <summary>
@@ -75,16 +87,11 @@ namespace ZGame.Resource
 
             if (path.StartsWith("http"))
             {
-                if (NetworkResourceLoadingPipeline is null)
-                {
-                    Debug.LogError(new NullReferenceException(nameof(NetworkResourceLoadingPipeline)));
-                    return default;
-                }
-
-                return NetworkResourceLoadingPipeline.LoadAsset(path);
+                Debug.LogError("网络资源必须使用异步加载！");
+                return default;
             }
 #if UNITY_EDITOR
-            if (CoreApi.IsHotfix is false)
+            if (Engine.IsHotfix is false)
             {
                 if (AssetDatabaseResourceLoadingPipeline is null)
                 {
@@ -133,7 +140,7 @@ namespace ZGame.Resource
                 return await NetworkResourceLoadingPipeline.LoadAssetAsync(path);
             }
 #if UNITY_EDITOR
-            if (CoreApi.IsHotfix is false)
+            if (Engine.IsHotfix is false)
             {
                 if (AssetDatabaseResourceLoadingPipeline is null)
                 {
@@ -159,34 +166,34 @@ namespace ZGame.Resource
         /// <param name="groupName">资源组名</param>
         /// <param name="progressUpdate">加载进度会回调</param>
         /// <returns>资源列表加载任务</returns>
-        public async UniTask<ErrorCode> LoadingResourcePackageList(string groupName, Action<float> progressUpdate)
+        public async UniTask LoadingResourcePackageList(string groupName, Action<float> progressUpdate)
         {
 #if UNITY_EDITOR
-            if (CoreApi.IsHotfix is false)
+            if (Engine.IsHotfix is false)
             {
                 progressUpdate?.Invoke(1);
-                return ErrorCode.OK;
+                return;
             }
 #endif
             if (groupName.IsNullOrEmpty())
             {
-                Debug.LogError(new ArgumentNullException("groupName"));
-                return ErrorCode.PARAMETER_IS_EMPTY;
+                throw new ArgumentNullException("groupName");
             }
 
             ResourceModuleManifest manifest = await ResourceModuleManifest.Find(groupName);
             if (manifest is null)
             {
-                return ErrorCode.NOT_FIND;
+                Debug.LogError(new ResourceModuleNotFoundException(groupName));
+                return;
             }
 
             if (PackageLoadingPipeline is null)
             {
-                Debug.LogError(new NullReferenceException(nameof(PackageLoadingPipeline)));
-                return ErrorCode.LOAD_ASSET_BUNDLE_FAIL;
+                throw new NullReferenceException(nameof(PackageLoadingPipeline));
+                return;
             }
 
-            return await PackageLoadingPipeline.LoadingModulePackageList(manifest, progressUpdate);
+            await PackageLoadingPipeline.LoadingModulePackageList(manifest, progressUpdate);
         }
 
         /// <summary>
@@ -195,15 +202,14 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async UniTask<ErrorCode> LoadingOhterPackageList(Action<float> progressCallback, params string[] args)
+        public async UniTask LoadingOhterPackageList(Action<float> progressCallback, params string[] args)
         {
             if (PackageLoadingPipeline is null)
             {
-                Debug.LogError(new NullReferenceException(nameof(PackageLoadingPipeline)));
-                return ErrorCode.LOAD_ASSET_BUNDLE_FAIL;
+                throw new NullReferenceException(nameof(PackageLoadingPipeline));
             }
 
-            return await PackageLoadingPipeline.LoadingPackageList(progressCallback, args);
+            await PackageLoadingPipeline.LoadingPackageList(progressCallback, args);
         }
 
         /// <summary>
@@ -212,46 +218,48 @@ namespace ZGame.Resource
         /// <param name="groupName">资源组名</param>
         /// <param name="progressUpdate">更新进度会回调</param>
         /// <returns>资源更新任务</returns>
-        public async UniTask<ErrorCode> UpdateResourcePackageList(string groupName, Action<float> progressUpdate)
+        public async UniTask UpdateResourcePackageList(string groupName, Action<float> progressUpdate)
         {
 #if UNITY_EDITOR
-            if (CoreApi.IsHotfix is false)
+            if (Engine.IsHotfix is false)
             {
                 progressUpdate?.Invoke(1);
-                return ErrorCode.OK;
+                return;
             }
 #endif
             if (groupName.IsNullOrEmpty())
             {
-                Debug.LogError(new ArgumentNullException("groupName"));
-                return ErrorCode.PARAMETER_IS_EMPTY;
+                throw new ArgumentNullException("groupName");
             }
 
             ResourceModuleManifest manifest = await ResourceModuleManifest.Find(groupName);
             if (manifest is null)
             {
-                Debug.LogError("没有找到指定的资源组");
-                return ErrorCode.NOT_FIND;
+                throw new ResourceModuleNotFoundException(groupName);
             }
 
             if (PackageUpdatePipeline is null)
             {
-                Debug.LogError(new NullReferenceException(nameof(PackageUpdatePipeline)));
-                return ErrorCode.UPDATE_RESOURCE_FAIL;
+                throw new NullReferenceException(nameof(PackageUpdatePipeline));
             }
 
-            return await PackageUpdatePipeline.StartUpdate(manifest, progressUpdate);
+            await PackageUpdatePipeline.StartUpdate(manifest, progressUpdate);
         }
 
-        public async UniTask<ErrorCode> UpdateResourceList(Action<float> progressCallback, params string[] args)
+        /// <summary>
+        /// 更新资源列表
+        /// </summary>
+        /// <param name="progressCallback"></param>
+        /// <param name="args"></param>
+        /// <exception cref="NullReferenceException"></exception>
+        public async UniTask UpdateResourceList(Action<float> progressCallback, params string[] args)
         {
             if (PackageUpdatePipeline is null)
             {
-                Debug.LogError(new NullReferenceException(nameof(PackageUpdatePipeline)));
-                return ErrorCode.UPDATE_RESOURCE_FAIL;
+                throw new NullReferenceException(nameof(PackageUpdatePipeline));
             }
 
-            return await PackageUpdatePipeline.StartUpdate(progressCallback, args);
+            await PackageUpdatePipeline.StartUpdate(progressCallback, args);
         }
 
         /// <summary>

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ZGame.Resource
 {
-    public class AssetBundleHandle : IDisposable
+    internal class AssetBundleHandle : IDisposable
     {
         public string name => bundle?.name;
         private AssetBundle bundle;

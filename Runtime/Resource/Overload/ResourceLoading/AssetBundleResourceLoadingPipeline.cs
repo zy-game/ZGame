@@ -8,7 +8,7 @@ namespace ZGame.Resource
     {
         public AssetObjectHandle LoadAsset(string path)
         {
-            AssetBundleHandle handle = CoreApi.Resource.FindAssetBundleHandle(path);
+            AssetBundleHandle handle = Engine.Resource.FindAssetBundleHandle(path);
             if (handle is null)
             {
                 return default;
@@ -19,7 +19,7 @@ namespace ZGame.Resource
 
         public UniTask<AssetObjectHandle> LoadAssetAsync(string path)
         {
-            AssetBundleHandle handle = CoreApi.Resource.FindAssetBundleHandle(path);
+            AssetBundleHandle handle = Engine.Resource.FindAssetBundleHandle(path);
             if (handle is null)
             {
                 return default;
@@ -30,7 +30,7 @@ namespace ZGame.Resource
 
         public void Release(AssetObjectHandle obj)
         {
-            AssetBundleHandle handle = CoreApi.Resource.FindAssetBundleHandle(obj);
+            AssetBundleHandle handle = Engine.Resource.FindAssetBundleHandle(obj);
             if (handle is null)
             {
                 return;

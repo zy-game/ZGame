@@ -8,6 +8,7 @@ namespace ZGame.Window
         public string name { get; }
         public GameObject gameObject { get; internal set; }
 
+
         public virtual void Awake()
         {
         }
@@ -22,6 +23,25 @@ namespace ZGame.Window
 
         public virtual void Dispose()
         {
+        }
+    }
+
+    public abstract class TestUIInitlizedPipiline : GameWindow
+    {
+        public LabelComponent label_name_title;
+
+        public override void Awake()
+        {
+            base.Awake();
+            label_name_title = new LabelComponent(this, "");
+        }
+    }
+
+    public class TestUIHandle : TestUIInitlizedPipiline
+    {
+        public override void Awake()
+        {
+            base.Awake();
         }
     }
 }

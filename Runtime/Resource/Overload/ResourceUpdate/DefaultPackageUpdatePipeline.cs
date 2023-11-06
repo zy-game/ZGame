@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using ZGame.FileSystem;
@@ -20,18 +22,18 @@ namespace ZGame.Resource
 
         private void EqualsLocalFile(string fileName, int version)
         {
-            if (CoreApi.File.EqualsVersion(fileName, version) is false)
+            if (Engine.File.EqualsVersion(fileName, version) is false)
             {
                 options.Add(new DownloadOptions()
                 {
                     name = fileName,
                     version = version,
-                    url = CoreApi.GetNetworkResourceUrl(fileName)
+                    url = Engine.Resource.GetNetworkResourceUrl(fileName)
                 });
             }
         }
 
-        public async UniTask<ErrorCode> StartUpdate(ResourceModuleManifest manifest, Action<float> progressCallback)
+        public async UniTask StartUpdate(ResourceModuleManifest manifest, Action<float> progressCallback)
         {
             options = new List<DownloadOptions>();
             foreach (var VARIABLE in manifest.packages)
@@ -51,22 +53,19 @@ namespace ZGame.Resource
             if (options.Count == 0)
             {
                 Clear();
-                return ErrorCode.OK;
+                return;
             }
 
-            DownloadHandle[] downloadHandles = await CoreApi.Network.Download(progressCallback, options.ToArray());
+            DownloadHandle[] downloadHandles = await Engine.Network.Download(progressCallback, options.ToArray());
             if (downloadHandles.Where(x => x.error != null).Count() > 0)
             {
-                Debug.LogError("下载资源时出现错误");
-                Clear();
-                return ErrorCode.DOWNLOAD_FAIL;
+                throw new HttpRequestException(downloadHandles.Where(x => x.error != null).FirstOrDefault()?.error);
             }
 
             Clear();
-            return ErrorCode.OK;
         }
 
-        public async UniTask<ErrorCode> StartUpdate(Action<float> progressCallback, params string[] args)
+        public async UniTask StartUpdate(Action<float> progressCallback, params string[] args)
         {
             options = new List<DownloadOptions>();
             foreach (var VARIABLE in args)
@@ -75,26 +74,24 @@ namespace ZGame.Resource
                 {
                     name = VARIABLE,
                     version = 0,
-                    url = CoreApi.GetNetworkResourceUrl(VARIABLE)
+                    url = Engine.Resource.GetNetworkResourceUrl(VARIABLE)
                 });
             }
 
             if (options.Count == 0)
             {
                 Clear();
-                return ErrorCode.OK;
+                return;
             }
 
-            DownloadHandle[] downloadHandles = await CoreApi.Network.Download(progressCallback, options.ToArray());
+            DownloadHandle[] downloadHandles = await Engine.Network.Download(progressCallback, options.ToArray());
             if (downloadHandles.Where(x => x.error != null).Count() > 0)
             {
-                Debug.LogError("下载资源时出现错误");
                 Clear();
-                return ErrorCode.DOWNLOAD_FAIL;
+                throw new HttpRequestException(downloadHandles.Where(x => x.error != null).FirstOrDefault()?.error);
             }
 
             Clear();
-            return ErrorCode.OK;
         }
 
         public void Dispose()
