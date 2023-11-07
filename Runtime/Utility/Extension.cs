@@ -51,6 +51,16 @@ namespace ZGame
 
     public static class Extension
     {
+        public static string Replace(this string value, params string[] t)
+        {
+            foreach (var VARIABLE in t)
+            {
+                value = value.Replace(VARIABLE, String.Empty);
+            }
+
+            return value;
+        }
+
         public static bool IsNullOrEmpty(this string str)
             => string.IsNullOrEmpty(str);
 

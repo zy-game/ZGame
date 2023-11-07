@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ZGame.Window
 {
@@ -28,12 +29,35 @@ namespace ZGame.Window
 
     public abstract class TestUIInitlizedPipiline : GameWindow
     {
-        public LabelComponent label_name_title;
+        public UIBind<Text> label_name_title { get; private set; }
+        public UIBind<Button> btn_switch;
 
         public override void Awake()
         {
             base.Awake();
-            label_name_title = new LabelComponent(this, "");
+            OnBindUIComponent();
+            OnRefreshLabelText();
+            OnEventRegister();
+        }
+
+        private void OnBindUIComponent()
+        {
+            label_name_title = new UIBind<Text>(this.gameObject.transform.Find("xxx"));
+            btn_switch = new UIBind<Button>(this.gameObject.transform.Find("xxx"));
+        }
+
+        private void OnRefreshLabelText()
+        {
+            label_name_title.Setup(Engine.Localization.GetLanguage(100000));
+        }
+
+        private void OnEventRegister()
+        {
+            btn_switch.SetCallback(new Action(on_invoke_SwitchClickEvent));
+        }
+
+        protected virtual void on_invoke_SwitchClickEvent()
+        {
         }
     }
 
@@ -42,6 +66,10 @@ namespace ZGame.Window
         public override void Awake()
         {
             base.Awake();
+        }
+
+        protected override void on_invoke_SwitchClickEvent()
+        {
         }
     }
 }

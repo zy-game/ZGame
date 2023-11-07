@@ -1,0 +1,22 @@
+{
+    "name": "ZEngine.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:3a5dbb47b15101a43b84005a9f19963f",
+        "GUID:f06555f75b070af458a003d92f9efb00",
+        "GUID:02f771204943f4a40949438e873e3eff",
+        "GUID:613783dc1674e844b87788ea74ede0f6",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
