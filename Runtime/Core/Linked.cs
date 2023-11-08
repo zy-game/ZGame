@@ -2,16 +2,16 @@
 
 namespace ZGame
 {
-    public sealed class PrefabReference : Attribute
+    public sealed class Linked : Attribute
     {
         internal string path;
         internal int layer;
 
-        public PrefabReference(string path) : this(path, -1)
+        public Linked(string path) : this(path, -1)
         {
         }
 
-        public PrefabReference(string path, int layer)
+        public Linked(string path, int layer)
         {
             this.path = path;
             this.layer = layer;

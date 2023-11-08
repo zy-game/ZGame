@@ -19,9 +19,8 @@ namespace ZGame.Resource
         private List<AssetBundleHandle> _handles = new List<AssetBundleHandle>();
         private string address;
 
-        public ResourceManager(string rootUrl)
+        public ResourceManager()
         {
-            this.address = rootUrl;
             ResourcesLodaingPipeline = new ResourcesLoadingPipeline();
             NetworkResourceLoadingPipeline = new NetworkResourceLoadingPipeline();
             AssetDatabaseResourceLoadingPipeline = new AssetDatabaseLoadingPipeline();
@@ -30,6 +29,10 @@ namespace ZGame.Resource
             PackageLoadingPipeline = new DefaultPackageLoadingPipeline();
         }
 
+        public void SetResourceAddressable(string url)
+        {
+            this.address = url;
+        }
 
         internal AssetBundleHandle FindAssetBundleHandle(AssetObjectHandle obj)
         {

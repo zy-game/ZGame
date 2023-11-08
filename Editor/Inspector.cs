@@ -25,13 +25,17 @@ namespace ZGame.Editor
 
         public override void OnInspectorGUI()
         {
-            GUILayout.BeginVertical(EditorStyles.helpBox);
-            GUILayout.Label("Global Setting", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(this.serializedObject.FindProperty("useHotfix"));
-            GUILayout.EndVertical();
-
+            // GUILayout.BeginVertical(EditorStyles.helpBox);
+            // GUILayout.Label("Global Setting", EditorStyles.boldLabel);
+            // EditorGUILayout.PropertyField(this.serializedObject.FindProperty("useHotfix"));
+            // GUILayout.EndVertical();
+            EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(this.serializedObject.FindProperty("GameSettings"), true);
-            this.serializedObject.ApplyModifiedProperties();
+            if (EditorGUI.EndChangeCheck())
+            {
+                this.serializedObject.ApplyModifiedProperties();
+                EditorUtility.SetDirty(_startup);
+            }
         }
     }
 }

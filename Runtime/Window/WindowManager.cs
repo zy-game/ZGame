@@ -9,7 +9,6 @@ namespace ZGame.Window
 {
     public sealed class WindowManager : IManager
     {
-        private Dictionary<int, ILayer> _layers = new Dictionary<int, ILayer>();
         private Dictionary<Type, GameWindow> _windows = new Dictionary<Type, GameWindow>();
 
 
@@ -20,7 +19,7 @@ namespace ZGame.Window
                 return gameWindow;
             }
 
-            PrefabReference reference = type.GetCustomAttribute<PrefabReference>();
+            Linked reference = type.GetCustomAttribute<Linked>();
             if (reference is null || reference.path.IsNullOrEmpty())
             {
                 Debug.LogError("没找到资源引用");
@@ -35,12 +34,7 @@ namespace ZGame.Window
 
             gameWindow = (GameWindow)Activator.CreateInstance(type);
             gameWindow.gameObject = resObject.Instantiate();
-            if (_layers.TryGetValue(reference.layer, out ILayer layer) is false)
-            {
-                _layers.Add(reference.layer, layer = ILayer.Create("UICanvas", Camera.main, reference.layer));
-            }
-
-            layer.Setup(gameWindow.gameObject, Vector3.zero, Vector3.zero, Vector3.one);
+            Engine.Cameras.TrySetup(gameWindow.gameObject, reference.layer, Vector3.zero, Vector3.zero, Vector3.one);
             gameWindow.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
             gameWindow.Awake();
             Active(type);

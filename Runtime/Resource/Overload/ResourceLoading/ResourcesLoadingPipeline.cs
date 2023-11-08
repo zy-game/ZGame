@@ -28,7 +28,7 @@ namespace ZGame.Resource
                 result = new AssetObjectHandle(await Resources.LoadAsync(path.Substring(10)), path);
                 resources.Add(result);
             }
-
+            
             return result;
         }
 

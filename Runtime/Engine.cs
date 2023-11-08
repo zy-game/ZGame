@@ -47,21 +47,28 @@ namespace ZGame
         public static WindowManager Window { get; private set; }
 
         /// <summary>
+        /// 像机管理器
+        /// </summary>
+        public static CameraManager Cameras { get; private set; }
+
+        /// <summary>
         /// 是否使用热更新
         /// </summary>
         public static bool IsHotfix { get; private set; }
 
 
-        public async static void Initialized(GameSetting setting)
+        public async static void Initialized(GameSeting setting)
         {
             IsHotfix = setting.useHotfix;
             Network = new NetworkManager();
             File = new FileManager();
             Localization = new LanguageManager();
-            Localization.SwitchLanguage(setting.Language);
-            Resource = new ResourceManager(setting.resUrl);
+            Resource = new ResourceManager();
             Window = new WindowManager();
             Game = new GameManager();
+            Cameras = new CameraManager();
+            Resource.SetResourceAddressable(setting.resUrl);
+            Localization.SwitchLanguage(setting.Language);
         }
 
 

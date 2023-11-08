@@ -39,7 +39,7 @@ namespace ZGame.Resource
 
         public void Dispose()
         {
-            Resources.UnloadAsset(obj);
+            Resources.UnloadUnusedAssets();
             obj = null;
         }
     }

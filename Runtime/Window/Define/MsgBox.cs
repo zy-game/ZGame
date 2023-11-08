@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ZGame.Window
 {
-    [PrefabReference("Resources/MsgBox", 999)]
+    [Linked("Resources/MsgBox", 999)]
     public class MsgBox : GameWindow
     {
         public MsgBox Setup(string title, string message, string okString, Action ok, string cancelString = "", Action cancel = null)
