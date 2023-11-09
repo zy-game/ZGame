@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace ZGame.Editor
 {
@@ -10,12 +11,55 @@ namespace ZGame.Editor
     {
         public abstract string name { get; }
         public Docker docker { get; }
-        public List<SubPageScene> SubScenes { get; set; } = new List<SubPageScene>();
+        public PageScene parent { get; private set; }
+        public List<SubPageScene> SubScenes { get; } = new List<SubPageScene>();
         public bool foldout;
 
         public PageScene(Docker window)
         {
             docker = window;
+        }
+
+
+        public virtual PageScene OpenAssetObject(Object obj)
+        {
+            foreach (var VARIABLE in SubScenes)
+            {
+                if (VARIABLE.OpenAssetObject(obj) is not null)
+                {
+                    return VARIABLE;
+                }
+            }
+
+            return default;
+        }
+
+        public void RegisterSubPageScene<T>() where T : SubPageScene
+        {
+            T pageScene = (T)Activator.CreateInstance(typeof(T), new object[] { docker });
+            if (pageScene is null)
+            {
+                return;
+            }
+
+            pageScene.parent = this;
+            SubScenes.Add(pageScene);
+        }
+
+        public void RemoveSubPageScene<T>() where T : SubPageScene
+        {
+            T subPageScene = GetSubPageScene<T>();
+            if (subPageScene is null)
+            {
+                return;
+            }
+
+            SubScenes.Remove(subPageScene);
+        }
+
+        public T GetSubPageScene<T>() where T : SubPageScene
+        {
+            return (T)SubScenes.Find(x => x.GetType().Equals(typeof(T)));
         }
 
         public virtual void Dispose()
@@ -30,7 +74,7 @@ namespace ZGame.Editor
         {
         }
 
-        public virtual void OnGUI(Rect rect)
+        public virtual void OnGUI(string search, Rect rect)
         {
         }
 
@@ -48,7 +92,8 @@ namespace ZGame.Editor
             GUILayout.EndHorizontal();
             docker.EndColor();
             bool result = false;
-            if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
+            if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) &&
+                Event.current.button == 0)
             {
                 result = true;
             }

@@ -8,8 +8,10 @@ MonoBehaviour:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb858eb74f69406bb1abb3638578507f, type: 3}
-  m_Name: ResourceBuildRulerConfig
+  m_EditorHideFlags: 1
+  m_Script: {fileID: 11500000, guid: 3a8f24d4d6a64f84b2c3cd20cfe219b2, type: 3}
+  m_Name: SettingsBuilderConfig
   m_EditorClassIdentifier: 
-  rulers: []
+  ruleSeting: {fileID: 0}
+  buildSeting: {fileID: 0}
+  uploadSeting: {fileID: 0}
