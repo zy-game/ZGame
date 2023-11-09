@@ -25,8 +25,12 @@ MonoBehaviour:
   m_Name: BuilderConfig
   m_EditorClassIdentifier: 
   ruleSeting: {fileID: 4768584534377090727}
-  buildSeting: {fileID: -9102180054958960103}
   uploadSeting: {fileID: 6850543600118876597}
+  comperss: 0
+  useActiveTarget: 1
+  target: 9
+  output: 
+  ex: 
 --- !u!114 &4768584534377090727
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -40,16 +44,18 @@ MonoBehaviour:
   m_Name: RuleSeting
   m_EditorClassIdentifier: 
   rulers:
-  - name: "UI\u8D44\u6E90\u6253\u5305\u89C4\u5219"
+  - use: 0
+    name: "UI\u8D44\u6E90\u6253\u5305\u89C4\u5219"
     describe: "\u6D4B\u8BD5\u6253\u5305\u5DE5\u5177"
     folder: {fileID: 102900000, guid: 39e214328eb53fd45a45b7239ccaa08d, type: 3}
     ignore: .meta,.u
-    spiltPackageType: 0
-  - name: "\u573A\u666F\u8D44\u6E90\u6253\u5305\u89C4\u5219"
+    spiltPackageType: 3
+  - use: 0
+    name: "\u573A\u666F\u8D44\u6E90\u6253\u5305\u89C4\u5219"
     describe: "\u6D4B\u8BD5\u6253\u5305\u5DE5\u5177"
     folder: {fileID: 102900000, guid: 9c53962885c2c4f449125a979d6ad240, type: 3}
     ignore: 
-    spiltPackageType: 1
+    spiltPackageType: 2
 --- !u!114 &6850543600118876597
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62,3 +68,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 227e169df575424a983c5cf6f4fc00e2, type: 3}
   m_Name: UploadSeting
   m_EditorClassIdentifier: 
+  address: 
+  key: 
+  password: 
