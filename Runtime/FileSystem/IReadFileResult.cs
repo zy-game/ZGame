@@ -9,9 +9,9 @@ namespace ZGame.FileSystem
         string name { get; }
         long time { get; }
         byte[] bytes { get; }
-        int version { get; }
+        uint version { get; }
 
-        internal static IReadFileResult Create(string name, byte[] bytes, long time, int version)
+        internal static IReadFileResult Create(string name, byte[] bytes, long time, uint version)
         {
             InternalVfsReadResult internalVfsReadResult = Activator.CreateInstance<InternalVfsReadResult>();
             internalVfsReadResult.name = name;
@@ -26,7 +26,7 @@ namespace ZGame.FileSystem
             public string name { get; set; }
             public long time { get; set; }
             public byte[] bytes { get; set; }
-            public int version { get; set; }
+            public uint version { get; set; }
 
             public void Dispose()
             {

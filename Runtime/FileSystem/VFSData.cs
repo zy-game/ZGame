@@ -45,7 +45,7 @@ namespace ZGame.FileSystem
         /// <summary>
         /// 文件版本
         /// </summary>
-        public int version;
+        public uint version;
 
         /// <summary>
         /// 是否在使用
@@ -59,7 +59,7 @@ namespace ZGame.FileSystem
             this.length = length;
         }
 
-        public void Use(string name, int useLenght, int sort, long time, int version)
+        public void Use(string name, int useLenght, int sort, long time, uint version)
         {
             this.name = name;
             this.fileLenght = useLenght;

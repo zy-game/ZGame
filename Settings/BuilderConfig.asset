@@ -28,9 +28,9 @@ MonoBehaviour:
   uploadSeting: {fileID: 6850543600118876597}
   comperss: 0
   useActiveTarget: 1
-  target: 9
-  output: 
-  ex: 
+  target: 2
+  output: E:\ZEngine\output
+  ex: .assetbundle
 --- !u!114 &4768584534377090727
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45,17 +45,123 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rulers:
   - use: 0
-    name: "UI\u8D44\u6E90\u6253\u5305\u89C4\u5219"
+    name: Test Ruler Seting
     describe: "\u6D4B\u8BD5\u6253\u5305\u5DE5\u5177"
     folder: {fileID: 102900000, guid: 39e214328eb53fd45a45b7239ccaa08d, type: 3}
-    ignore: .meta,.u
-    spiltPackageType: 3
+    spiltPackageType: 2
+    exList:
+    - .asset
+    - .prefab
+    - .playable
+    - .json
+    - .controller
+    - .mat
+    - .cs
+    - .unity
+    - .anim
+    - .txt
+    - .png
+    - .tga
+    - .exr
+    - .lighting
+    - .spriteatlas
   - use: 0
-    name: "\u573A\u666F\u8D44\u6E90\u6253\u5305\u89C4\u5219"
+    name: Scenes Ruler Seting
     describe: "\u6D4B\u8BD5\u6253\u5305\u5DE5\u5177"
     folder: {fileID: 102900000, guid: 9c53962885c2c4f449125a979d6ad240, type: 3}
-    ignore: 
     spiltPackageType: 2
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 0
+    name: 
+    describe: 
+    folder: {fileID: 0}
+    spiltPackageType: 0
+    exList: []
+  - use: 1
+    name: Hex Terrain Basic Ruler Seting
+    describe: 
+    folder: {fileID: 102900000, guid: afc66cbc915b00f49b94b9a8deeb62aa, type: 3}
+    spiltPackageType: 2
+    exList:
+    - .txt
+    - .png
+    - .unity
+    - .lighting
+    - .spriteatlas
+    - .prefab
+    - .asset
 --- !u!114 &6850543600118876597
 MonoBehaviour:
   m_ObjectHideFlags: 0

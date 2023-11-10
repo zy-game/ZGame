@@ -16,7 +16,7 @@ namespace ZGame.Networking
     {
         public string name;
         public string url;
-        public int version;
+        public uint version;
 
         public void Dispose()
         {
@@ -38,7 +38,7 @@ namespace ZGame.Networking
         public bool isDone;
         public string url;
         public byte[] bytes;
-        public int version;
+        public uint version;
         public string error;
     }
 

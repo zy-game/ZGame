@@ -48,7 +48,7 @@ namespace ZGame.FileSystem
             Saved();
         }
 
-        public bool EqualsVersion(string fileName, int version)
+        public bool EqualsVersion(string fileName, uint version)
         {
             VFSData vfsData = segments.Find(x => x.name == fileName);
             if (vfsData is null)
@@ -127,7 +127,7 @@ namespace ZGame.FileSystem
             return segments.Where(x => x.name == fileName).ToArray();
         }
 
-        public IWriteFileResult Write(string fileName, byte[] bytes, int version)
+        public IWriteFileResult Write(string fileName, byte[] bytes, uint version)
         {
             Delete(fileName);
             VFSData[] vfsDataList = GetFreeSgement(bytes.Length);
@@ -157,7 +157,7 @@ namespace ZGame.FileSystem
             return IWriteFileResult.Create(fileName, bytes, version);
         }
 
-        public async UniTask<IWriteFileResult> WriteAsync(string fileName, byte[] bytes, int version)
+        public async UniTask<IWriteFileResult> WriteAsync(string fileName, byte[] bytes, uint version)
         {
             Delete(fileName);
             VFSData[] vfsDataList = GetFreeSgement(bytes.Length);

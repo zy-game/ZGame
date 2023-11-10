@@ -20,7 +20,7 @@ namespace ZGame.Resource
             options.Clear();
         }
 
-        private void EqualsLocalFile(string fileName, int version)
+        private void EqualsLocalFile(string fileName, uint version)
         {
             if (Engine.File.EqualsVersion(fileName, version) is false)
             {
@@ -33,7 +33,7 @@ namespace ZGame.Resource
             }
         }
 
-        public async UniTask StartUpdate(ResourceModuleManifest manifest, Action<float> progressCallback)
+        public async UniTask StartUpdate(BuilderManifest manifest, Action<float> progressCallback)
         {
             options = new List<DownloadOptions>();
             foreach (var VARIABLE in manifest.packages)

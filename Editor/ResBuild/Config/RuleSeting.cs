@@ -39,12 +39,13 @@ namespace ZGame.Editor.ResBuild.Config
     public class RulerInfoItem
     {
         [NonSerialized] public bool selection;
+        [NonSerialized] public List<string> exs;
         public bool use;
         public string name;
         public string describe;
         public Object folder;
-        public string ignore;
         public SpiltPackageType spiltPackageType;
+        public List<string> exList;
 
     }
 }

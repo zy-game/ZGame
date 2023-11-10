@@ -35,7 +35,7 @@ namespace ZGame.Resource
             Clear();
         }
 
-        public async UniTask LoadingModulePackageList(ResourceModuleManifest manifest, Action<float> progressCallback)
+        public async UniTask LoadingModulePackageList(BuilderManifest manifest, Action<float> progressCallback)
         {
             index = 0;
             loaded = new HashSet<string>();
@@ -58,7 +58,7 @@ namespace ZGame.Resource
             progressCallback?.Invoke(1);
         }
 
-        private async UniTask LoadAssetBundleFromFile(string fileName, int version, Action<float> progressCallback)
+        private async UniTask LoadAssetBundleFromFile(string fileName, uint version, Action<float> progressCallback)
         {
             if (loaded.Contains(fileName))
             {

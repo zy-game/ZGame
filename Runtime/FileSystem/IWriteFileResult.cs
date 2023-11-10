@@ -6,9 +6,9 @@ namespace ZGame.FileSystem
     {
         string name { get; }
         byte[] bytes { get; }
-        int version { get; }
+        uint version { get; }
 
-        internal static IWriteFileResult Create(string name, byte[] bytes, int version)
+        internal static IWriteFileResult Create(string name, byte[] bytes, uint version)
         {
             InternalVfsWriteFileResult internalVfsWriteFile = Activator.CreateInstance<InternalVfsWriteFileResult>();
             internalVfsWriteFile.name = name;
@@ -21,7 +21,7 @@ namespace ZGame.FileSystem
         {
             public string name { get; set; }
             public byte[] bytes { get; set; }
-            public int version { get; set; }
+            public uint version { get; set; }
 
             public void Dispose()
             {

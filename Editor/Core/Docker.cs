@@ -47,6 +47,7 @@ namespace ZGame.Editor
         private void DrawingPageScene()
         {
             GUILayout.BeginVertical(ZStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width - 305), GUILayout.Height(position.height));
+            
             GUILayout.BeginHorizontal();
             int size = EditorStyles.boldLabel.fontSize;
             EditorStyles.boldLabel.fontSize = 20;
@@ -55,13 +56,16 @@ namespace ZGame.Editor
             GUILayout.FlexibleSpace();
             scarch = EditorGUILayout.TextField(scarch, EditorStyles.toolbarSearchField, GUILayout.Width(300));
             GUILayout.EndHorizontal();
+            
             this.BeginColor(ZStyle.inColor);
             GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.Height(1), GUILayout.Width(position.width - 305));
             this.EndColor();
             GUILayout.Space(5);
+            
             pageRoll = GUILayout.BeginScrollView(pageRoll);
             current.OnGUI(scarch, new Rect(position.x + leftSpace, position.y, position.width - 325, position.height));
             GUILayout.EndScrollView();
+            
             GUILayout.EndVertical();
         }
 

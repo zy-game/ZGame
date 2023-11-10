@@ -183,7 +183,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("groupName");
             }
 
-            ResourceModuleManifest manifest = await ResourceModuleManifest.Find(groupName);
+            BuilderManifest manifest = await BuilderManifest.Find(groupName);
             if (manifest is null)
             {
                 Debug.LogError(new ResourceModuleNotFoundException(groupName));
@@ -235,7 +235,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("groupName");
             }
 
-            ResourceModuleManifest manifest = await ResourceModuleManifest.Find(groupName);
+            BuilderManifest manifest = await BuilderManifest.Find(groupName);
             if (manifest is null)
             {
                 throw new ResourceModuleNotFoundException(groupName);
