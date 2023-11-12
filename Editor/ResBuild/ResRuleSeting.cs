@@ -8,28 +8,19 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    public class ResRuleSeting : SubPageScene
+    [Options(typeof(RuleSeting))]
+    [BindScene("规则管理", typeof(ResBuilder))]
+    public class ResRuleSeting : PageScene
     {
-        public override string name { get; } = "规则管理";
         private RuleSeting _config;
 
-        public ResRuleSeting(Docker window) : base(window)
+        public override void OnEnable(params object[] args)
         {
-        }
-
-        public override PageScene OpenAssetObject(Object obj)
-        {
-            if (obj is RuleSeting rulerConfig)
+            if (args.Length > 0)
             {
-                _config = rulerConfig;
-                return this;
+                _config = (RuleSeting)args[0];
             }
 
-            return base.OpenAssetObject(obj);
-        }
-
-        public override void OnEnable()
-        {
             if (_config is null)
             {
                 _config = ((ResBuilder)parent).config?.ruleSeting;
@@ -69,7 +60,7 @@ namespace ZGame.Editor.ResBuild
             EditorUtility.SetDirty(_config);
         }
 
-        public override void OnGUI(string search, Rect rect)
+        public override void OnGUI()
         {
             if (_config is null)
             {
@@ -194,7 +185,6 @@ namespace ZGame.Editor.ResBuild
     {
         public void OnGUI()
         {
-            
         }
     }
 }

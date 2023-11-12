@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-9102180054958960103
+--- !u!114 &-2613326204505848478
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9,9 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c8311e320f645ac8ad792053cc65ddd, type: 3}
-  m_Name: BuildSeting
+  m_Script: {fileID: 11500000, guid: cb858eb74f69406bb1abb3638578507f, type: 3}
+  m_Name: RuleSeting
   m_EditorClassIdentifier: 
+  rulers: []
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24,145 +25,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a8f24d4d6a64f84b2c3cd20cfe219b2, type: 3}
   m_Name: BuilderConfig
   m_EditorClassIdentifier: 
-  ruleSeting: {fileID: 4768584534377090727}
-  uploadSeting: {fileID: 6850543600118876597}
+  ruleSeting: {fileID: -2613326204505848478}
+  uploadSeting: {fileID: 5685215686410035517}
   comperss: 0
   useActiveTarget: 1
   target: 2
-  output: E:\ZEngine\output
-  ex: .assetbundle
---- !u!114 &4768584534377090727
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb858eb74f69406bb1abb3638578507f, type: 3}
-  m_Name: RuleSeting
-  m_EditorClassIdentifier: 
-  rulers:
-  - use: 0
-    name: Test Ruler Seting
-    describe: "\u6D4B\u8BD5\u6253\u5305\u5DE5\u5177"
-    folder: {fileID: 102900000, guid: 39e214328eb53fd45a45b7239ccaa08d, type: 3}
-    spiltPackageType: 2
-    exList:
-    - .asset
-    - .prefab
-    - .playable
-    - .json
-    - .controller
-    - .mat
-    - .cs
-    - .unity
-    - .anim
-    - .txt
-    - .png
-    - .tga
-    - .exr
-    - .lighting
-    - .spriteatlas
-  - use: 0
-    name: Scenes Ruler Seting
-    describe: "\u6D4B\u8BD5\u6253\u5305\u5DE5\u5177"
-    folder: {fileID: 102900000, guid: 9c53962885c2c4f449125a979d6ad240, type: 3}
-    spiltPackageType: 2
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 0
-    name: 
-    describe: 
-    folder: {fileID: 0}
-    spiltPackageType: 0
-    exList: []
-  - use: 1
-    name: Hex Terrain Basic Ruler Seting
-    describe: 
-    folder: {fileID: 102900000, guid: afc66cbc915b00f49b94b9a8deeb62aa, type: 3}
-    spiltPackageType: 2
-    exList:
-    - .txt
-    - .png
-    - .unity
-    - .lighting
-    - .spriteatlas
-    - .prefab
-    - .asset
---- !u!114 &6850543600118876597
+  output: 
+  ex: 
+--- !u!114 &5685215686410035517
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

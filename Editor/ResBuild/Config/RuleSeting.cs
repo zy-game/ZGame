@@ -30,7 +30,7 @@ namespace ZGame.Editor.ResBuild.Config
         Folder,
     }
 
-    public class RuleSeting : ConfigBase
+    public class RuleSeting : ScriptableObject
     {
         [SerializeField] public List<RulerInfoItem> rulers;
     }

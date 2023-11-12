@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -5,7 +6,7 @@ using UnityEngine;
 namespace ZGame.Editor.ResBuild.Config
 {
     [CreateAssetMenu(menuName = "ZGame/Create BuilderConfig", fileName = "BuilderConfig", order = 0)]
-    public class BuilderConfig : ConfigBase
+    public class BuilderConfig : ScriptableObject
     {
         public RuleSeting ruleSeting;
         public UploadSeting uploadSeting;
@@ -35,6 +36,7 @@ namespace ZGame.Editor.ResBuild.Config
             AssetDatabase.AddObjectToAsset(b.ruleSeting = ScriptableObject.CreateInstance<RuleSeting>(), b);
             AssetDatabase.AddObjectToAsset(b.uploadSeting = ScriptableObject.CreateInstance<UploadSeting>(), b);
             b.ruleSeting.name = "RuleSeting";
+            b.ruleSeting.rulers = new List<RulerInfoItem>();
             b.uploadSeting.name = "UploadSeting";
             b.Save();
             return b;

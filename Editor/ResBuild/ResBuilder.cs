@@ -11,39 +11,30 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
+    [BindScene("资源")]
+    [Options(typeof(BuilderConfig))]
     public class ResBuilder : PageScene
     {
         private const string key = "__build config__";
 
-        public override string name { get; } = "资源";
         public BuilderConfig config;
 
-
-        public ResBuilder(Docker window) : base(window)
+        public override void OnEnable(params object[] args)
         {
-            RegisterSubPageScene<ResRuleSeting>();
-            RegisterSubPageScene<ResUploader>();
-            if (EditorPrefs.HasKey(key))
+            if (args.Length == 0)
             {
-                config = AssetDatabase.LoadAssetAtPath<BuilderConfig>(EditorPrefs.GetString(key));
+                return;
             }
-        }
 
-        public override PageScene OpenAssetObject(Object obj)
-        {
-            if (obj is BuilderConfig builderConfig)
+            if (args[0] is BuilderConfig builderConfig)
             {
                 config = builderConfig;
                 EditorPrefs.SetString(key, AssetDatabase.GetAssetPath(config));
-                return this;
             }
-
-            return base.OpenAssetObject(obj);
         }
 
-        public override void OnGUI(string search, Rect rect)
+        public override void OnGUI()
         {
-            EditorGUI.BeginChangeCheck();
             GUILayout.BeginHorizontal();
             config = (BuilderConfig)EditorGUILayout.ObjectField("资源配置", config, typeof(BuilderConfig), false, GUILayout.MinWidth(400));
             GUILayout.FlexibleSpace();
@@ -52,8 +43,19 @@ namespace ZGame.Editor.ResBuild
                 config = BuilderConfig.Create();
             }
 
-            GUILayout.EndHorizontal();
 
+            GUILayout.EndHorizontal();
+            if (config == null)
+            {
+                return;
+            }
+
+            OnDrawingConfigSeting();
+        }
+
+        private void OnDrawingConfigSeting()
+        {
+            EditorGUI.BeginChangeCheck();
             GUILayout.BeginVertical("Output Seting", EditorStyles.helpBox);
             GUILayout.Space(20);
             config.comperss = (BuildAssetBundleOptions)EditorGUILayout.EnumPopup("压缩方式", config.comperss);
@@ -81,11 +83,11 @@ namespace ZGame.Editor.ResBuild
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Edit"))
                 {
-                    docker.SwitchPageScene(GetSubPageScene<ResRuleSeting>());
+                    WindowDocker.SwitchScene<ResRuleSeting>();
                 }
 
                 GUILayout.EndHorizontal();
-                GUILayout.Box("", ZStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(rect.width), GUILayout.Height(1));
+                GUILayout.Box("", ZStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width), GUILayout.Height(1));
                 GUILayout.Space(3);
             }
 

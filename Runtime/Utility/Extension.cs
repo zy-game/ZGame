@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Events;
@@ -113,8 +114,26 @@ namespace ZGame
 
             return result;
         }
-        
-        
+
+        public static List<T> GetCustomAttributes<T>(this AppDomain domain) where T : Attribute
+        {
+            List<T> result = new List<T>();
+            foreach (var VARIABLE in domain.GetAssemblies())
+            {
+                foreach (var VARIABLE2 in VARIABLE.GetTypes())
+                {
+                    T[] attribute = VARIABLE2.GetCustomAttributes<T>().ToArray();
+
+                    if (attribute != null && attribute.Length > 0)
+                    {
+                        result.AddRange(attribute);
+                    }
+                }
+            }
+
+            return result;
+        }
+
 
         public static Type FindType(this Assembly assembly, string name)
         {

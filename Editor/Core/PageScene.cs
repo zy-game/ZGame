@@ -7,66 +7,45 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor
 {
-    public abstract class PageScene : IDisposable
+    public sealed class DefaultOptions
     {
-        public abstract string name { get; }
-        public Docker docker { get; }
-        public PageScene parent { get; private set; }
-        public List<SubPageScene> SubScenes { get; } = new List<SubPageScene>();
-        public bool foldout;
-
-        public PageScene(Docker window)
+        public static T GetDefault<T>() where T : ScriptableObject
         {
-            docker = window;
-        }
-
-
-        public virtual PageScene OpenAssetObject(Object obj)
-        {
-            foreach (var VARIABLE in SubScenes)
-            {
-                if (VARIABLE.OpenAssetObject(obj) is not null)
-                {
-                    return VARIABLE;
-                }
-            }
-
             return default;
         }
+    }
 
-        public void RegisterSubPageScene<T>() where T : SubPageScene
+
+    public class PageScene : IDisposable
+    {
+        public string name { get; private set; }
+        public PageScene parent { get; private set; }
+        public Rect position { get; set; }
+        public string search { get; set; }
+
+        public PageScene()
         {
-            T pageScene = (T)Activator.CreateInstance(typeof(T), new object[] { docker });
-            if (pageScene is null)
+            Init();
+        }
+
+        void Init()
+        {
+            BindScene attribute = this.GetType().GetCustomAttribute<BindScene>();
+            if (attribute is null)
             {
                 return;
             }
 
-            pageScene.parent = this;
-            SubScenes.Add(pageScene);
-        }
-
-        public void RemoveSubPageScene<T>() where T : SubPageScene
-        {
-            T subPageScene = GetSubPageScene<T>();
-            if (subPageScene is null)
+            this.name = attribute.name;
+            if (attribute.parent is null)
             {
                 return;
             }
 
-            SubScenes.Remove(subPageScene);
+            this.parent = WindowDocker.GetScene(attribute.parent);
         }
 
-        public T GetSubPageScene<T>() where T : SubPageScene
-        {
-            return (T)SubScenes.Find(x => x.GetType().Equals(typeof(T)));
-        }
-
-        public virtual void Dispose()
-        {
-        }
-
-        public virtual void OnEnable()
+        public virtual void OnEnable(params object[] args)
         {
         }
 
@@ -74,33 +53,12 @@ namespace ZGame.Editor
         {
         }
 
-        public virtual void OnGUI(string search, Rect rect)
+        public virtual void OnGUI()
         {
         }
 
-        public bool OnDrwaingMeunItem(float offset, float width)
+        public virtual void Dispose()
         {
-            Rect contains = EditorGUILayout.BeginVertical();
-            docker.BeginColor(docker.current.Equals(this) ? Color.cyan : GUI.color);
-            foldout = docker.MenuFoldout(foldout, name, SubScenes.Count > 0);
-            docker.EndColor();
-            GUILayout.Space(5);
-            docker.BeginColor(docker.current.Equals(this) ? ZStyle.inColor : ZStyle.outColor);
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(-offset);
-            GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.MaxWidth(width), GUILayout.Height(1));
-            GUILayout.EndHorizontal();
-            docker.EndColor();
-            bool result = false;
-            if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) &&
-                Event.current.button == 0)
-            {
-                result = true;
-            }
-
-            GUILayout.Space(5);
-            GUILayout.EndVertical();
-            return result;
         }
     }
 }

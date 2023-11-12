@@ -1,11 +1,10 @@
-﻿namespace ZGame.Editor.ResBuild
-{
-    public class ResUploader : SubPageScene
-    {
-        public override string name { get; } = "版本管理";
+﻿using ZGame.Editor.ResBuild.Config;
 
-        public ResUploader(Docker window) : base(window)
-        {
-        }
+namespace ZGame.Editor.ResBuild
+{
+    [Options(typeof(UploadSeting))]
+    [BindScene("版本管理", typeof(ResBuilder))]
+    public class ResUploader : PageScene
+    {
     }
 }
