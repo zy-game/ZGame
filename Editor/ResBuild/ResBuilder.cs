@@ -17,59 +17,28 @@ namespace ZGame.Editor.ResBuild
     {
         private const string key = "__build config__";
 
-        public BuilderConfig config;
 
-        public override void OnEnable(params object[] args)
+        public override void OnEnable()
         {
-            if (args.Length == 0)
-            {
-                return;
-            }
-
-            if (args[0] is BuilderConfig builderConfig)
-            {
-                config = builderConfig;
-                EditorPrefs.SetString(key, AssetDatabase.GetAssetPath(config));
-            }
         }
 
         public override void OnGUI()
         {
-            GUILayout.BeginHorizontal();
-            config = (BuilderConfig)EditorGUILayout.ObjectField("资源配置", config, typeof(BuilderConfig), false, GUILayout.MinWidth(400));
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Create"))
-            {
-                config = BuilderConfig.Create();
-            }
-
-
-            GUILayout.EndHorizontal();
-            if (config == null)
-            {
-                return;
-            }
-
-            OnDrawingConfigSeting();
-        }
-
-        private void OnDrawingConfigSeting()
-        {
             EditorGUI.BeginChangeCheck();
             GUILayout.BeginVertical("Output Seting", EditorStyles.helpBox);
             GUILayout.Space(20);
-            config.comperss = (BuildAssetBundleOptions)EditorGUILayout.EnumPopup("压缩方式", config.comperss);
-            config.useActiveTarget = EditorGUILayout.Toggle("是否跟随激活平台", config.useActiveTarget);
-            EditorGUI.BeginDisabledGroup(config.useActiveTarget);
-            config.target = (BuildTarget)EditorGUILayout.EnumPopup("编译平台", config.target);
+            BuilderConfig.instance.comperss = (BuildAssetBundleOptions)EditorGUILayout.EnumPopup("压缩方式", BuilderConfig.instance.comperss);
+            BuilderConfig.instance.useActiveTarget = EditorGUILayout.Toggle("是否跟随激活平台", BuilderConfig.instance.useActiveTarget);
+            EditorGUI.BeginDisabledGroup(BuilderConfig.instance.useActiveTarget);
+            BuilderConfig.instance.target = (BuildTarget)EditorGUILayout.EnumPopup("编译平台", BuilderConfig.instance.target);
             EditorGUI.EndDisabledGroup();
-            config.output = EditorGUILayout.TextField("输出路径", config.output);
-            config.ex = EditorGUILayout.TextField("文件扩展名", config.ex);
+            BuilderConfig.instance.output = EditorGUILayout.TextField("输出路径", BuilderConfig.instance.output);
+            BuilderConfig.instance.ex = EditorGUILayout.TextField("文件扩展名", BuilderConfig.instance.ex);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginVertical("Ruler List", EditorStyles.helpBox);
             GUILayout.Space(20);
-            foreach (var VARIABLE in config.ruleSeting.rulers)
+            foreach (var VARIABLE in BuilderConfig.instance.ruleSeting.rulers)
             {
                 if (VARIABLE.use is false || VARIABLE.folder == null || (search.IsNullOrEmpty() is false && VARIABLE.name.StartsWith(search) is false))
                 {
@@ -99,20 +68,20 @@ namespace ZGame.Editor.ResBuild
 
             if (EditorGUI.EndChangeCheck())
             {
-                EditorPrefs.SetString(key, AssetDatabase.GetAssetPath(config));
+                BuilderConfig.Saved();
             }
         }
 
         private void OnBuild()
         {
-            List<RulerInfoItem> items = config.ruleSeting.rulers.Where(x => x.selection).ToList();
+            List<RulerInfoItem> items = BuilderConfig.instance.ruleSeting.rulers.Where(x => x.selection).ToList();
             if (items is null || items.Count == 0)
             {
                 return;
             }
 
             List<BuildItem> builds = new List<BuildItem>();
-            foreach (var VARIABLE in config.ruleSeting.rulers)
+            foreach (var VARIABLE in BuilderConfig.instance.ruleSeting.rulers)
             {
                 if (VARIABLE.use is false)
                 {
@@ -122,12 +91,12 @@ namespace ZGame.Editor.ResBuild
                 builds.Add(GetRuleBuildBundles(VARIABLE));
             }
 
-            OnBuildBundle(config.output, config.useActiveTarget ? EditorUserBuildSettings.activeBuildTarget : config.target, builds.ToArray());
+            OnBuildBundle(BuilderConfig.instance.output, BuilderConfig.instance.useActiveTarget ? EditorUserBuildSettings.activeBuildTarget : BuilderConfig.instance.target, builds.ToArray());
         }
 
         private string GetBundleName(RulerInfoItem ruler, string name)
         {
-            return ruler.folder.name + "_" + Path.GetFileNameWithoutExtension(name) + config.ex;
+            return ruler.folder.name + "_" + Path.GetFileNameWithoutExtension(name) + BuilderConfig.instance.ex;
         }
 
         private BuildItem GetRuleBuildBundles(RulerInfoItem ruler)

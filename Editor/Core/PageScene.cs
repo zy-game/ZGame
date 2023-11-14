@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -7,15 +8,6 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor
 {
-    public sealed class DefaultOptions
-    {
-        public static T GetDefault<T>() where T : ScriptableObject
-        {
-            return default;
-        }
-    }
-
-
     public class PageScene : IDisposable
     {
         public string name { get; private set; }
@@ -45,7 +37,7 @@ namespace ZGame.Editor
             this.parent = WindowDocker.GetScene(attribute.parent);
         }
 
-        public virtual void OnEnable(params object[] args)
+        public virtual void OnEnable()
         {
         }
 

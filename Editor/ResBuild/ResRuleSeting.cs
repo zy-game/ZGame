@@ -12,86 +12,59 @@ namespace ZGame.Editor.ResBuild
     [BindScene("规则管理", typeof(ResBuilder))]
     public class ResRuleSeting : PageScene
     {
-        private RuleSeting _config;
-
-        public override void OnEnable(params object[] args)
+        public override void OnEnable()
         {
-            if (args.Length > 0)
+            foreach (var ruler in BuilderConfig.instance.ruleSeting.rulers)
             {
-                _config = (RuleSeting)args[0];
-            }
-
-            if (_config is null)
-            {
-                _config = ((ResBuilder)parent).config?.ruleSeting;
-            }
-
-            foreach (var ruler in _config.rulers)
-            {
-                Refresh(ruler);
-            }
-        }
-
-        private void Refresh(RulerInfoItem ruler)
-        {
-            ruler.exs = new List<string>();
-            if (ruler.folder == null)
-            {
-                return;
-            }
-
-            string path = AssetDatabase.GetAssetPath(ruler.folder);
-            string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
-
-            foreach (var VARIABLE in files)
-            {
-                string ex = Path.GetExtension(VARIABLE);
-                if (ruler.exs.Contains(ex) || ex == ".meta")
+                ruler.exs = new List<string>();
+                if (ruler.folder == null)
                 {
-                    continue;
+                    return;
                 }
 
-                ruler.exs.Add(ex);
-            }
-        }
+                string path = AssetDatabase.GetAssetPath(ruler.folder);
+                string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
 
-        public override void OnDisable()
-        {
-            EditorUtility.SetDirty(_config);
+                foreach (var VARIABLE in files)
+                {
+                    string ex = Path.GetExtension(VARIABLE);
+                    if (ruler.exs.Contains(ex) || ex == ".meta")
+                    {
+                        continue;
+                    }
+
+                    ruler.exs.Add(ex);
+                }
+            }
         }
 
         public override void OnGUI()
         {
-            if (_config is null)
-            {
-                return;
-            }
-
             EditorGUI.BeginChangeCheck();
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Create"))
             {
-                _config.rulers.Add(new RulerInfoItem());
+                BuilderConfig.instance.ruleSeting.rulers.Add(new RulerInfoItem());
             }
 
             GUILayout.EndHorizontal();
-            for (int i = _config.rulers.Count - 1; i >= 0; i--)
+            for (int i = BuilderConfig.instance.ruleSeting.rulers.Count - 1; i >= 0; i--)
             {
-                if (search.IsNullOrEmpty() is false && _config.rulers[i].name.Contains(search) is false)
+                if (search.IsNullOrEmpty() is false && BuilderConfig.instance.ruleSeting.rulers[i].name.Contains(search) is false)
                 {
                     continue;
                 }
 
                 GUILayout.BeginVertical(EditorStyles.helpBox);
-                DrawingRuleInfo(_config.rulers[i]);
+                DrawingRuleInfo(BuilderConfig.instance.ruleSeting.rulers[i]);
                 GUILayout.EndVertical();
                 GUILayout.Space(10);
             }
 
             if (EditorGUI.EndChangeCheck())
             {
-                EditorUtility.SetDirty(_config);
+                BuilderConfig.Saved();
             }
         }
 
@@ -103,7 +76,7 @@ namespace ZGame.Editor.ResBuild
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("", ZStyle.GUI_STYLE_MINUS))
             {
-                _config.rulers.Remove(ruler);
+                BuilderConfig.instance.ruleSeting.rulers.Remove(ruler);
             }
 
             GUILayout.EndHorizontal();
@@ -113,7 +86,7 @@ namespace ZGame.Editor.ResBuild
             ruler.folder = EditorGUILayout.ObjectField("资源目录", ruler.folder, typeof(DefaultAsset), false);
             if (EditorGUI.EndChangeCheck())
             {
-                Refresh(ruler);
+                OnEnable();
             }
 
             if (ruler.folder != null)

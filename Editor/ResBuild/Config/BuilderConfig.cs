@@ -15,31 +15,45 @@ namespace ZGame.Editor.ResBuild.Config
         public BuildTarget target;
         public string output;
         public string ex;
-        private const string config_path = "Assets/Settings";
+        private static BuilderConfig _instance;
 
-        public void Save()
+        public static BuilderConfig instance
         {
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            get
+            {
+                if (_instance == null)
+                {
+                    Initialized();
+                }
+
+                return _instance;
+            }
         }
 
-        public static BuilderConfig Create()
+        private static void Initialized()
         {
-            if (Directory.Exists(config_path) is false)
+            _instance = AssetDatabase.LoadAssetAtPath<BuilderConfig>("Assets/Settings/BuilderConfig.asset");
+            if (_instance != null)
             {
-                Directory.CreateDirectory(config_path);
+                return;
             }
 
-            BuilderConfig b = new BuilderConfig();
-            AssetDatabase.CreateAsset(b, config_path + "/BuilderConfig.asset");
-            AssetDatabase.AddObjectToAsset(b.ruleSeting = ScriptableObject.CreateInstance<RuleSeting>(), b);
-            AssetDatabase.AddObjectToAsset(b.uploadSeting = ScriptableObject.CreateInstance<UploadSeting>(), b);
-            b.ruleSeting.name = "RuleSeting";
-            b.ruleSeting.rulers = new List<RulerInfoItem>();
-            b.uploadSeting.name = "UploadSeting";
-            b.Save();
-            return b;
+            _instance = ScriptableObject.CreateInstance<BuilderConfig>();
+            _instance.ruleSeting = ScriptableObject.CreateInstance<RuleSeting>();
+            _instance.uploadSeting = ScriptableObject.CreateInstance<UploadSeting>();
+            _instance.ruleSeting.name = "Ruler Setting";
+            _instance.uploadSeting.name = "Upload Setting";
+            AssetDatabase.CreateAsset(_instance, $"Assets/Settings/BuilderConfig.asset");
+            Saved();
+        }
+
+        public static void Saved()
+        {
+            EditorUtility.SetDirty(_instance.ruleSeting);
+            EditorUtility.SetDirty(_instance.uploadSeting);
+            EditorUtility.SetDirty(_instance);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
     }
 }

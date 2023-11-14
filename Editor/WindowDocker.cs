@@ -126,7 +126,7 @@ namespace ZGame.Editor
                 return;
             }
 
-            SwitchScene(sceneType, obj);
+            SwitchScene(sceneType);
         }
 
         public static PageScene GetScene(Type type)
@@ -157,7 +157,7 @@ namespace ZGame.Editor
             return (T)GetScene(typeof(T));
         }
 
-        public static void SwitchScene(Type type, params object[] args)
+        public static void SwitchScene(Type type)
         {
             //检查type是否实现了PageScene
             if (type.IsSubclassOf(typeof(PageScene)) is false)
@@ -165,10 +165,10 @@ namespace ZGame.Editor
                 return;
             }
 
-            SwitchScene(GetScene(type), args);
+            SwitchScene(GetScene(type));
         }
 
-        public static void SwitchScene(PageScene scene, params object[] args)
+        public static void SwitchScene(PageScene scene)
         {
             if (scene is null)
             {
@@ -181,13 +181,13 @@ namespace ZGame.Editor
             }
 
             _docker.current = scene;
-            _docker.current.OnEnable(args);
+            _docker.current.OnEnable();
             _docker.Repaint();
         }
 
-        public static void SwitchScene<T>(params object[] args) where T : PageScene
+        public static void SwitchScene<T>() where T : PageScene
         {
-            SwitchScene(typeof(T), args);
+            SwitchScene(typeof(T));
         }
     }
 }

@@ -12,7 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb858eb74f69406bb1abb3638578507f, type: 3}
   m_Name: RuleSeting
   m_EditorClassIdentifier: 
-  rulers: []
+  rulers:
+  - use: 1
+    name: New Folder Ruler Seting
+    describe: 
+    folder: {fileID: 102900000, guid: 62bbea5413c8bef449ab89d9d3dddc03, type: 3}
+    spiltPackageType: 0
+    exList: []
+  - use: 1
+    name: Hex Terrain Basic Ruler Seting
+    describe: 
+    folder: {fileID: 102900000, guid: afc66cbc915b00f49b94b9a8deeb62aa, type: 3}
+    spiltPackageType: 2
+    exList: []
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44,6 +56,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 227e169df575424a983c5cf6f4fc00e2, type: 3}
   m_Name: UploadSeting
   m_EditorClassIdentifier: 
-  address: 
-  key: 
-  password: 
+  optionsList: []
