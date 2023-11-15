@@ -32,8 +32,7 @@ namespace ZGame.Window
                 return default;
             }
 
-            gameWindow = (GameWindow)Activator.CreateInstance(type);
-            gameWindow.gameObject = resObject.Instantiate();
+            gameWindow = (GameWindow)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
             Engine.Cameras.TrySetup(gameWindow.gameObject, reference.layer, Vector3.zero, Vector3.zero, Vector3.one);
             gameWindow.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
             gameWindow.Awake();

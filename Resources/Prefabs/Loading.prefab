@@ -141,15 +141,27 @@ MonoBehaviour:
   nameSpace:
   - UnityEngine
   - UnityEngine.UI
-  NameSpace: Test
-  output: {fileID: 102900000, guid: b32eddeaeb3fdde42bafb7236957f45a, type: 3}
+  - TMPro
+  NameSpace: ZGame.Window
+  output: {fileID: 102900000, guid: 8ed90d788de4467e9162b59827efc924, type: 3}
   options:
   - name: Slider
     path: Panel/Slider
-    type: UnityEngine.UI.Slider
+    type:
+    - UnityEngine.RectTransform
+    - UnityEngine.UI.Slider
   - name: Background
     path: Panel/Slider/Background
-    type: UnityEngine.UI.Image
+    type:
+    - UnityEngine.RectTransform
+    - UnityEngine.CanvasRenderer
+    - UnityEngine.UI.Image
+  - name: TextTMP
+    path: Panel/Text (TMP)
+    type:
+    - UnityEngine.RectTransform
+    - UnityEngine.CanvasRenderer
+    - TMPro.TextMeshProUGUI
 --- !u!1 &3514990325737268949
 GameObject:
   m_ObjectHideFlags: 0

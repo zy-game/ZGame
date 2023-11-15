@@ -3,15 +3,17 @@ using ZGame.Editor.ResBuild.Config;
 
 namespace ZGame.Editor.ResBuild
 {
-    [Options(typeof(UploadSeting))]
     [BindScene("设置", typeof(ResBuilder))]
     public class OSSSetting : PageScene
     {
         private SerializedProperty property;
 
+        private SerializedObject serializedObject;
+
         public override void OnEnable()
         {
-            property = new SerializedObject(BuilderConfig.instance.uploadSeting).FindProperty("optionsList");
+            serializedObject = new SerializedObject(BuilderConfig.instance);
+            property = serializedObject.FindProperty("ossList");
         }
 
         public override void OnGUI()
@@ -23,7 +25,7 @@ namespace ZGame.Editor.ResBuild
 
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(property);
-            if (EditorGUI.EndChangeCheck())
+            if (EditorGUI.EndChangeCheck() || serializedObject.ApplyModifiedProperties())
             {
                 BuilderConfig.Saved();
             }

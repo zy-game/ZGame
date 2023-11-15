@@ -93,12 +93,19 @@ namespace ZGame.Editor.UIBind
                 }
             }
 
-            GUILayout.Label(options.name);
             options.target = (GameObject)EditorGUILayout.ObjectField(options.target, typeof(GameObject), true);
 
             List<string> items = new List<string>();
             if (options.target != null)
             {
+                options.path = GetPath(options.target.transform);
+                if (options.name.IsNullOrEmpty())
+                {
+                    options.name = options.target.name.Replace(" ", "(", ")");
+                }
+
+                options.name = EditorGUILayout.TextField(options.name);
+
                 Component[] opComs = options.target.GetComponents<Component>();
                 foreach (var VARIABLE in opComs)
                 {
@@ -159,25 +166,6 @@ namespace ZGame.Editor.UIBind
 
                     menu.ShowAsContext();
                 }
-
-                options.path = GetPath(options.target.transform);
-                options.name = options.target.name.Replace(" ", "(", ")");
-            }
-
-            // if (options.type != "None")
-            // {
-            //     Type type = AppDomain.CurrentDomain.GetTypeForThat(options.type);
-            //     var click = type.GetProperty("onClick");
-            //     var change = type.GetProperty("onValueChanged");
-            //     if (click != null || change != null)
-            //     {
-            //         options.overrideEventCode = GUILayout.Toggle(options.overrideEventCode, "Event Code");
-            //     }
-            // }
-
-            if (options.type.Find(x => x.EndsWith("TextMeshProUGUI")) != null)
-            {
-                options.language = EditorGUILayout.IntField("", options.language, GUILayout.Width(100));
             }
 
             GUILayout.FlexibleSpace();
@@ -209,6 +197,7 @@ namespace ZGame.Editor.UIBind
             return path;
         }
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -225,7 +214,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("/// </summary>");
             sb.AppendLine("namespace " + setting.NameSpace);
             sb.AppendLine("{");
-            sb.AppendLine("\tpublic abstract class UI_Bind_" + setting.name + " : GameWindow");
+            sb.AppendLine("\tpublic class UI_Bind_" + setting.name + " : GameWindow");
             sb.AppendLine("\t{");
 
             foreach (var VARIABLE in setting.options)
@@ -237,15 +226,19 @@ namespace ZGame.Editor.UIBind
                 }
             }
 
-            sb.AppendLine("\n");
+            sb.AppendLine("");
+            sb.AppendLine($"\t\tpublic UI_Bind_{setting.name}(GameObject gameObject) : base(gameObject)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("");
             sb.AppendLine("\t\tpublic override void Awake()");
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t\tOnBind();");
             sb.AppendLine("\t\t\tOnEventRegister();");
-            sb.AppendLine("\t\t\tOnRefresh();");
+            // sb.AppendLine("\t\t\tOnRefresh();");
             sb.AppendLine("\t\t}");
             sb.AppendLine("");
-            sb.AppendLine("\t\tprivate void OnBind()");
+            sb.AppendLine("\t\tprotected virtual void OnBind()");
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t\tif(this.gameObject == null)");
             sb.AppendLine("\t\t\t{");
@@ -262,7 +255,7 @@ namespace ZGame.Editor.UIBind
 
             sb.AppendLine("\t\t}");
             sb.AppendLine("");
-            sb.AppendLine("\t\tprivate void OnEventRegister()");
+            sb.AppendLine("\t\tprotected virtual void OnEventRegister()");
             sb.AppendLine("\t\t{");
             foreach (var VARIABLE in setting.options)
             {
@@ -328,10 +321,23 @@ namespace ZGame.Editor.UIBind
                 }
             }
 
-
-            sb.AppendLine("\t\tpublic void OnRefresh()");
+            sb.AppendLine("\t\tpublic override void Dispose()");
             sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\tbase.Dispose();");
+            foreach (var VARIABLE in setting.options)
+            {
+                foreach (var VARIABLE2 in VARIABLE.type)
+                {
+                    string[] ts = VARIABLE2.Split('.');
+                    sb.AppendLine($"\t\t\t{ts[ts.Length - 1]}_{VARIABLE.name}?.Dispose();");
+                }
+            }
+
             sb.AppendLine("\t\t}");
+            // sb.AppendLine("");
+            // sb.AppendLine("\t\tpublic virtual void OnRefresh()");
+            // sb.AppendLine("\t\t{");
+            // sb.AppendLine("\t\t}");
             sb.AppendLine("\t}");
             sb.AppendLine("}");
 

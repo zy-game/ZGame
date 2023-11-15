@@ -38,7 +38,7 @@ namespace ZGame.Editor.ResBuild
 
             GUILayout.BeginVertical("Ruler List", EditorStyles.helpBox);
             GUILayout.Space(20);
-            foreach (var VARIABLE in BuilderConfig.instance.ruleSeting.rulers)
+            foreach (var VARIABLE in BuilderConfig.instance.packages)
             {
                 if (VARIABLE.use is false || VARIABLE.folder == null || (search.IsNullOrEmpty() is false && VARIABLE.name.StartsWith(search) is false))
                 {
@@ -52,7 +52,7 @@ namespace ZGame.Editor.ResBuild
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Edit"))
                 {
-                    WindowDocker.SwitchScene<ResRuleSeting>();
+                    WindowDocker.SwitchScene<ResPackageSeting>();
                 }
 
                 GUILayout.EndHorizontal();
@@ -74,14 +74,14 @@ namespace ZGame.Editor.ResBuild
 
         private void OnBuild()
         {
-            List<RulerInfoItem> items = BuilderConfig.instance.ruleSeting.rulers.Where(x => x.selection).ToList();
+            List<PackageSeting> items = BuilderConfig.instance.packages.Where(x => x.selection).ToList();
             if (items is null || items.Count == 0)
             {
                 return;
             }
 
             List<BuildItem> builds = new List<BuildItem>();
-            foreach (var VARIABLE in BuilderConfig.instance.ruleSeting.rulers)
+            foreach (var VARIABLE in BuilderConfig.instance.packages)
             {
                 if (VARIABLE.use is false)
                 {
@@ -94,19 +94,19 @@ namespace ZGame.Editor.ResBuild
             OnBuildBundle(BuilderConfig.instance.output, BuilderConfig.instance.useActiveTarget ? EditorUserBuildSettings.activeBuildTarget : BuilderConfig.instance.target, builds.ToArray());
         }
 
-        private string GetBundleName(RulerInfoItem ruler, string name)
+        private string GetBundleName(PackageSeting ruler, string name)
         {
             return ruler.folder.name + "_" + Path.GetFileNameWithoutExtension(name) + BuilderConfig.instance.ex;
         }
 
-        private BuildItem GetRuleBuildBundles(RulerInfoItem ruler)
+        private BuildItem GetRuleBuildBundles(PackageSeting ruler)
         {
             List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
             string[] files = default;
             string rootPath = AssetDatabase.GetAssetPath(ruler.folder);
-            switch (ruler.spiltPackageType)
+            switch (ruler.buildType)
             {
-                case SpiltPackageType.Asset:
+                case PackageBuildType.Asset:
                     files = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories);
                     foreach (var VARIABLE in files)
                     {
@@ -123,7 +123,7 @@ namespace ZGame.Editor.ResBuild
                     }
 
                     break;
-                case SpiltPackageType.Folder:
+                case PackageBuildType.Folder:
                     string[] folders = Directory.GetDirectories(rootPath);
                     foreach (var folder in folders)
                     {
@@ -136,15 +136,15 @@ namespace ZGame.Editor.ResBuild
                     }
 
                     break;
-                case SpiltPackageType.Once:
+                case PackageBuildType.Once:
                     builds.Add(new AssetBundleBuild()
                     {
                         assetBundleName = ruler.folder.name + "_" + Path.GetFileNameWithoutExtension(ruler.folder.name),
                         assetNames = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray()
                     });
                     break;
-                case SpiltPackageType.AssetType:
-                    foreach (var VARIABLE in ruler.exList)
+                case PackageBuildType.AssetType:
+                    foreach (var VARIABLE in ruler.contentExtensionList)
                     {
                         files = Directory.GetFiles(rootPath, "*" + VARIABLE, SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
                         builds.Add(new AssetBundleBuild()
@@ -213,7 +213,7 @@ namespace ZGame.Editor.ResBuild
 
         class BuildItem
         {
-            public RulerInfoItem ruler;
+            public PackageSeting ruler;
             public AssetBundleBuild[] builds;
         }
     }

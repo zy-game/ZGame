@@ -41,8 +41,8 @@ public class Startup : MonoBehaviour
         }
 
         Loading loading = Engine.Window.GeOrOpentWindow<Loading>();
-        await Engine.Resource.UpdateResourcePackageList(setting.module, loading.Setup);
-        await Engine.Resource.LoadingResourcePackageList(setting.module, loading.Setup);
+        await Engine.Resource.UpdateResourcePackageList(setting.module, loading.SetupProgress);
+        await Engine.Resource.LoadingResourcePackageList(setting.module, loading.SetupProgress);
     }
 
     private static async UniTask EntryGame(GameSeting settings)

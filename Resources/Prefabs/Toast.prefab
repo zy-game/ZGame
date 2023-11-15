@@ -31,7 +31,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 292347919987641833}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -107,7 +106,6 @@ RectTransform:
   - {fileID: 8104575979681765190}
   - {fileID: 8771115513761028914}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -125,7 +123,6 @@ GameObject:
   - component: {fileID: 1142349202863172321}
   - component: {fileID: 1654364386091747583}
   - component: {fileID: 435755297047864352}
-  - component: {fileID: 5289250016634625059}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -146,7 +143,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7639602879289765874}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -250,26 +246,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &5289250016634625059
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8374897621852167811}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad3c86a7eca5498f892bf49517d5750a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_HorizontalFit: 2
-  m_VerticalFit: 2
-  target:
-  - {fileID: 7639602879289765874}
-  offset: {x: 0, y: 0}
-  useLimit: 1
-  min: {x: 454, y: 52}
-  max: {x: 1622, y: 52}
 --- !u!1 &9150619524882193410
 GameObject:
   m_ObjectHideFlags: 0
@@ -302,7 +278,6 @@ RectTransform:
   m_Children:
   - {fileID: 1142349202863172321}
   m_Father: {fileID: 8771115513761028914}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -377,7 +352,6 @@ RectTransform:
   m_Children:
   - {fileID: 7639602879289765874}
   m_Father: {fileID: 292347919987641833}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}

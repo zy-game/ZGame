@@ -134,6 +134,25 @@ namespace ZGame
             return result;
         }
 
+        public static List<Type> GetCustomAttributesWithoutType<T>(this AppDomain domain) where T : Attribute
+        {
+            List<Type> result = new List<Type>();
+            foreach (var VARIABLE in domain.GetAssemblies())
+            {
+                foreach (var VARIABLE2 in VARIABLE.GetTypes())
+                {
+                    T[] attribute = VARIABLE2.GetCustomAttributes<T>().ToArray();
+
+                    if (attribute != null && attribute.Length > 0)
+                    {
+                        result.Add(VARIABLE2);
+                    }
+                }
+            }
+
+            return result;
+        }
+
 
         public static Type FindType(this Assembly assembly, string name)
         {

@@ -4,11 +4,7 @@ using ZGame.Editor.ResBuild.Config;
 
 namespace ZGame.Editor.ResBuild
 {
-    public enum OSSType
-    {
-        Aliyun,
-        Tencentyun,
-    }
+
 
     [BindScene("版本管理", typeof(ResBuilder))]
     public class ResUploader : PageScene

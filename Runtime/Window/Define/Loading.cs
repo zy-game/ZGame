@@ -1,11 +1,17 @@
+using UnityEngine;
+
 namespace ZGame.Window
 {
-    [Linked("Resources/Loading", 1)]
-    public class Loading : GameWindow
+    [Linked("Resources/Prefabs/Loading", 100)]
+    public class Loading : UI_Bind_Loading
     {
-        public void Setup(float progress)
+        public Loading(GameObject gameObject) : base(gameObject)
         {
-            
+        }
+
+        public void SetupProgress(float progress)
+        {
+            this.Slider_Slider.Setup(progress);
         }
     }
 }

@@ -67,7 +67,7 @@ namespace ZGame
             Window = new WindowManager();
             Game = new GameManager();
             Cameras = new CameraManager();
-            Resource.SetResourceAddressable(setting.resUrl);
+            Resource.SetResourceAddressable(setting.address);
             Localization.SwitchLanguage(setting.Language);
         }
 

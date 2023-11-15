@@ -10,7 +10,6 @@ namespace ZGame.Window
         public string name;
         public string path;
         public List<string> type = new List<string>();
-        public int language;
         [NonSerialized] public GameObject target;
     }
 

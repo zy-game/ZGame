@@ -10,6 +10,7 @@ namespace ZGame.Window
     {
         public string name { get; private set; }
         public Transform transform { get; private set; }
+        public GameObject gameObject { get; private set; }
 
         public UIBind(Transform transform)
         {
@@ -20,6 +21,7 @@ namespace ZGame.Window
 
             name = transform.name;
             this.transform = transform;
+            gameObject = transform.gameObject;
         }
 
         public void Setup(object args)

@@ -1,20 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.ResBuild.Config;
-using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    [Options(typeof(RuleSeting))]
-    [BindScene("规则管理", typeof(ResBuilder))]
-    public class ResRuleSeting : PageScene
+    [Options(typeof(PackageSeting))]
+    [BindScene("资源包管理", typeof(ResBuilder))]
+    public class ResPackageSeting : PageScene
     {
         public override void OnEnable()
         {
-            foreach (var ruler in BuilderConfig.instance.ruleSeting.rulers)
+            foreach (var ruler in BuilderConfig.instance.packages)
             {
                 ruler.exs = new List<string>();
                 if (ruler.folder == null)
@@ -45,19 +44,25 @@ namespace ZGame.Editor.ResBuild
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Create"))
             {
-                BuilderConfig.instance.ruleSeting.rulers.Add(new RulerInfoItem());
+                BuilderConfig.instance.packages.Add(new PackageSeting()
+                {
+                    name = "New Package Seting",
+                    folder = null,
+                    buildType = PackageBuildType.AssetType,
+                    contentExtensionList = new List<string>()
+                });
             }
 
             GUILayout.EndHorizontal();
-            for (int i = BuilderConfig.instance.ruleSeting.rulers.Count - 1; i >= 0; i--)
+            for (int i = BuilderConfig.instance.packages.Count - 1; i >= 0; i--)
             {
-                if (search.IsNullOrEmpty() is false && BuilderConfig.instance.ruleSeting.rulers[i].name.Contains(search) is false)
+                if (search.IsNullOrEmpty() is false && BuilderConfig.instance.packages[i].name.Contains(search) is false)
                 {
                     continue;
                 }
 
                 GUILayout.BeginVertical(EditorStyles.helpBox);
-                DrawingRuleInfo(BuilderConfig.instance.ruleSeting.rulers[i]);
+                DrawingRuleInfo(BuilderConfig.instance.packages[i]);
                 GUILayout.EndVertical();
                 GUILayout.Space(10);
             }
@@ -68,50 +73,50 @@ namespace ZGame.Editor.ResBuild
             }
         }
 
-        private void DrawingRuleInfo(RulerInfoItem ruler)
+        private void DrawingRuleInfo(PackageSeting package)
         {
             GUILayout.BeginHorizontal();
 
-            ruler.use = EditorGUILayout.Toggle("是否激活规则", ruler.use);
+            package.use = EditorGUILayout.Toggle("是否激活规则", package.use);
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("", ZStyle.GUI_STYLE_MINUS))
             {
-                BuilderConfig.instance.ruleSeting.rulers.Remove(ruler);
+                BuilderConfig.instance.packages.Remove(package);
             }
 
             GUILayout.EndHorizontal();
-            EditorGUI.BeginDisabledGroup(!ruler.use);
-            GUILayout.Label(ruler.name);
+            EditorGUI.BeginDisabledGroup(!package.use);
+            GUILayout.Label(package.name);
             EditorGUI.BeginChangeCheck();
-            ruler.folder = EditorGUILayout.ObjectField("资源目录", ruler.folder, typeof(DefaultAsset), false);
+            package.folder = EditorGUILayout.ObjectField("资源目录", package.folder, typeof(DefaultAsset), false);
             if (EditorGUI.EndChangeCheck())
             {
                 OnEnable();
             }
 
-            if (ruler.folder != null)
+            if (package.folder != null)
             {
-                ruler.name = ruler.folder.name + " Ruler Seting";
+                package.name = package.folder.name + " Ruler Seting";
             }
 
             GUILayout.BeginHorizontal();
-            ruler.spiltPackageType = (SpiltPackageType)EditorGUILayout.EnumPopup("分包规则", ruler.spiltPackageType);
-            if (ruler.folder != null && ruler.spiltPackageType == SpiltPackageType.AssetType)
+            package.buildType = (PackageBuildType)EditorGUILayout.EnumPopup("分包规则", package.buildType);
+            if (package.folder != null && package.buildType == PackageBuildType.AssetType)
             {
                 string name = String.Empty;
-                if (ruler.exList.Count == 0)
+                if (package.contentExtensionList.Count == 0)
                 {
                     name = "Noting";
                 }
                 else
                 {
-                    if (ruler.exs.Count == ruler.exList.Count)
+                    if (package.exs.Count == package.contentExtensionList.Count)
                     {
                         name = "Everyting";
                     }
                     else
                     {
-                        name = string.Join(",", ruler.exs);
+                        name = string.Join(",", package.exs);
                         if (name.Length > 20)
                         {
                             name = name.Substring(0, 25) + "...";
@@ -122,23 +127,23 @@ namespace ZGame.Editor.ResBuild
                 if (GUILayout.Button(name, EditorStyles.popup))
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Noting"), ruler.exList.Count == 0, () => { ruler.exList.Clear(); });
-                    menu.AddItem(new GUIContent("Everything"), ruler.exs.Count == ruler.exList.Count, () =>
+                    menu.AddItem(new GUIContent("Noting"), package.contentExtensionList.Count == 0, () => { package.contentExtensionList.Clear(); });
+                    menu.AddItem(new GUIContent("Everything"), package.exs.Count == package.contentExtensionList.Count, () =>
                     {
-                        ruler.exList.Clear();
-                        ruler.exList.AddRange(ruler.exs);
+                        package.contentExtensionList.Clear();
+                        package.contentExtensionList.AddRange(package.exs);
                     });
-                    foreach (var VARIABLE in ruler.exs)
+                    foreach (var VARIABLE in package.exs)
                     {
-                        menu.AddItem(new GUIContent(VARIABLE), ruler.exList.Contains(VARIABLE), () =>
+                        menu.AddItem(new GUIContent(VARIABLE), package.contentExtensionList.Contains(VARIABLE), () =>
                         {
-                            if (ruler.exList.Contains(VARIABLE))
+                            if (package.contentExtensionList.Contains(VARIABLE))
                             {
-                                ruler.exList.Remove(VARIABLE);
+                                package.contentExtensionList.Remove(VARIABLE);
                             }
                             else
                             {
-                                ruler.exList.Add(VARIABLE);
+                                package.contentExtensionList.Add(VARIABLE);
                             }
                         });
                     }
@@ -148,16 +153,9 @@ namespace ZGame.Editor.ResBuild
             }
 
             GUILayout.EndHorizontal();
-            ruler.describe = EditorGUILayout.TextField("描述", ruler.describe);
+            package.describe = EditorGUILayout.TextField("描述", package.describe);
 
             EditorGUI.EndDisabledGroup();
-        }
-    }
-
-    class RulerGUI
-    {
-        public void OnGUI()
-        {
         }
     }
 }
