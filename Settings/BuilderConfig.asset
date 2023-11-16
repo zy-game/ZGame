@@ -42,4 +42,4 @@ MonoBehaviour:
   comperss: 0
   target: 5
   output: 
-  ex: 
+  fileExtension: 

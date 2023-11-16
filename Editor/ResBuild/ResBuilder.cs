@@ -25,18 +25,9 @@ namespace ZGame.Editor.ResBuild
         public override void OnGUI()
         {
             EditorGUI.BeginChangeCheck();
-            GUILayout.BeginVertical("Output Seting", EditorStyles.helpBox);
-            GUILayout.Space(20);
-            BuilderConfig.instance.comperss = (BuildAssetBundleOptions)EditorGUILayout.EnumPopup("压缩方式", BuilderConfig.instance.comperss);
-            BuilderConfig.instance.useActiveTarget = EditorGUILayout.Toggle("是否跟随激活平台", BuilderConfig.instance.useActiveTarget);
-            EditorGUI.BeginDisabledGroup(BuilderConfig.instance.useActiveTarget);
-            BuilderConfig.instance.target = (BuildTarget)EditorGUILayout.EnumPopup("编译平台", BuilderConfig.instance.target);
-            EditorGUI.EndDisabledGroup();
-            BuilderConfig.instance.output = EditorGUILayout.TextField("输出路径", BuilderConfig.instance.output);
-            BuilderConfig.instance.ex = EditorGUILayout.TextField("文件扩展名", BuilderConfig.instance.ex);
-            GUILayout.EndHorizontal();
+           
 
-            GUILayout.BeginVertical("Ruler List", EditorStyles.helpBox);
+            GUILayout.BeginVertical("Package List", EditorStyles.helpBox);
             GUILayout.Space(20);
             foreach (var VARIABLE in BuilderConfig.instance.packages)
             {
@@ -96,7 +87,7 @@ namespace ZGame.Editor.ResBuild
 
         private string GetBundleName(PackageSeting ruler, string name)
         {
-            return ruler.folder.name + "_" + Path.GetFileNameWithoutExtension(name) + BuilderConfig.instance.ex;
+            return ruler.folder.name + "_" + Path.GetFileNameWithoutExtension(name) + BuilderConfig.instance.fileExtension;
         }
 
         private BuildItem GetRuleBuildBundles(PackageSeting ruler)
@@ -106,7 +97,7 @@ namespace ZGame.Editor.ResBuild
             string rootPath = AssetDatabase.GetAssetPath(ruler.folder);
             switch (ruler.buildType)
             {
-                case PackageBuildType.Asset:
+                case BuildType.Asset:
                     files = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories);
                     foreach (var VARIABLE in files)
                     {
@@ -123,7 +114,7 @@ namespace ZGame.Editor.ResBuild
                     }
 
                     break;
-                case PackageBuildType.Folder:
+                case BuildType.Folder:
                     string[] folders = Directory.GetDirectories(rootPath);
                     foreach (var folder in folders)
                     {
@@ -136,14 +127,14 @@ namespace ZGame.Editor.ResBuild
                     }
 
                     break;
-                case PackageBuildType.Once:
+                case BuildType.Once:
                     builds.Add(new AssetBundleBuild()
                     {
                         assetBundleName = ruler.folder.name + "_" + Path.GetFileNameWithoutExtension(ruler.folder.name),
                         assetNames = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray()
                     });
                     break;
-                case PackageBuildType.AssetType:
+                case BuildType.AssetType:
                     foreach (var VARIABLE in ruler.contentExtensionList)
                     {
                         files = Directory.GetFiles(rootPath, "*" + VARIABLE, SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();

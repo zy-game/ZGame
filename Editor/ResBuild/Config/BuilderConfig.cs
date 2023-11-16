@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ZGame.Editor.ResBuild.Config
 {
@@ -14,7 +15,7 @@ namespace ZGame.Editor.ResBuild.Config
         public BuildAssetBundleOptions comperss;
         public BuildTarget target;
         public string output;
-        public string ex;
+        public string fileExtension;
         private static BuilderConfig _instance;
 
         public static BuilderConfig instance
@@ -33,16 +34,23 @@ namespace ZGame.Editor.ResBuild.Config
         private static void Initialized()
         {
             _instance = AssetDatabase.LoadAssetAtPath<BuilderConfig>("Assets/Settings/BuilderConfig.asset");
-            if (_instance != null)
+            if (_instance == null)
             {
-                return;
+                _instance = ScriptableObject.CreateInstance<BuilderConfig>();
+                _instance.target = EditorUserBuildSettings.activeBuildTarget;
+                AssetDatabase.CreateAsset(_instance, $"Assets/Settings/BuilderConfig.asset");
             }
 
-            _instance = ScriptableObject.CreateInstance<BuilderConfig>();
-            _instance.packages = new List<PackageSeting>();
-            _instance.ossList = new List<OSSOptions>();
-            _instance.target = EditorUserBuildSettings.activeBuildTarget;
-            AssetDatabase.CreateAsset(_instance, $"Assets/Settings/BuilderConfig.asset");
+            if (_instance.packages is null)
+            {
+                _instance.packages = new List<PackageSeting>();
+            }
+
+            if (_instance.ossList is null)
+            {
+                _instance.ossList = new List<OSSOptions>();
+            }
+
             Saved();
         }
 

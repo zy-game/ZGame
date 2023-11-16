@@ -48,7 +48,7 @@ namespace ZGame.Editor.ResBuild
                 {
                     name = "New Package Seting",
                     folder = null,
-                    buildType = PackageBuildType.AssetType,
+                    buildType = BuildType.AssetType,
                     contentExtensionList = new List<string>()
                 });
             }
@@ -100,8 +100,8 @@ namespace ZGame.Editor.ResBuild
             }
 
             GUILayout.BeginHorizontal();
-            package.buildType = (PackageBuildType)EditorGUILayout.EnumPopup("分包规则", package.buildType);
-            if (package.folder != null && package.buildType == PackageBuildType.AssetType)
+            package.buildType = (BuildType)EditorGUILayout.EnumPopup("分包规则", package.buildType);
+            if (package.folder != null && package.buildType == BuildType.AssetType)
             {
                 string name = String.Empty;
                 if (package.contentExtensionList.Count == 0)
