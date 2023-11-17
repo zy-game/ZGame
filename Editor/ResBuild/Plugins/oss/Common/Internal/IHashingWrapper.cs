@@ -9,7 +9,7 @@ using System.IO;
 
 namespace Aliyun.OSS.Common.Internal
 {
-    public interface IHashingWrapper : System.IDisposable
+    public interface IHashingWrapper : IDisposable
     {
         void Clear();
         byte[] ComputeHash(byte[] buffer);

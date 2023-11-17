@@ -15,7 +15,7 @@ namespace Aliyun.OSS.Model
     /// <summary>
     /// Base class for responses that return a stream.
     /// </summary>
-    public abstract class StreamResult : GenericResult, System.IDisposable
+    public abstract class StreamResult : GenericResult, IDisposable
     {
         private bool disposed;
         private Stream responseStream;

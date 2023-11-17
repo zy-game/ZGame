@@ -91,7 +91,7 @@ namespace Aliyun.OSS.Common.Internal
         /// or garbage collected.</param>
         protected virtual void Dispose(bool disposing)
         {
-            var disposable = _algorithm as System.IDisposable;
+            var disposable = _algorithm as IDisposable;
             if (disposing && disposable != null)
             {
                 disposable.Dispose();

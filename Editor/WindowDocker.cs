@@ -182,12 +182,17 @@ namespace ZGame.Editor
 
             _docker.current = scene;
             _docker.current.OnEnable();
-            _docker.Repaint();
+            Refresh();
         }
 
         public static void SwitchScene<T>() where T : PageScene
         {
             SwitchScene(typeof(T));
+        }
+
+        public static void Refresh()
+        {
+            _docker?.Repaint();
         }
     }
 }

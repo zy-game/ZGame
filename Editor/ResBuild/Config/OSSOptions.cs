@@ -11,8 +11,10 @@ namespace ZGame.Editor.ResBuild.Config
     public class OSSOptions
     {
         public string title;
-        public bool use;
         public OSSType type;
+        public string appid;
+        public string bucket;
+        public string region;
         public string address;
         public string key;
         public string password;

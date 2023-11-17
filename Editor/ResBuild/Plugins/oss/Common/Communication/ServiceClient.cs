@@ -10,6 +10,7 @@ using System.Diagnostics;
 using Aliyun.OSS.Util;
 using Aliyun.OSS.Common.Handlers;
 
+
 namespace Aliyun.OSS.Common.Communication
 {
     /// <summary>
@@ -17,10 +18,11 @@ namespace Aliyun.OSS.Common.Communication
     /// </summary>
     internal abstract class ServiceClient : IServiceClient
     {
+
         #region Fields and Properties
 
         private readonly ClientConfiguration _configuration;
-
+        
         internal ClientConfiguration Configuration
         {
             get { return _configuration; }
@@ -34,7 +36,7 @@ namespace Aliyun.OSS.Common.Communication
         {
             _configuration = configuration;
         }
-
+        
         public static ServiceClient Create(ClientConfiguration configuration)
         {
 #if NETCOREAPP2_0
@@ -52,9 +54,9 @@ namespace Aliyun.OSS.Common.Communication
 #endif
         }
 
-        #endregion
-
-        #region IServiceClient Members
+#endregion
+        
+#region IServiceClient Members
 
         public ServiceResponse Send(ServiceRequest request, ExecutionContext context)
         {
@@ -64,7 +66,7 @@ namespace Aliyun.OSS.Common.Communication
             return response;
         }
 
-        public IAsyncResult BeginSend(ServiceRequest request, ExecutionContext context,
+        public IAsyncResult BeginSend(ServiceRequest request, ExecutionContext context, 
             AsyncCallback callback, object state)
         {
             SignRequest(request, context);
@@ -94,19 +96,19 @@ namespace Aliyun.OSS.Common.Communication
             }
         }
 
-        #endregion
+#endregion
 
         protected abstract ServiceResponse SendCore(ServiceRequest request, ExecutionContext context);
-
-        protected abstract IAsyncResult BeginSendCore(ServiceRequest request, ExecutionContext context,
+        
+        protected abstract IAsyncResult BeginSendCore(ServiceRequest request, ExecutionContext context, 
             AsyncCallback callback, Object state);
-
+        
         private static void SignRequest(ServiceRequest request, ExecutionContext context)
         {
             if (context.Signer != null)
                 context.Signer.Sign(request, context.Credentials);
         }
-
+        
         protected static void HandleResponse(ServiceResponse response, IEnumerable<IResponseHandler> handlers)
         {
             foreach (var handler in handlers)

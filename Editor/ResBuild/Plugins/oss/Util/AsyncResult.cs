@@ -15,7 +15,7 @@ namespace Aliyun.OSS.Util
     /// The implementation of <see cref="IAsyncResult"/>
     /// that represents the status of an async operation.
     /// </summary>
-    internal abstract class AsyncResult : IAsyncResult, System.IDisposable
+    internal abstract class AsyncResult : IAsyncResult, IDisposable
     {
         #region Fields
 

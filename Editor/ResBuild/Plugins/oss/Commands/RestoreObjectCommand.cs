@@ -20,12 +20,16 @@ namespace Aliyun.OSS.Commands
 
         protected override string Bucket
         {
-            get { return _request.BucketName; }
+            get { 
+                return _request.BucketName; 
+            }
         }
 
         protected override string Key
         {
-            get { return _request.Key; }
+            get {
+                return _request.Key; 
+            }
         }
 
         protected override HttpMethod Method
@@ -37,10 +41,8 @@ namespace Aliyun.OSS.Commands
         {
             get
             {
-                return _request.IsUseDefaultParameter()
-                    ? null
-                    : SerializerFactory.GetFactory().CreateRestoreObjectRequestSerializer()
-                        .Serialize(_request);
+                return _request.IsUseDefaultParameter() ? null : SerializerFactory.GetFactory().CreateRestoreObjectRequestSerializer()
+                    .Serialize(_request);
             }
         }
 
@@ -54,7 +56,6 @@ namespace Aliyun.OSS.Commands
                 {
                     parameters.Add(RequestParameters.SUBRESOURCE_VERSIONID, _request.VersionId);
                 }
-
                 return parameters;
             }
         }
@@ -68,13 +69,12 @@ namespace Aliyun.OSS.Commands
                 {
                     headers.Add(OssHeaders.OssRequestPayer, RequestPayer.Requester.ToString().ToLowerInvariant());
                 }
-
                 return headers;
             }
         }
 
         private RestoreObjectCommand(IServiceClient client, Uri endpoint, ExecutionContext context,
-            RestoreObjectRequest request, IDeserializer<ServiceResponse, RestoreObjectResult> deserializer)
+                                     RestoreObjectRequest request, IDeserializer<ServiceResponse, RestoreObjectResult> deserializer)
             : base(client, endpoint, context, deserializer)
         {
             OssUtils.CheckBucketName(request.BucketName);
@@ -84,8 +84,8 @@ namespace Aliyun.OSS.Commands
         }
 
         public static RestoreObjectCommand Create(IServiceClient client, Uri endpoint,
-            ExecutionContext context,
-            RestoreObjectRequest request)
+                                                 ExecutionContext context,
+                                                 RestoreObjectRequest request)
         {
             return new RestoreObjectCommand(client, endpoint, context, request, DeserializerFactory.GetFactory().CreateRestoreObjectResultDeserializer());
         }

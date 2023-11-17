@@ -25,7 +25,7 @@ namespace ZGame.Editor.ResBuild
         public override void OnGUI()
         {
             EditorGUI.BeginChangeCheck();
-           
+
 
             GUILayout.BeginVertical("Package List", EditorStyles.helpBox);
             GUILayout.Space(20);
@@ -82,7 +82,9 @@ namespace ZGame.Editor.ResBuild
                 builds.Add(GetRuleBuildBundles(VARIABLE));
             }
 
-            OnBuildBundle(BuilderConfig.instance.output, BuilderConfig.instance.useActiveTarget ? EditorUserBuildSettings.activeBuildTarget : BuilderConfig.instance.target, builds.ToArray());
+            BuildTarget buildTarget = BuilderConfig.instance.useActiveTarget ? EditorUserBuildSettings.activeBuildTarget : BuilderConfig.instance.target;
+
+            OnBuildBundle(BuilderConfig.instance.output, buildTarget, builds.ToArray());
         }
 
         private string GetBundleName(PackageSeting ruler, string name)
@@ -162,6 +164,15 @@ namespace ZGame.Editor.ResBuild
             {
                 list.AddRange(VARIABLE.builds);
             }
+
+            output = target switch
+            {
+                BuildTarget.StandaloneWindows64 => output + "/windows",
+                BuildTarget.Android => output + "/android",
+                BuildTarget.WebGL => output + "/webgl",
+                BuildTarget.iOS => output + "/ios",
+                _ => output + "/none"
+            };
 
             var manifest = BuildPipeline.BuildAssetBundles(output, list.ToArray(), BuildAssetBundleOptions.None, target);
             Debug.Log(new DirectoryInfo(output).Name);

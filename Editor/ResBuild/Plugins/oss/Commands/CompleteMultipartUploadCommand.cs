@@ -17,17 +17,23 @@ namespace Aliyun.OSS.Commands
     internal class CompleteMultipartUploadCommand : OssCommand<CompleteMultipartUploadResult>
     {
         private readonly CompleteMultipartUploadRequest _completeMultipartUploadRequest;
-
+        
         protected override string Bucket
         {
-            get { return _completeMultipartUploadRequest.BucketName; }
+            get
+            {
+                return _completeMultipartUploadRequest.BucketName;
+            }
         }
-
+        
         protected override string Key
         {
-            get { return _completeMultipartUploadRequest.Key; }
+            get
+            {
+                return _completeMultipartUploadRequest.Key;
+            }
         }
-
+        
         protected override HttpMethod Method
         {
             get { return HttpMethod.Post; }
@@ -42,32 +48,30 @@ namespace Aliyun.OSS.Commands
                 {
                     _completeMultipartUploadRequest.Metadata.Populate(headers);
                 }
-
                 if (_completeMultipartUploadRequest.RequestPayer == RequestPayer.Requester)
                 {
                     headers.Add(OssHeaders.OssRequestPayer, RequestPayer.Requester.ToString().ToLowerInvariant());
                 }
-
                 return headers;
             }
         }
-
+        
         protected override IDictionary<string, string> Parameters
         {
-            get
+            get 
             {
                 var parameters = base.Parameters;
                 parameters[RequestParameters.UPLOAD_ID] = _completeMultipartUploadRequest.UploadId;
                 return parameters;
             }
         }
-
+        
         protected override Stream Content
         {
-            get
-            {
+            get 
+            { 
                 return SerializerFactory.GetFactory().CreateCompleteUploadRequestSerializer()
-                    .Serialize(_completeMultipartUploadRequest);
+                    .Serialize(_completeMultipartUploadRequest); 
             }
         }
 
@@ -75,17 +79,17 @@ namespace Aliyun.OSS.Commands
         {
             get { return _completeMultipartUploadRequest.IsNeedResponseStream(); }
         }
-
+        
         private CompleteMultipartUploadCommand(IServiceClient client, Uri endpoint, ExecutionContext context,
-            IDeserializer<ServiceResponse, CompleteMultipartUploadResult> deserializeMethod,
-            CompleteMultipartUploadRequest completeMultipartUploadRequest)
-            : base(client, endpoint, context, deserializeMethod)
+                                 IDeserializer<ServiceResponse, CompleteMultipartUploadResult> deserializeMethod,
+                                 CompleteMultipartUploadRequest completeMultipartUploadRequest)
+                        : base(client, endpoint, context, deserializeMethod)
         {
             _completeMultipartUploadRequest = completeMultipartUploadRequest;
         }
-
+        
         public static CompleteMultipartUploadCommand Create(IServiceClient client, Uri endpoint, ExecutionContext context,
-            CompleteMultipartUploadRequest completeMultipartUploadRequest)
+                                  CompleteMultipartUploadRequest completeMultipartUploadRequest)
         {
             OssUtils.CheckBucketName(completeMultipartUploadRequest.BucketName);
             OssUtils.CheckObjectKey(completeMultipartUploadRequest.Key);
@@ -102,12 +106,13 @@ namespace Aliyun.OSS.Commands
             var conf = OssUtils.GetClientConfiguration(client);
             if (conf.EnableCrcCheck)
             {
-                context.ResponseHandlers.Add(new CompleteMultipartUploadCrc64Handler(completeMultipartUploadRequest));
+                context.ResponseHandlers.Add(new CompleteMultipartUploadCrc64Handler(completeMultipartUploadRequest)); 
             }
 
             return new CompleteMultipartUploadCommand(client, endpoint, context,
-                DeserializerFactory.GetFactory().CreateCompleteUploadResultDeserializer(completeMultipartUploadRequest),
-                completeMultipartUploadRequest);
+                                               DeserializerFactory.GetFactory().CreateCompleteUploadResultDeserializer(completeMultipartUploadRequest),
+                                               completeMultipartUploadRequest);
+            
         }
     }
 }

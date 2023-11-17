@@ -11,124 +11,122 @@ namespace ZGame.Editor.ResBuild
     public class ResUploader : PageScene
     {
         public OSSType type;
-        private int ossIndex = 0;
-        private OSSOptions selectin;
-        private List<OSSFileEntity> files;
+        private int selection = 0;
+        private OSSManager manager;
+        private string[] buckets;
 
         public override void OnEnable()
         {
+            manager = new OSSManager();
             OnRefresh();
         }
 
         public override void OnGUI()
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
             GUILayout.FlexibleSpace();
-            type = (OSSType)EditorGUILayout.EnumPopup(type);
+            type = (OSSType)EditorGUILayout.EnumPopup(type, EditorStyles.toolbarDropDown);
+            EditorGUI.BeginChangeCheck();
             string[] list = BuilderConfig.instance.ossList.Where(x => x.type == type).Select(x => x.title).ToArray();
-            ossIndex = EditorGUILayout.Popup(ossIndex, list);
-            if (GUILayout.Button("刷新列表"))
+            selection = EditorGUILayout.Popup(selection, list, EditorStyles.toolbarDropDown);
+            if (EditorGUI.EndChangeCheck())
             {
                 OnRefresh();
             }
 
-            if (GUILayout.Button("上传"))
+            if (GUILayout.Button("刷新", EditorStyles.toolbarButton))
             {
-                OnUpload();
+                OnRefresh();
+            }
+
+            if (GUILayout.Button("上传", EditorStyles.toolbarButton))
+            {
+                manager.Upload();
+            }
+
+            if (GUILayout.Button("下载", EditorStyles.toolbarButton))
+            {
+                manager.Download();
             }
 
             GUILayout.EndHorizontal();
-            OnDrawingItem();
+
+            GUILayout.BeginVertical("File List", EditorStyles.helpBox);
+            GUILayout.Space(15);
+            if (manager is not null)
+            {
+                OnDrawingFolder(manager.root, 0);
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
         }
 
         private void OnRefresh()
         {
-        }
-
-        private void OnUpload()
-        {
-        }
-
-        private void OnDrawingItem()
-        {
-            if (files is null)
+            if (selection < 0 || selection > BuilderConfig.instance.ossList.Count - 1)
             {
                 return;
             }
+
+            manager.Refresh(BuilderConfig.instance.ossList.Where(x => x.type == type).ElementAt(selection));
         }
-        private void UploadOSSService(string output, OSSOptions options, ResourceModuleManifest moduleManifest, params ResourceBundleManifest[] manifests)
+
+
+        private void OnDrawingFolder(OSSObject folder, int offset)
         {
-            float count = manifests.Length;
-            float now = 0;
-            var _configuration = new Aliyun.OSS.Common.ClientConfiguration();
-            _configuration.ConnectionTimeout = 10000;
-            Aliyun.OSS.OssClient ossClient = new Aliyun.OSS.OssClient(options.url, options.keyID, options.key, _configuration);
-            if (ossClient.DoesBucketExist(options.bucket) is false)
+            GUILayout.BeginHorizontal();
             {
-                Aliyun.OSS.Bucket bucket = ossClient.CreateBucket(options.bucket);
-            }
+                GUILayout.Space(offset);
+                GUILayout.BeginVertical();
+                {
+                    GUILayout.BeginHorizontal();
+                    folder.foldout = EditorGUILayout.Foldout(folder.foldout, "");
+                    GUILayout.Space(-40);
+                    GUILayout.Label(EditorGUIUtility.IconContent("Folder Icon"), GUILayout.Width(20), GUILayout.Height(20));
+                    GUILayout.Label(folder.name);
+                    GUILayout.FlexibleSpace();
+                    EditorGUI.BeginChangeCheck();
+                    folder.isOn = GUILayout.Toggle(folder.isOn, String.Empty);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        folder.OnSelection(folder.isOn);
+                    }
 
-            string key = String.Empty;
-            Aliyun.OSS.PutObjectResult result = default;
-            foreach (var file in manifests)
-            {
-                string bundleName = ($"{moduleManifest.title}_{file.name}.assetbundle").ToLower();
-                key = $"{ZGame.GetPlatfrom()}/{bundleName}";
-                result = ossClient.PutObject(options.bucket, key, $"{output}/{bundleName}");
-                now++;
-                EditorUtility.DisplayProgressBar("上传资源", "正在上传OSS...", now / count);
-            }
+                    GUILayout.EndHorizontal();
 
-            key = $"{ZGame.GetPlatfrom()}/{moduleManifest.title.ToLower()}.ini";
-            result = ossClient.PutObject(options.bucket, key, $"{output}/{moduleManifest.title.ToLower()}.ini");
-            EditorUtility.DisplayProgressBar("上传资源", "正在上传配置文件...", now / count);
+
+                    if (folder.foldout)
+                    {
+                        if (folder.childs.Count > 0)
+                        {
+                            IEnumerable<OSSObject> folderList = folder.childs.Where(x => x.isFolder);
+                            foreach (var VARIABLE in folderList)
+                            {
+                                OnDrawingFolder(VARIABLE, 15);
+                            }
+
+                            foreach (var VARIABLE in folder.childs)
+                            {
+                                if (VARIABLE.isFolder)
+                                {
+                                    continue;
+                                }
+
+                                GUILayout.BeginHorizontal();
+                                GUILayout.Space(offset);
+                                GUILayout.Label(EditorGUIUtility.IconContent("Prefab Icon"), GUILayout.Width(20), GUILayout.Height(20));
+                                GUILayout.Label(VARIABLE.name);
+                                GUILayout.FlexibleSpace();
+                                VARIABLE.isOn = GUILayout.Toggle(VARIABLE.isOn, String.Empty);
+                                GUILayout.EndHorizontal();
+                            }
+                        }
+                    }
+                }
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndHorizontal();
         }
-
-        private void UploadCosService(string output, OSSOptions options, ResourceModuleManifest moduleManifest, params ResourceBundleManifest[] manifests)
-        {
-            float count = manifests.Length;
-            float now = 0;
-            long durationSecond = 600;
-            COSXML.Auth.QCloudCredentialProvider cosCredentialProvider = new COSXML.Auth.DefaultQCloudCredentialProvider(options.keyID, options.key, durationSecond);
-            COSXML.CosXmlConfig config = new COSXML.CosXmlConfig.Builder().IsHttps(true).SetRegion(options.url).SetDebugLog(true).Build();
-            COSXML.CosXmlServer cosClient = new COSXML.CosXmlServer(config, cosCredentialProvider);
-            COSXML.Model.Bucket.DoesBucketExistRequest bucketExistRequest = new COSXML.Model.Bucket.DoesBucketExistRequest(options.bucket);
-            string key = String.Empty;
-            COSXML.Model.Object.PutObjectResult result = default;
-            COSXML.Model.Object.PutObjectRequest request = default;
-            if (cosClient.DoesBucketExist(bucketExistRequest) is false)
-            {
-                COSXML.Model.Bucket.PutBucketRequest bucketRequestrequest = new COSXML.Model.Bucket.PutBucketRequest(options.bucket);
-                COSXML.Model.Bucket.PutBucketResult bucketResult = cosClient.PutBucket(bucketRequestrequest);
-            }
-
-
-            foreach (var file in manifests)
-            {
-                string bundleName = ($"{moduleManifest.title}_{file.name}.assetbundle").ToLower();
-                key = ($"{ZGame.GetPlatfrom()}/{bundleName}").ToLower();
-                request = new COSXML.Model.Object.PutObjectRequest(options.bucket, key, $"{output}/{bundleName}");
-                result = cosClient.PutObject(request);
-                now++;
-                EditorUtility.DisplayProgressBar("上传资源", "正在上传COS...", now / count);
-            }
-
-            key = ($"{ZGame.GetPlatfrom()}/{moduleManifest.title}.ini").ToLower();
-            request = new COSXML.Model.Object.PutObjectRequest(options.bucket, key, $"{output}/{moduleManifest.title.ToLower()}.ini");
-            result = cosClient.PutObject(request);
-            EditorUtility.DisplayProgressBar("上传资源", "正在上传配置文件...", now / count);
-        }
-    }
-
-    class OSSFileEntity : IDisposable
-    {
-        public void Dispose()
-        {
-        }
-    }
-
-    public class OSSApi
-    {
-        
     }
 }

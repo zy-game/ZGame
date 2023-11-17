@@ -61,6 +61,7 @@ namespace ZGame.Editor
             pageRoll = GUILayout.BeginScrollView(pageRoll);
             current.position = new Rect(position.x + leftWidth + 5, position.y, position.width - 325, position.height);
             current.search = search;
+            
             current.OnGUI();
             GUILayout.EndScrollView();
 

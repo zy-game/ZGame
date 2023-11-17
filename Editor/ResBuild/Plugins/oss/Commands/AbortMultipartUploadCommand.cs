@@ -3,7 +3,7 @@
  * All rights reserved.
  * 
  */
- 
+
 using System;
 using System.Collections.Generic;
 using Aliyun.OSS.Common.Communication;
@@ -14,7 +14,7 @@ namespace Aliyun.OSS.Commands
     internal class AbortMultipartUploadCommand : OssCommand
     {
         private readonly AbortMultipartUploadRequest _abortMultipartUploadRequest;
-        
+
         protected override HttpMethod Method
         {
             get { return HttpMethod.Delete; }
@@ -22,23 +22,17 @@ namespace Aliyun.OSS.Commands
 
         protected override string Bucket
         {
-            get
-            {
-                return _abortMultipartUploadRequest.BucketName;
-            }
+            get { return _abortMultipartUploadRequest.BucketName; }
         }
-        
+
         protected override string Key
         {
-            get
-            {
-                return _abortMultipartUploadRequest.Key;
-            }
+            get { return _abortMultipartUploadRequest.Key; }
         }
-        
+
         protected override IDictionary<string, string> Parameters
         {
-            get 
+            get
             {
                 var parameters = base.Parameters;
                 parameters[RequestParameters.UPLOAD_ID] = _abortMultipartUploadRequest.UploadId;
@@ -55,28 +49,29 @@ namespace Aliyun.OSS.Commands
                 {
                     headers.Add(OssHeaders.OssRequestPayer, RequestPayer.Requester.ToString().ToLowerInvariant());
                 }
+
                 return headers;
             }
         }
 
-        private AbortMultipartUploadCommand(IServiceClient client, Uri endpoint, ExecutionContext context, 
-                                            AbortMultipartUploadRequest abortMultipartUploadRequest)
+        private AbortMultipartUploadCommand(IServiceClient client, Uri endpoint, ExecutionContext context,
+            AbortMultipartUploadRequest abortMultipartUploadRequest)
             : base(client, endpoint, context)
-            
+
         {
             _abortMultipartUploadRequest = abortMultipartUploadRequest;
         }
-        
+
 
         public static AbortMultipartUploadCommand Create(IServiceClient client, Uri endpoint, ExecutionContext context,
-                                                 AbortMultipartUploadRequest abortMultipartUploadRequest)
+            AbortMultipartUploadRequest abortMultipartUploadRequest)
         {
             OssUtils.CheckBucketName(abortMultipartUploadRequest.BucketName);
             OssUtils.CheckObjectKey(abortMultipartUploadRequest.Key);
-            
+
             if (string.IsNullOrEmpty(abortMultipartUploadRequest.UploadId))
-                throw new ArgumentException("The parameter is empty or null.", "uploadId");          
-            
+                throw new ArgumentException("The parameter is empty or null.", "uploadId");
+
             return new AbortMultipartUploadCommand(client, endpoint, context, abortMultipartUploadRequest);
         }
     }
