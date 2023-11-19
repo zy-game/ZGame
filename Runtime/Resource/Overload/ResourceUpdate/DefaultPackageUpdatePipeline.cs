@@ -12,71 +12,19 @@ namespace ZGame.Resource
 {
     public sealed class DefaultPackageUpdatePipeline : IPackageUpdatePipeline
     {
-        private List<DownloadOptions> options;
-
         private void Clear()
         {
-            options.ForEach(x => x.Dispose());
-            options.Clear();
-        }
-
-        private void EqualsLocalFile(string fileName, uint version)
-        {
-            if (Engine.File.EqualsVersion(fileName, version) is false)
-            {
-                options.Add(new DownloadOptions()
-                {
-                    name = fileName,
-                    version = version,
-                    url = Engine.Resource.GetNetworkResourceUrl(fileName)
-                });
-            }
-        }
-
-        public async UniTask StartUpdate(BuilderManifest manifest, Action<float> progressCallback)
-        {
-            options = new List<DownloadOptions>();
-            foreach (var VARIABLE in manifest.packages)
-            {
-                EqualsLocalFile(VARIABLE.name, VARIABLE.version);
-                if (VARIABLE.dependencies is null || VARIABLE.dependencies.Length == 0)
-                {
-                    continue;
-                }
-
-                foreach (var VARIABLE2 in VARIABLE.dependencies)
-                {
-                    EqualsLocalFile(VARIABLE2.name, VARIABLE2.version);
-                }
-            }
-
-            if (options.Count == 0)
-            {
-                Clear();
-                return;
-            }
-
-            DownloadHandle[] downloadHandles = await Engine.Network.Download(progressCallback, options.ToArray());
-            if (downloadHandles.Where(x => x.error != null).Count() > 0)
-            {
-                throw new HttpRequestException(downloadHandles.Where(x => x.error != null).FirstOrDefault()?.error);
-            }
-
-            Clear();
         }
 
         public async UniTask StartUpdate(Action<float> progressCallback, params string[] args)
         {
-            options = new List<DownloadOptions>();
-            foreach (var VARIABLE in args)
+            if (args is null || args.Length == 0)
             {
-                options.Add(new DownloadOptions()
-                {
-                    name = VARIABLE,
-                    version = 0,
-                    url = Engine.Resource.GetNetworkResourceUrl(VARIABLE)
-                });
+                Clear();
+                return;
             }
+
+            List<DownloadOptions> options = await Checkout(args);
 
             if (options.Count == 0)
             {
@@ -92,6 +40,60 @@ namespace ZGame.Resource
             }
 
             Clear();
+        }
+
+        private async UniTask<List<DownloadOptions>> Checkout(string[] args)
+        {
+            List<DownloadOptions> options = new List<DownloadOptions>();
+            foreach (var VARIABLE in args)
+            {
+                if (VARIABLE.StartsWith("http") is false)
+                {
+                    PackageListManifest packageListManifest = await PackageListManifest.Find(VARIABLE);
+                    if (packageListManifest == null)
+                    {
+                        continue;
+                    }
+
+                    List<DownloadOptions> result = CheckPackageListManifest(packageListManifest);
+                    foreach (var op in result)
+                    {
+                        if (options.Find(x => x.name.Equals(op.name)) is null)
+                        {
+                            options.Add(op);
+                        }
+                    }
+
+                    continue;
+                }
+
+                string etag = await Engine.Network.Head(VARIABLE, "eTag");
+                if (etag.IsNullOrEmpty())
+                {
+                    continue;
+                }
+
+                uint crc = Crc32.GetCRC32Str(etag);
+                if (Engine.File.Exist(Path.GetFileName(VARIABLE), crc))
+                {
+                    continue;
+                }
+
+                options.Add(new DownloadOptions()
+                {
+                    name = Path.GetFileName(VARIABLE),
+                    version = crc,
+                    url = VARIABLE
+                });
+            }
+
+            return options;
+        }
+
+
+        private List<DownloadOptions> CheckPackageListManifest(PackageListManifest packageListManifest)
+        {
+            return default;
         }
 
         public void Dispose()

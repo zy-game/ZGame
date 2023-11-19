@@ -8,14 +8,29 @@ using ZGame.Networking;
 
 namespace ZGame.Resource
 {
+    public enum ResourceMode : byte
+    {
+        Networking,
+        StreamingAssets,
+    }
+
+    public enum RuntimeMode : byte
+    {
+        Editor,
+        Simulator,
+    }
+
+
     public sealed class ResourceManager : IManager
     {
-        public IAssetLoadingPipeline ResourcesLodaingPipeline;
-        public IAssetLoadingPipeline NetworkResourceLoadingPipeline;
-        public IAssetLoadingPipeline AssetBundleResourceLoadingPipeline;
-        public IAssetLoadingPipeline AssetDatabaseResourceLoadingPipeline;
-        public IPackageUpdatePipeline PackageUpdatePipeline;
-        public IPackageLoadingPipeline PackageLoadingPipeline;
+        private IAssetLoadingPipeline ResourcesLodaingPipeline;
+        private IAssetLoadingPipeline NetworkResourceLoadingPipeline;
+        private IAssetLoadingPipeline AssetBundleResourceLoadingPipeline;
+        private IAssetLoadingPipeline AssetDatabaseResourceLoadingPipeline;
+        private IPackageUpdatePipeline PackageUpdatePipeline;
+        private IPackageLoadingPipeline PackageLoadingPipeline;
+        private ResourceMode resouceMode;
+        private RuntimeMode runtimeMode;
         private List<AssetBundleHandle> _handles = new List<AssetBundleHandle>();
         private string address;
 
@@ -32,6 +47,16 @@ namespace ZGame.Resource
         public void SetResourceAddressable(string url)
         {
             this.address = url;
+        }
+
+        public void SetResourceMode(ResourceMode mode)
+        {
+            this.resouceMode = mode;
+        }
+
+        public void SetRuntimeMode(RuntimeMode mode)
+        {
+            this.runtimeMode = mode;
         }
 
         internal AssetBundleHandle FindAssetBundleHandle(AssetObjectHandle obj)
@@ -94,7 +119,7 @@ namespace ZGame.Resource
                 return default;
             }
 #if UNITY_EDITOR
-            if (Engine.IsHotfix is false)
+            if (runtimeMode == RuntimeMode.Editor)
             {
                 if (AssetDatabaseResourceLoadingPipeline is null)
                 {
@@ -142,8 +167,9 @@ namespace ZGame.Resource
 
                 return await NetworkResourceLoadingPipeline.LoadAssetAsync(path);
             }
+
 #if UNITY_EDITOR
-            if (Engine.IsHotfix is false)
+            if (runtimeMode == RuntimeMode.Editor)
             {
                 if (AssetDatabaseResourceLoadingPipeline is null)
                 {
@@ -164,89 +190,41 @@ namespace ZGame.Resource
         }
 
         /// <summary>
-        /// 加载资源模块
-        /// </summary>
-        /// <param name="groupName">资源组名</param>
-        /// <param name="progressUpdate">加载进度会回调</param>
-        /// <returns>资源列表加载任务</returns>
-        public async UniTask LoadingResourcePackageList(string groupName, Action<float> progressUpdate)
-        {
-#if UNITY_EDITOR
-            if (Engine.IsHotfix is false)
-            {
-                progressUpdate?.Invoke(1);
-                return;
-            }
-#endif
-            if (groupName.IsNullOrEmpty())
-            {
-                throw new ArgumentNullException("groupName");
-            }
-
-            BuilderManifest manifest = await BuilderManifest.Find(groupName);
-            if (manifest is null)
-            {
-                Debug.LogError(new ResourceModuleNotFoundException(groupName));
-                return;
-            }
-
-            if (PackageLoadingPipeline is null)
-            {
-                throw new NullReferenceException(nameof(PackageLoadingPipeline));
-                return;
-            }
-
-            await PackageLoadingPipeline.LoadingModulePackageList(manifest, progressUpdate);
-        }
-
-        /// <summary>
         /// 加载资源包列表
         /// </summary>
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async UniTask LoadingOhterPackageList(Action<float> progressCallback, params string[] args)
+        public async UniTask LoadingResourcePackageList(Action<float> progressCallback, params string[] args)
         {
+            if (args is null || args.Length == 0)
+            {
+                throw new ArgumentNullException("args");
+            }
+#if UNITY_EDITOR
+            if (runtimeMode == RuntimeMode.Editor)
+            {
+                progressCallback?.Invoke(1);
+                return;
+            }
+#endif
+
             if (PackageLoadingPipeline is null)
             {
                 throw new NullReferenceException(nameof(PackageLoadingPipeline));
             }
 
+            // PackageListManifest[] packageListManifests = new PackageListManifest[args.Length];
+            // for (int i = 0; i < args.Length; i++)
+            // {
+            //     if (args[i].StartsWith("http"))
+            //     {
+            //         
+            //     }
+            //     packageListManifests[i] = await PackageListManifest.Find(args[i]);
+            // }
+
             await PackageLoadingPipeline.LoadingPackageList(progressCallback, args);
-        }
-
-        /// <summary>
-        /// 更新资源组
-        /// </summary>
-        /// <param name="groupName">资源组名</param>
-        /// <param name="progressUpdate">更新进度会回调</param>
-        /// <returns>资源更新任务</returns>
-        public async UniTask UpdateResourcePackageList(string groupName, Action<float> progressUpdate)
-        {
-#if UNITY_EDITOR
-            if (Engine.IsHotfix is false)
-            {
-                progressUpdate?.Invoke(1);
-                return;
-            }
-#endif
-            if (groupName.IsNullOrEmpty())
-            {
-                throw new ArgumentNullException("groupName");
-            }
-
-            BuilderManifest manifest = await BuilderManifest.Find(groupName);
-            if (manifest is null)
-            {
-                throw new ResourceModuleNotFoundException(groupName);
-            }
-
-            if (PackageUpdatePipeline is null)
-            {
-                throw new NullReferenceException(nameof(PackageUpdatePipeline));
-            }
-
-            await PackageUpdatePipeline.StartUpdate(manifest, progressUpdate);
         }
 
         /// <summary>
@@ -255,12 +233,33 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <exception cref="NullReferenceException"></exception>
-        public async UniTask UpdateResourceList(Action<float> progressCallback, params string[] args)
+        public async UniTask CheckUpdateResourcePackageList(Action<float> progressCallback, params string[] args)
         {
+            if (args is null || args.Length == 0)
+            {
+                throw new ArgumentNullException("args");
+            }
+#if UNITY_EDITOR
+            if (runtimeMode == RuntimeMode.Editor)
+            {
+                progressCallback?.Invoke(1);
+                return;
+            }
+#endif
             if (PackageUpdatePipeline is null)
             {
                 throw new NullReferenceException(nameof(PackageUpdatePipeline));
             }
+
+            // PackageListManifest[] manifests = new PackageListManifest[args.Length];
+            // for (int i = 0; i < manifests.Length; i++)
+            // {
+            //     if (args[i].StartsWith("http"))
+            //     {
+            //         
+            //     }
+            //     manifests[i] = await PackageListManifest.Find(args[i]);
+            // }
 
             await PackageUpdatePipeline.StartUpdate(progressCallback, args);
         }
@@ -284,13 +283,14 @@ namespace ZGame.Resource
             AssetDatabaseResourceLoadingPipeline?.Dispose();
             PackageUpdatePipeline?.Dispose();
             PackageLoadingPipeline?.Dispose();
-
+            _handles.Clear();
             ResourcesLodaingPipeline = null;
-            NetworkResourceLoadingPipeline = null;
             AssetBundleResourceLoadingPipeline = null;
+            NetworkResourceLoadingPipeline = null;
             AssetDatabaseResourceLoadingPipeline = null;
             PackageUpdatePipeline = null;
             PackageLoadingPipeline = null;
+            _handles = null;
         }
     }
 }

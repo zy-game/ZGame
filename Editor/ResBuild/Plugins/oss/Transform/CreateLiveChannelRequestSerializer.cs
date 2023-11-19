@@ -7,7 +7,6 @@
 using System.IO;
 using Aliyun.OSS.Util;
 using Aliyun.OSS.Model;
-using Aliyun.OSS.Domain;
 
 namespace Aliyun.OSS.Transform
 {

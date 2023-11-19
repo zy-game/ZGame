@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -193,6 +195,11 @@ namespace ZGame.Editor
         public static void Refresh()
         {
             _docker?.Repaint();
+        }
+
+        public static void StartCoroutine(IEnumerator enumerator)
+        {
+            _docker.StartCoroutine(enumerator);
         }
     }
 }

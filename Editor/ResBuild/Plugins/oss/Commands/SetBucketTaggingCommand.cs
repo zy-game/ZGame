@@ -10,7 +10,6 @@ using System.IO;
 using Aliyun.OSS.Common.Communication;
 using Aliyun.OSS.Util;
 using Aliyun.OSS.Transform;
-using Aliyun.OSS.Domain;
 
 namespace Aliyun.OSS.Commands
 {

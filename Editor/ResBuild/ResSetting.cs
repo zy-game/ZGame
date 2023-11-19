@@ -22,7 +22,6 @@ namespace ZGame.Editor.ResBuild
             EditorGUI.BeginDisabledGroup(BuilderConfig.instance.useActiveTarget);
             BuilderConfig.instance.target = (BuildTarget)EditorGUILayout.EnumPopup("编译平台", BuilderConfig.instance.target);
             EditorGUI.EndDisabledGroup();
-            BuilderConfig.instance.output = EditorGUILayout.TextField("输出路径", BuilderConfig.instance.output);
             BuilderConfig.instance.fileExtension = EditorGUILayout.TextField("文件扩展名", BuilderConfig.instance.fileExtension);
             GUILayout.EndVertical();
 

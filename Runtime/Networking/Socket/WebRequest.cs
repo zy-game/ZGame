@@ -13,6 +13,7 @@ namespace ZGame.Networking
         string url { get; }
         UniTask<T> GetAsync<T>();
         UniTask<T> PostAsync<T>(Dictionary<string, string> headers, object data);
+        UniTask<string> Head(string headName);
 
         public static IWebRequestPipeline Create(string url)
         {
@@ -69,6 +70,18 @@ namespace ZGame.Networking
 
                 Behaviour.instance.StartCoroutine(Start(taskCompletionSource));
                 return await taskCompletionSource.Task;
+            }
+
+            public async UniTask<string> Head(string headName)
+            {
+                request = UnityWebRequest.Head(url);
+                request.timeout = 5;
+                request.useHttpContinue = true;
+                //通过UnityWebRequest获取head
+                await request.SendWebRequest().ToUniTask();
+                string result = request.GetResponseHeader(headName);
+                request.Dispose();
+                return result;
             }
 
 

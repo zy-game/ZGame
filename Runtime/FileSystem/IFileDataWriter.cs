@@ -2,22 +2,22 @@ using System;
 
 namespace ZGame.FileSystem
 {
-    public interface IWriteFileResult : IDisposable
+    public interface IFileDataWriter : IDisposable
     {
         string name { get; }
         byte[] bytes { get; }
         uint version { get; }
 
-        internal static IWriteFileResult Create(string name, byte[] bytes, uint version)
+        internal static IFileDataWriter Create(string name, byte[] bytes, uint version)
         {
-            InternalVfsWriteFileResult internalVfsWriteFile = Activator.CreateInstance<InternalVfsWriteFileResult>();
-            internalVfsWriteFile.name = name;
-            internalVfsWriteFile.bytes = bytes;
-            internalVfsWriteFile.version = version;
-            return internalVfsWriteFile;
+            FileDataWritePipeline fileWriter = Activator.CreateInstance<FileDataWritePipeline>();
+            fileWriter.name = name;
+            fileWriter.bytes = bytes;
+            fileWriter.version = version;
+            return fileWriter;
         }
 
-        class InternalVfsWriteFileResult : IWriteFileResult
+        class FileDataWritePipeline : IFileDataWriter
         {
             public string name { get; set; }
             public byte[] bytes { get; set; }

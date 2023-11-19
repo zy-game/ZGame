@@ -14,7 +14,6 @@ namespace ZGame.Editor.ResBuild.Config
         public bool useActiveTarget = true;
         public BuildAssetBundleOptions comperss;
         public BuildTarget target;
-        public string output;
         public string fileExtension;
         private static BuilderConfig _instance;
 
@@ -59,6 +58,20 @@ namespace ZGame.Editor.ResBuild.Config
             EditorUtility.SetDirty(_instance);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        public static string output
+        {
+            get
+            {
+                string path = Application.dataPath + "/../output/";
+                if (Directory.Exists(path) == false)
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                return path;
+            }
         }
     }
 }

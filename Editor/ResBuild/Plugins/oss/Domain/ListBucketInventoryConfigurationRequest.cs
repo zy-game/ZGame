@@ -1,5 +1,4 @@
 ﻿using System;
-using Aliyun.OSS.Domain;
 
 namespace Aliyun.OSS
 {    /// <summary>

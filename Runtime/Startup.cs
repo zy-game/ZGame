@@ -41,26 +41,23 @@ public class Startup : MonoBehaviour
         }
 
         Loading loading = Engine.Window.GeOrOpentWindow<Loading>();
-        await Engine.Resource.UpdateResourcePackageList(setting.module, loading.SetupProgress);
-        await Engine.Resource.LoadingResourcePackageList(setting.module, loading.SetupProgress);
+        await Engine.Resource.CheckUpdateResourcePackageList(loading.SetupProgress, setting.module);
+        await Engine.Resource.LoadingResourcePackageList(loading.SetupProgress, setting.module);
     }
 
     private static async UniTask EntryGame(GameSeting settings)
     {
         Assembly assembly = default;
 #if UNITY_EDITOR
-        if (Engine.IsHotfix is false)
+        if (settings.dll.IsNullOrEmpty())
         {
-            if (settings.dll.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(settings.dll));
-            }
-
-            string dllName = Path.GetFileNameWithoutExtension(settings.dll);
-            assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
-            CallGameEntryMethod();
-            return;
+            throw new NullReferenceException(nameof(settings.dll));
         }
+
+        string dllName = Path.GetFileNameWithoutExtension(settings.dll);
+        assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
+        CallGameEntryMethod();
+        return;
 #endif
         TextAsset textAsset = Engine.Resource.LoadAsset(Path.GetFileNameWithoutExtension(settings.dll) + ".bytes")?.Require<TextAsset>();
         if (textAsset == null)

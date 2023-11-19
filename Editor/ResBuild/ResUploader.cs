@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -41,12 +42,12 @@ namespace ZGame.Editor.ResBuild
 
             if (GUILayout.Button("上传", EditorStyles.toolbarButton))
             {
-                manager.Upload();
+                manager.Upload(() => { EditorUtility.DisplayDialog("提示", "上传完成", "ok"); });
             }
 
             if (GUILayout.Button("下载", EditorStyles.toolbarButton))
             {
-                manager.Download();
+                manager.Download(() => { EditorUtility.DisplayDialog("提示", "下载完成", "ok"); });
             }
 
             GUILayout.EndHorizontal();
@@ -115,9 +116,16 @@ namespace ZGame.Editor.ResBuild
 
                                 GUILayout.BeginHorizontal();
                                 GUILayout.Space(offset);
-                                GUILayout.Label(EditorGUIUtility.IconContent("Prefab Icon"), GUILayout.Width(20), GUILayout.Height(20));
+                                GUILayout.Label(EditorGUIUtility.IconContent(GetUnityInternalAssetIcon(VARIABLE.name)), GUILayout.Width(20), GUILayout.Height(20));
                                 GUILayout.Label(VARIABLE.name);
+
+
                                 GUILayout.FlexibleSpace();
+                                if (VARIABLE.progrss > 0)
+                                {
+                                    EditorGUI.ProgressBar(GUILayoutUtility.GetRect(200, 20), VARIABLE.progrss, $"{(VARIABLE.progrss * 100)}%");
+                                }
+
                                 VARIABLE.isOn = GUILayout.Toggle(VARIABLE.isOn, String.Empty);
                                 GUILayout.EndHorizontal();
                             }
@@ -127,6 +135,40 @@ namespace ZGame.Editor.ResBuild
                 GUILayout.EndVertical();
             }
             GUILayout.EndHorizontal();
+        }
+
+        private string GetUnityInternalAssetIcon(string name)
+        {
+            //更具name的扩展名获取unity内置资源icon图标
+            return Path.GetExtension(name) switch
+            {
+                
+                ".png" => "Texture Icon",
+                ".jpg" => "Texture Icon",
+                ".jpeg" => "Texture Icon",
+                ".tga" => "Texture Icon",
+                ".psd" => "Texture Icon",
+                ".tiff" => "Texture Icon",
+                ".gif" => "Texture Icon",
+                ".bmp" => "Texture Icon",
+                ".ico" => "Texture Icon",
+                ".hdr" => "HDR Icon",
+                ".exr" => "HDR Icon",
+                ".mat" => "Material Icon",
+                ".anim" => "Animator Icon",
+                ".controller" => "Animator Controller Icon",
+                ".shader" => "Shader Icon",
+                ".cginc" => "Shader Icon",
+                ".compute" => "Compute Shader Icon",
+                ".unity" => "SceneAsset Icon",
+                ".unity3d" => "SceneAsset Icon",
+                ".assetbundle"=> "SceneAsset Icon",
+                ".prefab" => "Prefab Icon",
+                ".asset" => "Asset Icon",
+                ".zip" => "Zip Icon",
+                ".rar" => "Zip Icon",
+                ".ini" => "Text Icon"
+            };
         }
     }
 }

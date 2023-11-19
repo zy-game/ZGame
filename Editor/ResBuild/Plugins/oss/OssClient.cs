@@ -10,7 +10,6 @@ using System.Net;
 using System.Threading;
 using System.Globalization;
 using System.Collections.Generic;
-using Aliyun.OSS.Domain;
 using Aliyun.OSS.Commands;
 using Aliyun.OSS.Util;
 using Aliyun.OSS.Common;
@@ -180,7 +179,7 @@ namespace Aliyun.OSS
 
             if (!endpoint.ToString().StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
                 !endpoint.ToString().StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException(OssResources.EndpointNotSupportedProtocal, "endpoint");
+                throw new ArgumentException("EndpointNotSupportedProtocal", "endpoint");
 
             if (credsProvider == null)
                 throw new ArgumentException("The parameter is empty or null.", "credsProvider");
@@ -582,7 +581,7 @@ namespace Aliyun.OSS
             if (string.IsNullOrEmpty(bucketName))
                 throw new ArgumentException("The parameter is empty or null.", "bucketName");
             if (!OssUtils.IsBucketNameValid(bucketName))
-                throw new ArgumentException(OssResources.BucketNameInvalid, "bucketName");
+                throw new ArgumentException("BucketNameInvalid", "bucketName");
 
             try
             {

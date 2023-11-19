@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using ZGame.Localization;
+using ZGame.Resource;
 
 namespace ZGame
 {
@@ -18,11 +19,6 @@ namespace ZGame
         public bool active;
 
         /// <summary>
-        /// 是否在编辑器使用热更模式
-        /// </summary>
-        public bool useHotfix;
-
-        /// <summary>
         /// 默认语言
         /// </summary>
         public Language Language;
@@ -37,6 +33,15 @@ namespace ZGame
         /// </summary>
         public string module;
 
+        /// <summary>
+        /// 资源模式
+        /// </summary>
+        public ResourceMode resMode;
+
+        /// <summary>
+        /// 运行方式
+        /// </summary>
+        public RuntimeMode runtime;
         /// <summary>
         /// DLL 名称
         /// </summary>

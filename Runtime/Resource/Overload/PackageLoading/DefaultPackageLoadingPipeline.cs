@@ -22,6 +22,7 @@ namespace ZGame.Resource
             GC.SuppressFinalize(this);
         }
 
+
         public async UniTask LoadingPackageList(Action<float> progressCallback, params string[] args)
         {
             index = 0;
@@ -30,32 +31,11 @@ namespace ZGame.Resource
             foreach (var VARIABLE in args)
             {
                 await LoadAssetBundleFromFile(VARIABLE, 0, progressCallback);
+                index++;
+                progressCallback?.Invoke(index / count);
             }
 
             Clear();
-        }
-
-        public async UniTask LoadingModulePackageList(BuilderManifest manifest, Action<float> progressCallback)
-        {
-            index = 0;
-            loaded = new HashSet<string>();
-            count = (float)(manifest.packages?.Length + manifest.packages.Sum(x => x.dependencies?.Length));
-            progressCallback?.Invoke(0);
-            foreach (var VARIABLE in manifest.packages)
-            {
-                if (VARIABLE.dependencies is not null && VARIABLE.dependencies.Length > 0)
-                {
-                    foreach (var dependencie in VARIABLE.dependencies)
-                    {
-                        await LoadAssetBundleFromFile(dependencie.name, dependencie.version, progressCallback);
-                    }
-                }
-
-                await LoadAssetBundleFromFile(VARIABLE.name, VARIABLE.version, progressCallback);
-            }
-
-            Clear();
-            progressCallback?.Invoke(1);
         }
 
         private async UniTask LoadAssetBundleFromFile(string fileName, uint version, Action<float> progressCallback)
@@ -65,22 +45,21 @@ namespace ZGame.Resource
                 return;
             }
 
-            if (Engine.File.EqualsVersion(fileName, version) is false)
+            if (Engine.File.Exist(fileName, version) is false)
             {
                 throw new FileNotFoundException(fileName);
             }
 
-            IReadFileResult readFileResult = await Engine.File.ReadAsync(fileName);
-            if (readFileResult.bytes is null || readFileResult.bytes.Length == 0)
+            IFileDataReader fileDataReader = await Engine.File.ReadAsync(fileName);
+            if (fileDataReader.bytes is null || fileDataReader.bytes.Length == 0)
             {
-                throw new FileLoadException(readFileResult.name);
+                throw new FileLoadException(fileDataReader.name);
             }
 
-            AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(readFileResult.bytes);
+            AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(fileDataReader.bytes);
             Engine.Resource.AddAssetBundleHandle(assetBundle);
-            readFileResult.Dispose();
-            index++;
-            progressCallback?.Invoke(index / count);
+            fileDataReader.Dispose();
+     
         }
 
         private void Clear()

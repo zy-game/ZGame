@@ -19,6 +19,7 @@ namespace ZGame.Editor
     {
         private Startup _startup;
         private List<Type> types;
+
         public void OnEnable()
         {
             _startup = (Startup)target;
@@ -68,8 +69,9 @@ namespace ZGame.Editor
         private void DrawingSetting(GameSeting seting)
         {
             seting.active = EditorGUILayout.Toggle("启用", seting.active);
-            seting.useHotfix = EditorGUILayout.Toggle(new GUIContent("启用热更", "该字段只在编辑器中有效"), seting.useHotfix);
             seting.Language = (Language)EditorGUILayout.EnumPopup("默认语言", seting.Language);
+            seting.resMode = (ResourceMode)EditorGUILayout.EnumPopup("资源模式", seting.resMode);
+            seting.runtime = (RuntimeMode)EditorGUILayout.EnumPopup("运行方式", seting.runtime);
             List<string> resList = BuilderConfig.instance.packages?.Select(x => x.name).ToList();
             if (seting.module.IsNullOrEmpty() && resList.Count > 0)
             {

@@ -82,9 +82,8 @@ namespace ZGame.Editor.ResBuild
                 builds.Add(GetRuleBuildBundles(VARIABLE));
             }
 
-            BuildTarget buildTarget = BuilderConfig.instance.useActiveTarget ? EditorUserBuildSettings.activeBuildTarget : BuilderConfig.instance.target;
 
-            OnBuildBundle(BuilderConfig.instance.output, buildTarget, builds.ToArray());
+            OnBuildBundle(builds.ToArray());
         }
 
         private string GetBundleName(PackageSeting ruler, string name)
@@ -157,7 +156,7 @@ namespace ZGame.Editor.ResBuild
             };
         }
 
-        private void OnBuildBundle(string output, BuildTarget target, params BuildItem[] builds)
+        private void OnBuildBundle(params BuildItem[] builds)
         {
             List<AssetBundleBuild> list = new List<AssetBundleBuild>();
             foreach (var VARIABLE in builds)
@@ -165,13 +164,14 @@ namespace ZGame.Editor.ResBuild
                 list.AddRange(VARIABLE.builds);
             }
 
-            output = target switch
+            BuildTarget target = BuilderConfig.instance.useActiveTarget ? EditorUserBuildSettings.activeBuildTarget : BuilderConfig.instance.target;
+            string output = target switch
             {
-                BuildTarget.StandaloneWindows64 => output + "/windows",
-                BuildTarget.Android => output + "/android",
-                BuildTarget.WebGL => output + "/webgl",
-                BuildTarget.iOS => output + "/ios",
-                _ => output + "/none"
+                BuildTarget.StandaloneWindows64 => BuilderConfig.output + "windows",
+                BuildTarget.Android => BuilderConfig.output + "android",
+                BuildTarget.WebGL => BuilderConfig.output + "webgl",
+                BuildTarget.iOS => BuilderConfig.output + "ios",
+                _ => BuilderConfig.output + "none"
             };
 
             var manifest = BuildPipeline.BuildAssetBundles(output, list.ToArray(), BuildAssetBundleOptions.None, target);
@@ -180,26 +180,26 @@ namespace ZGame.Editor.ResBuild
 
             foreach (var VARIABLE in builds)
             {
-                BuilderManifest builderManifest = new BuilderManifest();
-                builderManifest.name = VARIABLE.ruler.folder.name;
-                builderManifest.packages = new PackageManifest[VARIABLE.builds.Length];
-                builderManifest.version = Crc32.GetCRC32Str(DateTime.Now.ToString("g"));
+                PackageListManifest packageListManifest = new PackageListManifest();
+                packageListManifest.name = VARIABLE.ruler.folder.name;
+                packageListManifest.packages = new PackageManifest[VARIABLE.builds.Length];
+                packageListManifest.version = Crc32.GetCRC32Str(DateTime.Now.ToString("g"));
 
                 for (int i = 0; i < VARIABLE.builds.Length; i++)
                 {
                     string[] dependencies = manifest.GetAllDependencies(VARIABLE.builds[i].assetBundleName);
                     BuildPipeline.GetCRCForAssetBundle(output + "/" + VARIABLE.builds[i].assetBundleName, out crc);
-                    builderManifest.packages[i] = new PackageManifest()
+                    packageListManifest.packages[i] = new PackageManifest()
                     {
                         name = VARIABLE.builds[i].assetBundleName,
                         version = crc,
                         dependencies = new Dependencies[dependencies.Length],
                         files = VARIABLE.builds[i].assetNames
                     };
-                    for (int j = 0; j < builderManifest.packages[i].dependencies.Length; j++)
+                    for (int j = 0; j < packageListManifest.packages[i].dependencies.Length; j++)
                     {
                         BuildPipeline.GetCRCForAssetBundle(output + "/" + dependencies[j], out crc);
-                        builderManifest.packages[i].dependencies[j] = new Dependencies()
+                        packageListManifest.packages[i].dependencies[j] = new Dependencies()
                         {
                             name = dependencies[j],
                             version = crc
@@ -207,7 +207,7 @@ namespace ZGame.Editor.ResBuild
                     }
                 }
 
-                File.WriteAllText($"{output}/{VARIABLE.ruler.folder.name}.ini", JsonConvert.SerializeObject(builderManifest));
+                File.WriteAllText($"{output}/{VARIABLE.ruler.folder.name}.ini", JsonConvert.SerializeObject(packageListManifest));
             }
 
             EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");

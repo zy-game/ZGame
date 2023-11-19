@@ -11,7 +11,6 @@ using System.Net;
 using System.Threading;
 using System.Collections.Generic;
 
-using Aliyun.OSS.Domain;
 using Aliyun.OSS.Commands;
 using Aliyun.OSS.Util;
 using Aliyun.OSS.Common;

@@ -29,7 +29,7 @@ namespace ZGame.Resource
             if (result is null)
             {
 #if UNITY_EDITOR
-                result = new AssetObjectHandle(UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(Object)), path);
+                result = new AssetObjectHandle(UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(UnityEngine.Object)), path);
                 await UniTask.Delay(1);
                 resources.Add(result);
 #endif

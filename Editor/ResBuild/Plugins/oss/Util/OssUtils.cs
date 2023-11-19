@@ -14,7 +14,6 @@ using System.Text.RegularExpressions;
 using Aliyun.OSS.Common;
 using Aliyun.OSS.Common.Communication;
 using Aliyun.OSS.Commands;
-using Aliyun.OSS.Domain;
 using Aliyun.OSS.Common.Internal;
 
 namespace Aliyun.OSS.Util
@@ -318,7 +317,7 @@ namespace Aliyun.OSS.Util
             if (string.IsNullOrEmpty(bucketName))
                 throw new ArgumentException("The parameter is empty or null.", "bucketName");
             if (!IsBucketNameValid(bucketName))
-                throw new ArgumentException(OssResources.BucketNameInvalid, "bucketName");
+                throw new ArgumentException("BucketNameInvalid", "bucketName");
         }
 
         internal static void CheckObjectKey(string key)
@@ -326,7 +325,7 @@ namespace Aliyun.OSS.Util
             if (string.IsNullOrEmpty(key))
                 throw new ArgumentException("The parameter is empty or null.", "key");
             if (!IsObjectKeyValid(key))
-                throw new ArgumentException(OssResources.ObjectKeyInvalid, "key");
+                throw new ArgumentException("ObjectKeyInvalid", "key");
         }
 
         internal static string DetermineOsVersion()

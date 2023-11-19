@@ -46,7 +46,7 @@ namespace ZGame.Networking
     {
         private List<IDispatcher> messageRecvierPipelines = new List<IDispatcher>();
         private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
-        
+
 
         public async UniTask<IChannel> Connect(string address)
         {
@@ -117,6 +117,12 @@ namespace ZGame.Networking
         {
             IWebRequestPipeline webRequestPipeline = IWebRequestPipeline.Create(url);
             return await webRequestPipeline.PostAsync<T>(header, data);
+        }
+
+        public async UniTask<string> Head(string url, string headName)
+        {
+            IWebRequestPipeline webRequestPipeline = IWebRequestPipeline.Create(url);
+            return await webRequestPipeline.Head(headName);
         }
 
         public async UniTask<DownloadHandle[]> Download(Action<float> progress, params DownloadOptions[] args)

@@ -43,13 +43,12 @@ MonoBehaviour:
   - title: "\u6D4B\u8BD5-\u963F\u91CC\u4E91"
     type: 0
     appid: 
-    bucket: black
+    bucket: test10291
     region: cn-chengdu
     address: 
-    key: LTAI5tLijfMAKY27BnjSia9J
-    password: 4m3IYJbwKZXJbT9l66Cop9yZQMdoaH
+    key: LTAI5tD6j25qsHhsvW1DoY5f
+    password: KIqW5G7Tvr0QY7ZiZ9fKPmEHHVpDOF
   useActiveTarget: 1
   comperss: 0
   target: 5
-  output: E:\ZEngine\output
   fileExtension: .assetbundle

@@ -48,7 +48,7 @@ namespace ZGame.FileSystem
             Saved();
         }
 
-        public bool EqualsVersion(string fileName, uint version)
+        public bool Exist(string fileName, uint version)
         {
             VFSData vfsData = segments.Find(x => x.name == fileName);
             if (vfsData is null)
@@ -127,7 +127,7 @@ namespace ZGame.FileSystem
             return segments.Where(x => x.name == fileName).ToArray();
         }
 
-        public IWriteFileResult Write(string fileName, byte[] bytes, uint version)
+        public IFileDataWriter Write(string fileName, byte[] bytes, uint version)
         {
             Delete(fileName);
             VFSData[] vfsDataList = GetFreeSgement(bytes.Length);
@@ -154,10 +154,10 @@ namespace ZGame.FileSystem
             }
 
             Saved();
-            return IWriteFileResult.Create(fileName, bytes, version);
+            return IFileDataWriter.Create(fileName, bytes, version);
         }
 
-        public async UniTask<IWriteFileResult> WriteAsync(string fileName, byte[] bytes, uint version)
+        public async UniTask<IFileDataWriter> WriteAsync(string fileName, byte[] bytes, uint version)
         {
             Delete(fileName);
             VFSData[] vfsDataList = GetFreeSgement(bytes.Length);
@@ -184,10 +184,10 @@ namespace ZGame.FileSystem
             }
 
             Saved();
-            return IWriteFileResult.Create(fileName, bytes, version);
+            return IFileDataWriter.Create(fileName, bytes, version);
         }
 
-        public IReadFileResult Read(string fileName)
+        public IFileDataReader Read(string fileName)
         {
             if (Exsit(fileName) is false)
             {
@@ -214,10 +214,10 @@ namespace ZGame.FileSystem
                 offset += VARIABLE.fileLenght;
             }
 
-            return IReadFileResult.Create(fileName, bytes, vfsDatas[0].time, vfsDatas[0].version);
+            return IFileDataReader.Create(fileName, bytes, vfsDatas[0].time, vfsDatas[0].version);
         }
 
-        public async UniTask<IReadFileResult> ReadAsync(string fileName)
+        public async UniTask<IFileDataReader> ReadAsync(string fileName)
         {
             if (Exsit(fileName) is false)
             {
@@ -244,7 +244,7 @@ namespace ZGame.FileSystem
                 offset += VARIABLE.fileLenght;
             }
 
-            return IReadFileResult.Create(fileName, bytes, vfsDatas[0].time, vfsDatas[0].version);
+            return IFileDataReader.Create(fileName, bytes, vfsDatas[0].time, vfsDatas[0].version);
         }
     }
 }

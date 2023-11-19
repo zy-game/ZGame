@@ -4,24 +4,24 @@ using System.Linq;
 
 namespace ZGame.FileSystem
 {
-    public interface IReadFileResult : IDisposable
+    public interface IFileDataReader : IDisposable
     {
         string name { get; }
         long time { get; }
         byte[] bytes { get; }
         uint version { get; }
 
-        internal static IReadFileResult Create(string name, byte[] bytes, long time, uint version)
+        internal static IFileDataReader Create(string name, byte[] bytes, long time, uint version)
         {
-            InternalVfsReadResult internalVfsReadResult = Activator.CreateInstance<InternalVfsReadResult>();
-            internalVfsReadResult.name = name;
-            internalVfsReadResult.version = version;
-            internalVfsReadResult.bytes = bytes;
-            internalVfsReadResult.time = time;
-            return internalVfsReadResult;
+            FileReaderPipeline fileReaderPipeline = Activator.CreateInstance<FileReaderPipeline>();
+            fileReaderPipeline.name = name;
+            fileReaderPipeline.version = version;
+            fileReaderPipeline.bytes = bytes;
+            fileReaderPipeline.time = time;
+            return fileReaderPipeline;
         }
 
-        class InternalVfsReadResult : IReadFileResult
+        class FileReaderPipeline : IFileDataReader
         {
             public string name { get; set; }
             public long time { get; set; }
