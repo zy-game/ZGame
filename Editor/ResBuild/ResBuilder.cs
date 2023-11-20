@@ -180,16 +180,16 @@ namespace ZGame.Editor.ResBuild
 
             foreach (var VARIABLE in builds)
             {
-                PackageListManifest packageListManifest = new PackageListManifest();
+                ResourcePackageListManifest packageListManifest = new ResourcePackageListManifest();
                 packageListManifest.name = VARIABLE.ruler.folder.name;
-                packageListManifest.packages = new PackageManifest[VARIABLE.builds.Length];
+                packageListManifest.packages = new ResourcePackageManifest[VARIABLE.builds.Length];
                 packageListManifest.version = Crc32.GetCRC32Str(DateTime.Now.ToString("g"));
 
                 for (int i = 0; i < VARIABLE.builds.Length; i++)
                 {
                     string[] dependencies = manifest.GetAllDependencies(VARIABLE.builds[i].assetBundleName);
                     BuildPipeline.GetCRCForAssetBundle(output + "/" + VARIABLE.builds[i].assetBundleName, out crc);
-                    packageListManifest.packages[i] = new PackageManifest()
+                    packageListManifest.packages[i] = new ResourcePackageManifest()
                     {
                         name = VARIABLE.builds[i].assetBundleName,
                         version = crc,

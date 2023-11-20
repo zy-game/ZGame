@@ -6,8 +6,16 @@ using ZGame.Resource;
 
 namespace ZGame
 {
-    public sealed class Entry : Attribute
+    public enum ResourceMode : byte
     {
+        Networking,
+        StreamingAssets,
+    }
+
+    public enum RuntimeMode : byte
+    {
+        Editor,
+        Simulator,
     }
 
     [Serializable]
@@ -42,6 +50,7 @@ namespace ZGame
         /// 运行方式
         /// </summary>
         public RuntimeMode runtime;
+
         /// <summary>
         /// DLL 名称
         /// </summary>
@@ -51,5 +60,27 @@ namespace ZGame
         /// 补元数据列表
         /// </summary>
         public List<string> aot;
+
+        public static GameSeting current { get; set; }
+
+        public static string GetPlatformName()
+        {
+#if UNITY_ANDROID
+            return "android";
+#elif UNITY_IPHONE
+            return "ios";
+#endif
+            return "windows";
+        }
+
+        /// <summary>
+        /// 获取文件资源地址
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public static string GetNetworkResourceUrl(string fileName)
+        {
+            return $"{GameSeting.current.address}/{Extension.GetPlatformName()}/{fileName}";
+        }
     }
 }

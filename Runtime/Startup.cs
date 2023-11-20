@@ -18,19 +18,18 @@ public class Startup : MonoBehaviour
 
     private async void Start()
     {
-        GameSeting setting = GameSettings.Find(x => x.active);
-        Engine.Initialized(setting);
-        Engine.Cameras.NewCamera("UICamera", 999, "UI");
-        Loading loading = Engine.Window.GeOrOpentWindow<Loading>();
-        if (setting is null)
+        GameSeting.current = GameSettings.Find(x => x.active);
+        LayerManager.instance.NewCamera("UICamera", 999, "UI");
+        Loading loading = UIManager.instance.GeOrOpentWindow<Loading>();
+        if (GameSeting.current is null)
         {
             Debug.LogError(new EntryPointNotFoundException());
             return;
         }
 
 
-        await UpdateAndLoadingResourcePackageList(setting);
-        await EntryGame(setting);
+        await UpdateAndLoadingResourcePackageList(GameSeting.current);
+        await EntryGame(GameSeting.current);
     }
 
     private static async UniTask UpdateAndLoadingResourcePackageList(GameSeting setting)
@@ -40,9 +39,9 @@ public class Startup : MonoBehaviour
             throw new ResourceModuleNotFoundException();
         }
 
-        Loading loading = Engine.Window.GeOrOpentWindow<Loading>();
-        await Engine.Resource.CheckUpdateResourcePackageList(loading.SetupProgress, setting.module);
-        await Engine.Resource.LoadingResourcePackageList(loading.SetupProgress, setting.module);
+        Loading loading = UIManager.instance.GeOrOpentWindow<Loading>();
+        await ResourceManager.instance.CheckUpdateResourcePackageList(loading.SetupProgress, setting.module);
+        await ResourceManager.instance.LoadingResourcePackageList(loading.SetupProgress, setting.module);
     }
 
     private static async UniTask EntryGame(GameSeting settings)
@@ -59,7 +58,7 @@ public class Startup : MonoBehaviour
         CallGameEntryMethod();
         return;
 #endif
-        TextAsset textAsset = Engine.Resource.LoadAsset(Path.GetFileNameWithoutExtension(settings.dll) + ".bytes")?.Require<TextAsset>();
+        TextAsset textAsset = ResourceManager.instance.LoadAsset(Path.GetFileNameWithoutExtension(settings.dll) + ".bytes")?.Require<TextAsset>();
         if (textAsset == null)
         {
             throw new NullReferenceException(settings.dll);
@@ -68,7 +67,7 @@ public class Startup : MonoBehaviour
         HomologousImageMode mode = HomologousImageMode.SuperSet;
         foreach (var item in settings.aot)
         {
-            textAsset = Engine.Resource.LoadAsset(Path.GetFileNameWithoutExtension(item) + ".bytes")?.Require<TextAsset>();
+            textAsset = ResourceManager.instance.LoadAsset(Path.GetFileNameWithoutExtension(item) + ".bytes")?.Require<TextAsset>();
             if (textAsset == null)
             {
                 throw new Exception("加载AOT补元数据资源失败:" + item);

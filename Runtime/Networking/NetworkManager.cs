@@ -9,6 +9,7 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using UnityEngine;
 using UnityEngine.Networking;
+using ZGame.FileSystem;
 
 namespace ZGame.Networking
 {
@@ -42,7 +43,7 @@ namespace ZGame.Networking
         public string error;
     }
 
-    public class NetworkManager : IManager
+    public class NetworkManager : SingletonBehaviour<NetworkManager>
     {
         private List<IDispatcher> messageRecvierPipelines = new List<IDispatcher>();
         private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
@@ -145,10 +146,10 @@ namespace ZGame.Networking
                     version = args[i].version,
                     bytes = Array.Empty<byte>()
                 };
-                Behaviour.instance.StartCoroutine(Download(handles[i]));
+                StartCoroutine(Download(handles[i]));
             }
 
-            Behaviour.instance.StartCoroutine(UpdateProgress());
+            StartCoroutine(UpdateProgress());
 
             IEnumerator UpdateProgress()
             {
@@ -179,7 +180,7 @@ namespace ZGame.Networking
                 }
 
                 downloadData.bytes = request.downloadHandler.data;
-                Engine.File.Write(downloadData.name, downloadData.bytes, downloadData.version);
+                FileManager.instance.Write(downloadData.name, downloadData.bytes, downloadData.version);
             }
 
             return await taskCompletionSource.Task;

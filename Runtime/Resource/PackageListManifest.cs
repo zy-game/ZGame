@@ -1,42 +1,99 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
+using ZGame.FileSystem;
+using ZGame.Networking;
 
 namespace ZGame.Resource
 {
-    public class PackageListManifest
+    public class ResourcePackageListManifest
     {
         public string name;
         public uint version;
-        public PackageManifest[] packages;
+        public ResourcePackageManifest[] packages;
 
-        private static List<PackageListManifest> _manifests = new List<PackageListManifest>();
+        private static List<ResourcePackageListManifest> _manifests = new List<ResourcePackageListManifest>();
 
-        public static async UniTask<PackageListManifest> Find(string name)
+        public static async UniTask<ResourcePackageListManifest> Find(string name)
         {
-            PackageListManifest packageListManifest = _manifests.Find(x => x.name == name);
-            if (packageListManifest is null)
+            ResourcePackageListManifest resourcePackageListManifest = _manifests.Find(x => x.name == name);
+            if (resourcePackageListManifest is null)
             {
-                packageListManifest = await Engine.Network.Get<PackageListManifest>(Engine.Resource.GetNetworkResourceUrl(name + ".ini"));
-                if (packageListManifest is null)
+                resourcePackageListManifest = await NetworkManager.instance.Get<ResourcePackageListManifest>(GameSeting.GetNetworkResourceUrl(name + ".ini"));
+                if (resourcePackageListManifest is null)
                 {
                     return default;
                 }
 
-                _manifests.Add(packageListManifest);
+                _manifests.Add(resourcePackageListManifest);
             }
 
-            return packageListManifest;
+            return resourcePackageListManifest;
+        }
+
+        public static async UniTask<List<ResourcePackageManifest>> CheckNeedUpdatePackageList(string name)
+        {
+            List<ResourcePackageManifest> needUpdatePackages = new List<ResourcePackageManifest>();
+            ResourcePackageListManifest resourcePackageListManifest = await Find(name);
+            if (resourcePackageListManifest is null)
+                return needUpdatePackages;
+
+            foreach (var package in resourcePackageListManifest.packages)
+            {
+                if (FileManager.instance.Exist(package.name, package.version) is false || needUpdatePackages.Contains(package))
+                {
+                    needUpdatePackages.Add(package);
+                }
+
+                foreach (var dependenc in package.dependencies)
+                {
+                    if (dependenc.owner.Equals(resourcePackageListManifest.name) is false)
+                    {
+                        needUpdatePackages.AddRange(await CheckNeedUpdatePackageList(dependenc.owner));
+                        continue;
+                    }
+
+                    ResourcePackageManifest resourcePackageManifest = resourcePackageListManifest.GetPackageManifest(dependenc.name);
+                    if (resourcePackageManifest is null || FileManager.instance.Exist(dependenc.name, dependenc.version) || needUpdatePackages.Contains(package))
+                    {
+                        continue;
+                    }
+
+                    needUpdatePackages.Add(resourcePackageManifest);
+                }
+            }
+
+            return needUpdatePackages;
+        }
+
+        public bool Contains(string name)
+        {
+            return GetPackageManifest(name) is not null;
+        }
+
+        public ResourcePackageManifest GetPackageManifest(string name)
+        {
+            for (int i = 0; i < packages.Length; i++)
+            {
+                if (packages[i].name == name)
+                {
+                    return packages[i];
+                }
+            }
+
+            return default;
         }
     }
 
     [Serializable]
-    public class PackageManifest
+    public class ResourcePackageManifest
     {
         public string name;
         public uint version;
-        public string parent;
+        public string owner;
         public string[] files;
         public Dependencies[] dependencies;
     }
@@ -46,6 +103,6 @@ namespace ZGame.Resource
     {
         public string name;
         public uint version;
-        public string parent;
+        public string owner;
     }
 }

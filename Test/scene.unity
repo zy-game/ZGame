@@ -169,10 +169,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GameSettings:
   - active: 0
-    useHotfix: 0
     Language: 0
     address: 
     module: Hex Terrain Basic Ruler Seting
+    resMode: 0
+    runtime: 1
     dll: Assembly-CSharp
     aot: []
 --- !u!1660057539 &9223372036854775807

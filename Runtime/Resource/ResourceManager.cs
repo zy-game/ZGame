@@ -8,91 +8,31 @@ using ZGame.Networking;
 
 namespace ZGame.Resource
 {
-    public enum ResourceMode : byte
-    {
-        Networking,
-        StreamingAssets,
-    }
-
-    public enum RuntimeMode : byte
-    {
-        Editor,
-        Simulator,
-    }
-
-
-    public sealed class ResourceManager : IManager
+    public sealed class ResourceManager : SingletonBehaviour<ResourceManager>
     {
         private IAssetLoadingPipeline ResourcesLodaingPipeline;
-        private IAssetLoadingPipeline NetworkResourceLoadingPipeline;
-        private IAssetLoadingPipeline AssetBundleResourceLoadingPipeline;
-        private IAssetLoadingPipeline AssetDatabaseResourceLoadingPipeline;
         private IPackageUpdatePipeline PackageUpdatePipeline;
         private IPackageLoadingPipeline PackageLoadingPipeline;
-        private ResourceMode resouceMode;
-        private RuntimeMode runtimeMode;
         private List<AssetBundleHandle> _handles = new List<AssetBundleHandle>();
         private string address;
 
         public ResourceManager()
         {
-            ResourcesLodaingPipeline = new ResourcesLoadingPipeline();
-            NetworkResourceLoadingPipeline = new NetworkResourceLoadingPipeline();
-            AssetDatabaseResourceLoadingPipeline = new AssetDatabaseLoadingPipeline();
-            AssetBundleResourceLoadingPipeline = new AssetBundleResourceLoadingPipeline();
-            PackageUpdatePipeline = new DefaultPackageUpdatePipeline();
-            PackageLoadingPipeline = new DefaultPackageLoadingPipeline();
+            ResourcesLodaingPipeline = new AssetObjectLoadingPipeline();
+            PackageUpdatePipeline = new CheckResourceUpdatePipeline();
+            PackageLoadingPipeline = new AssetBundleLoadingPipeline();
         }
 
-        public void SetResourceAddressable(string url)
+        public void SetupAssetLoader<T>() where T : IAssetLoadingPipeline
         {
-            this.address = url;
         }
 
-        public void SetResourceMode(ResourceMode mode)
+        public void SetupAssetBundleLoaderHelper<T>() where T : IPackageLoadingPipeline
         {
-            this.resouceMode = mode;
         }
 
-        public void SetRuntimeMode(RuntimeMode mode)
+        public void SetupResourceUpdateHelper<T>() where T : IPackageUpdatePipeline
         {
-            this.runtimeMode = mode;
-        }
-
-        internal AssetBundleHandle FindAssetBundleHandle(AssetObjectHandle obj)
-        {
-            return _handles.Find(x => x.Contains(obj));
-        }
-
-        internal AssetBundleHandle FindAssetBundleHandle(string path)
-        {
-            return _handles.Find(x => x.Contains(path));
-        }
-
-        internal void RemoveAssetBundleHandle(string name)
-        {
-            AssetBundleHandle handle = _handles.Find(x => x.name == name);
-            if (handle is null)
-            {
-                return;
-            }
-
-            _handles.Remove(handle);
-        }
-
-        internal void AddAssetBundleHandle(AssetBundle bundle)
-        {
-            _handles.Add(new AssetBundleHandle(bundle));
-        }
-
-        /// <summary>
-        /// 获取文件资源地址
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public string GetNetworkResourceUrl(string fileName)
-        {
-            return $"{address}/{Engine.GetPlatformName()}/{fileName}";
         }
 
         /// <summary>
@@ -102,41 +42,13 @@ namespace ZGame.Resource
         /// <returns>资源加载结果</returns>
         public AssetObjectHandle LoadAsset(string path)
         {
-            if (path.StartsWith("Resources"))
+            if (ResourcesLodaingPipeline is null)
             {
-                if (ResourcesLodaingPipeline is null)
-                {
-                    Debug.LogError(new NullReferenceException(nameof(ResourcesLodaingPipeline)));
-                    return default;
-                }
-
-                return ResourcesLodaingPipeline.LoadAsset(path);
-            }
-
-            if (path.StartsWith("http"))
-            {
-                Debug.LogError("网络资源必须使用异步加载！");
-                return default;
-            }
-#if UNITY_EDITOR
-            if (runtimeMode == RuntimeMode.Editor)
-            {
-                if (AssetDatabaseResourceLoadingPipeline is null)
-                {
-                    Debug.LogError(new NullReferenceException(nameof(AssetDatabaseResourceLoadingPipeline)));
-                    return default;
-                }
-
-                return AssetDatabaseResourceLoadingPipeline.LoadAsset(path);
-            }
-#endif
-            if (AssetBundleResourceLoadingPipeline is null)
-            {
-                Debug.LogError(new NullReferenceException(nameof(AssetBundleResourceLoadingPipeline)));
+                Debug.LogError(new NullReferenceException(nameof(ResourcesLodaingPipeline)));
                 return default;
             }
 
-            return AssetBundleResourceLoadingPipeline.LoadAsset(path);
+            return ResourcesLodaingPipeline.LoadAsset(path);
         }
 
         /// <summary>
@@ -146,47 +58,13 @@ namespace ZGame.Resource
         /// <returns>资源加载任务</returns>
         public async UniTask<AssetObjectHandle> LoadAssetAsync(string path)
         {
-            if (path.StartsWith("Resources"))
+            if (ResourcesLodaingPipeline is null)
             {
-                if (NetworkResourceLoadingPipeline is null)
-                {
-                    Debug.LogError(new NullReferenceException(nameof(NetworkResourceLoadingPipeline)));
-                    return default;
-                }
-
-                return await ResourcesLodaingPipeline.LoadAssetAsync(path);
-            }
-
-            if (path.StartsWith("http"))
-            {
-                if (NetworkResourceLoadingPipeline is null)
-                {
-                    Debug.LogError(new NullReferenceException(nameof(NetworkResourceLoadingPipeline)));
-                    return default;
-                }
-
-                return await NetworkResourceLoadingPipeline.LoadAssetAsync(path);
-            }
-
-#if UNITY_EDITOR
-            if (runtimeMode == RuntimeMode.Editor)
-            {
-                if (AssetDatabaseResourceLoadingPipeline is null)
-                {
-                    Debug.LogError(new NullReferenceException(nameof(AssetDatabaseResourceLoadingPipeline)));
-                    return default;
-                }
-
-                return await AssetDatabaseResourceLoadingPipeline.LoadAssetAsync(path);
-            }
-#endif
-            if (AssetBundleResourceLoadingPipeline is null)
-            {
-                Debug.LogError(new NullReferenceException(nameof(AssetBundleResourceLoadingPipeline)));
+                Debug.LogError(new NullReferenceException(nameof(ResourcesLodaingPipeline)));
                 return default;
             }
 
-            return await AssetBundleResourceLoadingPipeline.LoadAssetAsync(path);
+            return await ResourcesLodaingPipeline.LoadAssetAsync(path);
         }
 
         /// <summary>
@@ -202,7 +80,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("args");
             }
 #if UNITY_EDITOR
-            if (runtimeMode == RuntimeMode.Editor)
+            if (GameSeting.current.runtime == RuntimeMode.Editor)
             {
                 progressCallback?.Invoke(1);
                 return;
@@ -213,16 +91,6 @@ namespace ZGame.Resource
             {
                 throw new NullReferenceException(nameof(PackageLoadingPipeline));
             }
-
-            // PackageListManifest[] packageListManifests = new PackageListManifest[args.Length];
-            // for (int i = 0; i < args.Length; i++)
-            // {
-            //     if (args[i].StartsWith("http"))
-            //     {
-            //         
-            //     }
-            //     packageListManifests[i] = await PackageListManifest.Find(args[i]);
-            // }
 
             await PackageLoadingPipeline.LoadingPackageList(progressCallback, args);
         }
@@ -240,7 +108,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("args");
             }
 #if UNITY_EDITOR
-            if (runtimeMode == RuntimeMode.Editor)
+            if (GameSeting.current.runtime == RuntimeMode.Editor)
             {
                 progressCallback?.Invoke(1);
                 return;
@@ -250,16 +118,6 @@ namespace ZGame.Resource
             {
                 throw new NullReferenceException(nameof(PackageUpdatePipeline));
             }
-
-            // PackageListManifest[] manifests = new PackageListManifest[args.Length];
-            // for (int i = 0; i < manifests.Length; i++)
-            // {
-            //     if (args[i].StartsWith("http"))
-            //     {
-            //         
-            //     }
-            //     manifests[i] = await PackageListManifest.Find(args[i]);
-            // }
 
             await PackageUpdatePipeline.StartUpdate(progressCallback, args);
         }
@@ -271,23 +129,15 @@ namespace ZGame.Resource
         public void Release(AssetObjectHandle obj)
         {
             ResourcesLodaingPipeline?.Release(obj);
-            AssetBundleResourceLoadingPipeline?.Release(obj);
-            AssetDatabaseResourceLoadingPipeline?.Release(obj);
         }
 
         public void Dispose()
         {
             ResourcesLodaingPipeline?.Dispose();
-            AssetBundleResourceLoadingPipeline?.Dispose();
-            NetworkResourceLoadingPipeline?.Dispose();
-            AssetDatabaseResourceLoadingPipeline?.Dispose();
             PackageUpdatePipeline?.Dispose();
             PackageLoadingPipeline?.Dispose();
             _handles.Clear();
             ResourcesLodaingPipeline = null;
-            AssetBundleResourceLoadingPipeline = null;
-            NetworkResourceLoadingPipeline = null;
-            AssetDatabaseResourceLoadingPipeline = null;
             PackageUpdatePipeline = null;
             PackageLoadingPipeline = null;
             _handles = null;

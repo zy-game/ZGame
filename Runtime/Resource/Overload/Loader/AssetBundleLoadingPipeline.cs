@@ -9,7 +9,7 @@ using ZGame.Networking;
 
 namespace ZGame.Resource
 {
-    public sealed class DefaultPackageLoadingPipeline : IPackageLoadingPipeline
+    public sealed class AssetBundleLoadingPipeline : IPackageLoadingPipeline
     {
         private float count;
         private float index;
@@ -34,8 +34,6 @@ namespace ZGame.Resource
                 index++;
                 progressCallback?.Invoke(index / count);
             }
-
-            Clear();
         }
 
         private async UniTask LoadAssetBundleFromFile(string fileName, uint version, Action<float> progressCallback)
@@ -45,21 +43,22 @@ namespace ZGame.Resource
                 return;
             }
 
-            if (Engine.File.Exist(fileName, version) is false)
+            if (FileManager.instance.Exist(fileName, version) is false)
             {
+                Clear();
                 throw new FileNotFoundException(fileName);
             }
 
-            IFileDataReader fileDataReader = await Engine.File.ReadAsync(fileName);
+            IFileDataReader fileDataReader = await FileManager.instance.ReadAsync(fileName);
             if (fileDataReader.bytes is null || fileDataReader.bytes.Length == 0)
             {
+                Clear();
                 throw new FileLoadException(fileDataReader.name);
             }
 
             AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(fileDataReader.bytes);
-            Engine.Resource.AddAssetBundleHandle(assetBundle);
+            AssetBundleManager.instance.Add(assetBundle);
             fileDataReader.Dispose();
-     
         }
 
         private void Clear()
@@ -68,7 +67,7 @@ namespace ZGame.Resource
             index = 0;
             foreach (var VARIABLE in loaded)
             {
-                Engine.Resource.RemoveAssetBundleHandle(VARIABLE);
+                AssetBundleManager.instance.Remove(VARIABLE);
             }
 
             loaded.Clear();

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace ZGame.Window
 {
     [Linked("Resources/Prefabs/Wait", 997)]
-    public class Waiting : GameWindow
+    public class Waiting : UIBase
     {
         public Waiting(GameObject gameObject) : base(gameObject)
         {

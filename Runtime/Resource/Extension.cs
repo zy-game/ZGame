@@ -4,7 +4,7 @@ using UnityEngine.Video;
 
 namespace ZGame.Resource
 {
-    public static class Extension
+    public static partial class Extension
     {
         public static GameObject Instantiate(this AssetObjectHandle resObject)
         {
@@ -14,7 +14,7 @@ namespace ZGame.Resource
             }
 
             GameObject gameObject = (GameObject)GameObject.Instantiate(resObject.Require<GameObject>());
-            GameObjectDestoryCallback.Create(gameObject, () => { Engine.Resource.Release(resObject); });
+            gameObject.OnDestroyEventCallback(() => { ResourceManager.instance.Release(resObject); });
             return gameObject;
         }
 
@@ -50,7 +50,7 @@ namespace ZGame.Resource
             }
 
             image.sprite = resObject.Require<Sprite>();
-            GameObjectDestoryCallback.Create(gameObject, () => { Engine.Resource.Release(resObject); });
+            gameObject.OnDestroyEventCallback(() => { ResourceManager.instance.Release(resObject); });
         }
 
         public static void SetRawImage(this AssetObjectHandle resObject, GameObject gameObject)
@@ -67,7 +67,7 @@ namespace ZGame.Resource
             }
 
             image.texture = resObject.Require<Texture2D>();
-            GameObjectDestoryCallback.Create(gameObject, () => { Engine.Resource.Release(resObject); });
+            gameObject.OnDestroyEventCallback(() => { ResourceManager.instance.Release(resObject); });
         }
 
         public static void SetSound(this AssetObjectHandle resObject, GameObject gameObject)
@@ -84,7 +84,7 @@ namespace ZGame.Resource
             }
 
             component.clip = resObject.Require<AudioClip>();
-            GameObjectDestoryCallback.Create(gameObject, () => { Engine.Resource.Release(resObject); });
+            gameObject.OnDestroyEventCallback(() => { ResourceManager.instance.Release(resObject); });
         }
 
         public static void SetVideoClip(this AssetObjectHandle resObject, GameObject gameObject)
@@ -101,7 +101,7 @@ namespace ZGame.Resource
             }
 
             component.clip = resObject.Require<VideoClip>();
-            GameObjectDestoryCallback.Create(gameObject, () => { Engine.Resource.Release(resObject); });
+            gameObject.OnDestroyEventCallback(() => { ResourceManager.instance.Release(resObject); });
         }
     }
 }

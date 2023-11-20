@@ -10,7 +10,7 @@ using ZGame.Networking;
 
 namespace ZGame.Resource
 {
-    public sealed class DefaultPackageUpdatePipeline : IPackageUpdatePipeline
+    public sealed class CheckResourceUpdatePipeline : IPackageUpdatePipeline
     {
         private void Clear()
         {
@@ -32,7 +32,7 @@ namespace ZGame.Resource
                 return;
             }
 
-            DownloadHandle[] downloadHandles = await Engine.Network.Download(progressCallback, options.ToArray());
+            DownloadHandle[] downloadHandles = await NetworkManager.instance.Download(progressCallback, options.ToArray());
             if (downloadHandles.Where(x => x.error != null).Count() > 0)
             {
                 Clear();
@@ -49,32 +49,32 @@ namespace ZGame.Resource
             {
                 if (VARIABLE.StartsWith("http") is false)
                 {
-                    PackageListManifest packageListManifest = await PackageListManifest.Find(VARIABLE);
-                    if (packageListManifest == null)
-                    {
-                        continue;
-                    }
-
-                    List<DownloadOptions> result = CheckPackageListManifest(packageListManifest);
+                    List<ResourcePackageManifest> result = await ResourcePackageListManifest.CheckNeedUpdatePackageList(VARIABLE);
                     foreach (var op in result)
                     {
                         if (options.Find(x => x.name.Equals(op.name)) is null)
                         {
-                            options.Add(op);
+                            options.Add(new DownloadOptions()
+                            {
+                                name = Path.GetFileName(VARIABLE),
+                                version = op.version,
+                                url = VARIABLE
+                            });
                         }
                     }
 
                     continue;
                 }
 
-                string etag = await Engine.Network.Head(VARIABLE, "eTag");
+                string etag = await NetworkManager.instance.Head(VARIABLE, "eTag");
                 if (etag.IsNullOrEmpty())
                 {
+                    Debug.LogError($"Checkout {VARIABLE} etag is null");
                     continue;
                 }
 
                 uint crc = Crc32.GetCRC32Str(etag);
-                if (Engine.File.Exist(Path.GetFileName(VARIABLE), crc))
+                if (FileManager.instance.Exist(Path.GetFileName(VARIABLE), crc))
                 {
                     continue;
                 }
@@ -90,11 +90,6 @@ namespace ZGame.Resource
             return options;
         }
 
-
-        private List<DownloadOptions> CheckPackageListManifest(PackageListManifest packageListManifest)
-        {
-            return default;
-        }
 
         public void Dispose()
         {

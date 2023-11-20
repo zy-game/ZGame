@@ -4,17 +4,34 @@ using UnityEngine;
 
 namespace ZGame.Resource
 {
-    public class ResourcesLoadingPipeline : IAssetLoadingPipeline
+    public class AssetObjectLoadingPipeline : IAssetLoadingPipeline
     {
         private List<AssetObjectHandle> resources = new List<AssetObjectHandle>();
 
         public AssetObjectHandle LoadAsset(string path)
         {
+            if (path.StartsWith("http"))
+            {
+                Debug.LogError("网络资源必须使用异步加载！");
+                return default;
+            }
+
             AssetObjectHandle result = resources.Find(x => x.path.Equals(path));
             if (result is null)
             {
-                result = new AssetObjectHandle(Resources.Load(path.Substring(10)), path);
-                resources.Add(result);
+                if (path.StartsWith("Resources"))
+                {
+                    result = new AssetObjectHandle(Resources.Load(path.Substring(10)), path);
+                    resources.Add(result);
+                }
+                else
+                {
+                    AssetBundleHandle handle = AssetBundleManager.instance.GetBundleHandle(path);
+                    if (handle is not null)
+                    {
+                        result = handle.Load(path);
+                    }
+                }
             }
 
             return result;
@@ -23,12 +40,29 @@ namespace ZGame.Resource
         public async UniTask<AssetObjectHandle> LoadAssetAsync(string path)
         {
             AssetObjectHandle result = resources.Find(x => x.path.Equals(path));
-            if (result is null)
+            if (result is not null)
+            {
+                return result;
+            }
+
+            if (path.StartsWith("http"))
+            {
+            }
+
+            if (path.StartsWith("Resources"))
             {
                 result = new AssetObjectHandle(await Resources.LoadAsync(path.Substring(10)), path);
                 resources.Add(result);
             }
-            
+            else
+            {
+                AssetBundleHandle handle = AssetBundleManager.instance.GetBundleHandle(path);
+                if (handle is not null)
+                {
+                    result = await handle.LoadAsync(path);
+                }
+            }
+
             return result;
         }
 

@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace ZGame.FileSystem
 {
-    public class FileManager : IManager
+    public class FileManager : SingletonBehaviour<FileManager>
     {
         private List<VFSData> segments = new List<VFSData>();
         private List<IOHandle> ioList = new List<IOHandle>();

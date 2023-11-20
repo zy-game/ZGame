@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ZGame.Window
 {
     [Linked("Resources/Prefabs/MsgBox", 999)]
-    public class MsgBox : GameWindow
+    public class MsgBox : UIBase
     {
         public MsgBox(GameObject gameObject) : base(gameObject)
         {
@@ -25,6 +25,6 @@ namespace ZGame.Window
             => Create(title, message, "OK", ok, "Cancel", cancel);
 
         public static MsgBox Create(string title, string message, string okString, Action ok, string cancelString, Action cancel = null)
-            => Engine.Window.Open<MsgBox>().Setup(title, message, okString, ok, cancelString, cancel);
+            => UIManager.instance.Open<MsgBox>().Setup(title, message, okString, ok, cancelString, cancel);
     }
 }

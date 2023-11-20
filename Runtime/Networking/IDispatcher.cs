@@ -45,7 +45,7 @@ namespace ZGame.Networking
                 }
 
                 callback?.Invoke(Serializer.Deserialize<T>(memoryStream));
-                Engine.Network.UnsubscribeMessageRecvier(typeof(ActionMessageRecvier<T>));
+                NetworkManager.instance.UnsubscribeMessageRecvier(typeof(ActionMessageRecvier<T>));
             }
         }
     }

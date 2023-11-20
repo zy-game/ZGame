@@ -7,14 +7,13 @@ namespace ZGame.Game
     {
     }
 
-    public interface IGameEntryOptions 
+    public interface IGameEntryOptions
     {
     }
 
 
-    public sealed class GameManager : IManager
+    public sealed class GameManager : SingletonBehaviour<GameManager>
     {
-
         public UniTask<IEntryGameResult> EntryGame(IGameEntryOptions options)
         {
             throw new NotImplementedException();

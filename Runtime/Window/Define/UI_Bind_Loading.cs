@@ -9,7 +9,7 @@ using TMPro;
 /// </summary>
 namespace ZGame.Window
 {
-	public class UI_Bind_Loading : GameWindow
+	public class UI_Bind_Loading : UIBase
 	{
 		public UIBind<RectTransform> RectTransform_Slider;
 		public UIBind<Slider> Slider_Slider;

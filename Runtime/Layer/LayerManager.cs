@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace ZGame
 {
-    public sealed class CameraManager : IManager
+    public sealed class LayerManager : SingletonBehaviour<LayerManager>
     {
         public Camera main { get; }
         private List<CameraItem> cameras = new List<CameraItem>();
@@ -20,7 +20,7 @@ namespace ZGame
             public Camera camera;
         }
 
-        public CameraManager()
+        public LayerManager()
         {
             main = new GameObject("MainCamera").AddComponent<Camera>();
             main.orthographic = false;
@@ -154,8 +154,7 @@ namespace ZGame
                 GameObject.DontDestroyOnLoad(layerRoot);
             }
 
-            Transform parent = layerRoot.transform;
-            gameObject.transform.SetParent(parent);
+            gameObject.transform.SetParent(layerRoot.transform);
             gameObject.transform.position = pos;
             gameObject.transform.rotation = Quaternion.Euler(rot);
             gameObject.transform.localScale = scale;

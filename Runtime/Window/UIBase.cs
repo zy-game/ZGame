@@ -4,12 +4,12 @@ using UnityEngine.UI;
 
 namespace ZGame.Window
 {
-    public abstract class GameWindow : IDisposable
+    public abstract class UIBase : IDisposable
     {
         public string name { get; }
         public GameObject gameObject { get; }
 
-        public GameWindow(GameObject gameObject)
+        public UIBase(GameObject gameObject)
         {
             this.name = gameObject.name;
             this.gameObject = gameObject;

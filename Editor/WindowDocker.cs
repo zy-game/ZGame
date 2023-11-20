@@ -29,7 +29,6 @@ namespace ZGame.Editor
         [UnityEditor.Callbacks.DidReloadScripts]
         static void OnScriptBuilderComplation()
         {
-            Debug.Log("脚本编译完成，处理编辑器扩展数据");
             sceneMaps = new List<PageDocker>();
             optionsTypeList = new Dictionary<Type, Type>();
             List<Type> types = AppDomain.CurrentDomain.GetAllTypes<PageScene>();

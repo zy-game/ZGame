@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using ZGame.Networking;
+using ZGame.Resource;
 
 namespace ZGame.Localization
 {
-    public sealed class LanguageManager : IManager
+    public sealed class LanguageManager : SingletonBehaviour<LanguageManager>
     {
         private Dictionary<int, LanguageOptions> _optionsMap = new Dictionary<int, LanguageOptions>();
 
@@ -18,7 +20,8 @@ namespace ZGame.Localization
 
         public async void SwitchLanguage(Language language)
         {
-            List<LanguageOptions> languageOptionsList = await Engine.Network.Get<List<LanguageOptions>>(Engine.Resource.GetNetworkResourceUrl("language_" + language + ".ini"));
+            string url = GameSeting.GetNetworkResourceUrl("language_" + language + ".ini");
+            List<LanguageOptions> languageOptionsList = await NetworkManager.instance.Get<List<LanguageOptions>>(url);
             if (languageOptionsList is null)
             {
                 return;

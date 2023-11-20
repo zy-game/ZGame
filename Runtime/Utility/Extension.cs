@@ -8,25 +8,7 @@ using UnityEngine.Events;
 
 namespace ZGame
 {
-    public sealed class Behaviour : MonoBehaviour
-    {
-        private static Behaviour _instance;
-
-        public static Behaviour instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new GameObject("Behaviour").AddComponent<Behaviour>();
-                }
-
-                return _instance;
-            }
-        }
-    }
-
-    public sealed class GameObjectDestoryCallback
+    public static partial class Extension
     {
         class Listener : MonoBehaviour
         {
@@ -38,7 +20,7 @@ namespace ZGame
             }
         }
 
-        public static void Create(GameObject gameObject, UnityAction callback)
+        public static void OnDestroyEventCallback(this GameObject gameObject, UnityAction callback)
         {
             Listener listener = gameObject.GetComponent<Listener>();
             if (listener == null)
@@ -48,10 +30,17 @@ namespace ZGame
 
             listener.callback.AddListener(callback);
         }
-    }
 
-    public static class Extension
-    {
+        public static string GetPlatformName()
+        {
+#if UNITY_ANDROID
+            return "android";
+#elif UNITY_IPHONE
+            return "ios";
+#endif
+            return "windows";
+        }
+
         public static string Replace(this string value, params string[] t)
         {
             foreach (var VARIABLE in t)

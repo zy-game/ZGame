@@ -48,7 +48,7 @@ namespace ZGame.Networking
                 request = UnityWebRequest.Get(url);
                 request.timeout = 5;
                 request.useHttpContinue = true;
-                Behaviour.instance.StartCoroutine(Start(taskCompletionSource));
+                NetworkManager.instance.StartCoroutine(Start(taskCompletionSource));
                 return await taskCompletionSource.Task;
             }
 
@@ -68,7 +68,7 @@ namespace ZGame.Networking
                     }
                 }
 
-                Behaviour.instance.StartCoroutine(Start(taskCompletionSource));
+                NetworkManager.instance.StartCoroutine(Start(taskCompletionSource));
                 return await taskCompletionSource.Task;
             }
 

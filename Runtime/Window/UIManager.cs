@@ -7,14 +7,14 @@ using ZGame.Resource;
 
 namespace ZGame.Window
 {
-    public sealed class WindowManager : IManager
+    public sealed class UIManager : SingletonBehaviour<UIManager>
     {
-        private Dictionary<Type, GameWindow> _windows = new Dictionary<Type, GameWindow>();
+        private Dictionary<Type, UIBase> _windows = new Dictionary<Type, UIBase>();
 
 
-        public GameWindow Open(Type type)
+        public UIBase Open(Type type)
         {
-            if (_windows.TryGetValue(type, out GameWindow gameWindow))
+            if (_windows.TryGetValue(type, out UIBase gameWindow))
             {
                 return gameWindow;
             }
@@ -26,23 +26,23 @@ namespace ZGame.Window
                 return default;
             }
 
-            AssetObjectHandle resObject = Engine.Resource.LoadAsset(reference.path);
+            AssetObjectHandle resObject = ResourceManager.instance.LoadAsset(reference.path);
             if (resObject is null)
             {
                 return default;
             }
 
-            gameWindow = (GameWindow)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
-            Engine.Cameras.TrySetup(gameWindow.gameObject, reference.layer, Vector3.zero, Vector3.zero, Vector3.one);
+            gameWindow = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
+            LayerManager.instance.TrySetup(gameWindow.gameObject, reference.layer, Vector3.zero, Vector3.zero, Vector3.one);
             gameWindow.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
             gameWindow.Awake();
             Active(type);
             return gameWindow;
         }
 
-        public GameWindow GetWindow(Type type)
+        public UIBase GetWindow(Type type)
         {
-            if (_windows.TryGetValue(type, out GameWindow gameWindow))
+            if (_windows.TryGetValue(type, out UIBase gameWindow))
             {
                 return gameWindow;
             }
@@ -57,7 +57,7 @@ namespace ZGame.Window
 
         public void Active(Type type)
         {
-            if (_windows.TryGetValue(type, out GameWindow gameWindow))
+            if (_windows.TryGetValue(type, out UIBase gameWindow))
             {
                 gameWindow.gameObject.SetActive(true);
                 gameWindow.Enable();
@@ -66,7 +66,7 @@ namespace ZGame.Window
 
         public void Inactive(Type type)
         {
-            if (_windows.TryGetValue(type, out GameWindow gameWindow))
+            if (_windows.TryGetValue(type, out UIBase gameWindow))
             {
                 gameWindow.gameObject.SetActive(false);
                 gameWindow.Disable();
@@ -75,7 +75,7 @@ namespace ZGame.Window
 
         public void Close(Type type)
         {
-            if (_windows.TryGetValue(type, out GameWindow gameWindow))
+            if (_windows.TryGetValue(type, out UIBase gameWindow))
             {
                 gameWindow.Disable();
                 gameWindow.Dispose();
