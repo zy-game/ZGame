@@ -32,9 +32,11 @@ namespace ZGame.Window
                 return default;
             }
 
+            Debug.Log("加载UI：" + type.Name);
             gameWindow = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
             LayerManager.instance.TrySetup(gameWindow.gameObject, reference.layer, Vector3.zero, Vector3.zero, Vector3.one);
             gameWindow.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
+            _windows.Add(type, gameWindow);
             gameWindow.Awake();
             Active(type);
             return gameWindow;

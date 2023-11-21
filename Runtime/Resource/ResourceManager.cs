@@ -8,31 +8,22 @@ using ZGame.Networking;
 
 namespace ZGame.Resource
 {
+    /// <summary>
+    /// 资源管理器
+    /// </summary>
     public sealed class ResourceManager : SingletonBehaviour<ResourceManager>
     {
-        private IAssetLoadingPipeline ResourcesLodaingPipeline;
-        private IPackageUpdatePipeline PackageUpdatePipeline;
-        private IPackageLoadingPipeline PackageLoadingPipeline;
+        private AssetBundleLoadingHandle _assetBundleLoadingHandle;
+        private ResourceObjectLoadingHandle _resourcesLodaingHandle;
+        private CheckResourceUpdateHandle _checkResourceUpdateHandle;
         private List<ABHandle> _handles = new List<ABHandle>();
         private string address;
 
         public ResourceManager()
         {
-            ResourcesLodaingPipeline = new AssetObjectLoadingPipeline();
-            PackageUpdatePipeline = new CheckResourceUpdatePipeline();
-            PackageLoadingPipeline = new AssetBundleLoadingPipeline();
-        }
-
-        public void SetupAssetLoader<T>() where T : IAssetLoadingPipeline
-        {
-        }
-
-        public void SetupAssetBundleLoaderHelper<T>() where T : IPackageLoadingPipeline
-        {
-        }
-
-        public void SetupResourceUpdateHelper<T>() where T : IPackageUpdatePipeline
-        {
+            _assetBundleLoadingHandle = new AssetBundleLoadingHandle();
+            _resourcesLodaingHandle = new ResourceObjectLoadingHandle();
+            _checkResourceUpdateHandle = new CheckResourceUpdateHandle();
         }
 
         /// <summary>
@@ -42,13 +33,13 @@ namespace ZGame.Resource
         /// <returns>资源加载结果</returns>
         public ResHandle LoadAsset(string path)
         {
-            if (ResourcesLodaingPipeline is null)
+            if (_resourcesLodaingHandle is null)
             {
-                Debug.LogError(new NullReferenceException(nameof(ResourcesLodaingPipeline)));
+                Debug.LogError(new NullReferenceException(nameof(_resourcesLodaingHandle)));
                 return default;
             }
 
-            return ResourcesLodaingPipeline.LoadAsset(path);
+            return _resourcesLodaingHandle.LoadAsset(path);
         }
 
         /// <summary>
@@ -58,13 +49,13 @@ namespace ZGame.Resource
         /// <returns>资源加载任务</returns>
         public async UniTask<ResHandle> LoadAssetAsync(string path)
         {
-            if (ResourcesLodaingPipeline is null)
+            if (_resourcesLodaingHandle is null)
             {
-                Debug.LogError(new NullReferenceException(nameof(ResourcesLodaingPipeline)));
+                Debug.LogError(new NullReferenceException(nameof(_resourcesLodaingHandle)));
                 return default;
             }
 
-            return await ResourcesLodaingPipeline.LoadAssetAsync(path);
+            return await _resourcesLodaingHandle.LoadAssetAsync(path);
         }
 
         /// <summary>
@@ -87,12 +78,12 @@ namespace ZGame.Resource
             }
 #endif
 
-            if (PackageLoadingPipeline is null)
+            if (_assetBundleLoadingHandle is null)
             {
-                throw new NullReferenceException(nameof(PackageLoadingPipeline));
+                throw new NullReferenceException(nameof(_assetBundleLoadingHandle));
             }
 
-            await PackageLoadingPipeline.LoadingPackageList(progressCallback, args);
+            await _assetBundleLoadingHandle.LoadingPackageList(progressCallback, args);
         }
 
         /// <summary>
@@ -114,12 +105,12 @@ namespace ZGame.Resource
                 return;
             }
 #endif
-            if (PackageUpdatePipeline is null)
+            if (_checkResourceUpdateHandle is null)
             {
-                throw new NullReferenceException(nameof(PackageUpdatePipeline));
+                throw new NullReferenceException(nameof(_checkResourceUpdateHandle));
             }
 
-            await PackageUpdatePipeline.StartUpdate(progressCallback, args);
+            await _checkResourceUpdateHandle.StartUpdate(progressCallback, args);
         }
 
         /// <summary>
@@ -133,13 +124,13 @@ namespace ZGame.Resource
 
         public void Dispose()
         {
-            ResourcesLodaingPipeline?.Dispose();
-            PackageUpdatePipeline?.Dispose();
-            PackageLoadingPipeline?.Dispose();
+            _resourcesLodaingHandle?.Dispose();
+            _checkResourceUpdateHandle?.Dispose();
+            _assetBundleLoadingHandle?.Dispose();
             _handles.Clear();
-            ResourcesLodaingPipeline = null;
-            PackageUpdatePipeline = null;
-            PackageLoadingPipeline = null;
+            _resourcesLodaingHandle = null;
+            _checkResourceUpdateHandle = null;
+            _assetBundleLoadingHandle = null;
             _handles = null;
         }
     }

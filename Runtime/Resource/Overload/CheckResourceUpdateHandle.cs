@@ -10,7 +10,7 @@ using ZGame.Networking;
 
 namespace ZGame.Resource
 {
-    public sealed class CheckResourceUpdatePipeline : IPackageUpdatePipeline
+    public sealed class CheckResourceUpdateHandle : IDisposable
     {
         public async UniTask StartUpdate(Action<float> progressCallback, params string[] args)
         {

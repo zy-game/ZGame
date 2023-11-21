@@ -11,7 +11,6 @@ namespace ZGame
         class SinglePipeline
         {
             public static T _entity;
-            public static Behaviour _behaviour;
 
             public static T GetInstance()
             {
@@ -21,57 +20,15 @@ namespace ZGame
                 }
 
                 _entity = Activator.CreateInstance<T>();
-                _behaviour = new GameObject(nameof(T)).AddComponent<Behaviour>();
+                EventListener.instance.onDestroy.AddListener(_entity.OnDestroy);
+                EventListener.instance.update.AddListener(_entity.OnUpdate);
+                EventListener.instance.fixedUpdate.AddListener(_entity.OnFixedUpdate);
+                EventListener.instance.lateUpdate.AddListener(_entity.OnLateUpdate);
+                EventListener.instance.onGUI.AddListener(_entity.OnGUI);
+                EventListener.instance.onApplicationQuit.AddListener(_entity.OnApplicationQuit);
+                EventListener.instance.onApplicationPause.AddListener(_entity.OnApplicationPause);
+                EventListener.instance.onApplicationFocus.AddListener(_entity.OnApplicationFocus);
                 return _entity;
-            }
-        }
-
-        class Behaviour : MonoBehaviour
-        {
-            private void Awake()
-            {
-                GameObject.DontDestroyOnLoad(this.gameObject);
-                SinglePipeline._entity?.OnAwake();
-            }
-
-            private void Update()
-            {
-                SinglePipeline._entity?.OnUpdate();
-            }
-
-            private void FixedUpdate()
-            {
-                SinglePipeline._entity?.OnFixedUpdate();
-            }
-
-            private void LateUpdate()
-            {
-                SinglePipeline._entity?.OnLateUpdate();
-            }
-
-            private void OnGUI()
-            {
-                SinglePipeline._entity?.OnGUI();
-            }
-
-            private void OnDestroy()
-            {
-                SinglePipeline._entity?.OnDestroy();
-            }
-
-            private void OnApplicationQuit()
-            {
-                SinglePipeline._entity?.OnApplicationQuit();
-            }
-
-            private void OnApplicationPause(bool pause)
-            {
-                SinglePipeline._entity?.OnApplicationPause(pause);
-            }
-
-            private void OnApplicationFocus(bool focus)
-            {
-                SinglePipeline._entity?.OnApplicationFocus(focus);
             }
         }
 
@@ -109,16 +66,17 @@ namespace ZGame
 
         protected virtual void OnApplicationFocus(bool focus)
         {
+            
         }
 
         public void StartCoroutine(IEnumerator enumerator)
         {
-            SinglePipeline._behaviour?.StartCoroutine(enumerator);
+            EventListener.instance?.StartCoroutine(enumerator);
         }
 
         public void StopAllCoroutine()
         {
-            SinglePipeline._behaviour.StopAllCoroutines();
+            EventListener.instance?.StopAllCoroutines();
         }
     }
 }

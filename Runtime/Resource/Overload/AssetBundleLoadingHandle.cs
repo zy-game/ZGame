@@ -9,7 +9,7 @@ using ZGame.Networking;
 
 namespace ZGame.Resource
 {
-    public sealed class AssetBundleLoadingPipeline : IPackageLoadingPipeline
+    public sealed class AssetBundleLoadingHandle : IDisposable
     {
         private float count;
         private float index;
@@ -34,6 +34,10 @@ namespace ZGame.Resource
                 index++;
                 progressCallback?.Invoke(index / count);
             }
+        }
+
+        public void UnloadPackageList(params string[] args)
+        {
         }
 
         private async UniTask LoadAssetBundleFromFile(string fileName, uint version, Action<float> progressCallback)

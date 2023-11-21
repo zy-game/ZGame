@@ -5,23 +5,38 @@ using UnityEngine;
 
 namespace ZGame.Resource
 {
+    public class Pooled<T> : IDisposable
+    {
+        private Queue<T> pool;
+
+        public Pooled()
+        {
+            pool = new Queue<T>();
+        }
+
+
+        public void Dispose()
+        {
+        }
+    }
+
     public class ABHandle : IDisposable
     {
-        public string name => bundle?.name;
-        private AssetBundle bundle;
-        private List<ResHandle> _results;
+        public string name { get; }
+        private List<ResHandle> resList;
+        public AssetBundle bundle { get; }
         public int refCount { get; private set; }
 
         internal ABHandle(string title)
         {
+            refCount = 0;
+            this.name = title;
+            resList = new List<ResHandle>();
         }
-        
 
-        internal ABHandle(AssetBundle bundle)
+        internal ABHandle(AssetBundle bundle) : this(bundle.name)
         {
             this.bundle = bundle;
-            _results = new List<ResHandle>();
-            refCount = 0;
         }
 
         public void AddRef()
@@ -34,16 +49,26 @@ namespace ZGame.Resource
             refCount--;
         }
 
+        public void AddRes(ResHandle res)
+        {
+            resList.Add(res);
+        }
+
+        public ResHandle GetRes(string path)
+        {
+            return resList.Find(x => x.path.Equals(path));
+        }
+
         public bool Contains(ResHandle obj)
         {
-            return _results.Find(x => x.Equals(obj)) != null;
+            return GetRes(obj.path) != null;
         }
 
         public bool Contains(string path)
         {
             if (bundle == null)
             {
-                return false;
+                return resList.Find(x => x.path.Equals(path)) != null;
             }
 
             return bundle.Contains(path);
@@ -51,61 +76,23 @@ namespace ZGame.Resource
 
         public void Release(ResHandle obj)
         {
+            obj.Release();
             if (obj.refCount > 0)
             {
                 return;
             }
 
             obj.Dispose();
-            _results.Remove(obj);
-            refCount--;
+            resList.Remove(obj);
         }
 
-        public ResHandle Load(string path)
-        {
-            if (Contains(path) is false)
-            {
-                return default;
-            }
-
-            ResHandle resObject = _results.Find(x => x.path.Equals(path));
-            if (resObject is not null)
-            {
-                return resObject;
-            }
-
-            UnityEngine.Object obj = bundle.LoadAsset(path);
-            resObject = new ResHandle(this, obj, path);
-            _results.Add(resObject);
-            return resObject;
-        }
-
-        public async UniTask<ResHandle> LoadAsync(string path)
-        {
-            if (Contains(path) is false)
-            {
-                return default;
-            }
-
-            ResHandle resObject = _results.Find(x => x.path.Equals(path));
-            if (resObject is not null)
-            {
-                return resObject;
-            }
-
-            UnityEngine.Object result = await bundle.LoadAssetAsync<UnityEngine.Object>(path).ToUniTask();
-            resObject = new ResHandle(this, result, path);
-            _results.Add(resObject);
-            return resObject;
-        }
 
         public void Dispose()
         {
             bundle.Unload(true);
-            bundle = null;
             refCount = 0;
-            _results.ForEach(x => x.Dispose());
-            _results.Clear();
+            resList.ForEach(x => x.Dispose());
+            resList.Clear();
         }
     }
 }

@@ -10,25 +10,15 @@ namespace ZGame
 {
     public static partial class Extension
     {
-        class Listener : MonoBehaviour
-        {
-            public UnityEvent callback = new UnityEvent();
-
-            private void OnDestroy()
-            {
-                callback.Invoke();
-            }
-        }
-
         public static void OnDestroyEventCallback(this GameObject gameObject, UnityAction callback)
         {
-            Listener listener = gameObject.GetComponent<Listener>();
+            EventListener listener = gameObject.GetComponent<EventListener>();
             if (listener == null)
             {
-                listener = gameObject.AddComponent<Listener>();
+                listener = gameObject.AddComponent<EventListener>();
             }
 
-            listener.callback.AddListener(callback);
+            listener.onDestroy.AddListener(callback);
         }
 
         public static string GetPlatformName()
