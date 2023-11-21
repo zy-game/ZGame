@@ -13,7 +13,7 @@ namespace ZGame.Resource
         private IAssetLoadingPipeline ResourcesLodaingPipeline;
         private IPackageUpdatePipeline PackageUpdatePipeline;
         private IPackageLoadingPipeline PackageLoadingPipeline;
-        private List<AssetBundleHandle> _handles = new List<AssetBundleHandle>();
+        private List<ABHandle> _handles = new List<ABHandle>();
         private string address;
 
         public ResourceManager()
@@ -40,7 +40,7 @@ namespace ZGame.Resource
         /// </summary>
         /// <param name="path">资源路径</param>
         /// <returns>资源加载结果</returns>
-        public AssetObjectHandle LoadAsset(string path)
+        public ResHandle LoadAsset(string path)
         {
             if (ResourcesLodaingPipeline is null)
             {
@@ -56,7 +56,7 @@ namespace ZGame.Resource
         /// </summary>
         /// <param name="path">资源路径</param>
         /// <returns>资源加载任务</returns>
-        public async UniTask<AssetObjectHandle> LoadAssetAsync(string path)
+        public async UniTask<ResHandle> LoadAssetAsync(string path)
         {
             if (ResourcesLodaingPipeline is null)
             {
@@ -126,9 +126,9 @@ namespace ZGame.Resource
         /// 回收资源
         /// </summary>
         /// <param name="obj"></param>
-        public void Release(AssetObjectHandle obj)
+        public void Release(ResHandle obj)
         {
-            ResourcesLodaingPipeline?.Release(obj);
+            ABManager.instance.Release(obj);
         }
 
         public void Dispose()

@@ -26,7 +26,7 @@ namespace ZGame.Window
                 return default;
             }
 
-            AssetObjectHandle resObject = ResourceManager.instance.LoadAsset(reference.path);
+            ResHandle resObject = ResourceManager.instance.LoadAsset(reference.path);
             if (resObject is null)
             {
                 return default;

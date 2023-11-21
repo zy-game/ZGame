@@ -24,7 +24,7 @@ namespace ZGame.Networking
         }
     }
 
-    public class DownloadHandle : IDisposable
+    public struct NetworkDownloadPipelineHandle : IDisposable
     {
         public void Dispose()
         {
@@ -39,7 +39,6 @@ namespace ZGame.Networking
         public bool isDone;
         public string url;
         public byte[] bytes;
-        public uint version;
         public string error;
     }
 
@@ -126,30 +125,28 @@ namespace ZGame.Networking
             return await webRequestPipeline.Head(headName);
         }
 
-        public async UniTask<DownloadHandle[]> Download(Action<float> progress, params DownloadOptions[] args)
+        public async UniTask<NetworkDownloadPipelineHandle[]> Download(Action<float> progress, params string[] args)
         {
             if (args is null || args.Length == 0)
             {
                 return default;
             }
 
-            UniTaskCompletionSource<DownloadHandle[]> taskCompletionSource = new UniTaskCompletionSource<DownloadHandle[]>();
-            DownloadHandle[] handles = new DownloadHandle[args.Length];
+            UniTaskCompletionSource<NetworkDownloadPipelineHandle[]> taskCompletionSource = new UniTaskCompletionSource<NetworkDownloadPipelineHandle[]>();
+            NetworkDownloadPipelineHandle[] handles = new NetworkDownloadPipelineHandle[args.Length];
+            StartCoroutine(UpdateProgress());
             for (int i = 0; i < args.Length; i++)
             {
-                handles[i] = new DownloadHandle()
+                handles[i] = new NetworkDownloadPipelineHandle()
                 {
-                    name = args[i].name,
-                    url = args[i].url,
+                    name = Path.GetFileName(args[i]),
+                    url = args[i],
                     isDone = false,
                     progress = 0,
-                    version = args[i].version,
                     bytes = Array.Empty<byte>()
                 };
                 StartCoroutine(Download(handles[i]));
             }
-
-            StartCoroutine(UpdateProgress());
 
             IEnumerator UpdateProgress()
             {
@@ -162,7 +159,7 @@ namespace ZGame.Networking
                 taskCompletionSource.TrySetResult(handles);
             }
 
-            IEnumerator Download(DownloadHandle downloadData)
+            IEnumerator Download(NetworkDownloadPipelineHandle downloadData)
             {
                 UnityWebRequest request = UnityWebRequest.Get(downloadData.url);
                 request.SendWebRequest();
@@ -180,7 +177,6 @@ namespace ZGame.Networking
                 }
 
                 downloadData.bytes = request.downloadHandler.data;
-                FileManager.instance.Write(downloadData.name, downloadData.bytes, downloadData.version);
             }
 
             return await taskCompletionSource.Task;

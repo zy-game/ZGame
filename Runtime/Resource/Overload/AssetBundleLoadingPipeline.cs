@@ -57,7 +57,7 @@ namespace ZGame.Resource
             }
 
             AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(fileDataReader.bytes);
-            AssetBundleManager.instance.Add(assetBundle);
+            ABManager.instance.Add(assetBundle);
             fileDataReader.Dispose();
         }
 
@@ -67,7 +67,7 @@ namespace ZGame.Resource
             index = 0;
             foreach (var VARIABLE in loaded)
             {
-                AssetBundleManager.instance.Remove(VARIABLE);
+                ABManager.instance.Remove(VARIABLE);
             }
 
             loaded.Clear();

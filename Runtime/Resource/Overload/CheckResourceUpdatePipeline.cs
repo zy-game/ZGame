@@ -12,39 +12,42 @@ namespace ZGame.Resource
 {
     public sealed class CheckResourceUpdatePipeline : IPackageUpdatePipeline
     {
-        private void Clear()
-        {
-        }
-
         public async UniTask StartUpdate(Action<float> progressCallback, params string[] args)
         {
             if (args is null || args.Length == 0)
             {
-                Clear();
                 return;
             }
 
-            List<DownloadOptions> options = await Checkout(args);
+            List<string> options = await CheckNeedUpdateList(args);
 
             if (options.Count == 0)
             {
-                Clear();
                 return;
             }
 
-            DownloadHandle[] downloadHandles = await NetworkManager.instance.Download(progressCallback, options.ToArray());
-            if (downloadHandles.Where(x => x.error != null).Count() > 0)
+            NetworkDownloadPipelineHandle[] downloadHandles = await NetworkManager.instance.Download(progressCallback, options.ToArray());
+            bool state = true;
+            foreach (var VARIABLE in downloadHandles)
             {
-                Clear();
-                throw new HttpRequestException(downloadHandles.Where(x => x.error != null).FirstOrDefault()?.error);
+                if (VARIABLE.isDone is false)
+                {
+                    state = false;
+                    continue;
+                }
+
+                await FileManager.instance.WriteAsync(VARIABLE.name, VARIABLE.bytes, ResourcePackageListManifest.GetResourcePackageVersion(VARIABLE.name));
             }
 
-            Clear();
+            if (state is false)
+            {
+                throw new HttpRequestException();
+            }
         }
 
-        private async UniTask<List<DownloadOptions>> Checkout(string[] args)
+        private async UniTask<List<string>> CheckNeedUpdateList(string[] args)
         {
-            List<DownloadOptions> options = new List<DownloadOptions>();
+            List<string> options = new List<string>();
             foreach (var VARIABLE in args)
             {
                 if (VARIABLE.StartsWith("http") is false)
@@ -52,15 +55,12 @@ namespace ZGame.Resource
                     List<ResourcePackageManifest> result = await ResourcePackageListManifest.CheckNeedUpdatePackageList(VARIABLE);
                     foreach (var op in result)
                     {
-                        if (options.Find(x => x.name.Equals(op.name)) is null)
+                        if (options.Contains(GameSeting.GetNetworkResourceUrl(op.name)))
                         {
-                            options.Add(new DownloadOptions()
-                            {
-                                name = Path.GetFileName(VARIABLE),
-                                version = op.version,
-                                url = VARIABLE
-                            });
+                            continue;
                         }
+
+                        options.Add(GameSeting.GetNetworkResourceUrl(op.name));
                     }
 
                     continue;
@@ -79,12 +79,7 @@ namespace ZGame.Resource
                     continue;
                 }
 
-                options.Add(new DownloadOptions()
-                {
-                    name = Path.GetFileName(VARIABLE),
-                    version = crc,
-                    url = VARIABLE
-                });
+                options.Add(VARIABLE);
             }
 
             return options;
@@ -93,7 +88,6 @@ namespace ZGame.Resource
 
         public void Dispose()
         {
-            Clear();
             GC.SuppressFinalize(this);
         }
     }

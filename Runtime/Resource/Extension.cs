@@ -6,7 +6,7 @@ namespace ZGame.Resource
 {
     public static partial class Extension
     {
-        public static GameObject Instantiate(this AssetObjectHandle resObject)
+        public static GameObject Instantiate(this ResHandle resObject)
         {
             if (resObject is null)
             {
@@ -18,7 +18,7 @@ namespace ZGame.Resource
             return gameObject;
         }
 
-        public static GameObject Instantiate(this AssetObjectHandle loadResourceObjectResult, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
+        public static GameObject Instantiate(this ResHandle loadResourceObjectResult, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
         {
             GameObject gameObject = loadResourceObjectResult.Instantiate();
             if (gameObject != null)
@@ -36,7 +36,7 @@ namespace ZGame.Resource
             return gameObject;
         }
 
-        public static void SetSprite(this AssetObjectHandle resObject, GameObject gameObject)
+        public static void SetSprite(this ResHandle resObject, GameObject gameObject)
         {
             if (resObject is null)
             {
@@ -53,7 +53,7 @@ namespace ZGame.Resource
             gameObject.OnDestroyEventCallback(() => { ResourceManager.instance.Release(resObject); });
         }
 
-        public static void SetRawImage(this AssetObjectHandle resObject, GameObject gameObject)
+        public static void SetRawImage(this ResHandle resObject, GameObject gameObject)
         {
             if (resObject is null)
             {
@@ -70,7 +70,7 @@ namespace ZGame.Resource
             gameObject.OnDestroyEventCallback(() => { ResourceManager.instance.Release(resObject); });
         }
 
-        public static void SetSound(this AssetObjectHandle resObject, GameObject gameObject)
+        public static void SetSound(this ResHandle resObject, GameObject gameObject)
         {
             if (resObject is null)
             {
@@ -87,7 +87,7 @@ namespace ZGame.Resource
             gameObject.OnDestroyEventCallback(() => { ResourceManager.instance.Release(resObject); });
         }
 
-        public static void SetVideoClip(this AssetObjectHandle resObject, GameObject gameObject)
+        public static void SetVideoClip(this ResHandle resObject, GameObject gameObject)
         {
             if (resObject is null)
             {

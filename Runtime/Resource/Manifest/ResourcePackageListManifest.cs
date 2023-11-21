@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Serialization;
 using ZGame.FileSystem;
 using ZGame.Networking;
 
@@ -32,6 +28,20 @@ namespace ZGame.Resource
             }
 
             return resourcePackageListManifest;
+        }
+
+        public static uint GetResourcePackageVersion(string packageName)
+        {
+            foreach (var VARIABLE in _manifests)
+            {
+                ResourcePackageManifest resourcePackageManifest = VARIABLE.GetPackageManifest(packageName);
+                if (resourcePackageManifest is not null)
+                {
+                    return resourcePackageManifest.version;
+                }
+            }
+
+            return 0;
         }
 
         public static async UniTask<List<ResourcePackageManifest>> CheckNeedUpdatePackageList(string name)
@@ -86,23 +96,5 @@ namespace ZGame.Resource
 
             return default;
         }
-    }
-
-    [Serializable]
-    public class ResourcePackageManifest
-    {
-        public string name;
-        public uint version;
-        public string owner;
-        public string[] files;
-        public Dependencies[] dependencies;
-    }
-
-    [Serializable]
-    public class Dependencies
-    {
-        public string name;
-        public uint version;
-        public string owner;
     }
 }
