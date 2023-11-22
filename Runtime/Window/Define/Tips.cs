@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace ZGame.Window
 {
-    [Linked("Resources/Prefabs/Toast",998)]
+    [ResourceReference("Resources/Prefabs/Toast",998)]
     public class Tips : UIBase
     {
         public Tips(GameObject gameObject) : base(gameObject)

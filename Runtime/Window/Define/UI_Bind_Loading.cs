@@ -48,7 +48,7 @@ namespace ZGame.Window
 
 		protected virtual void OnEventRegister()
 		{
-			Slider_Slider?.SetCallback(new Action<float>(on_invoke_ValueChangeEvent_Slider_Slider));
+			Slider_Slider?.Setup(new Action<float>(on_invoke_ValueChangeEvent_Slider_Slider));
 		}
 
 		protected virtual void on_invoke_ValueChangeEvent_Slider_Slider(float value)

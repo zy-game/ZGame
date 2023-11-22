@@ -23,7 +23,7 @@ namespace ZGame.Editor
         public void OnEnable()
         {
             _startup = (Startup)target;
-            types = AppDomain.CurrentDomain.GetCustomAttributesWithoutType<Entry>();
+            types = AppDomain.CurrentDomain.GetCustomAttributesWithoutType<GameEntry>();
         }
 
         public override void OnInspectorGUI()

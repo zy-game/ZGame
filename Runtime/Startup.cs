@@ -36,7 +36,7 @@ public class Startup : MonoBehaviour
     {
         if (setting.module.IsNullOrEmpty())
         {
-            throw new ResourceModuleNotFoundException();
+            throw new ArgumentNullException("module");
         }
 
         Loading loading = UIManager.instance.GeOrOpentWindow<Loading>();
@@ -54,6 +54,7 @@ public class Startup : MonoBehaviour
         }
 
         string dllName = Path.GetFileNameWithoutExtension(settings.dll);
+        Debug.Log(dllName);
         assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
         CallGameEntryMethod();
         return;
@@ -85,13 +86,20 @@ public class Startup : MonoBehaviour
                 throw new NullReferenceException(nameof(assembly));
             }
 
-            MethodInfo methodInfo = assembly.GetType("Program")?.GetMethod("Main");
-            if (methodInfo is null)
+            List<Type> types = AppDomain.CurrentDomain.GetCustomAttributesWithoutType<GameEntry>();
+            if (types.Count == 0)
             {
-                throw new EntryPointNotFoundException("Program.Main");
+                throw new EntryPointNotFoundException();
             }
 
-            methodInfo.Invoke(null, new object[0]);
+
+            MethodInfo methodInfo = types.FirstOrDefault()?.GetMethod("Main");
+            if (methodInfo is null)
+            {
+                throw new EntryPointNotFoundException("Method Main");
+            }
+
+            methodInfo.Invoke(null, new object[1] { new string[0] });
         }
     }
 }

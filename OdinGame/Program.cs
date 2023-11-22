@@ -1,18 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using ZGame;
 
-public class Program : MonoBehaviour
+namespace OdinGame
 {
-    // Start is called before the first frame update
-    void Start()
+    [GameEntry]
+    public class Program
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        public static void Main(params string[] args)
+        {
+            Debug.Log("OdinGame Startup");
+        }
     }
 }

@@ -19,7 +19,7 @@ namespace ZGame.Window
                 return gameWindow;
             }
 
-            Linked reference = type.GetCustomAttribute<Linked>();
+            ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
             if (reference is null || reference.path.IsNullOrEmpty())
             {
                 Debug.LogError("没找到资源引用");

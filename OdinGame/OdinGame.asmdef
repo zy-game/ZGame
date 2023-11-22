@@ -1,0 +1,16 @@
+{
+    "name": "OdinGame",
+    "rootNamespace": "",
+    "references": [
+        "GUID:3a5dbb47b15101a43b84005a9f19963f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
