@@ -7,12 +7,18 @@ using UnityEngine.UI;
 
 namespace ZGame.Window
 {
+    /// <summary>
+    /// UI组件绑定
+    /// </summary>
+    /// <typeparam name="T">组件类型</typeparam>
     public class UIBind<T> : IDisposable where T : Component
     {
         public string name { get; private set; }
         public Transform transform { get; private set; }
         public GameObject gameObject { get; private set; }
         public T Component { get; private set; }
+        private Action<object> _setupData;
+        private Action<object> _onComponentValueChange;
 
         public UIBind(Transform transform)
         {
@@ -21,68 +27,95 @@ namespace ZGame.Window
                 return;
             }
 
-            name = transform.name;
+            this.name = transform.name;
             this.transform = transform;
-            gameObject = transform.gameObject;
+            this.gameObject = transform.gameObject;
             this.Component = gameObject.GetComponent<T>();
+            OnInitSetupDataCallback();
+            OnInitComponentEventCallback();
+        }
+
+        private void OnInitSetupDataCallback()
+        {
+            switch (Component)
+            {
+                case Image image:
+                    _setupData = args => image.sprite = (Sprite)args;
+                    break;
+                case RawImage rawImage:
+                    _setupData = args => rawImage.texture = (Texture)args;
+                    break;
+                case TextMeshProUGUI text:
+                    _setupData = args => text.text = (string)args;
+                    break;
+                case Slider slider:
+                    _setupData = args => slider.SetValueWithoutNotify((float)args);
+                    break;
+                case TMP_InputField inputField:
+                    _setupData = args => inputField.SetTextWithoutNotify((string)args);
+                    break;
+                case Toggle toggle:
+                    _setupData = args => toggle.SetIsOnWithoutNotify((bool)args);
+                    break;
+                case TMP_Dropdown dropdown:
+                    _setupData = args => dropdown.SetValueWithoutNotify((int)args);
+                    break;
+            }
+        }
+
+        private void OnInitComponentEventCallback()
+        {
+            switch (Component)
+            {
+                case Slider slider:
+                    slider.onValueChanged.RemoveAllListeners();
+                    slider.onValueChanged.AddListener(OnEvent);
+                    break;
+                case TMP_InputField inputField:
+                    inputField.onEndEdit.RemoveAllListeners();
+                    inputField.onEndEdit.AddListener(OnEvent);
+                    break;
+                case Toggle toggle:
+                    toggle.onValueChanged.RemoveAllListeners();
+                    toggle.onValueChanged.AddListener(OnEvent);
+                    break;
+                case Button button:
+                    button.onClick.RemoveAllListeners();
+                    button.onClick.AddListener(() => { OnEvent(default(T)); });
+                    break;
+                case TMP_Dropdown dropdown:
+                    dropdown.onValueChanged.RemoveAllListeners();
+                    dropdown.onValueChanged.AddListener(OnEvent);
+                    break;
+                case ScrollRect scrollRect:
+                    scrollRect.onValueChanged.RemoveAllListeners();
+                    scrollRect.onValueChanged.AddListener(OnEvent);
+                    break;
+                case Scrollbar scrollbar:
+                    scrollbar.onValueChanged.RemoveAllListeners();
+                    scrollbar.onValueChanged.AddListener(OnEvent);
+                    break;
+            }
+        }
+
+        private void OnEvent<T2>(T2 args)
+        {
+            this._onComponentValueChange?.Invoke(args);
+        }
+
+        public void Setup(UnityAction action)
+        {
+            _onComponentValueChange = args => action();
+        }
+
+        public void Setup<T2>(UnityAction<T2> callback)
+        {
+            _onComponentValueChange = args => callback((T2)args);
         }
 
         public void Setup(object args)
         {
-            switch (Component)
-            {
-                case RectTransform rectTransform:
-                    break;
-                case Image image:
-                    image.sprite = (Sprite)args;
-                    break;
-                case RawImage rawImage:
-                    rawImage.texture = (Texture)args;
-                    break;
-                case TextMeshProUGUI text:
-                    text.text = (string)args;
-                    break;
-                case Slider slider:
-                    if (args is UnityAction<float> callback)
-                    {
-                        slider.onValueChanged.AddListener(callback);
-                    }
-                    else
-                    {
-                        slider.value = (float)args;
-                    }
-
-                    break;
-                case TMP_InputField inputField:
-                    if (args is UnityAction<string> endedit)
-                    {
-                        inputField.onEndEdit.AddListener(endedit);
-                    }
-                    else
-                    {
-                        inputField.text = (string)args;
-                    }
-
-                    break;
-                case Toggle toggle:
-                    if (args is UnityAction<bool> change)
-                    {
-                        toggle.onValueChanged.AddListener(change);
-                    }
-                    else
-                    {
-                        toggle.isOn = (bool)args;
-                    }
-
-                    break;
-                case Button button:
-                    if (args is UnityAction action)
-                    {
-                        button.onClick.AddListener(action);
-                    }
-
-                    break;
-            }
+            _setupData?.Invoke(args);
         }
 
         public virtual void Dispose()

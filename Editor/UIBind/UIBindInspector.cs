@@ -204,7 +204,6 @@ namespace ZGame.Editor.UIBind
         private void OnGenericCode()
         {
             StringBuilder sb = new StringBuilder();
-
             sb.AppendLine("using ZGame.Window;");
             sb.AppendLine("using System;");
             setting.nameSpace.ForEach(x => sb.AppendLine($"using {x};"));
@@ -214,7 +213,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("/// </summary>");
             sb.AppendLine("namespace " + setting.NameSpace);
             sb.AppendLine("{");
-            sb.AppendLine("\tpublic class UI_Bind_" + setting.name + " : GameWindow");
+            sb.AppendLine("\tpublic class UI_" + setting.name + " : UIBase");
             sb.AppendLine("\t{");
 
             foreach (var VARIABLE in setting.options)
@@ -227,7 +226,7 @@ namespace ZGame.Editor.UIBind
             }
 
             sb.AppendLine("");
-            sb.AppendLine($"\t\tpublic UI_Bind_{setting.name}(GameObject gameObject) : base(gameObject)");
+            sb.AppendLine($"\t\tpublic UI_{setting.name}(GameObject gameObject) : base(gameObject)");
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t}");
             sb.AppendLine("");
@@ -235,7 +234,6 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t\tOnBind();");
             sb.AppendLine("\t\t\tOnEventRegister();");
-            // sb.AppendLine("\t\t\tOnRefresh();");
             sb.AppendLine("\t\t}");
             sb.AppendLine("");
             sb.AppendLine("\t\tprotected virtual void OnBind()");
@@ -265,19 +263,19 @@ namespace ZGame.Editor.UIBind
                     string name = $"{ts[ts.Length - 1]}_{VARIABLE.name}";
                     if (VARIABLE2.EndsWith("Button"))
                     {
-                        sb.AppendLine($"\t\t\t{name}?.SetCallback(new Action(on_invoke_ButtonEvent_{name}));");
+                        sb.AppendLine($"\t\t\t{name}?.Setup(new Action(on_invoke_{name}));");
                     }
                     else if (VARIABLE2.EndsWith("Toggle"))
                     {
-                        sb.AppendLine($"\t\t\t{name}?.SetCallback(new Action<bool>(on_invoke_ValueChangeEvent_{name}));");
+                        sb.AppendLine($"\t\t\t{name}?.Setup(new Action<bool>(on_invoke_{name}));");
                     }
                     else if (VARIABLE2.EndsWith("Slider"))
                     {
-                        sb.AppendLine($"\t\t\t{name}?.SetCallback(new Action<float>(on_invoke_ValueChangeEvent_{name}));");
+                        sb.AppendLine($"\t\t\t{name}?.Setup(new Action<float>(on_invoke_{name}));");
                     }
                     else if (VARIABLE2.EndsWith("InputField"))
                     {
-                        sb.AppendLine($"\t\t\t{name}?.SetCallback(new Action<string>(on_invoke_ValueChangeEvent_{name}));");
+                        sb.AppendLine($"\t\t\t{name}?.Setup(new Action<string>(on_invoke_{name}));");
                     }
                 }
             }
@@ -293,22 +291,22 @@ namespace ZGame.Editor.UIBind
                     bool m = false;
                     if (VARIABLE2.EndsWith("Button"))
                     {
-                        sb.AppendLine("\t\tprotected virtual void on_invoke_ButtonEvent_{name}()");
+                        sb.AppendLine("\t\tprotected virtual void on_invoke_{name}()");
                         m = true;
                     }
                     else if (VARIABLE2.EndsWith("Toggle"))
                     {
-                        sb.AppendLine($"\t\tprotected virtual void on_invoke_ValueChangeEvent_{name}(bool isOn)");
+                        sb.AppendLine($"\t\tprotected virtual void on_invoke_{name}(bool isOn)");
                         m = true;
                     }
                     else if (VARIABLE2.EndsWith("Slider"))
                     {
-                        sb.AppendLine($"\t\tprotected virtual void on_invoke_ValueChangeEvent_{name}(float value)");
+                        sb.AppendLine($"\t\tprotected virtual void on_invoke_{name}(float value)");
                         m = true;
                     }
                     else if (VARIABLE2.EndsWith("InputField"))
                     {
-                        sb.AppendLine($"\t\tprotected virtual void on_invoke_ValueChangeEvent_{name}(string value)");
+                        sb.AppendLine($"\t\tprotected virtual void on_invoke_{name}(string value)");
                         m = true;
                     }
 
@@ -347,7 +345,7 @@ namespace ZGame.Editor.UIBind
                 return;
             }
 
-            File.WriteAllText($"{path}/UI_Bind_{setting.name}.cs", sb.ToString());
+            File.WriteAllText($"{path}/UI_{setting.name}.cs", sb.ToString());
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }

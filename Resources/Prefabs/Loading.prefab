@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1403908908382287283}
   - component: {fileID: 6928805719803156331}
+  - component: {fileID: 4711957568587372328}
   m_Layer: 5
   m_Name: Slider
   m_TagString: Untagged
@@ -89,6 +90,18 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4711957568587372328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1398043677735594507}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91e2a4683ff14ae5b4c706f173d5264c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3133994415771912156
 GameObject:
   m_ObjectHideFlags: 0
@@ -138,10 +151,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e28d756b75fe49e084a5060d32ca0775, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BindConfig: {fileID: 0}
   nameSpace:
   - UnityEngine
   - UnityEngine.UI
   - TMPro
+  - ZGame.Window
   NameSpace: ZGame.Window
   output: {fileID: 102900000, guid: 8ed90d788de4467e9162b59827efc924, type: 3}
   options:
@@ -150,6 +165,7 @@ MonoBehaviour:
     type:
     - UnityEngine.RectTransform
     - UnityEngine.UI.Slider
+    - ZGame.Window.UIGroupItem
   - name: Background
     path: Panel/Slider/Background
     type:
@@ -162,6 +178,13 @@ MonoBehaviour:
     - UnityEngine.RectTransform
     - UnityEngine.CanvasRenderer
     - TMPro.TextMeshProUGUI
+  - name: Panel
+    path: Panel
+    type:
+    - UnityEngine.RectTransform
+    - UnityEngine.CanvasRenderer
+    - UnityEngine.UI.Image
+    - ZGame.Window.UIGroup
 --- !u!1 &3514990325737268949
 GameObject:
   m_ObjectHideFlags: 0
@@ -418,6 +441,7 @@ GameObject:
   - component: {fileID: 735242828984533847}
   - component: {fileID: 5895129479962905244}
   - component: {fileID: 1502532775577465902}
+  - component: {fileID: 7461717127271529320}
   m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
@@ -484,6 +508,19 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7461717127271529320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6324022308468693624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32eae5b950b84f58bfd0ba7ce303fa14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  templeta: {fileID: 4711957568587372328}
 --- !u!1 &7938787818432923120
 GameObject:
   m_ObjectHideFlags: 0

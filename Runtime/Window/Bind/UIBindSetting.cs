@@ -13,9 +13,16 @@ namespace ZGame.Window
         [NonSerialized] public GameObject target;
     }
 
+    public class UIBindConfig : ScriptableObject
+    {
+        public string name;
+        [SerializeField] public UnityEngine.Object output;
+    }
+
     public class UIBindSetting : MonoBehaviour
     {
 #if UNITY_EDITOR
+        [SerializeField] public UIBindConfig BindConfig;
         [SerializeField] public List<string> nameSpace = new List<string>();
         [SerializeField] public string NameSpace;
         [SerializeField] public UnityEngine.Object output;
