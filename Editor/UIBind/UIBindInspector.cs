@@ -11,32 +11,32 @@ using ZGame.Window;
 
 namespace ZGame.Editor.UIBind
 {
-    [CustomEditor(typeof(UIBindSetting))]
+    [CustomEditor(typeof(UIBindEditor))]
     public class UIBindInspector : UnityEditor.Editor
     {
-        private UIBindSetting setting;
+        private UIBindEditor setting;
 
         public void OnEnable()
         {
-            this.setting = (UIBindSetting)target;
+            this.setting = (UIBindEditor)target;
         }
 
         public override void OnInspectorGUI()
         {
             EditorGUI.BeginChangeCheck();
-            setting.NameSpace = EditorGUILayout.TextField("NameSpace", setting.NameSpace);
+            setting.BindConfig.NameSpace = EditorGUILayout.TextField("NameSpace", setting.BindConfig.NameSpace);
 
             EditorGUILayout.BeginHorizontal();
-            setting.output = EditorGUILayout.ObjectField("Output", setting.output, typeof(DefaultAsset));
+            setting.BindConfig.output = EditorGUILayout.ObjectField("Output", setting.BindConfig.output, typeof(DefaultAsset));
             EditorGUILayout.EndHorizontal();
             this.BeginColor(ZStyle.inColor);
             GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.Height(1));
             this.EndColor();
 
 
-            if (setting.options == null)
+            if (setting.BindConfig.options == null)
             {
-                setting.options = new List<BindOptions>();
+                setting.BindConfig.options = new List<UIBindData>();
             }
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
@@ -47,13 +47,13 @@ namespace ZGame.Editor.UIBind
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("", ZStyle.GUI_STYLE_ADD_BUTTON))
                 {
-                    setting.options.Add(new BindOptions());
+                    setting.BindConfig.options.Add(new UIBindData());
                 }
 
                 GUILayout.EndHorizontal();
             }
 
-            if (setting.options.Count == 0)
+            if (setting.BindConfig.options.Count == 0)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
@@ -63,9 +63,9 @@ namespace ZGame.Editor.UIBind
             }
 
 
-            for (int i = setting.options.Count - 1; i >= 0; i--)
+            for (int i = setting.BindConfig.options.Count - 1; i >= 0; i--)
             {
-                OnDrawingBindItemData(setting.options[i]);
+                OnDrawingBindItemData(setting.BindConfig.options[i]);
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -82,7 +82,7 @@ namespace ZGame.Editor.UIBind
             }
         }
 
-        private void OnDrawingBindItemData(BindOptions options)
+        private void OnDrawingBindItemData(UIBindData options)
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             if (options.target == null)
@@ -109,12 +109,12 @@ namespace ZGame.Editor.UIBind
                 Component[] opComs = options.target.GetComponents<Component>();
                 foreach (var VARIABLE in opComs)
                 {
-                    if (setting.nameSpace.Contains(VARIABLE.GetType().Namespace))
+                    if (setting.BindConfig.reference.Contains(VARIABLE.GetType().Namespace))
                     {
                         continue;
                     }
 
-                    setting.nameSpace.Add(VARIABLE.GetType().Namespace);
+                    setting.BindConfig.reference.Add(VARIABLE.GetType().Namespace);
                 }
 
                 items.AddRange(opComs.Select(x => x.GetType().FullName));
@@ -171,7 +171,7 @@ namespace ZGame.Editor.UIBind
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("", ZStyle.GUI_STYLE_MINUS))
             {
-                setting.options.Remove(options);
+                setting.BindConfig.options.Remove(options);
                 EditorUtility.SetDirty(setting);
                 this.Repaint();
             }
@@ -182,7 +182,7 @@ namespace ZGame.Editor.UIBind
         private string GetPath(Transform _transform)
         {
             string path = "";
-            while (_transform.GetComponent<UIBindSetting>() == null)
+            while (_transform.GetComponent<UIBindEditor>() == null)
             {
                 if (_transform.parent == null)
                 {
@@ -206,17 +206,17 @@ namespace ZGame.Editor.UIBind
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("using ZGame.Window;");
             sb.AppendLine("using System;");
-            setting.nameSpace.ForEach(x => sb.AppendLine($"using {x};"));
+            setting.BindConfig.reference.ForEach(x => sb.AppendLine($"using {x};"));
             sb.AppendLine("/// <summary>");
             sb.AppendLine("/// Createing with " + DateTime.Now.ToString("g"));
             sb.AppendLine("/// by " + SystemInfo.deviceName);
             sb.AppendLine("/// </summary>");
-            sb.AppendLine("namespace " + setting.NameSpace);
+            sb.AppendLine("namespace " + setting.BindConfig.NameSpace);
             sb.AppendLine("{");
             sb.AppendLine("\tpublic class UI_" + setting.name + " : UIBase");
             sb.AppendLine("\t{");
 
-            foreach (var VARIABLE in setting.options)
+            foreach (var VARIABLE in setting.BindConfig.options)
             {
                 foreach (var VARIABLE2 in VARIABLE.type)
                 {
@@ -242,7 +242,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("\t\t\t{");
             sb.AppendLine("\t\t\t\treturn;");
             sb.AppendLine("\t\t\t}");
-            foreach (var VARIABLE in setting.options)
+            foreach (var VARIABLE in setting.BindConfig.options)
             {
                 foreach (var VARIABLE2 in VARIABLE.type)
                 {
@@ -255,7 +255,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("");
             sb.AppendLine("\t\tprotected virtual void OnEventRegister()");
             sb.AppendLine("\t\t{");
-            foreach (var VARIABLE in setting.options)
+            foreach (var VARIABLE in setting.BindConfig.options)
             {
                 foreach (var VARIABLE2 in VARIABLE.type)
                 {
@@ -282,7 +282,7 @@ namespace ZGame.Editor.UIBind
 
             sb.AppendLine("\t\t}");
             sb.AppendLine("");
-            foreach (var VARIABLE in setting.options)
+            foreach (var VARIABLE in setting.BindConfig.options)
             {
                 foreach (var VARIABLE2 in VARIABLE.type)
                 {
@@ -322,7 +322,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("\t\tpublic override void Dispose()");
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t\tbase.Dispose();");
-            foreach (var VARIABLE in setting.options)
+            foreach (var VARIABLE in setting.BindConfig.options)
             {
                 foreach (var VARIABLE2 in VARIABLE.type)
                 {
@@ -339,7 +339,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("\t}");
             sb.AppendLine("}");
 
-            string path = AssetDatabase.GetAssetPath(setting.output);
+            string path = AssetDatabase.GetAssetPath(setting.BindConfig.output);
             if (path.IsNullOrEmpty())
             {
                 return;

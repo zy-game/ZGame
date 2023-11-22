@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ZGame.Window
 {
     [Serializable]
-    public class BindOptions
+    public class UIBindData
     {
         public string name;
         public string path;
@@ -13,20 +13,19 @@ namespace ZGame.Window
         [NonSerialized] public GameObject target;
     }
 
-    public class UIBindConfig : ScriptableObject
+    [Serializable]
+    public class UIBindConfig
     {
-        public string name;
+        [SerializeField] public string NameSpace;
         [SerializeField] public UnityEngine.Object output;
+        [SerializeField] public List<string> reference = new List<string>();
+        [SerializeField] public List<UIBindData> options = new List<UIBindData>();
     }
 
-    public class UIBindSetting : MonoBehaviour
+    public class UIBindEditor : MonoBehaviour
     {
 #if UNITY_EDITOR
         [SerializeField] public UIBindConfig BindConfig;
-        [SerializeField] public List<string> nameSpace = new List<string>();
-        [SerializeField] public string NameSpace;
-        [SerializeField] public UnityEngine.Object output;
-        [SerializeField] public List<BindOptions> options = new List<BindOptions>();
 #endif
     }
 }

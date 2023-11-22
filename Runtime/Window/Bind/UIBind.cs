@@ -31,53 +31,37 @@ namespace ZGame.Window
             this.transform = transform;
             this.gameObject = transform.gameObject;
             this.Component = gameObject.GetComponent<T>();
-            OnInitSetupDataCallback();
             OnInitComponentEventCallback();
         }
 
-        private void OnInitSetupDataCallback()
-        {
-            switch (Component)
-            {
-                case Image image:
-                    _setupData = args => image.sprite = (Sprite)args;
-                    break;
-                case RawImage rawImage:
-                    _setupData = args => rawImage.texture = (Texture)args;
-                    break;
-                case TextMeshProUGUI text:
-                    _setupData = args => text.text = (string)args;
-                    break;
-                case Slider slider:
-                    _setupData = args => slider.SetValueWithoutNotify((float)args);
-                    break;
-                case TMP_InputField inputField:
-                    _setupData = args => inputField.SetTextWithoutNotify((string)args);
-                    break;
-                case Toggle toggle:
-                    _setupData = args => toggle.SetIsOnWithoutNotify((bool)args);
-                    break;
-                case TMP_Dropdown dropdown:
-                    _setupData = args => dropdown.SetValueWithoutNotify((int)args);
-                    break;
-            }
-        }
 
         private void OnInitComponentEventCallback()
         {
             switch (Component)
             {
+                case TextMeshProUGUI text:
+                    _setupData = args => text.text = (string)args;
+                    break;
+                case RawImage rawImage:
+                    _setupData = args => rawImage.texture = (Texture)args;
+                    break;
+                case Image image:
+                    _setupData = args => image.sprite = (Sprite)args;
+                    break;
                 case Slider slider:
                     slider.onValueChanged.RemoveAllListeners();
                     slider.onValueChanged.AddListener(OnEvent);
+                    _setupData = args => slider.SetValueWithoutNotify((float)args);
                     break;
                 case TMP_InputField inputField:
                     inputField.onEndEdit.RemoveAllListeners();
                     inputField.onEndEdit.AddListener(OnEvent);
+                    _setupData = args => inputField.SetTextWithoutNotify((string)args);
                     break;
                 case Toggle toggle:
                     toggle.onValueChanged.RemoveAllListeners();
                     toggle.onValueChanged.AddListener(OnEvent);
+                    _setupData = args => toggle.SetIsOnWithoutNotify((bool)args);
                     break;
                 case Button button:
                     button.onClick.RemoveAllListeners();
@@ -86,6 +70,7 @@ namespace ZGame.Window
                 case TMP_Dropdown dropdown:
                     dropdown.onValueChanged.RemoveAllListeners();
                     dropdown.onValueChanged.AddListener(OnEvent);
+                    _setupData = args => dropdown.SetValueWithoutNotify((int)args);
                     break;
                 case ScrollRect scrollRect:
                     scrollRect.onValueChanged.RemoveAllListeners();
