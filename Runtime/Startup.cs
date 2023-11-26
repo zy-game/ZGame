@@ -27,7 +27,7 @@ public class Startup : MonoBehaviour
             return;
         }
 
-
+        loading.TextMeshProUGUI_TextTMP.Setup("正在获取配置信息...");
         await UpdateAndLoadingResourcePackageList(GameSeting.current);
         await EntryGame(GameSeting.current);
     }
