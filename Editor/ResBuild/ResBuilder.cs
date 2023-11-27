@@ -31,7 +31,7 @@ namespace ZGame.Editor.ResBuild
             GUILayout.Space(20);
             foreach (var VARIABLE in BuilderConfig.instance.packages)
             {
-                if (VARIABLE.use is false || VARIABLE.folder == null || (search.IsNullOrEmpty() is false && VARIABLE.name.StartsWith(search) is false))
+                if (VARIABLE.use is false || VARIABLE.items == null || (search.IsNullOrEmpty() is false && VARIABLE.name.StartsWith(search) is false))
                 {
                     continue;
                 }
@@ -65,16 +65,10 @@ namespace ZGame.Editor.ResBuild
 
         private void OnBuild()
         {
-            List<PackageSeting> items = BuilderConfig.instance.packages.Where(x => x.selection).ToList();
-            if (items is null || items.Count == 0)
-            {
-                return;
-            }
-
             List<BuildItem> builds = new List<BuildItem>();
             foreach (var VARIABLE in BuilderConfig.instance.packages)
             {
-                if (VARIABLE.use is false)
+                if (VARIABLE.use is false || VARIABLE.selection is false)
                 {
                     continue;
                 }
@@ -91,14 +85,14 @@ namespace ZGame.Editor.ResBuild
             return target.name + "_" + Path.GetFileNameWithoutExtension(name) + BuilderConfig.instance.fileExtension;
         }
 
-        private BuildItem GetRuleBuildBundles(PackageSeting ruler)
+        private BuildItem GetRuleBuildBundles(PackageSeting seting)
         {
             List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
-            foreach (var folder in ruler.folder)
+            foreach (var rulerData in seting.items)
             {
                 string[] files = default;
-                string rootPath = AssetDatabase.GetAssetPath(folder);
-                switch (ruler.buildType)
+                string rootPath = AssetDatabase.GetAssetPath(rulerData.folder);
+                switch (rulerData.buildType)
                 {
                     case BuildType.Asset:
                         files = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories);
@@ -111,7 +105,7 @@ namespace ZGame.Editor.ResBuild
 
                             builds.Add(new AssetBundleBuild()
                             {
-                                assetBundleName = GetBundleName(folder, VARIABLE),
+                                assetBundleName = GetBundleName(rulerData.folder, VARIABLE),
                                 assetNames = new[] { VARIABLE }
                             });
                         }
@@ -124,7 +118,7 @@ namespace ZGame.Editor.ResBuild
                             files = Directory.GetFiles(child, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
                             builds.Add(new AssetBundleBuild()
                             {
-                                assetBundleName = GetBundleName(folder, child),
+                                assetBundleName = GetBundleName(rulerData.folder, child),
                                 assetNames = files
                             });
                         }
@@ -133,17 +127,17 @@ namespace ZGame.Editor.ResBuild
                     case BuildType.Once:
                         builds.Add(new AssetBundleBuild()
                         {
-                            assetBundleName = folder.name + "_" + Path.GetFileNameWithoutExtension(folder.name),
+                            assetBundleName = GetBundleName(rulerData.folder, ""),
                             assetNames = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray()
                         });
                         break;
                     case BuildType.AssetType:
-                        foreach (var VARIABLE in ruler.contentExtensionList)
+                        foreach (var VARIABLE in rulerData.exs)
                         {
-                            files = Directory.GetFiles(rootPath, "*" + VARIABLE, SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
+                            files = Directory.GetFiles(rootPath, "*" + VARIABLE.name, SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
                             builds.Add(new AssetBundleBuild()
                             {
-                                assetBundleName = GetBundleName(folder, VARIABLE.Substring(1)),
+                                assetBundleName = GetBundleName(rulerData.folder, VARIABLE.name.Substring(1)),
                                 assetNames = files
                             });
                         }
@@ -155,7 +149,7 @@ namespace ZGame.Editor.ResBuild
 
             return new BuildItem()
             {
-                ruler = ruler,
+                ruler = seting,
                 builds = builds.ToArray()
             };
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.ResBuild.Config;
@@ -14,34 +15,39 @@ namespace ZGame.Editor.ResBuild
     {
         public override void OnEnable()
         {
-            foreach (var ruler in BuilderConfig.instance.packages)
+            foreach (var packageSeting in BuilderConfig.instance.packages)
             {
-                ruler.exs = new List<string>();
-                if (ruler.folder == null)
+                if (packageSeting.items == null)
                 {
-                    return;
+                    continue;
                 }
 
-                foreach (var VARIABLE in ruler.folder)
+                foreach (var rulerData in packageSeting.items)
                 {
-                    if (VARIABLE == null)
+                    if (rulerData.folder == null)
                     {
                         continue;
                     }
 
-
-                    string path = AssetDatabase.GetAssetPath(VARIABLE);
+                    if (rulerData.exs is null)
+                    {
+                        rulerData.exs = new List<ExtensionSetting>();
+                    }
+                    string path = AssetDatabase.GetAssetPath(rulerData.folder);
                     string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
-
                     foreach (var VARIABLE2 in files)
                     {
                         string ex = Path.GetExtension(VARIABLE2);
-                        if (ruler.exs.Contains(ex) || ex == ".meta")
+                        if (rulerData.exs.Find(x => x.name == ex) != null)
                         {
                             continue;
                         }
 
-                        ruler.exs.Add(ex);
+                        rulerData.exs.Add(new ExtensionSetting()
+                        {
+                            name = ex,
+                            use = false,
+                        });
                     }
                 }
             }
@@ -57,12 +63,9 @@ namespace ZGame.Editor.ResBuild
                 BuilderConfig.instance.packages.Add(new PackageSeting()
                 {
                     name = "New Package Seting",
-                    folder = new List<Object>(),
-                    buildType = BuildType.AssetType,
+                    items = new List<RulerData>(),
                     use = true,
                     describe = String.Empty,
-                    exs = new List<string>(),
-                    contentExtensionList = new List<string>()
                 });
             }
 
@@ -107,9 +110,9 @@ namespace ZGame.Editor.ResBuild
 
                 EditorGUI.BeginChangeCheck();
                 {
-                    if (package.folder == null)
+                    if (package.items == null)
                     {
-                        package.folder = new List<Object>();
+                        package.items = new List<RulerData>();
                     }
 
                     GUILayout.BeginVertical(EditorStyles.helpBox);
@@ -119,67 +122,41 @@ namespace ZGame.Editor.ResBuild
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
                             {
-                                package.folder.Add(null);
+                                package.items.Add(new RulerData()
+                                {
+                                    use = true,
+                                    exs = new List<ExtensionSetting>(),
+                                    buildType = BuildType.Once
+                                });
                             }
 
                             GUILayout.EndHorizontal();
                         }
-                        for (int i = 0; i < package.folder.Count; i++)
+                        for (int i = 0; i < package.items.Count; i++)
                         {
+                            RulerData rulerData = package.items[i];
                             GUILayout.BeginHorizontal();
-                            package.folder[i] = EditorGUILayout.ObjectField(package.folder[i], typeof(DefaultAsset), false);
+                            rulerData.folder = EditorGUILayout.ObjectField(rulerData.folder, typeof(DefaultAsset), false);
                             GUILayout.BeginHorizontal();
                             {
-                                package.buildType = (BuildType)EditorGUILayout.EnumPopup("分包规则", package.buildType);
-                                if (package.folder != null && package.buildType == BuildType.AssetType)
+                                rulerData.buildType = (BuildType)EditorGUILayout.EnumPopup("分包规则", rulerData.buildType);
+                                if (rulerData.folder != null && rulerData.buildType == BuildType.AssetType)
                                 {
-                                    string name = String.Empty;
-                                    if (package.contentExtensionList.Count == 0)
+                                    GUILayout.EndHorizontal();
+                                    continue;
+                                }
+
+                                if (GUILayout.Button(rulerData.GetExtensionInfo(), EditorStyles.popup))
+                                {
+                                    GenericMenu menu = new GenericMenu();
+                                    menu.AddItem(new GUIContent("Noting"), rulerData.exs.Where(x => x.use).Count() == 0, () => { rulerData.exs.ForEach(x => x.use = false); });
+                                    menu.AddItem(new GUIContent("Everything"), rulerData.exs.Where(x => x.use).Count() == rulerData.exs.Count, () => { rulerData.exs.ForEach(x => x.use = true); });
+                                    foreach (var VARIABLE in rulerData.exs)
                                     {
-                                        name = "Noting";
-                                    }
-                                    else
-                                    {
-                                        if (package.exs.Count == package.contentExtensionList.Count)
-                                        {
-                                            name = "Everyting";
-                                        }
-                                        else
-                                        {
-                                            name = string.Join(",", package.exs);
-                                            if (name.Length > 20)
-                                            {
-                                                name = name.Substring(0, 25) + "...";
-                                            }
-                                        }
+                                        menu.AddItem(new GUIContent(VARIABLE.name), VARIABLE.use, () => { VARIABLE.use = !VARIABLE.use; });
                                     }
 
-                                    if (GUILayout.Button(name, EditorStyles.popup))
-                                    {
-                                        GenericMenu menu = new GenericMenu();
-                                        menu.AddItem(new GUIContent("Noting"), package.contentExtensionList.Count == 0, () => { package.contentExtensionList.Clear(); });
-                                        menu.AddItem(new GUIContent("Everything"), package.exs.Count == package.contentExtensionList.Count, () =>
-                                        {
-                                            package.contentExtensionList.Clear();
-                                            package.contentExtensionList.AddRange(package.exs);
-                                        });
-                                        foreach (var VARIABLE in package.exs)
-                                        {
-                                            menu.AddItem(new GUIContent(VARIABLE), package.contentExtensionList.Contains(VARIABLE), () =>
-                                            {
-                                                if (package.contentExtensionList.Contains(VARIABLE))
-                                                {
-                                                    package.contentExtensionList.Remove(VARIABLE);
-                                                }
-                                                else
-                                                {
-                                                    package.contentExtensionList.Add(VARIABLE);
-                                                }
-                                            });
-                                        }
-
-                                        menu.ShowAsContext();
-                                    }
+                                    menu.ShowAsContext();
                                 }
 
                                 GUILayout.EndHorizontal();
@@ -187,7 +164,7 @@ namespace ZGame.Editor.ResBuild
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
                             {
-                                package.folder.RemoveAt(i);
+                                package.items.RemoveAt(i);
                                 WindowDocker.Refresh();
                             }
 

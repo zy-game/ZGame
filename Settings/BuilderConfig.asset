@@ -16,11 +16,21 @@ MonoBehaviour:
   - use: 1
     name: New Package Seting
     describe: 
-    folder:
-    - {fileID: 102900000, guid: a5b9231662e24c942b544bd85d4b39cb, type: 3}
-    - {fileID: 0}
-    buildType: 2
-    contentExtensionList: []
+    items:
+    - use: 1
+      folder: {fileID: 102900000, guid: 08637fc07d602494ab93601fcacbb7c7, type: 3}
+      buildType: 2
+      exs:
+      - use: 1
+        name: .anim
+      - use: 1
+        name: .meta
+      - use: 1
+        name: .controller
+    - use: 1
+      folder: {fileID: 0}
+      buildType: 0
+      exs: []
   ossList:
   - title: "\u6D4B\u8BD5-\u817E\u8BAF\u4E91"
     type: 1
