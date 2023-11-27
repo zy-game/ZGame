@@ -14,21 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   packages:
   - use: 1
-    name: Hex Terrain Basic Ruler Seting
+    name: New Package Seting
     describe: 
-    folder: {fileID: 102900000, guid: afc66cbc915b00f49b94b9a8deeb62aa, type: 3}
-    buildType: 1
-    contentExtensionList: []
-  - use: 1
-    name: New Folder Ruler Seting
-    describe: 
-    folder: {fileID: 102900000, guid: 62bbea5413c8bef449ab89d9d3dddc03, type: 3}
-    buildType: 2
-    contentExtensionList: []
-  - use: 1
-    name: scene Ruler Seting
-    describe: 
-    folder: {fileID: 102900000, guid: 6bcaabbec47292f42a88c120c2a6a21d, type: 3}
+    folder:
+    - {fileID: 102900000, guid: a5b9231662e24c942b544bd85d4b39cb, type: 3}
+    - {fileID: 0}
     buildType: 2
     contentExtensionList: []
   ossList:

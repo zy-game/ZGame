@@ -13,40 +13,10 @@ using ZGame.FileSystem;
 
 namespace ZGame.Networking
 {
-    public class DownloadOptions : IDisposable
-    {
-        public string name;
-        public string url;
-        public uint version;
-
-        public void Dispose()
-        {
-        }
-    }
-
-    public struct NetworkDownloadPipelineHandle : IDisposable
-    {
-        public void Dispose()
-        {
-            name = String.Empty;
-            url = String.Empty;
-            bytes = Array.Empty<byte>();
-            GC.SuppressFinalize(this);
-        }
-
-        public string name;
-        public float progress;
-        public bool isDone;
-        public string url;
-        public byte[] bytes;
-        public string error;
-    }
-
     public class NetworkManager : SingletonBehaviour<NetworkManager>
     {
         private List<IDispatcher> messageRecvierPipelines = new List<IDispatcher>();
         private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
-
 
         public async UniTask<IChannel> Connect(string address)
         {
@@ -87,12 +57,8 @@ namespace ZGame.Networking
         {
             UniTaskCompletionSource<T> taskCompletionSource = new UniTaskCompletionSource<T>();
             IDispatcher messageRecvier = IDispatcher.Create<T>(taskCompletionSource);
-            if (WriteAndFlush(address, message) is false)
-            {
-                return default;
-            }
-
             messageRecvierPipelines.Add(messageRecvier);
+            WriteAndFlush(address, message);
             return await taskCompletionSource.Task;
         }
 
@@ -105,81 +71,6 @@ namespace ZGame.Networking
 
             await channel.Close();
             return channel;
-        }
-
-        public async UniTask<T> Get<T>(string url)
-        {
-            IWebRequestPipeline webRequestPipeline = IWebRequestPipeline.Create(url);
-            return await webRequestPipeline.GetAsync<T>();
-        }
-
-        public async UniTask<T> Post<T>(string url, object data, Dictionary<string, string> header = null)
-        {
-            IWebRequestPipeline webRequestPipeline = IWebRequestPipeline.Create(url);
-            return await webRequestPipeline.PostAsync<T>(header, data);
-        }
-
-        public async UniTask<string> Head(string url, string headName)
-        {
-            IWebRequestPipeline webRequestPipeline = IWebRequestPipeline.Create(url);
-            return await webRequestPipeline.Head(headName);
-        }
-
-        public async UniTask<NetworkDownloadPipelineHandle[]> Download(Action<float> progress, params string[] args)
-        {
-            if (args is null || args.Length == 0)
-            {
-                return default;
-            }
-
-            UniTaskCompletionSource<NetworkDownloadPipelineHandle[]> taskCompletionSource = new UniTaskCompletionSource<NetworkDownloadPipelineHandle[]>();
-            NetworkDownloadPipelineHandle[] handles = new NetworkDownloadPipelineHandle[args.Length];
-            StartCoroutine(UpdateProgress());
-            for (int i = 0; i < args.Length; i++)
-            {
-                handles[i] = new NetworkDownloadPipelineHandle()
-                {
-                    name = Path.GetFileName(args[i]),
-                    url = args[i],
-                    isDone = false,
-                    progress = 0,
-                    bytes = Array.Empty<byte>()
-                };
-                StartCoroutine(Download(handles[i]));
-            }
-
-            IEnumerator UpdateProgress()
-            {
-                while (handles.Where(x => x.isDone == false).Count() > 0)
-                {
-                    progress?.Invoke(handles.Sum(x => x.progress));
-                    yield return new WaitForSeconds(0.1f);
-                }
-
-                taskCompletionSource.TrySetResult(handles);
-            }
-
-            IEnumerator Download(NetworkDownloadPipelineHandle downloadData)
-            {
-                UnityWebRequest request = UnityWebRequest.Get(downloadData.url);
-                request.SendWebRequest();
-                while (!request.isDone)
-                {
-                    downloadData.progress = request.downloadProgress;
-                    yield return new WaitForSeconds(0.01f);
-                }
-
-                downloadData.isDone = true;
-                if (request.result is not UnityWebRequest.Result.Success)
-                {
-                    downloadData.error = request.downloadHandler.text;
-                    yield break;
-                }
-
-                downloadData.bytes = request.downloadHandler.data;
-            }
-
-            return await taskCompletionSource.Task;
         }
 
         public void SubscribeMessageRecvier(Type type)

@@ -11,14 +11,33 @@ namespace ZGame.Resource
         public uint version;
         public ResourcePackageManifest[] packages;
 
+        public bool Contains(string name)
+        {
+            return GetPackageManifest(name) is not null;
+        }
+
+        public ResourcePackageManifest GetPackageManifest(string name)
+        {
+            for (int i = 0; i < packages.Length; i++)
+            {
+                if (packages[i].name == name)
+                {
+                    return packages[i];
+                }
+            }
+
+            return default;
+        }
+
+
         private static List<ResourcePackageListManifest> _manifests = new List<ResourcePackageListManifest>();
 
-        public static async UniTask<ResourcePackageListManifest> Find(string name)
+        public static async UniTask<ResourcePackageListManifest> GetResourcePackageListManifestConfig(string name)
         {
             ResourcePackageListManifest resourcePackageListManifest = _manifests.Find(x => x.name == name);
             if (resourcePackageListManifest is null)
             {
-                resourcePackageListManifest = await NetworkManager.instance.Get<ResourcePackageListManifest>(GameSeting.GetNetworkResourceUrl(name + ".ini"));
+                resourcePackageListManifest = await NetworkRequest.Get<ResourcePackageListManifest>(GameSeting.GetNetworkResourceUrl(name + ".ini"));
                 if (resourcePackageListManifest is null)
                 {
                     return default;
@@ -44,57 +63,57 @@ namespace ZGame.Resource
             return 0;
         }
 
+        public static async UniTask<List<ResourcePackageManifest>> GetPackageList(string name)
+        {
+            List<ResourcePackageManifest> needUpdatePackages = new List<ResourcePackageManifest>();
+            ResourcePackageListManifest resourcePackageListManifest = await GetResourcePackageListManifestConfig(name);
+            if (resourcePackageListManifest is null)
+            {
+                return needUpdatePackages;
+            }
+
+            needUpdatePackages.AddRange(resourcePackageListManifest.packages);
+            foreach (var VARIABLE in resourcePackageListManifest.packages)
+            {
+                if (VARIABLE.owner.Equals(resourcePackageListManifest.name))
+                {
+                    continue;
+                }
+
+                needUpdatePackages.AddRange(await GetPackageList(VARIABLE.owner));
+            }
+
+            return needUpdatePackages;
+        }
+
         public static async UniTask<List<ResourcePackageManifest>> CheckNeedUpdatePackageList(string name)
         {
             List<ResourcePackageManifest> needUpdatePackages = new List<ResourcePackageManifest>();
-            ResourcePackageListManifest resourcePackageListManifest = await Find(name);
+            ResourcePackageListManifest resourcePackageListManifest = await GetResourcePackageListManifestConfig(name);
             if (resourcePackageListManifest is null)
+            {
                 return needUpdatePackages;
+            }
 
             foreach (var package in resourcePackageListManifest.packages)
             {
-                if (FileManager.instance.Exist(package.name, package.version) is false || needUpdatePackages.Contains(package))
+                if (VFSManager.instance.Exist(package.name, package.version) is false && needUpdatePackages.Contains(package) is false)
                 {
                     needUpdatePackages.Add(package);
                 }
 
                 foreach (var dependenc in package.dependencies)
                 {
-                    if (dependenc.owner.Equals(resourcePackageListManifest.name) is false)
-                    {
-                        needUpdatePackages.AddRange(await CheckNeedUpdatePackageList(dependenc.owner));
-                        continue;
-                    }
-
-                    ResourcePackageManifest resourcePackageManifest = resourcePackageListManifest.GetPackageManifest(dependenc.name);
-                    if (resourcePackageManifest is null || FileManager.instance.Exist(dependenc.name, dependenc.version) || needUpdatePackages.Contains(package))
+                    if (dependenc.owner.Equals(resourcePackageListManifest.name))
                     {
                         continue;
                     }
 
-                    needUpdatePackages.Add(resourcePackageManifest);
+                    needUpdatePackages.AddRange(await CheckNeedUpdatePackageList(dependenc.owner));
                 }
             }
 
             return needUpdatePackages;
-        }
-
-        public bool Contains(string name)
-        {
-            return GetPackageManifest(name) is not null;
-        }
-
-        public ResourcePackageManifest GetPackageManifest(string name)
-        {
-            for (int i = 0; i < packages.Length; i++)
-            {
-                if (packages[i].name == name)
-                {
-                    return packages[i];
-                }
-            }
-
-            return default;
         }
     }
 }

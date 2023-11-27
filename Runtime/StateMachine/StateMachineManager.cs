@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace ZGame.State
 {
+    /// <summary>
+    /// 状态机管理器
+    /// </summary>
     public sealed class StateMachineManager : SingletonBehaviour<StateMachineManager>
     {
         private List<IStateMachine> _machines = new List<IStateMachine>();
@@ -29,6 +32,21 @@ namespace ZGame.State
             machine = new IStateMachine.StateMachine(name);
             _machines.Add(machine);
             return machine;
+        }
+
+        /// <summary>
+        /// 移除状态机
+        /// </summary>
+        /// <param name="name"></param>
+        public void Remove(string name)
+        {
+            IStateMachine machine = GetMachine(name);
+            if (machine is null)
+            {
+                return;
+            }
+
+            _machines.Remove(machine);
         }
 
         /// <summary>

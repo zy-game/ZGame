@@ -6,75 +6,71 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using ZGame.FileSystem;
 using ZGame.Networking;
+using ZGame.Window;
 
 namespace ZGame.Resource
 {
     public sealed class AssetBundleLoadingHandle : IDisposable
     {
-        private float count;
-        private float index;
-        private HashSet<string> loaded;
-
         public void Dispose()
         {
-            count = 0;
-            index = 0;
             GC.SuppressFinalize(this);
         }
 
-
         public async UniTask LoadingPackageList(Action<float> progressCallback, params string[] args)
         {
-            index = 0;
-            count = (float)(args.Length);
-            loaded = new HashSet<string>();
+            Queue<string> fileList = new Queue<string>();
+            //todo 这里还需要注意实在webgl平台上面加载资源包的情况
+            UIManager.instance.GetWindow<Loading>().SetupTitle("正在加载资源信息...").SetupProgress(0);
             foreach (var VARIABLE in args)
             {
-                await LoadAssetBundleFromFile(VARIABLE, 0, progressCallback);
-                index++;
-                progressCallback?.Invoke(index / count);
+                if (VARIABLE.StartsWith("http"))
+                {
+                    fileList.Enqueue(Path.GetFileName(VARIABLE));
+                    continue;
+                }
+
+                List<ResourcePackageManifest> manifests = await ResourcePackageListManifest.GetPackageList(VARIABLE);
+                foreach (var VARIABLE2 in manifests)
+                {
+                    fileList.Enqueue(VARIABLE2.name);
+                }
+            }
+
+            LoadBundleList(fileList, progressCallback);
+        }
+
+        private async UniTask LoadBundleList(Queue<string> fileList, Action<float> progressCallback)
+        {
+            int count = fileList.Count;
+            for (int i = 0; i < count; i++)
+            {
+                string VARIABLE = fileList.Dequeue();
+                UIManager.instance.GetWindow<Loading>().SetupTitle($"正在加载资源包: {VARIABLE}").SetupProgress(i / (float)count);
+                if (ABManager.instance.GetBundleHandle(VARIABLE) != null)
+                {
+                    continue;
+                }
+
+                byte[] bytes = await VFSManager.instance.ReadAsync(VARIABLE);
+                if (bytes is null || bytes.Length == 0)
+                {
+                    Clear(fileList);
+                    return;
+                }
+
+                AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
+                ABManager.instance.Add(assetBundle);
             }
         }
 
-        public void UnloadPackageList(params string[] args)
+        private void Clear(Queue<string> fileList)
         {
-        }
-
-        private async UniTask LoadAssetBundleFromFile(string fileName, uint version, Action<float> progressCallback)
-        {
-            if (loaded.Contains(fileName))
+            while (fileList.Count > 0)
             {
-                return;
-            }
-
-            if (FileManager.instance.Exist(fileName, version) is false)
-            {
-                Clear();
-                throw new FileNotFoundException(fileName);
-            }
-
-            IFileDataReader fileDataReader = await FileManager.instance.ReadAsync(fileName);
-            if (fileDataReader.bytes is null || fileDataReader.bytes.Length == 0)
-            {
-                Clear();
-                throw new FileLoadException(fileDataReader.name);
-            }
-
-            AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(fileDataReader.bytes);
-            ABManager.instance.Add(assetBundle);
-            fileDataReader.Dispose();
-        }
-
-        private void Clear()
-        {
-            count = 0;
-            index = 0;
-            foreach (var VARIABLE in loaded)
-            {
+                string VARIABLE = fileList.Dequeue();
                 ABManager.instance.Remove(VARIABLE);
             }
-
-            loaded.Clear();
         }
     }
 }

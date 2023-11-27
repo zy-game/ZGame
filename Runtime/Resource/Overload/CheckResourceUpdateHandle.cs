@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using ZGame.FileSystem;
 using ZGame.Networking;
+using ZGame.Window;
 
 namespace ZGame.Resource
 {
@@ -19,6 +20,8 @@ namespace ZGame.Resource
                 return;
             }
 
+            UIManager.instance.GetWindow<Loading>().SetupTitle("正在检查资源更新...").SetupProgress(0);
+
             List<string> options = await CheckNeedUpdateList(args);
 
             if (options.Count == 0)
@@ -26,23 +29,29 @@ namespace ZGame.Resource
                 return;
             }
 
-            NetworkDownloadPipelineHandle[] downloadHandles = await NetworkManager.instance.Download(progressCallback, options.ToArray());
-            bool state = true;
-            foreach (var VARIABLE in downloadHandles)
+            MultipDownloadHandle.DownloadData[] downloadDatas = await MultipDownloadHandle.Download(progressCallback, options.ToArray());
+            for (int i = 0; i < downloadDatas.Length; i++)
             {
-                if (VARIABLE.isDone is false)
+                if (downloadDatas[i].isDone is false)
                 {
-                    state = false;
                     continue;
                 }
 
-                await FileManager.instance.WriteAsync(VARIABLE.name, VARIABLE.bytes, ResourcePackageListManifest.GetResourcePackageVersion(VARIABLE.name));
+                uint crc = ResourcePackageListManifest.GetResourcePackageVersion(downloadDatas[i].name);
+                if (crc == 0)
+                {
+                    crc = downloadDatas[i].crc;
+                }
+
+                await VFSManager.instance.WriteAsync(downloadDatas[i].name, downloadDatas[i].bytes, crc);
             }
 
-            if (state is false)
+            if (downloadDatas.Where(x => x.isDone == false).Count() == 0)
             {
-                throw new HttpRequestException();
+                return;
             }
+
+            MsgBox.Create("资源更新失败！", Extension.QuitGame);
         }
 
         private async UniTask<List<string>> CheckNeedUpdateList(string[] args)
@@ -66,7 +75,7 @@ namespace ZGame.Resource
                     continue;
                 }
 
-                string etag = await NetworkManager.instance.Head(VARIABLE, "eTag");
+                string etag = await NetworkRequest.Head(VARIABLE, "eTag");
                 if (etag.IsNullOrEmpty())
                 {
                     Debug.LogError($"Checkout {VARIABLE} etag is null");
@@ -74,7 +83,7 @@ namespace ZGame.Resource
                 }
 
                 uint crc = Crc32.GetCRC32Str(etag);
-                if (FileManager.instance.Exist(Path.GetFileName(VARIABLE), crc))
+                if (VFSManager.instance.Exist(Path.GetFileName(VARIABLE), crc))
                 {
                     continue;
                 }

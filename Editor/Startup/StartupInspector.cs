@@ -70,8 +70,7 @@ namespace ZGame.Editor
         {
             seting.active = EditorGUILayout.Toggle("启用", seting.active);
             seting.Language = (Language)EditorGUILayout.EnumPopup("默认语言", seting.Language);
-            seting.resMode = (ResourceMode)EditorGUILayout.EnumPopup("资源模式", seting.resMode);
-            seting.runtime = (RuntimeMode)EditorGUILayout.EnumPopup("运行方式", seting.runtime);
+            seting.runtime = (RuntimeMode)EditorGUILayout.EnumPopup("资源模式", seting.runtime);
             List<string> resList = BuilderConfig.instance.packages?.Select(x => x.name).ToList();
             if (seting.module.IsNullOrEmpty() && resList.Count > 0)
             {

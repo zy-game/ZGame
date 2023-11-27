@@ -142,7 +142,6 @@ namespace ZGame.Editor.ResBuild
             //更具name的扩展名获取unity内置资源icon图标
             return Path.GetExtension(name) switch
             {
-                
                 ".png" => "Texture Icon",
                 ".jpg" => "Texture Icon",
                 ".jpeg" => "Texture Icon",
@@ -162,12 +161,14 @@ namespace ZGame.Editor.ResBuild
                 ".compute" => "Compute Shader Icon",
                 ".unity" => "SceneAsset Icon",
                 ".unity3d" => "SceneAsset Icon",
-                ".assetbundle"=> "SceneAsset Icon",
+                ".assetbundle" => "SceneAsset Icon",
                 ".prefab" => "Prefab Icon",
                 ".asset" => "Asset Icon",
                 ".zip" => "Zip Icon",
                 ".rar" => "Zip Icon",
-                ".ini" => "Text Icon"
+                ".ini" => "Text Icon",
+                ".manifest" => "Text Icon",
+                _ => "Prefab Icon"
             };
         }
     }

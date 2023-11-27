@@ -36,8 +36,17 @@ namespace ZGame.Editor.ResBuild.Config
         public bool use;
         public string name;
         public string describe;
-        public Object folder;
+        public List<Object> folder;
         public BuildType buildType;
         public List<string> contentExtensionList;
+    }
+
+    [Serializable]
+    public class RulerData
+    {
+        public Object folder;
+        public List<string> exs;
+        public BuildType buildType;
+        public bool use;
     }
 }

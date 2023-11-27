@@ -37,6 +37,7 @@ namespace ZGame.Resource
             }
 
             _handles.Remove(handle);
+            handle.Dispose();
         }
 
         public ABHandle Add(string title)

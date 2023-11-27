@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using ZGame.Resource;
 
-namespace ZGame.Resource
+namespace ZGame
 {
     public static partial class Extension
     {

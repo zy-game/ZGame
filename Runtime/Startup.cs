@@ -54,7 +54,6 @@ public class Startup : MonoBehaviour
         }
 
         string dllName = Path.GetFileNameWithoutExtension(settings.dll);
-        Debug.Log(dllName);
         assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
         CallGameEntryMethod();
         return;

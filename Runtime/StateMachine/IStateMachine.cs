@@ -19,6 +19,12 @@ namespace ZGame.State
         IStateProcess current { get; }
 
         /// <summary>
+        /// 添加状态
+        /// </summary>
+        /// <param name="type"></param>
+        void AddState(Type type);
+
+        /// <summary>
         /// 切换状态类型
         /// </summary>
         /// <param name="type"></param>
@@ -38,6 +44,16 @@ namespace ZGame.State
             public StateMachine(string name)
             {
                 this.name = name;
+            }
+
+            public void AddState(Type type)
+            {
+                if (_handles.ContainsKey(type))
+                {
+                    return;
+                }
+
+                _handles.Add(type, Activator.CreateInstance(type) as IStateProcess);
             }
 
             public void Switch(Type type)

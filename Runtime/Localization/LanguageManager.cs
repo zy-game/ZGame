@@ -21,7 +21,7 @@ namespace ZGame.Localization
         public async void SwitchLanguage(Language language)
         {
             string url = GameSeting.GetNetworkResourceUrl("language_" + language + ".ini");
-            List<LanguageOptions> languageOptionsList = await NetworkManager.instance.Get<List<LanguageOptions>>(url);
+            List<LanguageOptions> languageOptionsList = await NetworkRequest.Get<List<LanguageOptions>>(url);
             if (languageOptionsList is null)
             {
                 return;

@@ -4,7 +4,6 @@ namespace ZGame
     {
         protected override void OnUpdate()
         {
-            
         }
     }
 }

@@ -224,5 +224,21 @@ namespace ZGame.Resource
         {
             GC.SuppressFinalize(this);
         }
+
+        class ResourceLoadingHelper
+        {
+        }
+
+        class AssetBundleLoadingHelper
+        {
+        }
+
+        class AssetDatabaseLoadingHelper
+        {
+        }
+
+        class NetworkLoadingHelper
+        {
+        }
     }
 }

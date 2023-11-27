@@ -10,6 +10,12 @@ namespace ZGame
 {
     public static partial class Extension
     {
+
+        public static void QuitGame()
+        {
+            
+        }
+
         public static void OnDestroyEventCallback(this GameObject gameObject, UnityAction callback)
         {
             EventListener listener = gameObject.GetComponent<EventListener>();

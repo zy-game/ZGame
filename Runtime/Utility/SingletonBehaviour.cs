@@ -28,6 +28,7 @@ namespace ZGame
                 EventListener.instance.onApplicationQuit.AddListener(_entity.OnApplicationQuit);
                 EventListener.instance.onApplicationPause.AddListener(_entity.OnApplicationPause);
                 EventListener.instance.onApplicationFocus.AddListener(_entity.OnApplicationFocus);
+                _entity.OnAwake();
                 return _entity;
             }
         }
@@ -66,7 +67,6 @@ namespace ZGame
 
         protected virtual void OnApplicationFocus(bool focus)
         {
-            
         }
 
         public void StartCoroutine(IEnumerator enumerator)
