@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using ZGame.Localization;
 using ZGame.Resource;
 
 namespace ZGame
@@ -12,12 +11,6 @@ namespace ZGame
         Simulator,
     }
 
-    public enum Switch : byte
-    {
-        On,
-        Off,
-    }
-
     [Serializable]
     public sealed class GameSeting
     {
@@ -25,11 +18,6 @@ namespace ZGame
         /// 是否启用
         /// </summary>
         public bool active;
-
-        /// <summary>
-        /// 默认语言
-        /// </summary>
-        public Language Language;
 
         /// <summary>
         /// 资源配置

@@ -13,11 +13,19 @@ using ZGame.FileSystem;
 
 namespace ZGame.Networking
 {
+    /// <summary>
+    /// 网络管理器
+    /// </summary>
     public class NetworkManager : SingletonBehaviour<NetworkManager>
     {
-        private List<IDispatcher> messageRecvierPipelines = new List<IDispatcher>();
-        private Dictionary<string, IChannel> channels = new Dictionary<string, IChannel>();
+        private Dictionary<uint, IMessageHandler> _dispatchers = new();
+        private Dictionary<string, IChannel> channels = new();
 
+        /// <summary>
+        /// 连接远程地址
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
         public async UniTask<IChannel> Connect(string address)
         {
             if (channels.TryGetValue(address, out IChannel channel))
@@ -27,17 +35,23 @@ namespace ZGame.Networking
 
             if (address.StartsWith("ws"))
             {
-                channel = new WebChannel(this);
+                channel = new WebChannel();
             }
             else
             {
-                channel = new TCPChannel(this);
+                channel = new TcpChannel();
             }
 
             await channel.Connect(address);
             return channel;
         }
 
+        /// <summary>
+        /// 写入消息
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public bool WriteAndFlush(string address, IMessage message)
         {
             if (channels.TryGetValue(address, out IChannel channel) is false)
@@ -53,15 +67,40 @@ namespace ZGame.Networking
             return true;
         }
 
+        /// <summary>
+        /// 写入消息并等待响应
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="message"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public async UniTask<T> WriteAndFlushAsync<T>(string address, IMessage message) where T : IMessage
         {
             UniTaskCompletionSource<T> taskCompletionSource = new UniTaskCompletionSource<T>();
-            IDispatcher messageRecvier = IDispatcher.Create<T>(taskCompletionSource);
-            messageRecvierPipelines.Add(messageRecvier);
+            uint crc = Crc32.GetCRC32Str(typeof(T).FullName);
+            if (_dispatchers.TryGetValue(crc, out IMessageHandler dispatcher) is false)
+            {
+                _dispatchers.Add(crc, dispatcher = new MessageReceiverHandle<T>());
+            }
+
+            MessageReceiverHandle<T> messageReceiverHandle = (MessageReceiverHandle<T>)dispatcher;
+
+            void OnCompletion(T message)
+            {
+                taskCompletionSource.TrySetResult(message);
+                messageReceiverHandle.Remove(OnCompletion);
+            }
+
+            messageReceiverHandle.Add(OnCompletion);
             WriteAndFlush(address, message);
             return await taskCompletionSource.Task;
         }
 
+        /// <summary>
+        /// 关闭连接
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
         public async UniTask<IChannel> Close(string address)
         {
             if (channels.TryGetValue(address, out IChannel channel) is false)
@@ -73,32 +112,39 @@ namespace ZGame.Networking
             return channel;
         }
 
-        public void SubscribeMessageRecvier(Type type)
+        /// <summary>
+        /// 注册消息回调
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <typeparam name="T"></typeparam>
+        public void RegisterMessageHandle<T>(Action<T> callback) where T : IMessage
         {
-            if (typeof(IDispatcher).IsAssignableFrom(type) is false)
+            uint crc = Crc32.GetCRC32Str(typeof(T).FullName);
+            if (_dispatchers.TryGetValue(crc, out IMessageHandler dispatcher) is false)
             {
-                Debug.LogError(new NotImplementedException(type.FullName));
+                _dispatchers.Add(crc, dispatcher = new MessageReceiverHandle<T>());
+            }
+
+            ((MessageReceiverHandle<T>)dispatcher).Add(callback);
+        }
+
+        /// <summary>
+        /// 取消注册消息回调
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <typeparam name="T"></typeparam>
+        public void UnregisterMessageHandle<T>(Action<T> callback) where T : IMessage
+        {
+            uint crc = Crc32.GetCRC32Str(typeof(T).FullName);
+            if (_dispatchers.TryGetValue(crc, out IMessageHandler dispatcher) is false)
+            {
                 return;
             }
 
-            messageRecvierPipelines.Add((IDispatcher)Activator.CreateInstance(type));
+            ((MessageReceiverHandle<T>)dispatcher).Remove(callback);
         }
 
-        public void UnsubscribeMessageRecvier(Type type)
-        {
-            for (int i = messageRecvierPipelines.Count - 1; i >= 0; i--)
-            {
-                if (messageRecvierPipelines[i].GetType() != type)
-                {
-                    continue;
-                }
-
-                messageRecvierPipelines[i].Dispose();
-                messageRecvierPipelines.Remove(messageRecvierPipelines[i]);
-            }
-        }
-
-        public void Recvie(IChannel channel, byte[] bytes)
+        internal void Receiver(IChannel channel, byte[] bytes)
         {
             if (bytes is null || bytes.Length == 0)
             {
@@ -108,22 +154,29 @@ namespace ZGame.Networking
             MemoryStream memoryStream = new MemoryStream(bytes);
             BinaryReader reader = new BinaryReader(new MemoryStream(bytes));
             uint opcode = reader.ReadUInt32();
-            for (int i = messageRecvierPipelines.Count - 1; i >= 0; i--)
+            if (_dispatchers.TryGetValue(opcode, out IMessageHandler dispatcher) is false)
             {
-                messageRecvierPipelines[i].RecvieHandle(channel, opcode, memoryStream);
+                Debug.LogError("未知消息类型：" + opcode);
+                return;
             }
+
+            dispatcher.ReceiveHandle(channel, opcode, memoryStream);
         }
 
         public void Dispose()
         {
-            foreach (var VARIABLE in channels.Values)
+            foreach (var variable in channels.Values)
             {
-                VARIABLE.Dispose();
+                variable.Dispose();
             }
 
             channels.Clear();
-            messageRecvierPipelines.ForEach(x => x.Dispose());
-            messageRecvierPipelines.Clear();
+            foreach (var variable in _dispatchers.Values)
+            {
+                variable.Dispose();
+            }
+
+            _dispatchers.Clear();
         }
     }
 }

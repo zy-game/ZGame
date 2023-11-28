@@ -9,27 +9,21 @@ using UnityEngine;
 
 namespace ZGame.Networking
 {
-    public class TCPChannel : IChannel
+    public class TcpChannel : IChannel
     {
         public string address { get; set; }
-        public bool connected => socket == null ? false : socket.Connected;
+        public bool connected => _socket == null ? false : _socket.Connected;
 
-        private Socket socket;
+        private Socket _socket;
         private bool isSendWork = false;
-        private byte[] recBytes = new byte[1024 * 1024];
-        private NetworkManager handle;
-
-        public TCPChannel(NetworkManager handle)
-        {
-            this.handle = handle;
-        }
+        private byte[] _recBytes = new byte[1024 * 1024];
 
         public async UniTask Connect(string address)
         {
             UriBuilder builder = new UriBuilder(address);
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             Debug.Log($"Connected address:{builder.Host} port:{builder.Port}");
-            await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse(builder.Host), builder.Port));
+            await _socket.ConnectAsync(new IPEndPoint(IPAddress.Parse(builder.Host), builder.Port));
             if (connected is false)
             {
                 Dispose();
@@ -37,14 +31,14 @@ namespace ZGame.Networking
                 return;
             }
 
-            Task.Factory.StartNew(OnStartRecvie);
+            Task.Factory.StartNew(OnStartReceiver);
         }
 
         public UniTask Close()
         {
             if (connected)
             {
-                socket.Disconnect(false);
+                _socket.Disconnect(false);
             }
 
             return UniTask.CompletedTask;
@@ -52,7 +46,7 @@ namespace ZGame.Networking
 
         public async void WriteAndFlush(byte[] bytes)
         {
-            int result = await socket.SendAsync(new Memory<byte>(bytes), SocketFlags.None);
+            int result = await _socket.SendAsync(new Memory<byte>(bytes), SocketFlags.None);
             if (result < bytes.Length)
             {
                 Debug.LogError("发送数据错误");
@@ -60,12 +54,12 @@ namespace ZGame.Networking
             }
         }
 
-        void OnStartRecvie()
+        void OnStartReceiver()
         {
             while (connected)
             {
                 // recvToken = new CancellationTokenSource();
-                int lenght = socket.Receive(recBytes, SocketFlags.None);
+                int lenght = _socket.Receive(_recBytes, SocketFlags.None);
                 if (lenght <= 0)
                 {
                     Debug.LogError(string.Format("{0},{1},{2}", address, "发送了一个0字节的消息", lenght));
@@ -73,8 +67,8 @@ namespace ZGame.Networking
                 }
 
                 byte[] bytes = new byte[lenght];
-                Array.Copy(recBytes, 0, bytes, 0, lenght);
-                handle.Recvie(this, bytes);
+                Array.Copy(_recBytes, 0, bytes, 0, lenght);
+                NetworkManager.instance.Receiver(this, bytes);
             }
         }
 
@@ -82,9 +76,8 @@ namespace ZGame.Networking
         public void Dispose()
         {
             address = String.Empty;
-            socket = null;
+            _socket = null;
             isSendWork = false;
-            handle.Dispose();
         }
     }
 }

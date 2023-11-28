@@ -7,7 +7,6 @@ using UnityEngine;
 using ZGame.Editor.ResBuild.Config;
 using ZGame.FileSystem;
 using ZGame.Game;
-using ZGame.Localization;
 using ZGame.Networking;
 using ZGame.Resource;
 using ZGame.Window;
@@ -69,7 +68,6 @@ namespace ZGame.Editor
         private void DrawingSetting(GameSeting seting)
         {
             seting.active = EditorGUILayout.Toggle("启用", seting.active);
-            seting.Language = (Language)EditorGUILayout.EnumPopup("默认语言", seting.Language);
             seting.runtime = (RuntimeMode)EditorGUILayout.EnumPopup("资源模式", seting.runtime);
             List<string> resList = BuilderConfig.instance.packages?.Select(x => x.name).ToList();
             if (seting.module.IsNullOrEmpty() && resList.Count > 0)

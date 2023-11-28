@@ -9,15 +9,44 @@ using UnityEngine;
 using ZGame;
 using ZGame.Game;
 using ZGame.Resource;
+using ZGame.State;
 using ZGame.Window;
 
 public class Startup : MonoBehaviour
 {
     [SerializeField] public List<GameSeting> GameSettings = new List<GameSeting>();
 
+    private IStateMachine _stateMachine;
 
+
+    class InitGameCamera: IStateProcess
+    {
+        public void Dispose()
+        {
+        }
+
+        public void OnAwake()
+        {
+        }
+
+        public void OnEntry()
+        {
+        }
+
+        public void OnExit()
+        {
+        }
+
+        public void OnUpdate()
+        {
+        }
+    }
     private async void Start()
     {
+        _stateMachine = StateMachineManager.instance.Create("STARTUP");
+        _stateMachine.AddState<InitGameCamera>();
+        _stateMachine.Switch<InitGameCamera>();
+
         GameSeting.current = GameSettings.Find(x => x.active);
         LayerManager.instance.NewCamera("UICamera", 999, "UI");
         Loading loading = UIManager.instance.GeOrOpentWindow<Loading>();

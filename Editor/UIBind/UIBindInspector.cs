@@ -16,6 +16,7 @@ namespace ZGame.Editor.UIBind
     {
         private UIBindEditor setting;
 
+
         public void OnEnable()
         {
             this.setting = (UIBindEditor)target;
@@ -119,47 +120,22 @@ namespace ZGame.Editor.UIBind
 
                 items.AddRange(opComs.Select(x => x.GetType().FullName));
 
-                string name = String.Empty;
-                if (options.type.Count == 0)
-                {
-                    name = "Noting";
-                }
-                else
-                {
-                    if (items.Count == options.type.Count)
-                    {
-                        name = "Everyting";
-                    }
-                    else
-                    {
-                        name = string.Join(",", items);
-                        if (name.Length > 20)
-                        {
-                            name = name.Substring(0, 25) + "...";
-                        }
-                    }
-                }
-
-                if (GUILayout.Button(name, EditorStyles.popup))
+                if (GUILayout.Button(options.selector.ToString(), EditorStyles.popup))
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Noting"), options.type.Count == 0, () => { options.type.Clear(); });
-                    menu.AddItem(new GUIContent("Everything"), items.Count == options.type.Count, () =>
-                    {
-                        options.type.Clear();
-                        options.type.AddRange(items);
-                    });
+                    menu.AddItem(new GUIContent("Noting"), options.selector.isNone, () => { options.selector.Clear(); });
+                    menu.AddItem(new GUIContent("Everything"), options.selector.isAll, () => { options.selector.SelectAll(); });
                     foreach (var VARIABLE in items)
                     {
-                        menu.AddItem(new GUIContent(VARIABLE), options.type.Contains(VARIABLE), () =>
+                        menu.AddItem(new GUIContent(VARIABLE), options.selector.IsSelected(VARIABLE), () =>
                         {
-                            if (options.type.Contains(VARIABLE))
+                            if (options.selector.IsSelected(VARIABLE))
                             {
-                                options.type.Remove(VARIABLE);
+                                options.selector.UnSelect(VARIABLE);
                             }
                             else
                             {
-                                options.type.Add(VARIABLE);
+                                options.selector.Select(VARIABLE);
                             }
                         });
                     }
@@ -167,6 +143,8 @@ namespace ZGame.Editor.UIBind
                     menu.ShowAsContext();
                 }
             }
+
+            options.language = EditorGUILayout.IntField(options.language);
 
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("", ZStyle.GUI_STYLE_MINUS))
@@ -218,7 +196,7 @@ namespace ZGame.Editor.UIBind
 
             foreach (var VARIABLE in setting.BindConfig.options)
             {
-                foreach (var VARIABLE2 in VARIABLE.type)
+                foreach (var VARIABLE2 in VARIABLE.selector.reference)
                 {
                     string[] ts = VARIABLE2.Split('.');
                     sb.AppendLine($"\t\tpublic UIBind<{ts[ts.Length - 1]}> {ts[ts.Length - 1]}_{VARIABLE.name};");
@@ -244,7 +222,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("\t\t\t}");
             foreach (var VARIABLE in setting.BindConfig.options)
             {
-                foreach (var VARIABLE2 in VARIABLE.type)
+                foreach (var VARIABLE2 in VARIABLE.selector.reference)
                 {
                     string[] ts = VARIABLE2.Split('.');
                     sb.AppendLine($"\t\t\t{ts[ts.Length - 1]}_{VARIABLE.name} = new UIBind<{ts[ts.Length - 1]}>(this.gameObject.transform.Find(\"{VARIABLE.path}\"));");
@@ -257,7 +235,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("\t\t{");
             foreach (var VARIABLE in setting.BindConfig.options)
             {
-                foreach (var VARIABLE2 in VARIABLE.type)
+                foreach (var VARIABLE2 in VARIABLE.selector.reference)
                 {
                     string[] ts = VARIABLE2.Split('.');
                     string name = $"{ts[ts.Length - 1]}_{VARIABLE.name}";
@@ -284,7 +262,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("");
             foreach (var VARIABLE in setting.BindConfig.options)
             {
-                foreach (var VARIABLE2 in VARIABLE.type)
+                foreach (var VARIABLE2 in VARIABLE.selector.reference)
                 {
                     string[] ts = VARIABLE2.Split('.');
                     string name = $"{ts[ts.Length - 1]}_{VARIABLE.name}";
@@ -324,7 +302,7 @@ namespace ZGame.Editor.UIBind
             sb.AppendLine("\t\t\tbase.Dispose();");
             foreach (var VARIABLE in setting.BindConfig.options)
             {
-                foreach (var VARIABLE2 in VARIABLE.type)
+                foreach (var VARIABLE2 in VARIABLE.selector.reference)
                 {
                     string[] ts = VARIABLE2.Split('.');
                     sb.AppendLine($"\t\t\t{ts[ts.Length - 1]}_{VARIABLE.name}?.Dispose();");

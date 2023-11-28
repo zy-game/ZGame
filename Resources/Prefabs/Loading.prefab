@@ -154,8 +154,16 @@ MonoBehaviour:
   BindConfig:
     NameSpace: 
     output: {fileID: 0}
-    reference: []
-    options: []
+    reference:
+    - UnityEngine
+    - TMPro
+    options:
+    - name: TextTMP
+      path: Panel/Text (TMP)
+      language: 0
+      selector:
+        items: []
+        reference: []
 --- !u!1 &3514990325737268949
 GameObject:
   m_ObjectHideFlags: 0

@@ -8,70 +8,63 @@ namespace ZGame.Networking
     {
         public string address { get; }
         public bool connected { get; set; }
-        private WebSocket webSocket;
-        private NetworkManager handle;
-        private UniTaskCompletionSource taskCompletionSource;
-
-        public WebChannel(NetworkManager handle)
-        {
-            this.handle = handle;
-        }
+        private WebSocket _webSocket;
+        private UniTaskCompletionSource _taskCompletionSource;
 
         public UniTask Connect(string address)
         {
-            taskCompletionSource = new UniTaskCompletionSource();
-            webSocket = new WebSocket(address);
-            webSocket.OnClose += OnHandleCloseEvent;
-            webSocket.OnError += OnHandleErrorEvent;
-            webSocket.OnMessage += OnHandleMessageEvent;
-            webSocket.OnOpen += OnHandleOpenEvent;
-            webSocket.ConnectAsync();
-            return taskCompletionSource.Task;
+            _taskCompletionSource = new UniTaskCompletionSource();
+            _webSocket = new WebSocket(address);
+            _webSocket.OnClose += OnHandleCloseEvent;
+            _webSocket.OnError += OnHandleErrorEvent;
+            _webSocket.OnMessage += OnHandleMessageEvent;
+            _webSocket.OnOpen += OnHandleOpenEvent;
+            _webSocket.ConnectAsync();
+            return _taskCompletionSource.Task;
         }
 
         private void OnHandleOpenEvent(object s, OpenEventArgs e)
         {
             connected = true;
-            taskCompletionSource.TrySetResult();
+            _taskCompletionSource.TrySetResult();
         }
 
         private void OnHandleMessageEvent(object s, MessageEventArgs e)
         {
-            handle.Recvie(this, e.RawData);
+            NetworkManager.instance.Receiver(this, e.RawData);
         }
 
         private void OnHandleErrorEvent(object s, ErrorEventArgs e)
         {
             connected = false;
-            webSocket.CloseAsync();
+            _webSocket.CloseAsync();
         }
 
         private void OnHandleCloseEvent(object s, CloseEventArgs e)
         {
             connected = false;
-            taskCompletionSource?.TrySetResult();
+            _taskCompletionSource?.TrySetResult();
         }
 
         public UniTask Close()
         {
-            taskCompletionSource = new UniTaskCompletionSource();
-            webSocket.CloseAsync();
-            return taskCompletionSource.Task;
+            _taskCompletionSource = new UniTaskCompletionSource();
+            _webSocket.CloseAsync();
+            return _taskCompletionSource.Task;
         }
 
         public void WriteAndFlush(byte[] bytes)
         {
             if (connected)
             {
-                webSocket.SendAsync(bytes);
+                _webSocket.SendAsync(bytes);
             }
         }
 
         public void Dispose()
         {
-            webSocket = null;
+            _webSocket = null;
             connected = false;
-            handle.Dispose();
         }
     }
 }
