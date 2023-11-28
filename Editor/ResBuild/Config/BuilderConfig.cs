@@ -9,12 +9,12 @@ namespace ZGame.Editor.ResBuild.Config
     [CreateAssetMenu(menuName = "ZGame/Create BuilderConfig", fileName = "BuilderConfig", order = 0)]
     public class BuilderConfig : ScriptableObject
     {
-        public List<PackageSeting> packages;
-        public List<OSSOptions> ossList;
-        public bool useActiveTarget = true;
-        public BuildAssetBundleOptions comperss;
         public BuildTarget target;
         public string fileExtension;
+        public List<OSSOptions> ossList;
+        public bool useActiveTarget = true;
+        public List<PackageSeting> packages;
+        public BuildAssetBundleOptions comperss;
         private static BuilderConfig _instance;
 
         public static BuilderConfig instance

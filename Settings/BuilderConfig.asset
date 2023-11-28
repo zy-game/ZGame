@@ -12,25 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a8f24d4d6a64f84b2c3cd20cfe219b2, type: 3}
   m_Name: BuilderConfig
   m_EditorClassIdentifier: 
-  packages:
-  - use: 1
-    name: New Package Seting
-    describe: 
-    items:
-    - use: 1
-      folder: {fileID: 102900000, guid: 08637fc07d602494ab93601fcacbb7c7, type: 3}
-      buildType: 2
-      exs:
-      - use: 1
-        name: .anim
-      - use: 1
-        name: .meta
-      - use: 1
-        name: .controller
-    - use: 1
-      folder: {fileID: 0}
-      buildType: 0
-      exs: []
+  target: 5
+  fileExtension: .assetbundle
   ossList:
   - title: "\u6D4B\u8BD5-\u817E\u8BAF\u4E91"
     type: 1
@@ -49,6 +32,18 @@ MonoBehaviour:
     key: LTAI5tD6j25qsHhsvW1DoY5f
     password: KIqW5G7Tvr0QY7ZiZ9fKPmEHHVpDOF
   useActiveTarget: 1
+  packages:
+  - name: New Package
+    describe: "\u7528\u6765\u6D4B\u8BD5\u7684"
+    items:
+    - use: 1
+      folder: {fileID: 102900000, guid: 08637fc07d602494ab93601fcacbb7c7, type: 3}
+      buildType: 2
+      exs:
+        allList:
+        - .anim
+        - .meta
+        - .controller
+        select:
+        - .controller
   comperss: 0
-  target: 5
-  fileExtension: .assetbundle

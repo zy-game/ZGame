@@ -33,10 +33,19 @@ namespace ZGame.Editor.ResBuild.Config
     public class PackageSeting
     {
         [NonSerialized] public bool selection;
-        public bool use;
         public string name;
         public string describe;
         public List<RulerData> items;
+
+        public static PackageSeting Create(string name, string describe = "")
+        {
+            return new PackageSeting()
+            {
+                name = name,
+                describe = describe,
+                items = new List<RulerData>()
+            };
+        }
     }
 
     [Serializable]
@@ -45,41 +54,91 @@ namespace ZGame.Editor.ResBuild.Config
         public bool use;
         public Object folder;
         public BuildType buildType;
-        public List<ExtensionSetting> exs;
-
-
-        public string GetExtensionInfo()
-        {
-            if (exs == null || exs.Find(x => x.use == true) is null)
-            {
-                return "Noting";
-            }
-
-            if (exs.Find(x => x.use == false) is not null)
-            {
-                return "Everyting";
-            }
-
-            string result = string.Join(",", exs.FindAll(x => x.use == true).Select(x => x.name));
-            if (result.Length > 100)
-            {
-                result = result.Substring(0, 100);
-            }
-
-            return result;
-        }
-
-
-        public bool IsAllExtension()
-        {
-            return exs.Find(x => x.use == false) is not null;
-        }
+        public ExtensionSetting exs;
     }
 
     [Serializable]
     public class ExtensionSetting
     {
-        public bool use;
-        public string name;
+        public List<string> allList = new List<string>();
+        public List<string> select = new List<string>();
+
+        public bool IsAllSelect
+        {
+            get { return select.Count == allList.Count; }
+        }
+
+        public bool IsNotingSelect
+        {
+            get { return select.Count == 0; }
+        }
+
+        public void Add(string ex)
+        {
+            if (allList.Contains(ex))
+            {
+                return;
+            }
+
+            allList.Add(ex);
+        }
+
+        public void Remove(string ex)
+        {
+            if (allList.Contains(ex))
+            {
+                allList.Remove(ex);
+            }
+
+            if (select.Contains(ex))
+            {
+                select.Remove(ex);
+            }
+        }
+
+        public void SelectAll(bool state)
+        {
+            select.Clear();
+            select.AddRange(allList);
+        }
+
+        public void Select(string ex)
+        {
+            if (select.Contains(ex))
+            {
+                return;
+            }
+
+            select.Add(ex);
+        }
+
+        public void Unselect(string ex)
+        {
+            if (select.Contains(ex))
+            {
+                select.Remove(ex);
+            }
+        }
+
+        public bool IsSelect(string ex)
+        {
+            return select.Contains(ex);
+        }
+
+        public override string ToString()
+        {
+            if (allList.Count == select.Count)
+            {
+                return "Everyting";
+            }
+            else if (select.Count == 0)
+            {
+                return "Noting";
+            }
+            else
+            {
+                return string.Join(",", select);
+            }
+        }
     }
 }

@@ -24,30 +24,21 @@ namespace ZGame.Editor.ResBuild
 
                 foreach (var rulerData in packageSeting.items)
                 {
+                    if (rulerData.exs is null)
+                    {
+                        rulerData.exs = new ExtensionSetting();
+                    }
+
                     if (rulerData.folder == null)
                     {
                         continue;
                     }
 
-                    if (rulerData.exs is null)
-                    {
-                        rulerData.exs = new List<ExtensionSetting>();
-                    }
                     string path = AssetDatabase.GetAssetPath(rulerData.folder);
                     string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
                     foreach (var VARIABLE2 in files)
                     {
-                        string ex = Path.GetExtension(VARIABLE2);
-                        if (rulerData.exs.Find(x => x.name == ex) != null)
-                        {
-                            continue;
-                        }
-
-                        rulerData.exs.Add(new ExtensionSetting()
-                        {
-                            name = ex,
-                            use = false,
-                        });
+                        rulerData.exs.Add(Path.GetExtension(VARIABLE2));
                     }
                 }
             }
@@ -56,36 +47,39 @@ namespace ZGame.Editor.ResBuild
         public override void OnGUI()
         {
             EditorGUI.BeginChangeCheck();
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
             {
-                BuilderConfig.instance.packages.Add(new PackageSeting()
+                GUILayout.BeginHorizontal();
                 {
-                    name = "New Package Seting",
-                    items = new List<RulerData>(),
-                    use = true,
-                    describe = String.Empty,
-                });
-            }
+                    GUILayout.Label("Ruler List", EditorStyles.boldLabel);
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
+                    {
+                        BuilderConfig.instance.packages.Add(PackageSeting.Create("New Package"));
+                    }
 
-            GUILayout.EndHorizontal();
-            for (int i = BuilderConfig.instance.packages.Count - 1; i >= 0; i--)
-            {
-                if (search.IsNullOrEmpty() is false && BuilderConfig.instance.packages[i].name.Contains(search) is false)
-                {
-                    continue;
+                    GUILayout.EndHorizontal();
                 }
 
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                DrawingRuleInfo(BuilderConfig.instance.packages[i]);
-                GUILayout.EndVertical();
-                GUILayout.Space(10);
-            }
+                for (int i = BuilderConfig.instance.packages.Count - 1; i >= 0; i--)
+                {
+                    if (search.IsNullOrEmpty() is false && BuilderConfig.instance.packages[i].name.Contains(search) is false)
+                    {
+                        continue;
+                    }
 
-            if (EditorGUI.EndChangeCheck())
-            {
-                BuilderConfig.Saved();
+                    GUILayout.BeginVertical(EditorStyles.helpBox);
+                    {
+                        DrawingRuleInfo(BuilderConfig.instance.packages[i]);
+                        GUILayout.EndVertical();
+                    }
+
+                    GUILayout.Space(10);
+                }
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    BuilderConfig.Saved();
+                }
             }
         }
 
@@ -93,70 +87,75 @@ namespace ZGame.Editor.ResBuild
         {
             GUILayout.BeginHorizontal();
             {
-                package.use = EditorGUILayout.Toggle("是否激活规则", package.use);
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("", ZStyle.GUI_STYLE_MINUS))
+                if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
                 {
                     BuilderConfig.instance.packages.Remove(package);
+                    WindowDocker.Refresh();
                 }
 
                 GUILayout.EndHorizontal();
             }
-            EditorGUI.BeginDisabledGroup(!package.use);
+            package.name = EditorGUILayout.TextField("规则名称", package.name);
+            package.describe = EditorGUILayout.TextField("描述", package.describe);
+            EditorGUI.BeginChangeCheck();
             {
-                package.name = EditorGUILayout.TextField("规则名称", package.name);
-                package.describe = EditorGUILayout.TextField("描述", package.describe);
-
-
-                EditorGUI.BeginChangeCheck();
+                if (package.items == null)
                 {
-                    if (package.items == null)
-                    {
-                        package.items = new List<RulerData>();
-                    }
+                    package.items = new List<RulerData>();
+                }
 
-                    GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                {
+                    GUILayout.BeginHorizontal();
                     {
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
+                        {
+                            package.items.Add(new RulerData()
+                            {
+                                use = true,
+                                exs = new ExtensionSetting(),
+                                buildType = BuildType.Once
+                            });
+                        }
+
+                        GUILayout.EndHorizontal();
+                    }
+                    for (int i = 0; i < package.items.Count; i++)
+                    {
+                        RulerData rulerData = package.items[i];
                         GUILayout.BeginHorizontal();
                         {
-                            GUILayout.FlexibleSpace();
-                            if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
-                            {
-                                package.items.Add(new RulerData()
-                                {
-                                    use = true,
-                                    exs = new List<ExtensionSetting>(),
-                                    buildType = BuildType.Once
-                                });
-                            }
-
-                            GUILayout.EndHorizontal();
-                        }
-                        for (int i = 0; i < package.items.Count; i++)
-                        {
-                            RulerData rulerData = package.items[i];
-                            GUILayout.BeginHorizontal();
+                            rulerData.use = EditorGUILayout.Toggle(rulerData.use, GUILayout.Width(20));
                             rulerData.folder = EditorGUILayout.ObjectField(rulerData.folder, typeof(DefaultAsset), false);
                             GUILayout.BeginHorizontal();
                             {
-                                rulerData.buildType = (BuildType)EditorGUILayout.EnumPopup("分包规则", rulerData.buildType);
+                                rulerData.buildType = (BuildType)EditorGUILayout.EnumPopup(rulerData.buildType, GUILayout.Width(200));
                                 if (rulerData.folder != null && rulerData.buildType == BuildType.AssetType)
                                 {
-                                    GUILayout.EndHorizontal();
-                                    continue;
-                                }
-
-                                if (GUILayout.Button(rulerData.GetExtensionInfo(), EditorStyles.popup))
-                                {
-                                    GenericMenu menu = new GenericMenu();
-                                    menu.AddItem(new GUIContent("Noting"), rulerData.exs.Where(x => x.use).Count() == 0, () => { rulerData.exs.ForEach(x => x.use = false); });
-                                    menu.AddItem(new GUIContent("Everything"), rulerData.exs.Where(x => x.use).Count() == rulerData.exs.Count, () => { rulerData.exs.ForEach(x => x.use = true); });
-                                    foreach (var VARIABLE in rulerData.exs)
+                                    if (GUILayout.Button(rulerData.exs.ToString(), EditorStyles.popup, GUILayout.Width(200)))
                                     {
-                                        menu.AddItem(new GUIContent(VARIABLE.name), VARIABLE.use, () => { VARIABLE.use = !VARIABLE.use; });
-                                    }
+                                        GenericMenu menu = new GenericMenu();
+                                        menu.AddItem(new GUIContent("Noting"), rulerData.exs.IsNotingSelect, () => { rulerData.exs.SelectAll(false); });
+                                        menu.AddItem(new GUIContent("Everything"), rulerData.exs.IsAllSelect, () => { rulerData.exs.SelectAll(true); });
+                                        foreach (var VARIABLE in rulerData.exs.allList)
+                                        {
+                                            menu.AddItem(new GUIContent(VARIABLE), rulerData.exs.IsSelect(VARIABLE), () =>
+                                            {
+                                                if (rulerData.exs.IsSelect(VARIABLE))
+                                                {
+                                                    rulerData.exs.Unselect(VARIABLE);
+                                                }
+                                                else
+                                                {
+                                                    rulerData.exs.Select(VARIABLE);
+                                                }
+                                            });
+                                        }
 
-                                    menu.ShowAsContext();
+                                        menu.ShowAsContext();
+                                    }
                                 }
 
                                 GUILayout.EndHorizontal();
@@ -170,17 +169,15 @@ namespace ZGame.Editor.ResBuild
 
                             GUILayout.EndHorizontal();
                         }
-
-                        GUILayout.EndVertical();
                     }
 
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        OnEnable();
-                    }
+                    GUILayout.EndVertical();
                 }
 
-                EditorGUI.EndDisabledGroup();
+                if (EditorGUI.EndChangeCheck())
+                {
+                    OnEnable();
+                }
             }
         }
     }
