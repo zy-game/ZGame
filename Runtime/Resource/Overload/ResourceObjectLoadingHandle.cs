@@ -26,7 +26,7 @@ namespace ZGame.Resource
                 return InternalResourceLoadSync(path);
             }
 #if UNITY_EDITOR
-            if (GameSeting.current.runtime == RuntimeMode.Editor)
+            if (GlobalConfig.current.runtime == RuntimeMode.Editor)
             {
                 return EditorResourceLoadSync(path);
             }
@@ -51,7 +51,7 @@ namespace ZGame.Resource
                 return InternalResourceLoadSync(path);
             }
 #if UNITY_EDITOR
-            if (GameSeting.current.runtime == RuntimeMode.Editor)
+            if (GlobalConfig.current.runtime == RuntimeMode.Editor)
             {
                 return EditorResourceLoadSync(path);
             }
@@ -106,7 +106,7 @@ namespace ZGame.Resource
         private ResHandle EditorResourceLoadSync(string path)
         {
 #if UNITY_EDITOR
-            if (GameSeting.current.runtime == RuntimeMode.Editor)
+            if (GlobalConfig.current.runtime == RuntimeMode.Editor)
             {
                 ABHandle bundleHandle = ABManager.instance.GetBundleHandle("EDITOR");
                 if (bundleHandle is null)

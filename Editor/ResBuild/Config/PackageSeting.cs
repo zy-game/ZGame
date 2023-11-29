@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Serialization;
+using ZGame.Window;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild.Config
@@ -54,91 +55,6 @@ namespace ZGame.Editor.ResBuild.Config
         public bool use;
         public Object folder;
         public BuildType buildType;
-        public ExtensionSetting exs;
-    }
-
-    [Serializable]
-    public class ExtensionSetting
-    {
-        public List<string> allList = new List<string>();
-        public List<string> select = new List<string>();
-
-        public bool IsAllSelect
-        {
-            get { return select.Count == allList.Count; }
-        }
-
-        public bool IsNotingSelect
-        {
-            get { return select.Count == 0; }
-        }
-
-        public void Add(string ex)
-        {
-            if (allList.Contains(ex))
-            {
-                return;
-            }
-
-            allList.Add(ex);
-        }
-
-        public void Remove(string ex)
-        {
-            if (allList.Contains(ex))
-            {
-                allList.Remove(ex);
-            }
-
-            if (select.Contains(ex))
-            {
-                select.Remove(ex);
-            }
-        }
-
-        public void SelectAll(bool state)
-        {
-            select.Clear();
-            select.AddRange(allList);
-        }
-
-        public void Select(string ex)
-        {
-            if (select.Contains(ex))
-            {
-                return;
-            }
-
-            select.Add(ex);
-        }
-
-        public void Unselect(string ex)
-        {
-            if (select.Contains(ex))
-            {
-                select.Remove(ex);
-            }
-        }
-
-        public bool IsSelect(string ex)
-        {
-            return select.Contains(ex);
-        }
-
-        public override string ToString()
-        {
-            if (allList.Count == select.Count)
-            {
-                return "Everyting";
-            }
-            else if (select.Count == 0)
-            {
-                return "Noting";
-            }
-            else
-            {
-                return string.Join(",", select);
-            }
-        }
+        public Selector selector;
     }
 }

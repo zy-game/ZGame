@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.ResBuild.Config;
+using ZGame.Window;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
@@ -24,9 +25,9 @@ namespace ZGame.Editor.ResBuild
 
                 foreach (var rulerData in packageSeting.items)
                 {
-                    if (rulerData.exs is null)
+                    if (rulerData.selector is null)
                     {
-                        rulerData.exs = new ExtensionSetting();
+                        rulerData.selector = new Selector();
                     }
 
                     if (rulerData.folder == null)
@@ -38,7 +39,7 @@ namespace ZGame.Editor.ResBuild
                     string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
                     foreach (var VARIABLE2 in files)
                     {
-                        rulerData.exs.Add(Path.GetExtension(VARIABLE2));
+                        rulerData.selector.Add(Path.GetExtension(VARIABLE2));
                     }
                 }
             }
@@ -115,7 +116,7 @@ namespace ZGame.Editor.ResBuild
                             package.items.Add(new RulerData()
                             {
                                 use = true,
-                                exs = new ExtensionSetting(),
+                                selector = new Selector(),
                                 buildType = BuildType.Once
                             });
                         }
@@ -134,22 +135,22 @@ namespace ZGame.Editor.ResBuild
                                 rulerData.buildType = (BuildType)EditorGUILayout.EnumPopup(rulerData.buildType, GUILayout.Width(200));
                                 if (rulerData.folder != null && rulerData.buildType == BuildType.AssetType)
                                 {
-                                    if (GUILayout.Button(rulerData.exs.ToString(), EditorStyles.popup, GUILayout.Width(200)))
+                                    if (GUILayout.Button(rulerData.selector.ToString(), EditorStyles.popup, GUILayout.Width(200)))
                                     {
                                         GenericMenu menu = new GenericMenu();
-                                        menu.AddItem(new GUIContent("Noting"), rulerData.exs.IsNotingSelect, () => { rulerData.exs.SelectAll(false); });
-                                        menu.AddItem(new GUIContent("Everything"), rulerData.exs.IsAllSelect, () => { rulerData.exs.SelectAll(true); });
-                                        foreach (var VARIABLE in rulerData.exs.allList)
+                                        menu.AddItem(new GUIContent("Noting"), rulerData.selector.isNone, () => { rulerData.selector.Clear(); });
+                                        menu.AddItem(new GUIContent("Everything"), rulerData.selector.isAll, () => { rulerData.selector.SelectAll(); });
+                                        foreach (var VARIABLE in rulerData.selector.items)
                                         {
-                                            menu.AddItem(new GUIContent(VARIABLE), rulerData.exs.IsSelect(VARIABLE), () =>
+                                            menu.AddItem(new GUIContent(VARIABLE), rulerData.selector.IsSelected(VARIABLE), () =>
                                             {
-                                                if (rulerData.exs.IsSelect(VARIABLE))
+                                                if (rulerData.selector.IsSelected(VARIABLE))
                                                 {
-                                                    rulerData.exs.Unselect(VARIABLE);
+                                                    rulerData.selector.UnSelect(VARIABLE);
                                                 }
                                                 else
                                                 {
-                                                    rulerData.exs.Select(VARIABLE);
+                                                    rulerData.selector.Select(VARIABLE);
                                                 }
                                             });
                                         }

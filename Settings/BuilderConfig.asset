@@ -20,7 +20,6 @@ MonoBehaviour:
     appid: 1251268098
     bucket: base
     region: ap-chengdu
-    address: 
     key: AKID108GPdrU0TrP3d9jLqJ4pRr7B4i8KI3c
     password: oSzKRKFAwojYAaszukWHwdQ8e0BELPJB
   - title: "\u6D4B\u8BD5-\u963F\u91CC\u4E91"
@@ -28,7 +27,6 @@ MonoBehaviour:
     appid: 
     bucket: test10291
     region: cn-chengdu
-    address: 
     key: LTAI5tD6j25qsHhsvW1DoY5f
     password: KIqW5G7Tvr0QY7ZiZ9fKPmEHHVpDOF
   useActiveTarget: 1
@@ -39,11 +37,27 @@ MonoBehaviour:
     - use: 1
       folder: {fileID: 102900000, guid: 08637fc07d602494ab93601fcacbb7c7, type: 3}
       buildType: 2
-      exs:
-        allList:
+      selector:
+        items:
         - .anim
         - .meta
         - .controller
-        select:
+        - .meta
+        - .anim
+        - .meta
         - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        reference: []
   comperss: 0

@@ -5,7 +5,7 @@ namespace ZGame.State
     /// <summary>
     /// 状态机管理器
     /// </summary>
-    public sealed class StateMachineManager : SingletonBehaviour<StateMachineManager>
+    public sealed class StateManager : SingletonBehaviour<StateManager>
     {
         private List<StateMachine> _machines = new List<StateMachine>();
         private StateMachine _default;

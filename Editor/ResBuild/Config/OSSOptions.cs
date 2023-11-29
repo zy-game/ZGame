@@ -15,7 +15,6 @@ namespace ZGame.Editor.ResBuild.Config
         public string appid;
         public string bucket;
         public string region;
-        public string address;
         public string key;
         public string password;
     }

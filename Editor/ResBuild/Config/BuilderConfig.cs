@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 
 namespace ZGame.Editor.ResBuild.Config
 {
-    [CreateAssetMenu(menuName = "ZGame/Create BuilderConfig", fileName = "BuilderConfig", order = 0)]
+    [CreateAssetMenu(menuName = "ZGame/BuilderConfig", fileName = "BuilderConfig", order = 0)]
     public class BuilderConfig : ScriptableObject
     {
         public BuildTarget target;

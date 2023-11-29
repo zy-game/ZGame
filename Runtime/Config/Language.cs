@@ -17,7 +17,7 @@ namespace ZGame.Config
 
         public async void SwitchLanguage(LanguageDefine languageDefine)
         {
-            _language = await NetworkRequest.Get<Dictionary<int, string>>(GameSeting.GetNetworkResourceUrl($"language_{languageDefine}.ini"));
+            _language = await NetworkRequest.Get<Dictionary<int, string>>(GlobalConfig.GetNetworkResourceUrl($"language_{languageDefine}.ini"));
             if (_language is null)
             {
                 _language = new Dictionary<int, string>();

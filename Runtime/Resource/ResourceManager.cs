@@ -71,7 +71,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("args");
             }
 #if UNITY_EDITOR
-            if (GameSeting.current.runtime == RuntimeMode.Editor)
+            if (GlobalConfig.current.runtime == RuntimeMode.Editor)
             {
                 progressCallback?.Invoke(1);
                 return;
@@ -99,7 +99,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("args");
             }
 #if UNITY_EDITOR
-            if (GameSeting.current.runtime == RuntimeMode.Editor)
+            if (GlobalConfig.current.runtime == RuntimeMode.Editor)
             {
                 progressCallback?.Invoke(1);
                 return;

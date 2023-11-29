@@ -194,7 +194,7 @@ namespace ZGame.Editor.ResBuild
                 return builds;
             }
 
-            foreach (var VARIABLE in rulerData.exs.select)
+            foreach (var VARIABLE in rulerData.selector.reference)
             {
                 string[] fileList = Directory.GetFiles(path, "*" + VARIABLE, SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
                 builds.Add(new AssetBundleBuild()

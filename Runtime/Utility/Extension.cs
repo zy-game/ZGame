@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -10,10 +11,13 @@ namespace ZGame
 {
     public static partial class Extension
     {
-
         public static void QuitGame()
         {
-            
+#if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         public static void OnDestroyEventCallback(this GameObject gameObject, UnityAction callback)
@@ -25,16 +29,6 @@ namespace ZGame
             }
 
             listener.onDestroy.AddListener(callback);
-        }
-
-        public static string GetPlatformName()
-        {
-#if UNITY_ANDROID
-            return "android";
-#elif UNITY_IPHONE
-            return "ios";
-#endif
-            return "windows";
         }
 
         public static string Replace(this string value, params string[] t)

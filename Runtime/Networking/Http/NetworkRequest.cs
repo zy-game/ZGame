@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
+using UnityEngine;
 using UnityEngine.Networking;
 
 namespace ZGame.Networking
@@ -10,6 +11,7 @@ namespace ZGame.Networking
     {
         public static async UniTask<T> Get<T>(string url)
         {
+            Debug.Log("GET:" + url);
             UnityWebRequest request = UnityWebRequest.Get(url);
             request.timeout = 5;
             request.useHttpContinue = true;
@@ -24,6 +26,7 @@ namespace ZGame.Networking
 
         public static async UniTask<T> Post<T>(string url, Dictionary<string, string> headers, object data)
         {
+            Debug.Log("POST:" + url);
             string str = JsonConvert.SerializeObject(data);
             UnityWebRequest request = UnityWebRequest.PostWwwForm(url, str);
             request.timeout = 5;
@@ -48,6 +51,7 @@ namespace ZGame.Networking
 
         public static async UniTask<string> Head(string url, string headName)
         {
+            Debug.Log("HEAD:" + url);
             UnityWebRequest request = UnityWebRequest.Head(url);
             request.timeout = 5;
             request.useHttpContinue = true;

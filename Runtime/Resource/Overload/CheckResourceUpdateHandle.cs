@@ -64,12 +64,12 @@ namespace ZGame.Resource
                     List<ResourcePackageManifest> result = await ResourcePackageListManifest.CheckNeedUpdatePackageList(VARIABLE);
                     foreach (var op in result)
                     {
-                        if (options.Contains(GameSeting.GetNetworkResourceUrl(op.name)))
+                        if (options.Contains(GlobalConfig.GetNetworkResourceUrl(op.name)))
                         {
                             continue;
                         }
 
-                        options.Add(GameSeting.GetNetworkResourceUrl(op.name));
+                        options.Add(GlobalConfig.GetNetworkResourceUrl(op.name));
                     }
 
                     continue;
