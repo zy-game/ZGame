@@ -16,118 +16,117 @@ public class Startup : MonoBehaviour
 {
     [SerializeField] public List<GameSeting> GameSettings = new List<GameSeting>();
 
-    private IStateMachine _stateMachine;
+    private StateMachine _stateMachine;
 
 
-    class InitGameCamera: IStateProcess
+    class InitGameCamera : StateHandle
     {
-        public void Dispose()
+        public override void OnEntry()
         {
-        }
+            LayerManager.instance.NewCamera("UICamera", 999, "UI");
+            Loading loading = UIManager.instance.GeOrOpentWindow<Loading>();
+            if (GameSeting.current is null)
+            {
+                Debug.LogError(new EntryPointNotFoundException());
+                return;
+            }
 
-        public void OnAwake()
-        {
-        }
-
-        public void OnEntry()
-        {
-        }
-
-        public void OnExit()
-        {
-        }
-
-        public void OnUpdate()
-        {
+            loading.TextMeshProUGUI_TextTMP.Setup("正在获取配置信息...");
+            owner.Switch<UpdateGameStateHandle>();
         }
     }
-    private async void Start()
+
+    class UpdateGameStateHandle : StateHandle
     {
-        _stateMachine = StateMachineManager.instance.Create("STARTUP");
-        _stateMachine.AddState<InitGameCamera>();
-        _stateMachine.Switch<InitGameCamera>();
-
-        GameSeting.current = GameSettings.Find(x => x.active);
-        LayerManager.instance.NewCamera("UICamera", 999, "UI");
-        Loading loading = UIManager.instance.GeOrOpentWindow<Loading>();
-        if (GameSeting.current is null)
+        public async override void OnEntry()
         {
-            Debug.LogError(new EntryPointNotFoundException());
-            return;
-        }
+            Loading loading = UIManager.instance.GeOrOpentWindow<Loading>();
+            if (GameSeting.current is null)
+            {
+                Debug.LogError(new EntryPointNotFoundException());
+                return;
+            }
 
-        loading.TextMeshProUGUI_TextTMP.Setup("正在获取配置信息...");
-        await UpdateAndLoadingResourcePackageList(GameSeting.current);
-        await EntryGame(GameSeting.current);
+            loading.TextMeshProUGUI_TextTMP.Setup("正在获取配置信息...");
+            if (GameSeting.current.module.IsNullOrEmpty())
+            {
+                throw new ArgumentNullException("module");
+            }
+
+            await ResourceManager.instance.CheckUpdateResourcePackageList(loading.SetupProgress, GameSeting.current.module);
+            await ResourceManager.instance.LoadingResourcePackageList(loading.SetupProgress, GameSeting.current.module);
+            owner.Switch<EntryGameStateHandle>();
+        }
     }
 
-    private static async UniTask UpdateAndLoadingResourcePackageList(GameSeting setting)
+    class EntryGameStateHandle : StateHandle
     {
-        if (setting.module.IsNullOrEmpty())
+        public async override void OnEntry()
         {
-            throw new ArgumentNullException("module");
-        }
-
-        Loading loading = UIManager.instance.GeOrOpentWindow<Loading>();
-        await ResourceManager.instance.CheckUpdateResourcePackageList(loading.SetupProgress, setting.module);
-        await ResourceManager.instance.LoadingResourcePackageList(loading.SetupProgress, setting.module);
-    }
-
-    private static async UniTask EntryGame(GameSeting settings)
-    {
-        Assembly assembly = default;
+            Assembly assembly = default;
 #if UNITY_EDITOR
-        if (settings.dll.IsNullOrEmpty())
-        {
-            throw new NullReferenceException(nameof(settings.dll));
-        }
+            if (GameSeting.current.dll.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(GameSeting.current.dll));
+            }
 
-        string dllName = Path.GetFileNameWithoutExtension(settings.dll);
-        assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
-        CallGameEntryMethod();
-        return;
+            string dllName = Path.GetFileNameWithoutExtension(GameSeting.current.dll);
+            assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
+            CallGameEntryMethod();
+            return;
 #endif
-        TextAsset textAsset = ResourceManager.instance.LoadAsset(Path.GetFileNameWithoutExtension(settings.dll) + ".bytes")?.Require<TextAsset>();
-        if (textAsset == null)
-        {
-            throw new NullReferenceException(settings.dll);
-        }
-
-        HomologousImageMode mode = HomologousImageMode.SuperSet;
-        foreach (var item in settings.aot)
-        {
-            textAsset = ResourceManager.instance.LoadAsset(Path.GetFileNameWithoutExtension(item) + ".bytes")?.Require<TextAsset>();
+            TextAsset textAsset = ResourceManager.instance.LoadAsset(Path.GetFileNameWithoutExtension(GameSeting.current.dll) + ".bytes")?.Require<TextAsset>();
             if (textAsset == null)
             {
-                throw new Exception("加载AOT补元数据资源失败:" + item);
+                throw new NullReferenceException(GameSeting.current.dll);
             }
 
-            LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(textAsset.bytes, mode);
+            HomologousImageMode mode = HomologousImageMode.SuperSet;
+            foreach (var item in GameSeting.current.aot)
+            {
+                textAsset = ResourceManager.instance.LoadAsset(Path.GetFileNameWithoutExtension(item) + ".bytes")?.Require<TextAsset>();
+                if (textAsset == null)
+                {
+                    throw new Exception("加载AOT补元数据资源失败:" + item);
+                }
+
+                LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(textAsset.bytes, mode);
+            }
+
+            CallGameEntryMethod();
+
+            void CallGameEntryMethod()
+            {
+                if (assembly is null)
+                {
+                    throw new NullReferenceException(nameof(assembly));
+                }
+
+                List<Type> types = AppDomain.CurrentDomain.GetCustomAttributesWithoutType<GameEntry>();
+                if (types.Count == 0)
+                {
+                    throw new EntryPointNotFoundException();
+                }
+
+
+                MethodInfo methodInfo = types.FirstOrDefault()?.GetMethod("Main");
+                if (methodInfo is null)
+                {
+                    throw new EntryPointNotFoundException("Method Main");
+                }
+
+                methodInfo.Invoke(null, new object[1] { new string[0] });
+            }
         }
+    }
 
-        CallGameEntryMethod();
-
-        void CallGameEntryMethod()
-        {
-            if (assembly is null)
-            {
-                throw new NullReferenceException(nameof(assembly));
-            }
-
-            List<Type> types = AppDomain.CurrentDomain.GetCustomAttributesWithoutType<GameEntry>();
-            if (types.Count == 0)
-            {
-                throw new EntryPointNotFoundException();
-            }
-
-
-            MethodInfo methodInfo = types.FirstOrDefault()?.GetMethod("Main");
-            if (methodInfo is null)
-            {
-                throw new EntryPointNotFoundException("Method Main");
-            }
-
-            methodInfo.Invoke(null, new object[1] { new string[0] });
-        }
+    private async void Start()
+    {
+        GameSeting.current = GameSettings.Find(x => x.active);
+        _stateMachine = StateMachineManager.instance.Create("STARTUP");
+        _stateMachine.AddState<InitGameCamera>();
+        _stateMachine.AddState<UpdateGameStateHandle>();
+        _stateMachine.AddState<EntryGameStateHandle>();
+        _stateMachine.Switch<InitGameCamera>();
     }
 }

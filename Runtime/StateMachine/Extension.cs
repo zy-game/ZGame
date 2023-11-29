@@ -7,7 +7,7 @@ namespace ZGame.State
         /// </summary>
         /// <param name="machine"></param>
         /// <typeparam name="T"></typeparam>
-        public static void AddState<T>(this IStateMachine machine) where T : IStateProcess
+        public static void AddState<T>(this StateMachine machine) where T : StateHandle
         {
             if (machine is null)
             {
@@ -22,7 +22,7 @@ namespace ZGame.State
         /// </summary>
         /// <param name="machine"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Switch<T>(this IStateMachine machine) where T : IStateProcess
+        public static void Switch<T>(this StateMachine machine) where T : StateHandle
         {
             machine.Switch(typeof(T));
         }

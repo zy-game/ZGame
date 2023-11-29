@@ -7,13 +7,13 @@ namespace ZGame.State
     /// </summary>
     public sealed class StateMachineManager : SingletonBehaviour<StateMachineManager>
     {
-        private List<IStateMachine> _machines = new List<IStateMachine>();
-        private IStateMachine _default;
-        public IStateMachine Default => _default;
+        private List<StateMachine> _machines = new List<StateMachine>();
+        private StateMachine _default;
+        public StateMachine Default => _default;
 
         protected override void OnAwake()
         {
-            _default = new IStateMachine.StateMachine("DEFAULT_MACHINE");
+            _default = new StateMachine("DEFAULT_MACHINE");
         }
 
         /// <summary>
@@ -21,15 +21,15 @@ namespace ZGame.State
         /// </summary>
         /// <param name="name">状态机名称</param>
         /// <returns></returns>
-        public IStateMachine Create(string name)
+        public StateMachine Create(string name)
         {
-            IStateMachine machine = GetMachine(name);
+            StateMachine machine = GetMachine(name);
             if (machine is not null)
             {
                 return machine;
             }
 
-            machine = new IStateMachine.StateMachine(name);
+            machine = new StateMachine(name);
             _machines.Add(machine);
             return machine;
         }
@@ -40,7 +40,7 @@ namespace ZGame.State
         /// <param name="name"></param>
         public void Remove(string name)
         {
-            IStateMachine machine = GetMachine(name);
+            StateMachine machine = GetMachine(name);
             if (machine is null)
             {
                 return;
@@ -54,7 +54,7 @@ namespace ZGame.State
         /// </summary>
         /// <param name="name">状态机名称</param>
         /// <returns></returns>
-        public IStateMachine GetMachine(string name)
+        public StateMachine GetMachine(string name)
         {
             return _machines.Find(x => x.name.Equals(name));
         }

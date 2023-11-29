@@ -26,12 +26,18 @@ namespace ZGame.Editor.ResBuild
         {
             GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
             GUILayout.FlexibleSpace();
-            type = (OSSType)EditorGUILayout.EnumPopup(type, EditorStyles.toolbarDropDown);
-            EditorGUI.BeginChangeCheck();
-            string[] list = BuilderConfig.instance.ossList.Where(x => x.type == type).Select(x => x.title).ToArray();
-            selection = EditorGUILayout.Popup(selection, list, EditorStyles.toolbarDropDown);
-            if (EditorGUI.EndChangeCheck())
+            OSSType _type = (OSSType)EditorGUILayout.EnumPopup(type, EditorStyles.toolbarDropDown);
+            if (_type.Equals(type) is false)
             {
+                type = _type;
+                OnRefresh();
+            }
+
+            string[] list = BuilderConfig.instance.ossList.Where(x => x.type == type).Select(x => x.title).ToArray();
+            int _selection = EditorGUILayout.Popup(selection, list, EditorStyles.toolbarDropDown);
+            if (selection.Equals(_selection) is false)
+            {
+                selection = _selection;
                 OnRefresh();
             }
 
