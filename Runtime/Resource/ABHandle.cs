@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -32,6 +33,7 @@ namespace ZGame.Resource
             refCount = 0;
             this.name = title;
             resList = new List<ResHandle>();
+            Debug.Log("load success :" + title);
         }
 
         internal ABHandle(AssetBundle bundle) : this(bundle.name)
@@ -68,9 +70,12 @@ namespace ZGame.Resource
         {
             if (bundle == null)
             {
+                Debug.Log("判断缓存是否存在资源：" + path);
                 return resList.Find(x => x.path.Equals(path)) != null;
             }
 
+            // path = Path.GetFileNameWithoutExtension(path);
+            Debug.Log($"判断{bundle.name}是否存在资源：{path} state:{bundle.Contains(path)}");
             return bundle.Contains(path);
         }
 

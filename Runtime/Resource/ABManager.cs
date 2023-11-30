@@ -12,7 +12,12 @@ namespace ZGame.Resource
             return _handles.Find(x => x.Contains(obj));
         }
 
-        internal ABHandle GetBundleHandle(string path)
+        public ABHandle GetABHandleWithName(string name)
+        {
+            return _handles.Find(x => x.name == name);
+        }
+
+        internal ABHandle GetHaveAssetBundle(string path)
         {
             return _handles.Find(x => x.Contains(path));
         }

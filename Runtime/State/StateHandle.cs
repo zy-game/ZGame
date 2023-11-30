@@ -4,8 +4,6 @@ namespace ZGame.State
 {
     public abstract class StateHandle : IDisposable
     {
-        public StateMachine owner { get; internal set; }
-
         /// <summary>
         /// 初始化状态
         /// </summary>

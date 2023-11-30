@@ -22,7 +22,6 @@ namespace ZGame.State
             }
 
             StateHandle handle = Activator.CreateInstance(type) as StateHandle;
-            handle.owner = this;
             _handles.Add(type, handle);
         }
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using ZGame.FileSystem;
 using ZGame.Networking;
@@ -61,6 +62,20 @@ namespace ZGame.Resource
             }
 
             return 0;
+        }
+
+        public static ResourcePackageManifest GetResourcePackageManifestWithAssetName(string assetName)
+        {
+            foreach (var VARIABLE in _manifests)
+            {
+                var m = VARIABLE.packages.FirstOrDefault(x => x.files.Contains(assetName));
+                if (m is not null)
+                {
+                    return m;
+                }
+            }
+
+            return default;
         }
 
         public static async UniTask<List<ResourcePackageManifest>> GetPackageList(string name)

@@ -9,8 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 4928ddc63e5a4cccb3beb164cf31d98d, type: 3}
   m_Name: GlobalConfig
-  m_EditorClassIdentifier: ZEngine.Runtime:ZGame:GlobalConfig
-  entrys: []
+  m_EditorClassIdentifier: 
+  entrys:
+  - active: 1
+    oss: "\u6D4B\u8BD5-\u963F\u91CC\u4E91"
+    address: https://test10291.oss-cn-chengdu.aliyuncs.com/
+    module: test
+    runtime: 1
+    dll: OdinGame
+    aot: []
   parallelRunnableCount: 10

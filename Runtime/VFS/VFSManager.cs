@@ -5,27 +5,26 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
+using ZGame.Config;
 
 namespace ZGame.FileSystem
 {
-    [CreateAssetMenu(menuName = "ZGame/VFS Setting", fileName = "VFSSetting", order = 1)]
-    public class VFSSetting : ScriptableObject
-    {
-        [Header("是否启用虚拟文件系统")] public bool enable = true;
-        [Header("虚拟文件分块大小")] public int chunkSize = 1024 * 1024;
-        [Header("虚拟文件分块数量")] public int chunkCount = 1024;
-    }
-
     public class VFSManager : SingletonBehaviour<VFSManager>
     {
         private List<VFSChunk> segments = new List<VFSChunk>();
         private List<VFSStream> ioList = new List<VFSStream>();
         private VFSSetting setting;
 
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            ioList.ForEach(x => x.Dispose());
+        }
+
         protected override void OnAwake()
         {
             base.OnAwake();
-            setting = Resources.Load<VFSSetting>("VFSSetting");
+            setting = Resources.Load<VFSSetting>("Config/VFSSetting");
             string filePath = Application.persistentDataPath + "/vfs.ini";
             if (!File.Exists(filePath))
             {
@@ -189,6 +188,7 @@ namespace ZGame.FileSystem
                 index++;
             }
 
+            Debug.Log("write file: " + fileName);
             Saved();
         }
 

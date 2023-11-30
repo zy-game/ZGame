@@ -31,12 +31,12 @@ MonoBehaviour:
     password: KIqW5G7Tvr0QY7ZiZ9fKPmEHHVpDOF
   useActiveTarget: 1
   packages:
-  - name: New Package
+  - name: test
     describe: "\u7528\u6765\u6D4B\u8BD5\u7684"
     items:
     - use: 1
       folder: {fileID: 102900000, guid: 08637fc07d602494ab93601fcacbb7c7, type: 3}
-      buildType: 2
+      buildType: 3
       selector:
         items:
         - .anim
@@ -58,6 +58,144 @@ MonoBehaviour:
         - .controller
         - .meta
         - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        - .controller
+        - .meta
+        - .anim
+        - .meta
+        reference: []
+    - use: 1
+      folder: {fileID: 102900000, guid: f49ea31f83c302e499b79b978d0fdb24, type: 3}
+      buildType: 1
+      selector:
+        items:
+        - .unity
+        - .meta
+        - .unity
+        - .meta
+        - .unity
+        - .meta
+        - .unity
+        - .meta
+        - .unity
+        - .meta
+        - .unity
         - .meta
         reference: []
   comperss: 0

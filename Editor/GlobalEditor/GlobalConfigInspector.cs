@@ -29,7 +29,7 @@ namespace ZGame.Editor
                 globalConfig.entrys = new List<EntryConfig>();
             }
 
-            types = AppDomain.CurrentDomain.GetCustomAttributesWithoutType<GameEntry>();
+            types = AppDomain.CurrentDomain.GetAllSubClasses<GameHandle>();
             resList = BuilderConfig.instance.packages?.Select(x => x.name).ToList();
         }
 

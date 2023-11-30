@@ -4,6 +4,8 @@ using System.IO;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
+using ZGame.Window;
 
 namespace ZGame.Resource
 {
@@ -62,7 +64,7 @@ namespace ZGame.Resource
         private ResHandle AssetBundleResourceLoadSync(string path)
         {
             ResHandle result = default;
-            ABHandle bundleHandle = ABManager.instance.GetBundleHandle(path);
+            ABHandle bundleHandle = ABManager.instance.GetHaveAssetBundle(path);
             if (bundleHandle is null)
             {
                 return default;
@@ -82,7 +84,7 @@ namespace ZGame.Resource
         private ResHandle InternalResourceLoadSync(string path)
         {
             path = path.Substring(10);
-            ABHandle bundleHandle = ABManager.instance.GetBundleHandle("RESOURCES");
+            ABHandle bundleHandle = ABManager.instance.GetABHandleWithName("RESOURCES");
             if (bundleHandle is null)
             {
                 bundleHandle = ABManager.instance.Add("RESOURCES");
@@ -108,7 +110,7 @@ namespace ZGame.Resource
 #if UNITY_EDITOR
             if (GlobalConfig.current.runtime == RuntimeMode.Editor)
             {
-                ABHandle bundleHandle = ABManager.instance.GetBundleHandle("EDITOR");
+                ABHandle bundleHandle = ABManager.instance.GetABHandleWithName("EDITOR");
                 if (bundleHandle is null)
                 {
                     bundleHandle = ABManager.instance.Add("EDITOR");
@@ -136,25 +138,41 @@ namespace ZGame.Resource
         private async UniTask<ResHandle> BundleResourceLoadAsync(string path)
         {
             ResHandle result = default;
-            ABHandle bundleHandle = ABManager.instance.GetBundleHandle(path);
-            if (bundleHandle is null)
+            if (path.EndsWith(".unity"))
             {
-                return default;
+                ResourcePackageManifest manifest = ResourcePackageListManifest.GetResourcePackageManifestWithAssetName(path);
+                ABHandle bundleHandle = ABManager.instance.GetABHandleWithName(manifest.name);
+                if (bundleHandle is null)
+                {
+                    throw new FileNotFoundException(path);
+                }
+
+                await SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path)).ToUniTask(UIManager.instance.TryOpen<Loading>());
+                bundleHandle.AddRef();
+            }
+            else
+            {
+                ABHandle bundleHandle = ABManager.instance.GetHaveAssetBundle(path);
+                if (bundleHandle is null)
+                {
+                    throw new FileNotFoundException(path);
+                }
+
+                UnityEngine.Object asset = await bundleHandle.bundle.LoadAssetAsync(path);
+                if (asset == null)
+                {
+                    throw new FileNotFoundException(path);
+                }
+
+                bundleHandle.AddRes(result = new ResHandle(bundleHandle, asset, path));
             }
 
-            UnityEngine.Object asset = await bundleHandle.bundle.LoadAssetAsync(path);
-            if (asset == null)
-            {
-                throw new FileNotFoundException(path);
-            }
-
-            bundleHandle.AddRes(result = new ResHandle(bundleHandle, asset, path));
             return result;
         }
 
         private async UniTask<ResHandle> NetworkResourceLoading(string path)
         {
-            ABHandle bundleHandle = ABManager.instance.GetBundleHandle("NETWORK");
+            ABHandle bundleHandle = ABManager.instance.GetABHandleWithName("NETWORK");
             if (bundleHandle is null)
             {
                 bundleHandle = ABManager.instance.Add("NETWORK");

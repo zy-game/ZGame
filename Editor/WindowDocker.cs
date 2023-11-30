@@ -31,7 +31,7 @@ namespace ZGame.Editor
         {
             sceneMaps = new List<PageDocker>();
             optionsTypeList = new Dictionary<Type, Type>();
-            List<Type> types = AppDomain.CurrentDomain.GetAllTypes<PageScene>();
+            List<Type> types = AppDomain.CurrentDomain.GetAllSubClasses<PageScene>();
             foreach (var VARIABLE in types)
             {
                 Options options = VARIABLE.GetCustomAttribute<Options>();
@@ -86,7 +86,7 @@ namespace ZGame.Editor
             openScriptableObject = null;
         }
 
-        [MenuItem("Window/GameEditor %L")]
+        [MenuItem("Tools/ZGame Editor %L")]
         static void OpenScene()
         {
             OpenScene(null);

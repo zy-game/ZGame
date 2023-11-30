@@ -24,6 +24,11 @@ namespace ZGame.Resource
             UIManager.instance.GetWindow<Loading>().SetupTitle("正在加载资源信息...").SetupProgress(0);
             foreach (var VARIABLE in args)
             {
+                if (VARIABLE.IsNullOrEmpty())
+                {
+                    continue;
+                }
+
                 if (VARIABLE.StartsWith("http"))
                 {
                     fileList.Enqueue(Path.GetFileName(VARIABLE));
@@ -37,17 +42,18 @@ namespace ZGame.Resource
                 }
             }
 
-            LoadBundleList(fileList, progressCallback);
+            await LoadBundleList(fileList, progressCallback);
         }
 
         private async UniTask LoadBundleList(Queue<string> fileList, Action<float> progressCallback)
         {
             int count = fileList.Count;
+            Loading window = UIManager.instance.TryOpen<Loading>();
             for (int i = 0; i < count; i++)
             {
                 string VARIABLE = fileList.Dequeue();
-                UIManager.instance.GetWindow<Loading>().SetupTitle($"正在加载资源包: {VARIABLE}").SetupProgress(i / (float)count);
-                if (ABManager.instance.GetBundleHandle(VARIABLE) != null)
+                window.SetupTitle($"正在加载资源包: {VARIABLE}").SetupProgress(i / (float)count);
+                if (ABManager.instance.GetABHandleWithName(VARIABLE) != null)
                 {
                     continue;
                 }
@@ -59,9 +65,13 @@ namespace ZGame.Resource
                     return;
                 }
 
+                window.SetupTitle($"正在加载资源包: {VARIABLE}").SetupProgress((i + 1) / (float)count);
                 AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
+
                 ABManager.instance.Add(assetBundle);
             }
+
+            window.SetupTitle("资源加载完成...").SetupProgress(1);
         }
 
         private void Clear(Queue<string> fileList)

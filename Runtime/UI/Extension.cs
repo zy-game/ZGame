@@ -47,7 +47,7 @@ namespace ZGame
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T GeOrOpentWindow<T>(this UIManager system) where T : UIBase
+        public static T TryOpen<T>(this UIManager system) where T : UIBase
         {
             T window = GetWindow<T>(system);
             if (window is null)

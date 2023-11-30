@@ -2,7 +2,8 @@
     "name": "OdinGame",
     "rootNamespace": "",
     "references": [
-        "GUID:3a5dbb47b15101a43b84005a9f19963f"
+        "GUID:3a5dbb47b15101a43b84005a9f19963f",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

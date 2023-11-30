@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEngine;
 using ZGame.FileSystem;
+using ZGame.Game;
 using ZGame.Networking;
 using ZGame.Window;
 
@@ -23,7 +25,7 @@ namespace ZGame.Resource
             UIManager.instance.GetWindow<Loading>().SetupTitle("正在检查资源更新...").SetupProgress(0);
 
             List<string> options = await CheckNeedUpdateList(args);
-
+            Debug.Log(JsonConvert.SerializeObject(options));
             if (options.Count == 0)
             {
                 return;
@@ -51,7 +53,7 @@ namespace ZGame.Resource
                 return;
             }
 
-            MsgBox.Create("资源更新失败！", Extension.QuitGame);
+            MsgBox.Create("资源更新失败！", GameManager.instance.QuitGame);
         }
 
         private async UniTask<List<string>> CheckNeedUpdateList(string[] args)
@@ -59,9 +61,15 @@ namespace ZGame.Resource
             List<string> options = new List<string>();
             foreach (var VARIABLE in args)
             {
+                if (VARIABLE.IsNullOrEmpty())
+                {
+                    continue;
+                }
+
                 if (VARIABLE.StartsWith("http") is false)
                 {
                     List<ResourcePackageManifest> result = await ResourcePackageListManifest.CheckNeedUpdatePackageList(VARIABLE);
+
                     foreach (var op in result)
                     {
                         if (options.Contains(GlobalConfig.GetNetworkResourceUrl(op.name)))

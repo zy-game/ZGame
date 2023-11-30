@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.1273174, g: 0.13414761, b: 0.12107885, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311918, g: 0.3807398, b: 0.35872716, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 168773236}
   - component: {fileID: 168773235}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Startup
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -152,13 +152,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43aaaae935274866839a527ae6638cd2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GameSettings:
-  - active: 1
-    address: 
-    module: New Package
-    runtime: 1
-    dll: OdinGame
-    aot: []
 --- !u!4 &168773236
 Transform:
   m_ObjectHideFlags: 0

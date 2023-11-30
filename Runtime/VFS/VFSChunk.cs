@@ -66,7 +66,7 @@ namespace ZGame.FileSystem
             this.sort = sort;
             this.time = time;
             this.version = version;
-            this.use = use;
+            this.use = true;
         }
 
         public void Free()

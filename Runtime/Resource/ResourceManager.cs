@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using ZGame.FileSystem;
 using ZGame.Networking;
 
@@ -21,9 +23,27 @@ namespace ZGame.Resource
 
         public ResourceManager()
         {
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
             _assetBundleLoadingHandle = new AssetBundleLoadingHandle();
             _resourcesLodaingHandle = new ResourceObjectLoadingHandle();
             _checkResourceUpdateHandle = new CheckResourceUpdateHandle();
+        }
+
+        private void OnSceneUnloaded(Scene arg0)
+        {
+            ResourcePackageManifest manifest = ResourcePackageListManifest.GetResourcePackageManifestWithAssetName(arg0.path);
+            if (manifest is null)
+            {
+                return;
+            }
+
+            ABHandle bundleHandle = ABManager.instance.GetABHandleWithName(manifest.name);
+            if (bundleHandle is null)
+            {
+                throw new FileNotFoundException(arg0.path);
+            }
+
+            bundleHandle.RemoveRef();
         }
 
         /// <summary>

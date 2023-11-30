@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -11,15 +10,6 @@ namespace ZGame
 {
     public static partial class Extension
     {
-        public static void QuitGame()
-        {
-#if UNITY_EDITOR
-            EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
-        }
-
         public static void OnDestroyEventCallback(this GameObject gameObject, UnityAction callback)
         {
             EventListener listener = gameObject.GetComponent<EventListener>();
@@ -42,41 +32,12 @@ namespace ZGame
         }
 
         public static bool IsNullOrEmpty(this string str)
-            => string.IsNullOrEmpty(str);
-
-        public static Type GetTypeForThat(this AppDomain domain, string name)
         {
-            foreach (var VARIABLE in domain.GetAssemblies())
-            {
-                Type type = VARIABLE.GetType(name);
-                if (type is null)
-                {
-                    continue;
-                }
-
-                return type;
-            }
-
-            return default;
+            return string.IsNullOrEmpty(str);
         }
 
-        public static T CreateInstance<T>(this AppDomain appDomain, string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                return default;
-            }
 
-            Type type = appDomain.GetTypeForThat(name);
-            if (type is null)
-            {
-                return default;
-            }
-
-            return (T)Activator.CreateInstance(type);
-        }
-
-        public static List<Type> GetAllTypes<T>(this AppDomain domain)
+        public static List<Type> GetAllSubClasses<T>(this AppDomain domain)
         {
             List<Type> result = new List<Type>();
             Type baseType = typeof(T);
@@ -88,6 +49,21 @@ namespace ZGame
                     {
                         result.Add(VARIABLE2);
                     }
+                }
+            }
+
+            return result;
+        }
+
+        public static List<Type> GetAllSubClasses<T>(this Assembly assembly)
+        {
+            List<Type> result = new List<Type>();
+            Type baseType = typeof(T);
+            foreach (var VARIABLE in assembly.GetTypes())
+            {
+                if (baseType.IsAssignableFrom(VARIABLE) && VARIABLE.IsInterface is false && VARIABLE.IsAbstract is false)
+                {
+                    result.Add(VARIABLE);
                 }
             }
 
@@ -130,23 +106,6 @@ namespace ZGame
             }
 
             return result;
-        }
-
-
-        public static Type FindType(this Assembly assembly, string name)
-        {
-            if (assembly is not null)
-            {
-                foreach (var VARIABLE in assembly.GetTypes())
-                {
-                    if (VARIABLE.Name == name)
-                    {
-                        return VARIABLE;
-                    }
-                }
-            }
-
-            return default;
         }
     }
 }

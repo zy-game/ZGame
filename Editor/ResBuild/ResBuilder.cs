@@ -104,26 +104,25 @@ namespace ZGame.Editor.ResBuild
             }
 
             var manifest = BuildPipeline.BuildAssetBundles(output, list.ToArray(), BuildAssetBundleOptions.None, target);
-            Debug.Log(JsonConvert.SerializeObject(builds));
             BuildPipeline.GetCRCForAssetBundle(new DirectoryInfo(output).Name, out uint crc);
-
+            List<ResourcePackageListManifest> packageListManifests = new List<ResourcePackageListManifest>();
             foreach (var VARIABLE in builds)
             {
                 ResourcePackageListManifest packageListManifest = new ResourcePackageListManifest();
                 packageListManifest.name = VARIABLE.ruler.name;
                 packageListManifest.packages = new ResourcePackageManifest[VARIABLE.builds.Length];
                 packageListManifest.version = Crc32.GetCRC32Str(DateTime.Now.ToString("g"));
-
                 for (int i = 0; i < VARIABLE.builds.Length; i++)
                 {
                     string[] dependencies = manifest.GetAllDependencies(VARIABLE.builds[i].assetBundleName);
                     BuildPipeline.GetCRCForAssetBundle(output + "/" + VARIABLE.builds[i].assetBundleName, out crc);
                     packageListManifest.packages[i] = new ResourcePackageManifest()
                     {
-                        name = VARIABLE.builds[i].assetBundleName,
+                        name = VARIABLE.builds[i].assetBundleName.ToLower(),
                         version = crc,
+                        owner = packageListManifest.name,
                         dependencies = new Dependencies[dependencies.Length],
-                        files = VARIABLE.builds[i].assetNames
+                        files = VARIABLE.builds[i].assetNames.Select(x => x.Replace("\\", "/")).ToArray()
                     };
                     for (int j = 0; j < packageListManifest.packages[i].dependencies.Length; j++)
                     {
@@ -136,7 +135,21 @@ namespace ZGame.Editor.ResBuild
                     }
                 }
 
-                File.WriteAllText($"{output}/{VARIABLE.ruler.name}.ini", JsonConvert.SerializeObject(packageListManifest));
+                packageListManifests.Add(packageListManifest);
+            }
+
+            foreach (var VARIABLE in packageListManifests)
+            {
+                for (int i = 0; i < VARIABLE.packages.Length; i++)
+                {
+                    for (int j = 0; j < VARIABLE.packages[i].dependencies.Length; j++)
+                    {
+                        var result = packageListManifests.Find(x => x.Contains(VARIABLE.packages[i].dependencies[j].name));
+                        VARIABLE.packages[i].dependencies[j].owner = result.name;
+                    }
+                }
+
+                File.WriteAllText($"{output}/{VARIABLE.name}.ini", JsonConvert.SerializeObject(VARIABLE));
             }
 
             EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
@@ -147,141 +160,5 @@ namespace ZGame.Editor.ResBuild
     {
         public PackageSeting ruler;
         public AssetBundleBuild[] builds;
-    }
-
-    class PackageAnalyzer
-    {
-        public BuildItem GetRuleBuildBundles(PackageSeting seting)
-        {
-            List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
-            foreach (var rulerData in seting.items)
-            {
-                switch (rulerData.buildType)
-                {
-                    case BuildType.Asset:
-                        builds.AddRange(GetAssetBundleListWithFile(rulerData));
-                        break;
-                    case BuildType.Folder:
-                        builds.AddRange(GetAssetBundleListWithFolder(rulerData));
-                        break;
-                    case BuildType.Once:
-                        builds.AddRange(GetOnceBundles(rulerData));
-                        break;
-                    case BuildType.AssetType:
-                        builds.AddRange(GetBundleListWithType(rulerData));
-                        break;
-                }
-            }
-
-            return new BuildItem()
-            {
-                ruler = seting,
-                builds = builds.ToArray()
-            };
-        }
-
-        private List<AssetBundleBuild> GetBundleListWithType(RulerData rulerData)
-        {
-            List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
-            if (rulerData.folder == null)
-            {
-                return builds;
-            }
-
-            string path = AssetDatabase.GetAssetPath(rulerData.folder);
-            if (Directory.Exists(path) is false)
-            {
-                return builds;
-            }
-
-            foreach (var VARIABLE in rulerData.selector.reference)
-            {
-                string[] fileList = Directory.GetFiles(path, "*" + VARIABLE, SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
-                builds.Add(new AssetBundleBuild()
-                {
-                    assetBundleName = $"{rulerData.folder.name}_{VARIABLE.Substring(1)}{BuilderConfig.instance.fileExtension}",
-                    assetNames = fileList
-                });
-            }
-
-            return builds;
-        }
-
-        private List<AssetBundleBuild> GetOnceBundles(RulerData rulerData)
-        {
-            List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
-            if (rulerData.folder == null)
-            {
-                return builds;
-            }
-
-            string path = AssetDatabase.GetAssetPath(rulerData.folder);
-            if (Directory.Exists(path) is false)
-            {
-                return builds;
-            }
-
-            string[] fileList = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
-            builds.Add(new AssetBundleBuild()
-            {
-                assetBundleName = $"{rulerData.folder.name}{BuilderConfig.instance.fileExtension}",
-                assetNames = fileList
-            });
-            return builds;
-        }
-
-        private List<AssetBundleBuild> GetAssetBundleListWithFolder(RulerData rulerData)
-        {
-            List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
-            if (rulerData.folder == null)
-            {
-                return builds;
-            }
-
-            string path = AssetDatabase.GetAssetPath(rulerData.folder);
-            if (Directory.Exists(path) is false)
-            {
-                return builds;
-            }
-
-            string[] folderList = Directory.GetDirectories(path);
-            foreach (var VARIABLE in folderList)
-            {
-                builds.Add(new AssetBundleBuild()
-                {
-                    assetBundleName = $"{rulerData.folder.name}_{Path.GetFileName(VARIABLE)}{BuilderConfig.instance.fileExtension}",
-                    assetNames = Directory.GetFiles(VARIABLE, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray()
-                });
-            }
-
-            return builds;
-        }
-
-        private List<AssetBundleBuild> GetAssetBundleListWithFile(RulerData rulerData)
-        {
-            List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
-            if (rulerData.folder == null)
-            {
-                return builds;
-            }
-
-            string path = AssetDatabase.GetAssetPath(rulerData.folder);
-            if (Directory.Exists(path) is false)
-            {
-                return builds;
-            }
-
-            string[] fileList = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
-            foreach (var VARIABLE in fileList)
-            {
-                builds.Add(new AssetBundleBuild()
-                {
-                    assetBundleName = $"{rulerData.folder.name}_{Path.GetFileName(VARIABLE)}{BuilderConfig.instance.fileExtension}",
-                    assetNames = new[] { VARIABLE }
-                });
-            }
-
-            return builds;
-        }
     }
 }
