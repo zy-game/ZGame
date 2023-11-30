@@ -96,6 +96,11 @@ namespace ZGame.Editor
         static bool OnOpened(int id, int line)
         {
             UnityEngine.Object target = UnityEditor.EditorUtility.InstanceIDToObject(id);
+            if (target == null)
+            {
+                return false;
+            }
+
             if (optionsTypeList.TryGetValue(target.GetType(), out Type sceneType) is false)
             {
                 return false;
