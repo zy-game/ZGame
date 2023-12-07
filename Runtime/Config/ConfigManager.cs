@@ -2,8 +2,7 @@ using ZGame;
 
 namespace Runtime.Config
 {
-    public class ConfigManager : SingletonBehaviour<ConfigManager>
+    public class ConfigManager : Singleton<ConfigManager>
     {
-        
     }
 }

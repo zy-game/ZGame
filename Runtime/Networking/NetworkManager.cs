@@ -16,7 +16,7 @@ namespace ZGame.Networking
     /// <summary>
     /// 网络管理器
     /// </summary>
-    public class NetworkManager : SingletonBehaviour<NetworkManager>
+    public class NetworkManager : Singleton<NetworkManager>
     {
         private Dictionary<uint, IMessageHandler> _dispatchers = new();
         private Dictionary<string, IChannel> channels = new();

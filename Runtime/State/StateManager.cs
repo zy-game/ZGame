@@ -5,13 +5,13 @@ namespace ZGame.State
     /// <summary>
     /// 状态机管理器
     /// </summary>
-    public sealed class StateManager : SingletonBehaviour<StateManager>
+    public sealed class StateManager : Singleton<StateManager>
     {
         private List<StateMachine> _machines = new List<StateMachine>();
         private StateMachine _default;
         public StateMachine Default => _default;
 
-        protected override void OnAwake()
+        internal protected override void OnAwake()
         {
             _default = new StateMachine("DEFAULT_MACHINE");
         }
@@ -59,7 +59,7 @@ namespace ZGame.State
             return _machines.Find(x => x.name.Equals(name));
         }
 
-        protected override void OnUpdate()
+        internal protected override void OnUpdate()
         {
             _default.OnUpdate();
             for (int i = _machines.Count - 1; i >= 0; i--)

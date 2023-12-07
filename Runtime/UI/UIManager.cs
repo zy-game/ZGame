@@ -7,10 +7,15 @@ using ZGame.Resource;
 
 namespace ZGame.Window
 {
-    public sealed class UIManager : SingletonBehaviour<UIManager>
+    public sealed class UIManager : Singleton<UIManager>
     {
         private Dictionary<Type, UIBase> _windows = new Dictionary<Type, UIBase>();
 
+
+        protected void OnAwake()
+        {
+            
+        }
 
         public UIBase Open(Type type)
         {

@@ -9,19 +9,19 @@ using ZGame.Config;
 
 namespace ZGame.FileSystem
 {
-    public class VFSManager : SingletonBehaviour<VFSManager>
+    public class VFSManager : Singleton<VFSManager>
     {
         private List<VFSChunk> segments = new List<VFSChunk>();
         private List<VFSStream> ioList = new List<VFSStream>();
         private VFSSetting setting;
 
-        protected override void OnDestroy()
+        internal protected override void OnDestroy()
         {
             base.OnDestroy();
             ioList.ForEach(x => x.Dispose());
         }
 
-        protected override void OnAwake()
+        internal protected override void OnAwake()
         {
             base.OnAwake();
             setting = Resources.Load<VFSSetting>("Config/VFSSetting");

@@ -13,7 +13,7 @@ namespace ZGame.Resource
     /// <summary>
     /// 资源管理器
     /// </summary>
-    public sealed class ResourceManager : SingletonBehaviour<ResourceManager>
+    public sealed class ResourceManager : Singleton<ResourceManager>
     {
         private AssetBundleLoadingHandle _assetBundleLoadingHandle;
         private ResourceObjectLoadingHandle _resourcesLodaingHandle;

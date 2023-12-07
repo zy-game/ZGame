@@ -11,7 +11,7 @@ using ZGame.Resource;
 
 namespace ZGame.Game
 {
-    public sealed class GameManager : SingletonBehaviour<GameManager>
+    public sealed class GameManager : Singleton<GameManager>
     {
         private Assembly assembly = default;
         private GameHandle gameHandle = default;
