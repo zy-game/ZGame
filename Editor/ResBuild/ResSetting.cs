@@ -34,7 +34,7 @@ namespace ZGame.Editor.ResBuild
             {
                 BuilderConfig.instance.ossList.Add(new OSSOptions());
                 BuilderConfig.Saved();
-                WindowDocker.Refresh();
+                EditorManager.Refresh();
             }
 
             GUILayout.EndHorizontal();
@@ -47,7 +47,7 @@ namespace ZGame.Editor.ResBuild
                 {
                     BuilderConfig.instance.ossList.RemoveAt(i);
                     BuilderConfig.Saved();
-                    WindowDocker.Refresh();
+                    EditorManager.Refresh();
                 }
 
                 GUILayout.EndHorizontal();

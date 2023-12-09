@@ -55,7 +55,7 @@ namespace ZGame.Editor.ResBuild
                 completion?.Invoke();
             }
 
-            WindowDocker.StartCoroutine(Start());
+            EditorManager.StartCoroutine(Start());
         }
 
         public void Download(Action completion)
@@ -66,7 +66,7 @@ namespace ZGame.Editor.ResBuild
                 completion?.Invoke();
             }
 
-            WindowDocker.StartCoroutine(Start());
+            EditorManager.StartCoroutine(Start());
         }
 
         public void Dispose()

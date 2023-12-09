@@ -8,7 +8,7 @@ namespace ZGame.Editor.ResBuild
 {
     class PackageAnalyzer
     {
-        public BuildItem GetRuleBuildBundles(PackageSeting seting)
+        public BuilderOptions GetRuleBuildBundles(PackageSeting seting)
         {
             List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
             foreach (var rulerData in seting.items)
@@ -30,7 +30,7 @@ namespace ZGame.Editor.ResBuild
                 }
             }
 
-            return new BuildItem()
+            return new BuilderOptions()
             {
                 ruler = seting,
                 builds = builds.ToArray()

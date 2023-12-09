@@ -75,7 +75,7 @@ namespace ZGame.Editor.ResBuild
             while (state is false)
             {
                 yield return new WaitForSeconds(0.05f);
-                WindowDocker.Refresh();
+                EditorManager.Refresh();
             }
 
             progrss = 0;
@@ -99,12 +99,12 @@ namespace ZGame.Editor.ResBuild
             {
                 progrss = args;
                 state = args >= 1;
-                WindowDocker.Refresh();
+                EditorManager.Refresh();
             });
             while (state is false)
             {
                 yield return new WaitForSeconds(0.05f);
-                WindowDocker.Refresh();
+                EditorManager.Refresh();
             }
 
             progrss = 0;

@@ -11,6 +11,12 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
+    class BuilderOptions
+    {
+        public PackageSeting ruler;
+        public AssetBundleBuild[] builds;
+    }
+
     [BindScene("资源")]
     [Options(typeof(BuilderConfig))]
     public class ResBuilder : PageScene
@@ -36,19 +42,27 @@ namespace ZGame.Editor.ResBuild
                     continue;
                 }
 
-                GUILayout.BeginHorizontal();
+                GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
                 VARIABLE.selection = GUILayout.Toggle(VARIABLE.selection, VARIABLE.name, GUILayout.Width(300));
                 GUILayout.Space(40);
                 GUILayout.Label(VARIABLE.describe);
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Edit"))
+                if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
                 {
-                    WindowDocker.SwitchScene<ResPackageSeting>();
+                    EditorManager.SwitchScene<ResPackageSeting>();
                 }
 
+                if (GUILayout.Button("Build", EditorStyles.toolbarButton))
+                {
+                    PackageAnalyzer analyzer = new PackageAnalyzer();
+                    OnBuildBundle(new BuilderOptions[1]
+                    {
+                        analyzer.GetRuleBuildBundles(VARIABLE)
+                    });
+                }
+
+                GUILayout.Space(2);
                 GUILayout.EndHorizontal();
-                GUILayout.Box("", ZStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width), GUILayout.Height(1));
-                GUILayout.Space(3);
             }
 
             GUILayout.EndVertical();
@@ -65,7 +79,7 @@ namespace ZGame.Editor.ResBuild
 
         private void OnBuild()
         {
-            List<BuildItem> builds = new List<BuildItem>();
+            List<BuilderOptions> builds = new List<BuilderOptions>();
             foreach (var VARIABLE in BuilderConfig.instance.packages)
             {
                 if (VARIABLE.selection is false)
@@ -80,7 +94,7 @@ namespace ZGame.Editor.ResBuild
             OnBuildBundle(builds.ToArray());
         }
 
-        private void OnBuildBundle(params BuildItem[] builds)
+        private void OnBuildBundle(params BuilderOptions[] builds)
         {
             List<AssetBundleBuild> list = new List<AssetBundleBuild>();
             foreach (var VARIABLE in builds)
@@ -154,11 +168,5 @@ namespace ZGame.Editor.ResBuild
 
             EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
         }
-    }
-
-    class BuildItem
-    {
-        public PackageSeting ruler;
-        public AssetBundleBuild[] builds;
     }
 }

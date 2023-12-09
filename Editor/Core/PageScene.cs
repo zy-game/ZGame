@@ -34,7 +34,7 @@ namespace ZGame.Editor
                 return;
             }
 
-            this.parent = WindowDocker.GetScene(attribute.parent);
+            this.parent = EditorManager.GetScene(attribute.parent);
         }
 
         public virtual void OnEnable()

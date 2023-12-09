@@ -92,7 +92,7 @@ namespace ZGame.Editor.ResBuild
                 if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
                 {
                     BuilderConfig.instance.packages.Remove(package);
-                    WindowDocker.Refresh();
+                    EditorManager.Refresh();
                 }
 
                 GUILayout.EndHorizontal();
@@ -165,7 +165,7 @@ namespace ZGame.Editor.ResBuild
                             if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
                             {
                                 package.items.RemoveAt(i);
-                                WindowDocker.Refresh();
+                                EditorManager.Refresh();
                             }
 
                             GUILayout.EndHorizontal();

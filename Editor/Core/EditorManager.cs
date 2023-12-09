@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor
 {
-    public partial class WindowDocker : EditorWindow
+    public partial class EditorManager : EditorWindow
     {
         private Vector2 menuRoll;
         private Vector2 pageRoll;

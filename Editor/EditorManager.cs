@@ -12,9 +12,9 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor
 {
-    public partial class WindowDocker
+    public partial class EditorManager
     {
-        private static WindowDocker _docker;
+        private static EditorManager _docker;
         private static List<PageDocker> sceneMaps;
         private static Dictionary<Type, Type> optionsTypeList;
         private static UnityEngine.Object openScriptableObject;
@@ -24,6 +24,11 @@ namespace ZGame.Editor
             public bool show;
             public PageScene scene;
             public List<PageScene> childs;
+        }
+
+        public static EditorManager instance
+        {
+            get { return _docker; }
         }
 
         [UnityEditor.Callbacks.DidReloadScripts]
@@ -71,7 +76,7 @@ namespace ZGame.Editor
                 docker.childs.Add((PageScene)Activator.CreateInstance(VARIABLE));
             }
 
-            if (EditorWindow.HasOpenInstances<WindowDocker>() is false)
+            if (EditorWindow.HasOpenInstances<EditorManager>() is false)
             {
                 return;
             }
@@ -114,7 +119,7 @@ namespace ZGame.Editor
         {
             if (_docker == null)
             {
-                _docker = GetWindow<WindowDocker>(false, "编辑器", true);
+                _docker = GetWindow<EditorManager>(false, "编辑器", true);
                 if (_docker == null)
                 {
                     return;
