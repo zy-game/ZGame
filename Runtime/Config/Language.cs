@@ -11,7 +11,14 @@ namespace ZGame.Config
         Chinese,
     }
 
-    public class Language : Singleton<Language>
+    public enum InternalLanguage
+    {
+        UPDATE_RESOURCE_PROGRESS = 100000,
+        UPDATE_RESOURCE_FINISH,
+        UPDATE_RESOURCE_ERROR,
+    }
+
+    public class Language : Singleton<Language>, IConfig
     {
         private Dictionary<int, string> _language = new();
 
@@ -42,11 +49,31 @@ namespace ZGame.Config
             handle.Setup(key);
         }
 
+        public string GetLanguage(int key)
+        {
+            if (_language.TryGetValue(key, out string value) is false)
+            {
+                return "Not Found";
+            }
+
+            return value;
+        }
+
+        public string GetLanguage(InternalLanguage language)
+        {
+            return GetLanguage((int)language);
+        }
+
+
         class LanguageHandle : MonoBehaviour
         {
             public void Setup(int key)
             {
             }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

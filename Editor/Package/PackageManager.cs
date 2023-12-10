@@ -8,26 +8,30 @@ namespace ZGame.Editor.Package
     public class PackageManager : PageScene
     {
         private const string configPath = "Assets/Settings/ProjectPackageList.asset";
-        private ProjectPackageDependenceList _projectPackageDependenceList;
+        private ProjectPackageDataList _projectPackageDataList;
         private string url;
 
         public override void OnEnable()
         {
-            _projectPackageDependenceList = AssetDatabase.LoadAssetAtPath<ProjectPackageDependenceList>(configPath);
-            if (_projectPackageDependenceList == null)
+            _projectPackageDataList = AssetDatabase.LoadAssetAtPath<ProjectPackageDataList>(configPath);
+            if (_projectPackageDataList == null)
             {
-                _projectPackageDependenceList = ScriptableObject.CreateInstance<ProjectPackageDependenceList>();
-                AssetDatabase.CreateAsset(_projectPackageDependenceList, configPath);
+                _projectPackageDataList = ScriptableObject.CreateInstance<ProjectPackageDataList>();
+                AssetDatabase.CreateAsset(_projectPackageDataList, configPath);
             }
 
             EditorManager.instance.ShowNotification(new GUIContent("Get Package List..."));
-            EditorManager.StartCoroutine(_projectPackageDependenceList.Init(() => { EditorManager.instance.RemoveNotification(); }));
+            EditorManager.StartCoroutine(_projectPackageDataList.Init(OnDisable));
         }
 
+        public override void OnDisable()
+        {
+            EditorManager.instance.RemoveNotification();
+        }
 
         public override void OnGUI()
         {
-            if (EditorApplication.isPlaying || _projectPackageDependenceList.isInit is false)
+            if (EditorApplication.isPlaying || _projectPackageDataList.isInit is false)
             {
                 return;
             }
@@ -60,15 +64,15 @@ namespace ZGame.Editor.Package
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Update All", EditorStyles.toolbarButton))
             {
-                _projectPackageDependenceList.UpdateAll();
+                _projectPackageDataList.UpdateAll();
             }
 
             GUILayout.EndHorizontal();
 
 
-            for (int i = 0; i < _projectPackageDependenceList.packages.Count; i++)
+            for (int i = 0; i < _projectPackageDataList.packages.Count; i++)
             {
-                ProjectPackageData info = _projectPackageDependenceList.packages[i];
+                ProjectPackageData info = _projectPackageDataList.packages[i];
                 if (info == null)
                 {
                     continue;
@@ -84,7 +88,7 @@ namespace ZGame.Editor.Package
 
                 if (GUILayout.Button("Remove", GUILayout.Width(70)))
                 {
-                    _projectPackageDependenceList.Remove(info);
+                    _projectPackageDataList.Remove(info);
                     EditorManager.Refresh();
                 }
 
@@ -93,7 +97,7 @@ namespace ZGame.Editor.Package
                     //todo 这里用下拉列表来做更新列表，这样可以更好的控制更新的版本
                     if (GUILayout.Button("Update", GUILayout.Width(70)))
                     {
-                        _projectPackageDependenceList.UpdatePackage(info.name);
+                        _projectPackageDataList.UpdatePackage(info.name);
                     }
                 }
 

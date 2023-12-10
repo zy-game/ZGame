@@ -2,11 +2,11 @@
 
 namespace ZGame.Editor
 {
-    public sealed class Options : Attribute
+    public sealed class SettingContent : Attribute
     {
         public Type type;
 
-        public Options(Type type)
+        public SettingContent(Type type)
         {
             this.type = type;
         }

@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    [Options(typeof(PackageSeting))]
+    [SettingContent(typeof(PackageSeting))]
     [BindScene("包管理", typeof(ResBuilder))]
     public class ResPackageSeting : PageScene
     {

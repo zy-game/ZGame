@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace ZGame.Editor.Package
 {
-    class GitNetClient
+    class PackageManagerClient
     {
         public static IEnumerator GetPackageList(string url, Action<List<ProjectPackageData>> callback)
         {

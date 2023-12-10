@@ -18,15 +18,15 @@ public class Startup : MonoBehaviour
     {
         LayerManager.instance.NewCamera("UICamera", 999, "UI");
         Loading loading = UIManager.instance.TryOpen<Loading>();
-        loading.TextMeshProUGUI_TextTMP.Setup("正在获取配置信息...");
+        loading.SetTitle("正在获取配置信息...");
         if (GlobalConfig.current is null)
         {
             Debug.LogError(new EntryPointNotFoundException());
             return;
         }
 
-        await ResourceManager.instance.CheckUpdateResourcePackageList(loading.SetupProgress, GlobalConfig.current.module);
-        await ResourceManager.instance.LoadingResourcePackageList(loading.SetupProgress, GlobalConfig.current.module);
+        await ResourceManager.instance.CheckUpdateResourcePackageList(loading, GlobalConfig.current.module);
+        await ResourceManager.instance.LoadingResourcePackageList(loading, GlobalConfig.current.module);
         await GameManager.instance.EntryGame(GlobalConfig.current);
     }
 }

@@ -6,12 +6,12 @@ namespace ZGame.Resource
     public sealed class ResHandle : IDisposable
     {
         private UnityEngine.Object obj;
-        private ABHandle parent;
+        private ResourcePackageHandle parent;
         public int refCount => count;
         public string path { get; }
         private int count;
 
-        public ResHandle(ABHandle parent, UnityEngine.Object obj, string path)
+        public ResHandle(ResourcePackageHandle parent, UnityEngine.Object obj, string path)
         {
             this.obj = obj;
             this.path = path;

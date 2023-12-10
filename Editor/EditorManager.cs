@@ -15,15 +15,16 @@ namespace ZGame.Editor
     public partial class EditorManager
     {
         private static EditorManager _docker;
-        private static List<PageDocker> sceneMaps;
-        private static Dictionary<Type, Type> optionsTypeList;
+        private static List<SceneData> sceneMaps;
         private static UnityEngine.Object openScriptableObject;
 
-        class PageDocker
+        class SceneData
         {
             public bool show;
             public PageScene scene;
             public List<PageScene> childs;
+            public Type settingType;
+            public Type parent;
         }
 
         public static EditorManager instance
@@ -34,61 +35,58 @@ namespace ZGame.Editor
         [UnityEditor.Callbacks.DidReloadScripts]
         static void OnScriptBuilderComplation()
         {
-            sceneMaps = new List<PageDocker>();
-            optionsTypeList = new Dictionary<Type, Type>();
+            sceneMaps = new List<SceneData>();
             List<Type> types = AppDomain.CurrentDomain.GetAllSubClasses<PageScene>();
-            foreach (var VARIABLE in types)
-            {
-                Options options = VARIABLE.GetCustomAttribute<Options>();
-                if (options is null)
-                {
-                    continue;
-                }
 
-                optionsTypeList.Add(options.type, VARIABLE);
-            }
 
             foreach (var VARIABLE in types)
             {
                 BindScene editorScene = VARIABLE.GetCustomAttribute<BindScene>();
-                if (editorScene is null || editorScene.parent is not null)
+
+                if (editorScene is null)
                 {
                     continue;
                 }
 
-                sceneMaps.Add(new PageDocker() { scene = (PageScene)Activator.CreateInstance(VARIABLE), childs = new List<PageScene>() });
+                SceneData sceneData = new SceneData();
+                sceneMaps.Add(sceneData);
+                sceneData.scene = (PageScene)Activator.CreateInstance(VARIABLE);
+                sceneData.parent = editorScene.parent;
+                sceneData.childs = new List<PageScene>();
+                SettingContent settingContent = VARIABLE.GetCustomAttribute<SettingContent>();
+                if (settingContent is null)
+                {
+                    continue;
+                }
+
+                sceneData.settingType = settingContent.type;
             }
 
-            foreach (var VARIABLE in types)
+            for (int i = sceneMaps.Count - 1; i >= 0; i--)
             {
-                BindScene subScene = VARIABLE.GetCustomAttribute<BindScene>();
-                if (subScene is null || subScene.parent is null)
+                SceneData sceneData = sceneMaps[i];
+                if (sceneData.parent is null)
                 {
                     continue;
                 }
 
-                PageDocker docker = sceneMaps.Find(x => x.scene.GetType() == subScene.parent);
-                if (docker is null)
+                SceneData parent = sceneMaps.Find(x => x.scene.GetType() == sceneData.parent);
+                if (parent is null)
                 {
                     continue;
                 }
 
-                docker.childs.Add((PageScene)Activator.CreateInstance(VARIABLE));
+                parent.childs.Add(sceneData.scene);
+                sceneMaps.RemoveAt(i);
             }
+
 
             if (EditorWindow.HasOpenInstances<EditorManager>() is false)
             {
                 return;
             }
 
-            if (openScriptableObject == null)
-            {
-                OpenScene(null);
-                return;
-            }
-
-            OpenScene(openScriptableObject);
-            openScriptableObject = null;
+            OpenScene();
         }
 
         [MenuItem("Tools/ZGame Editor %L")]
@@ -106,7 +104,7 @@ namespace ZGame.Editor
                 return false;
             }
 
-            if (optionsTypeList.TryGetValue(target.GetType(), out Type sceneType) is false)
+            if (sceneMaps.Exists(x => x.settingType == target.GetType()) is false)
             {
                 return false;
             }
@@ -132,12 +130,13 @@ namespace ZGame.Editor
                 return;
             }
 
-            if (optionsTypeList.TryGetValue(obj.GetType(), out Type sceneType) is false)
+            PageScene pageScene = sceneMaps.Find(x => x.settingType == obj.GetType())?.scene;
+            if (pageScene is null)
             {
                 return;
             }
 
-            SwitchScene(sceneType);
+            SwitchScene(pageScene);
         }
 
         public static PageScene GetScene(Type type)
@@ -168,6 +167,11 @@ namespace ZGame.Editor
             return (T)GetScene(typeof(T));
         }
 
+        public static void SwitchScene<T>() where T : PageScene
+        {
+            SwitchScene(typeof(T));
+        }
+
         public static void SwitchScene(Type type)
         {
             //检查type是否实现了PageScene
@@ -188,6 +192,7 @@ namespace ZGame.Editor
 
             if (_docker.current is not null)
             {
+                _docker.current.StopAllCoroutine();
                 _docker.current.OnDisable();
             }
 
@@ -196,19 +201,14 @@ namespace ZGame.Editor
             Refresh();
         }
 
-        public static void SwitchScene<T>() where T : PageScene
+        public static void StartCoroutine(IEnumerator enumerator)
         {
-            SwitchScene(typeof(T));
+            instance.current.StartCoroutine(enumerator);
         }
 
         public static void Refresh()
         {
             _docker?.Repaint();
-        }
-
-        public static void StartCoroutine(IEnumerator enumerator)
-        {
-            _docker.StartCoroutine(enumerator);
         }
     }
 }

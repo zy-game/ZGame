@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -6,9 +6,17 @@ using ZGame.Editor.ResBuild.Config;
 
 namespace ZGame.Editor.ResBuild
 {
-    class PackageAnalyzer
+    class BuilderOptions
     {
-        public BuilderOptions GetRuleBuildBundles(PackageSeting seting)
+        public PackageSeting seting { get; }
+        public AssetBundleBuild[] builds => GetRuleBuildBundles();
+
+        public BuilderOptions(PackageSeting seting)
+        {
+            this.seting = seting;
+        }
+
+        private AssetBundleBuild[] GetRuleBuildBundles()
         {
             List<AssetBundleBuild> builds = new List<AssetBundleBuild>();
             foreach (var rulerData in seting.items)
@@ -30,11 +38,7 @@ namespace ZGame.Editor.ResBuild
                 }
             }
 
-            return new BuilderOptions()
-            {
-                ruler = seting,
-                builds = builds.ToArray()
-            };
+            return builds.ToArray();
         }
 
         private List<AssetBundleBuild> GetBundleListWithType(RulerData rulerData)

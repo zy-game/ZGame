@@ -8,12 +8,12 @@ namespace ZGame
     public class Singleton<T> where T : Singleton<T>, new()
     {
         public static T instance => SinglePipeline.GetInstance();
-        private static UnitySingleton singleton;
+
 
         class SinglePipeline
         {
             private static T _entity;
-
+            public static UnitySingleton singleton;
 
             public static T GetInstance()
             {
@@ -24,22 +24,22 @@ namespace ZGame
 
                 GameObject gameObject = new GameObject(typeof(T).Name.ToUpper());
                 singleton = gameObject.AddComponent<UnitySingleton>();
-                GameObject.DontDestroyOnLoad(gameObject);
                 _entity = Activator.CreateInstance<T>();
                 singleton.Setup(_entity);
                 _entity.OnAwake();
+                GameObject.DontDestroyOnLoad(gameObject);
                 return _entity;
             }
         }
 
         public void StartCoroutine(IEnumerator enumerator)
         {
-            singleton?.StartCoroutine(enumerator);
+            SinglePipeline.singleton?.StartCoroutine(enumerator);
         }
 
         public void StopAllCoroutine()
         {
-            singleton?.StopAllCoroutines();
+            SinglePipeline.singleton?.StopAllCoroutines();
         }
 
         internal protected virtual void OnAwake()

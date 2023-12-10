@@ -4,26 +4,25 @@ using UnityEngine;
 namespace ZGame.Window
 {
     [ResourceReference("Resources/Prefabs/Loading", 100)]
-    public class Loading : UI_Loading, IProgress<float>
+    public class Loading : UI_Loading, ILoadingHandle
     {
         public Loading(GameObject gameObject) : base(gameObject)
         {
         }
 
-        public Loading SetupTitle(string title)
+        public void SetTitle(string title)
         {
             this.TextMeshProUGUI_TextTMP.Setup(title);
-            return this;
-        }
-
-        public void SetupProgress(float progress)
-        {
-            this.Slider_Slider.Setup(progress);
         }
 
         public void Report(float value)
         {
-            SetupProgress(value);
+            this.Slider_Slider.Setup(value);
         }
+    }
+
+    public interface ILoadingHandle : IDisposable, IProgress<float>
+    {
+        void SetTitle(string title);
     }
 }

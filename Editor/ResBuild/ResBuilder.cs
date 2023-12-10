@@ -11,14 +11,8 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    class BuilderOptions
-    {
-        public PackageSeting ruler;
-        public AssetBundleBuild[] builds;
-    }
-
     [BindScene("资源")]
-    [Options(typeof(BuilderConfig))]
+    [SettingContent(typeof(BuilderConfig))]
     public class ResBuilder : PageScene
     {
         private const string key = "__build config__";
@@ -54,10 +48,9 @@ namespace ZGame.Editor.ResBuild
 
                 if (GUILayout.Button("Build", EditorStyles.toolbarButton))
                 {
-                    PackageAnalyzer analyzer = new PackageAnalyzer();
                     OnBuildBundle(new BuilderOptions[1]
                     {
-                        analyzer.GetRuleBuildBundles(VARIABLE)
+                        new BuilderOptions(VARIABLE)
                     });
                 }
 
@@ -87,8 +80,7 @@ namespace ZGame.Editor.ResBuild
                     continue;
                 }
 
-                PackageAnalyzer analyzer = new PackageAnalyzer();
-                builds.Add(analyzer.GetRuleBuildBundles(VARIABLE));
+                builds.Add(new BuilderOptions(VARIABLE));
             }
 
             OnBuildBundle(builds.ToArray());
@@ -123,7 +115,7 @@ namespace ZGame.Editor.ResBuild
             foreach (var VARIABLE in builds)
             {
                 ResourcePackageListManifest packageListManifest = new ResourcePackageListManifest();
-                packageListManifest.name = VARIABLE.ruler.name;
+                packageListManifest.name = VARIABLE.seting.name;
                 packageListManifest.packages = new ResourcePackageManifest[VARIABLE.builds.Length];
                 packageListManifest.version = Crc32.GetCRC32Str(DateTime.Now.ToString("g"));
                 for (int i = 0; i < VARIABLE.builds.Length; i++)

@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace ZGame.Editor.Package
 {
-    public class ProjectPackageDependenceList : ScriptableObject
+    public class ProjectPackageDataList : ScriptableObject
     {
         [NonSerialized] public bool isInit;
         public List<ProjectPackageData> packages;
