@@ -131,7 +131,7 @@ namespace ZGame.Editor.Package
                 yield return new WaitUntil(() => request.IsCompleted);
                 if (request.Status == StatusCode.Success)
                 {
-                    Debug.Log(string.Format("Update {0} success", info.name));
+                    Debug.Log(string.Format("Update {0} success", name));
                     if (info is null)
                     {
                         info = new ProjectPackageData();
@@ -142,10 +142,12 @@ namespace ZGame.Editor.Package
                     }
 
                     info.version = version.IsNullOrEmpty() ? request.Result.version : version;
+                    yield return OnReferenceVersionList();
+                    EditorUtility.SetDirty(this);
                 }
                 else
                 {
-                    Debug.LogError(string.Format("Update {0} failed", info.name));
+                    Debug.LogError(string.Format("Update {0} failed:{1}", name, request.Error.message));
                 }
             }
 
@@ -171,6 +173,9 @@ namespace ZGame.Editor.Package
                 if (request.Status == StatusCode.Success)
                 {
                     Debug.Log(string.Format("Remove {0} success", info.name));
+                    packages.Remove(info);
+                    EditorUtility.SetDirty(this);
+                    EditorManager.Refresh();
                 }
                 else
                 {

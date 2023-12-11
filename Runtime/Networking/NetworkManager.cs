@@ -35,7 +35,7 @@ namespace ZGame.Networking
 
             if (address.StartsWith("ws"))
             {
-                channel = new WebChannel();
+                // channel = new WebChannel();
             }
             else
             {
