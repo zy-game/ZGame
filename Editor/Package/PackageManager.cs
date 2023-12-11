@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace ZGame.Editor.Package
         private const string configPath = "Assets/Settings/ProjectPackageList.asset";
         private ProjectPackageDataList _projectPackageDataList;
         private string url;
+        private string version;
 
         public override void OnEnable()
         {
@@ -20,9 +22,10 @@ namespace ZGame.Editor.Package
                 AssetDatabase.CreateAsset(_projectPackageDataList, configPath);
             }
 
-            EditorManager.instance.ShowNotification(new GUIContent("Get Package List..."));
-            EditorManager.StartCoroutine(_projectPackageDataList.Init(OnDisable));
+            EditorManager.instance.Waiting(); //ShowNotification(new GUIContent("Get Package List..."));
+            _projectPackageDataList.Init(EditorManager.instance.CloseWaiting);
         }
+
 
         public override void OnDisable()
         {
@@ -38,7 +41,7 @@ namespace ZGame.Editor.Package
 
             GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
             url = EditorGUILayout.TextField("Package Name", url, EditorStyles.toolbarTextField, GUILayout.Width(400));
-
+            version = EditorGUILayout.TextField("Version", version);
             if (GUILayout.Button("Add", EditorStyles.toolbarButton))
             {
                 if (url.IsNullOrEmpty())
@@ -47,16 +50,7 @@ namespace ZGame.Editor.Package
                 }
                 else
                 {
-                    ProjectPackageData packageData = new ProjectPackageData();
-                    if (url.StartsWith("http"))
-                    {
-                        packageData.url = url;
-                    }
-                    else
-                    {
-                        packageData.name = name;
-                    }
-
+                    _projectPackageDataList.OnUpdate(url, version);
                     EditorManager.Refresh();
                 }
             }
@@ -84,22 +78,36 @@ namespace ZGame.Editor.Package
                 }
 
                 GUILayout.BeginHorizontal(EditorStyles.helpBox);
-                GUILayout.Label(string.Format("{0}@{1} {3}", info.name, info.version, info.lastVersion, info.url));
+                GUILayout.Label(string.Format("{0}", info.name));
+                if (info.state == PackageState.Update)
+                {
+                    GUILayout.Label(EditorGUIUtility.IconContent("AS Badge New"));
+                }
 
-                if (GUILayout.Button("Remove", GUILayout.Width(70)))
+                GUILayout.FlexibleSpace();
+                // if (info.state == PackageState.Update)
+                // {
+                if (GUILayout.Button(info.version, EditorStyles.miniPullDown, GUILayout.Width(100)))
+                {
+                    GenericMenu menu = new GenericMenu();
+                    for (int j = 0; j < info.versions.Count; j++)
+                    {
+                        string currentVersion = info.versions[j];
+                        menu.AddItem(new GUIContent(currentVersion), currentVersion.EndsWith(info.version), () => { _projectPackageDataList.OnUpdate(info.name, currentVersion); });
+                    }
+
+                    menu.ShowAsContext();
+                }
+
+                GUILayout.Space(10);
+                // }
+
+                if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
                 {
                     _projectPackageDataList.Remove(info);
                     EditorManager.Refresh();
                 }
 
-                if (info.canUpdate)
-                {
-                    //todo 这里用下拉列表来做更新列表，这样可以更好的控制更新的版本
-                    if (GUILayout.Button("Update", GUILayout.Width(70)))
-                    {
-                        _projectPackageDataList.UpdatePackage(info.name);
-                    }
-                }
 
                 GUILayout.EndHorizontal();
             }

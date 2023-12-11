@@ -17,6 +17,8 @@ namespace ZGame.Editor
         private static EditorManager _docker;
         private static List<SceneData> sceneMaps;
         private static UnityEngine.Object openScriptableObject;
+        private EditorCoroutine waiting;
+        private bool isWaiting;
 
         class SceneData
         {
@@ -201,14 +203,16 @@ namespace ZGame.Editor
             Refresh();
         }
 
-        public static void StartCoroutine(IEnumerator enumerator)
+        public static EditorCoroutine StartCoroutine(IEnumerator enumerator)
         {
-            instance.current.StartCoroutine(enumerator);
+            return instance.current.StartCoroutine(enumerator);
         }
 
         public static void Refresh()
         {
             _docker?.Repaint();
         }
+
+        
     }
 }

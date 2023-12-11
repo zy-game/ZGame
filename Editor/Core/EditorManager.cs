@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -12,6 +14,10 @@ namespace ZGame.Editor
         private Vector2 menuRoll;
         private Vector2 pageRoll;
         private float leftWidth = 300;
+        int start = 0;
+        int end = 11;
+        int cur = 0;
+        string icon = "";
         public PageScene current { get; private set; }
         public string search { get; private set; }
 
@@ -22,7 +28,6 @@ namespace ZGame.Editor
 
         private void OnDestroy()
         {
-            Debug.Log("窗口关闭");
             _docker = null;
         }
 
@@ -36,20 +41,27 @@ namespace ZGame.Editor
             EditorGUILayout.BeginHorizontal();
             DrawingMenuList();
             GUILayout.Space(5);
+
             DrawingPageScene();
+
             EditorGUILayout.EndHorizontal();
         }
 
         private void DrawingPageScene()
         {
             GUILayout.BeginVertical(ZStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width - 305), GUILayout.Height(position.height));
-
             GUILayout.BeginHorizontal();
             int size = EditorStyles.boldLabel.fontSize;
             EditorStyles.boldLabel.fontSize = 20;
             GUILayout.Label(current.name, EditorStyles.boldLabel);
             EditorStyles.boldLabel.fontSize = size;
+            if (isWaiting)
+            {
+                GUILayout.Label(EditorGUIUtility.IconContent(icon, icon));
+            }
+
             GUILayout.FlexibleSpace();
+            EditorGUI.BeginDisabledGroup(isWaiting);
             search = EditorGUILayout.TextField(search, EditorStyles.toolbarSearchField, GUILayout.Width(300));
             GUILayout.EndHorizontal();
 
@@ -61,10 +73,10 @@ namespace ZGame.Editor
             pageRoll = GUILayout.BeginScrollView(pageRoll);
             current.position = new Rect(position.x + leftWidth + 5, position.y, position.width - 325, position.height);
             current.search = search;
-            
+
             current.OnGUI();
             GUILayout.EndScrollView();
-
+            EditorGUI.EndDisabledGroup();
             GUILayout.EndVertical();
         }
 
@@ -138,6 +150,48 @@ namespace ZGame.Editor
             GUILayout.Space(5);
             GUILayout.EndVertical();
             return result;
+        }
+
+        public void Waiting()
+        {
+            IEnumerator OnShow()
+            {
+                while (isWaiting)
+                {
+                    string temp = "WaitSpin";
+                    if (cur < 10)
+                    {
+                        temp += "0" + cur;
+                    }
+                    else
+                    {
+                        temp += cur;
+                    }
+
+                    icon = temp;
+                    Refresh();
+                    yield return new EditorWaitForSeconds(0.1f);
+                    cur++;
+                    cur %= end;
+                }
+            }
+
+            cur = 0;
+            isWaiting = true;
+            waiting = EditorCoroutineUtility.StartCoroutineOwnerless(OnShow());
+        }
+
+        public void CloseWaiting()
+        {
+            isWaiting = false;
+            Refresh();
+            instance.RemoveNotification();
+            if (waiting == null)
+            {
+                return;
+            }
+
+            EditorCoroutineUtility.StopCoroutine(waiting);
         }
     }
 }

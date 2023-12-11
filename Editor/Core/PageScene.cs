@@ -42,7 +42,7 @@ namespace ZGame.Editor
             this.parent = EditorManager.GetScene(attribute.parent);
         }
 
-        public void StartCoroutine(IEnumerator enumerator)
+        public EditorCoroutine StartCoroutine(IEnumerator enumerator)
         {
             IEnumerator OnStart()
             {
@@ -52,6 +52,7 @@ namespace ZGame.Editor
 
             var coroutine = EditorCoroutineUtility.StartCoroutine(OnStart(), this);
             coroutines.Add(enumerator, coroutine);
+            return coroutine;
         }
 
         public void StopCoroutine(IEnumerator enumerator)
