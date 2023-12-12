@@ -6,8 +6,8 @@ using UnityEngine.Serialization;
 
 namespace ZGame.Editor.ResBuild.Config
 {
-    [CreateAssetMenu(menuName = "ZGame/BuilderConfig", fileName = "BuilderConfig", order = 0)]
-    public class BuilderConfig : ScriptableObject
+    [ResourceReference("Assets/Settings/BuilderConfig")]
+    public class BuilderConfig : SingletonScriptableObject<BuilderConfig>
     {
         public BuildTarget target;
         public string fileExtension;
@@ -15,50 +15,6 @@ namespace ZGame.Editor.ResBuild.Config
         public bool useActiveTarget = true;
         public List<PackageSeting> packages;
         public BuildAssetBundleOptions comperss;
-        private static BuilderConfig _instance;
-
-        public static BuilderConfig instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    Initialized();
-                }
-
-                return _instance;
-            }
-        }
-
-        private static void Initialized()
-        {
-            _instance = AssetDatabase.LoadAssetAtPath<BuilderConfig>("Assets/Settings/BuilderConfig.asset");
-            if (_instance == null)
-            {
-                _instance = ScriptableObject.CreateInstance<BuilderConfig>();
-                _instance.target = EditorUserBuildSettings.activeBuildTarget;
-                AssetDatabase.CreateAsset(_instance, $"Assets/Settings/BuilderConfig.asset");
-            }
-
-            if (_instance.packages is null)
-            {
-                _instance.packages = new List<PackageSeting>();
-            }
-
-            if (_instance.ossList is null)
-            {
-                _instance.ossList = new List<OSSOptions>();
-            }
-
-            Saved();
-        }
-
-        public static void Saved()
-        {
-            EditorUtility.SetDirty(_instance);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-        }
 
         public static string output
         {
@@ -72,6 +28,12 @@ namespace ZGame.Editor.ResBuild.Config
 
                 return path;
             }
+        }
+
+        protected override void OnAwake()
+        {
+            ossList = ossList ?? new();
+            packages = packages ?? new();
         }
     }
 }

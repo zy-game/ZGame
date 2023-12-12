@@ -10,6 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 00d999bff864419e9aa797adc5082273, type: 3}
-  m_Name: ProjectPackageList
+  m_Name: PackageManager
   m_EditorClassIdentifier: 
+  isAutoInstalled: 0
   packages: []

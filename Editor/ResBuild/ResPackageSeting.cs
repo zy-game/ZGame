@@ -79,7 +79,7 @@ namespace ZGame.Editor.ResBuild
 
                 if (EditorGUI.EndChangeCheck())
                 {
-                    BuilderConfig.Saved();
+                    BuilderConfig.OnSave();
                 }
             }
         }

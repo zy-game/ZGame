@@ -4,8 +4,8 @@ namespace ZGame
 {
     public sealed class ResourceReference : Attribute
     {
-        internal string path;
-        internal int layer;
+        public string path;
+        public int layer;
 
         public ResourceReference(string path) : this(path, -1)
         {
@@ -17,6 +17,4 @@ namespace ZGame
             this.layer = layer;
         }
     }
-
-
 }

@@ -33,7 +33,7 @@ namespace ZGame.Editor.ResBuild
             if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
             {
                 BuilderConfig.instance.ossList.Add(new OSSOptions());
-                BuilderConfig.Saved();
+                BuilderConfig.OnSave();
                 EditorManager.Refresh();
             }
 
@@ -46,7 +46,7 @@ namespace ZGame.Editor.ResBuild
                 if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
                 {
                     BuilderConfig.instance.ossList.RemoveAt(i);
-                    BuilderConfig.Saved();
+                    BuilderConfig.OnSave();
                     EditorManager.Refresh();
                 }
 
@@ -60,7 +60,7 @@ namespace ZGame.Editor.ResBuild
 
             if (EditorGUI.EndChangeCheck())
             {
-                BuilderConfig.Saved();
+                BuilderConfig.OnSave();
             }
         }
 
