@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -12,8 +13,67 @@ using UnityEngine.Networking;
 using UnityEngine.Serialization;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
+
 namespace ZGame.Editor.Package
 {
+    public class InstallPackageRunnableHandle : IRunnableHandle<PackageData>
+    {
+        private TaskCompletionSource<PackageData> _taskCompletionSource;
+
+        public InstallPackageRunnableHandle()
+        {
+            _taskCompletionSource = new TaskCompletionSource<PackageData>();
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public Task<PackageData> Execute(params object[] args)
+        {
+            return _taskCompletionSource.Task;
+        }
+    }
+
+    public class UpdatePackageRunnableHandle : IRunnableHandle<bool>
+    {
+        public Task<bool> Execute(params object[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class UninstallPackageRunnableHandle : IRunnableHandle<bool>
+    {
+        public Task<bool> Execute(params object[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class InitializedPackageListRunnableHandle : IRunnableHandle<bool>
+    {
+        public Task<bool> Execute(params object[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     [ResourceReference("Assets/Settings/PackageManager")]
     public class PackageDataList : SingletonScriptableObject<PackageDataList>
     {
@@ -82,42 +142,73 @@ namespace ZGame.Editor.Package
             packages.Clear();
         }
 
-        public void Remove(PackageData info)
+        public async void Remove(PackageData info)
         {
             if (packages == null)
             {
                 return;
             }
 
-            IEnumerator OnStart(PackageData info)
+            UninstallPackageRunnableHandle uninstallPackageRunnableHandle = new UninstallPackageRunnableHandle();
+            bool state = await uninstallPackageRunnableHandle.Execute(info);
+            if (state is false)
             {
-                var request = Client.Remove(info.name);
-                yield return new WaitUntil(() => request.IsCompleted);
-                if (request.Status != StatusCode.Success)
-                {
-                    Debug.LogError(string.Format("Remove {0} failed", info.name));
-                    yield break;
-                }
-
-                info.installed = InstallState.Uninstall;
-                packages.Remove(info);
-                localPackages.Remove(info);
-                Debug.Log(string.Format("Remove {0} success", info.name));
-                OnSave();
-                EditorManager.Refresh();
+                return;
             }
 
-            EditorManager.StartCoroutine(OnStart(info));
+            packages.Remove(info);
+            localPackages.Remove(info);
+
+
+            // IEnumerator OnStart(PackageData info)
+            // {
+            //     var request = Client.Remove(info.name);
+            //     yield return new WaitUntil(() => request.IsCompleted);
+            //     if (request.Status != StatusCode.Success)
+            //     {
+            //         Debug.LogError(string.Format("Remove {0} failed", info.name));
+            //         yield break;
+            //     }
+            //
+            //     info.installed = InstallState.Uninstall;
+            //     packages.Remove(info);
+            //     localPackages.Remove(info);
+            //     Debug.Log(string.Format("Remove {0} success", info.name));
+            //     OnSave();
+            //     EditorManager.Refresh();
+            // }
+            //
+            // EditorManager.StartCoroutine(OnStart(info));
         }
 
+        public async void Install(string name, string version)
+        {
+            InstallPackageRunnableHandle installPackageRunnableHandle = new InstallPackageRunnableHandle();
+            PackageData packageData = await installPackageRunnableHandle.Execute(name, version);
+            if (packageData is null)
+            {
+                return;
+            }
 
-        public void OnUpdate(string name, string version)
+            packages.Add(packageData);
+            localPackages.Add(packageData);
+        }
+
+        public async void OnUpdate(string name, string version)
         {
             if (packages is null)
             {
                 return;
             }
 
+            UpdatePackageRunnableHandle updatePackageRunnableHandle = new UpdatePackageRunnableHandle();
+            bool state = await updatePackageRunnableHandle.Execute(name, version);
+            if (state is false)
+            {
+                return;
+            }
+            
+            
             EditorManager.StartCoroutine(OnInstalledPackage(name, version, state =>
             {
                 OnSave();
@@ -127,7 +218,7 @@ namespace ZGame.Editor.Package
 
         IEnumerator OnInstalledPackage(string name, string version, Action<bool> callback)
         {
-            if (packages.Exists(x => x.name == name))
+            if (localPackages.Exists(x => x.name == name && x.version == version))
             {
                 callback(true);
                 yield break;
@@ -149,8 +240,11 @@ namespace ZGame.Editor.Package
             {
                 Debug.LogError(string.Format("Update {0} failed:{1}", name, request.Error.message));
                 callback?.Invoke(false);
-                
-                packages.Remove(packageData);
+                if (url.StartsWith("https"))
+                {
+                    remotePackages.Remove(packageData);
+                }
+
                 yield break;
             }
 
@@ -173,12 +267,18 @@ namespace ZGame.Editor.Package
                 yield return new WaitForSeconds(0.1f);
             }
 
+            packageData.url = name;
             packageData.recommended = request.Result.versions.recommended;
             packageData.installed = InstallState.Install;
             packageData.version = version;
             if (packages.Exists(x => x.name == packageData.name) is false)
             {
                 packages.Add(packageData);
+            }
+
+            if (localPackages.Exists(x => x.name == packageData.name) is false)
+            {
+                localPackages.Add(packageData);
             }
 
             remotePackages.Remove(packageData);
