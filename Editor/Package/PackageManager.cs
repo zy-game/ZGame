@@ -22,7 +22,7 @@ namespace ZGame.Editor.Package
         public override void OnEnable()
         {
             EditorManager.instance.Waiting();
-            PackageDataList.instance.ReferncePackageList(EditorManager.instance.CloseWaiting);
+            PackageDataList.instance.Refresh(EditorManager.instance.CloseWaiting);
         }
 
 
@@ -39,12 +39,12 @@ namespace ZGame.Editor.Package
             }
 
             OnShowPackageInstallHeader();
-
             OnShowNotInstallPackageList();
             OnShowPackageList();
         }
 
-        private void OnShowPackageInstallHeader()
+
+        private async void OnShowPackageInstallHeader()
         {
             GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
             GUILayout.Label("Package Name");
@@ -52,7 +52,7 @@ namespace ZGame.Editor.Package
             if (Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.Return && url.IsNullOrEmpty() is false)
             {
                 index = 0;
-                PackageDataList.instance.RequestVersionList(url, s => { versionMap = s; });
+                versionMap = await Api.GetPackageVersionList(url);
             }
 
             if (versionMap is not null && versionMap.Count > 0)
@@ -67,7 +67,7 @@ namespace ZGame.Editor.Package
                     }
                     else
                     {
-                        PackageDataList.instance.OnUpdate(url, version);
+                        PackageDataList.instance.Install(url, version);
                         version = string.Empty;
                         versionMap = null;
                         index = 0;
@@ -120,23 +120,18 @@ namespace ZGame.Editor.Package
                 GUILayout.Label(EditorGUIUtility.IconContent("d_winbtn_mac_max"));
                 GUILayout.Label(string.Format("{0} [{1}]", package.title, package.recommended));
                 GUILayout.FlexibleSpace();
-
-                if (package.installed == InstallState.Uninstall)
+                if (package.isWaiting)
+                {
+                    GUILayout.Label(EditorGUIUtility.IconContent(package.icon));
+                }
+                else
                 {
                     if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
                     {
-                        package.cur = 0;
-                        EditorCoroutineUtility.StartCoroutineOwnerless(OnShow(package));
-                        package.installed = InstallState.Installeding;
                         string version = package.recommended.IsNullOrEmpty() ? package.versions.Last() : package.recommended;
-                        PackageDataList.instance.OnUpdate(package.name, version);
+                        PackageDataList.instance.Install(package.name, version);
                         EditorManager.Refresh();
                     }
-                }
-
-                if (package.installed == InstallState.Installeding)
-                {
-                    GUILayout.Label(EditorGUIUtility.IconContent(package.icon));
                 }
 
                 GUILayout.EndHorizontal();
@@ -160,69 +155,51 @@ namespace ZGame.Editor.Package
                 }
 
                 GUILayout.BeginHorizontal(EditorStyles.helpBox);
-                if (package.installed == InstallState.None)
+                if (PackageDataList.instance.LocalIsInstalled(package.name, package.version) is false)
                 {
                     GUILayout.Label(EditorGUIUtility.IconContent("d_winbtn_mac_close"));
                 }
                 else
                 {
-                    GUILayout.Label(EditorGUIUtility.IconContent(package.state switch
-                    {
-                        PackageState.None => "d_winbtn_mac_max",
-                        PackageState.Update => "d_winbtn_mac_min",
-                        _ => "d_winbtn_mac_max"
-                    }));
+                    GUILayout.Label(EditorGUIUtility.IconContent(package.version.EndsWith(package.recommended) ? "d_winbtn_mac_max" : "d_winbtn_mac_min"));
                 }
 
-                GUILayout.Label(string.Format("{0} [{1}]", package.title, package.version));
+                GUILayout.Label(string.Format("{0} [{1}] ", package.title, package.version));
                 GUILayout.FlexibleSpace();
 
-                if (package.state == PackageState.Update)
+                if (package.isWaiting)
                 {
-                    if (GUILayout.Button(package.version, EditorStyles.miniPullDown, GUILayout.Width(100)))
-                    {
-                        GenericMenu menu = new GenericMenu();
-                        for (int j = 0; j < package.versions.Count; j++)
-                        {
-                            string currentVersion = package.versions[j];
-                            menu.AddItem(new GUIContent(currentVersion), currentVersion.EndsWith(package.version), () => { PackageDataList.instance.OnUpdate(package.name, currentVersion); });
-                        }
-
-                        menu.ShowAsContext();
-                    }
-
-                    GUILayout.Space(10);
-                }
-
-                if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
-                {
-                    PackageDataList.instance.Remove(package);
-                    EditorManager.Refresh();
-                }
-
-                GUILayout.EndHorizontal();
-            }
-        }
-
-        IEnumerator OnShow(PackageData info)
-        {
-            while (info.installed == InstallState.Installeding)
-            {
-                string temp = "WaitSpin";
-                if (info.cur < 10)
-                {
-                    temp += "0" + info.cur;
+                    GUILayout.Label(EditorGUIUtility.IconContent(package.icon));
                 }
                 else
                 {
-                    temp += info.cur;
+                    if (package.version.EndsWith(package.recommended) is false)
+                    {
+                        if (GUILayout.Button(package.version, EditorStyles.miniPullDown, GUILayout.Width(100)))
+                        {
+                            GenericMenu menu = new GenericMenu();
+                            for (int j = 0; j < package.versions.Count; j++)
+                            {
+                                string currentVersion = package.versions[j];
+                                GenericMenu.MenuFunction func = () => { PackageDataList.instance.OnUpdate(package.name, currentVersion); };
+                                bool state = package.versions[j].EndsWith(package.version);
+                                menu.AddItem(new GUIContent(currentVersion), state, func);
+                            }
+
+                            menu.ShowAsContext();
+                        }
+
+                        GUILayout.Space(10);
+                    }
+
+                    if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
+                    {
+                        PackageDataList.instance.Remove(package);
+                        EditorManager.Refresh();
+                    }
                 }
 
-                info.icon = temp;
-                EditorManager.Refresh();
-                yield return new EditorWaitForSeconds(0.1f);
-                info.cur++;
-                info.cur %= info.end;
+                GUILayout.EndHorizontal();
             }
         }
     }
