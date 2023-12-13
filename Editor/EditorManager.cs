@@ -194,6 +194,7 @@ namespace ZGame.Editor
 
             if (_docker.current is not null)
             {
+                _docker.CloseWaiting();
                 _docker.current.StopAllCoroutine();
                 _docker.current.OnDisable();
             }
@@ -212,7 +213,5 @@ namespace ZGame.Editor
         {
             _docker?.Repaint();
         }
-
-        
     }
 }

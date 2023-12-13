@@ -18,6 +18,8 @@ namespace ZGame.Editor.Package
         private string version;
         private int index = 0;
         private List<string> versionMap;
+        private bool showUnityPackageList = false;
+        private bool showInstalledPackageList = false;
 
         public override void OnEnable()
         {
@@ -39,8 +41,23 @@ namespace ZGame.Editor.Package
             }
 
             OnShowPackageInstallHeader();
-            OnShowNotInstallPackageList();
-            OnShowPackageList();
+
+            GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
+            showUnityPackageList = EditorGUILayout.Foldout(showUnityPackageList, "Unity Package List", EditorStyles.foldoutHeader);
+            GUILayout.EndHorizontal();
+            if (showUnityPackageList)
+            {
+                OnShowNotInstallPackageList();
+            }
+
+            GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
+            showInstalledPackageList = EditorGUILayout.Foldout(showInstalledPackageList, "Install Package List", EditorStyles.foldoutHeader);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            if (showInstalledPackageList)
+            {
+                OnShowPackageList();
+            }
         }
 
 
@@ -53,6 +70,7 @@ namespace ZGame.Editor.Package
             {
                 index = 0;
                 versionMap = await Api.GetPackageVersionList(url);
+                Event.current.Use();
             }
 
             if (versionMap is not null && versionMap.Count > 0)
@@ -78,8 +96,7 @@ namespace ZGame.Editor.Package
             }
 
             GUILayout.FlexibleSpace();
-            GUILayout.Label("Auto Installed");
-            PackageDataList.instance.isAutoInstalled = EditorGUILayout.Toggle(PackageDataList.instance.isAutoInstalled, EditorStyles.toggle);
+            PackageDataList.instance.isAutoInstalled = GUILayout.Toggle(PackageDataList.instance.isAutoInstalled, "Auto Install", EditorStyles.toolbarButton);
             if (GUILayout.Button("Update All", EditorStyles.toolbarButton))
             {
                 foreach (var VARIABLE in PackageDataList.instance.packages)

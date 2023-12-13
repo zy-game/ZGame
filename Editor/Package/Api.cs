@@ -27,7 +27,7 @@ namespace ZGame.Editor.Package
 
             IEnumerator GetPackageList(bool isLocal, TaskCompletionSource<List<PackageData>> _taskCompletionSource)
             {
-                Request request = isLocal ? Client.List(true, true) : Client.SearchAll();
+                Request request = isLocal ? Client.List(true, true) : Client.SearchAll(false);
                 yield return new WaitUntil(() => request.IsCompleted);
                 if (request.Status != StatusCode.Success)
                 {
@@ -80,6 +80,8 @@ namespace ZGame.Editor.Package
                 url = url.StartsWith("https://github") ? $"https://api.github.com/repos/{owner}/{repo}/tags" : $"https://gitee.com/api/v5/repos/{owner}/{repo}/tags?sort=updated&direction=desc&page=1&per_page=10";
                 Debug.Log(url);
                 UnityWebRequest request2 = UnityWebRequest.Get(url);
+                request2.timeout = 10;
+                request2.useHttpContinue = true;
                 yield return request2.SendWebRequest();
                 if (request2.isNetworkError || request2.isHttpError || request2.result is not UnityWebRequest.Result.Success)
                 {
@@ -160,11 +162,9 @@ namespace ZGame.Editor.Package
 
             IEnumerator OnStart()
             {
-                packages.isWaiting = true;
-                Request request = Client.Remove(packages.name);
+                RemoveRequest request = Client.Remove(packages.name);
                 yield return new WaitUntil(() => request.IsCompleted);
-                packages.isWaiting = false;
-                packages.CloseWaiting();
+
                 if (request.Status != StatusCode.Success)
                 {
                     Debug.LogError(request.Error.message);
@@ -172,6 +172,26 @@ namespace ZGame.Editor.Package
                     yield break;
                 }
 
+                RemoveDependencies(packages.dependenceis);
+            }
+
+            async void RemoveDependencies(DependencyInfo[] infos)
+            {
+                if (infos is not null && infos.Length > 0)
+                {
+                    for (int i = 0; i < infos.Length; i++)
+                    {
+                        List<PackageData> dependList = PackageDataList.instance.GetDependencyList(infos[i].name);
+                        if (dependList.Count > 1)
+                        {
+                            continue;
+                        }
+
+                        await Remove(PackageDataList.instance.GetPackageData(infos[i].name));
+                    }
+                }
+
+                packages.CloseWaiting();
                 taskCompletionSource.SetResult(StatusCode.Success);
             }
 

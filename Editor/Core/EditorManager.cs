@@ -63,6 +63,12 @@ namespace ZGame.Editor
             GUILayout.FlexibleSpace();
             EditorGUI.BeginDisabledGroup(isWaiting);
             search = EditorGUILayout.TextField(search, EditorStyles.toolbarSearchField, GUILayout.Width(300));
+            if (Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.Return && search.IsNullOrEmpty() is false)
+            {
+                current.search = search;
+                search = String.Empty;
+                Event.current.Use();
+            }
             GUILayout.EndHorizontal();
 
             this.BeginColor(ZStyle.inColor);

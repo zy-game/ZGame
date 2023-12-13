@@ -20,6 +20,7 @@ namespace ZGame.Editor.Package
         public string url;
         public string recommended;
 
+        [NonSerialized] public DependencyInfo[] dependenceis;
         [NonSerialized] public List<string> versions;
         [NonSerialized] public bool isWaiting = false;
         [NonSerialized] private int start = 0;
@@ -34,6 +35,7 @@ namespace ZGame.Editor.Package
             packageData.version = info.version;
             packageData.title = info.displayName;
             packageData.recommended = info.versions.latestCompatible;
+            packageData.dependenceis = info.dependencies;
             string[] split = info.packageId.Split("@");
             packageData.url = split[1].StartsWith("https") ? split[1] : split[0];
             return packageData;

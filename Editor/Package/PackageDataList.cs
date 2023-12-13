@@ -152,5 +152,25 @@ namespace ZGame.Editor.Package
 
             await Api.RefreshPackageVersionList(packages.ToArray());
         }
+
+        /// <summary>
+        /// 获取所有引用包
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public List<PackageData> GetDependencyList(string s)
+        {
+            return packages.Where(x => x.name == s).ToList();
+        }
+
+        /// <summary>
+        /// 查找包
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public PackageData GetPackageData(string s)
+        {
+            return packages.Find(x => x.name == s);
+        }
     }
 }
