@@ -11,6 +11,12 @@ using ZGame.Window;
 
 namespace ZGame.Resource
 {
+    class UnloadQueueTask
+    {
+        public float time;
+        public ResourcePackageHandle handle;
+    }
+
     /// <summary>
     /// 资源管理器
     /// </summary>
@@ -19,10 +25,13 @@ namespace ZGame.Resource
         private IResourcePackageUpdateHandle _resourcePackageUpdateHandle;
         private IResourcePackageLoadingHandle _resourceResourcePackageLoadingHandle;
         private List<IResourceLoadingHandle> _resourceLoadingHandles = new List<IResourceLoadingHandle>();
+        private List<ResourcePackageHandle> _handles = new List<ResourcePackageHandle>();
+        private List<UnloadQueueTask> unloadList = new List<UnloadQueueTask>();
+        private float checkTime = 0;
 
-        protected internal override void OnAwake()
+        protected  override void OnAwake()
         {
-            SceneManager.sceneUnloaded += OnSceneUnloaded;
+            checkTime = Time.realtimeSinceStartup + GlobalConfig.instance.unloadBundleInterval;
             SetResourceUpdateHandle<DefaultResourcePackagePackageUpdateHandle>();
             SetupResourceBundleLoadingHandle<DefaultResourcePackageLoadingHandle>();
             SetupResourceLoadingHandle<InternalResourceLoadingHandle>();
@@ -37,21 +46,99 @@ namespace ZGame.Resource
             SetupResourceLoadingHandle<BundleResourceLoadingHandle>();
         }
 
-        private void OnSceneUnloaded(Scene arg0)
+        protected  override void OnDestroy()
         {
-            ResourcePackageManifest manifest = ResourcePackageListManifest.GetResourcePackageManifestWithAssetName(arg0.path);
-            if (manifest is null)
+            _handles.ForEach(x => x.Dispose());
+            _handles.Clear();
+            _resourceLoadingHandles.ForEach(x => x.Dispose());
+            _resourceResourcePackageLoadingHandle.Dispose();
+            _resourcePackageUpdateHandle.Dispose();
+            _resourceLoadingHandles.Clear();
+            _resourceResourcePackageLoadingHandle = null;
+            _resourcePackageUpdateHandle = null;
+        }
+
+        protected  override void OnUpdate()
+        {
+            if (Time.realtimeSinceStartup < checkTime)
             {
                 return;
             }
 
-            ResourcePackageHandle bundleHandle = BundleManager.instance.GetABHandleWithName(manifest.name);
-            if (bundleHandle is null)
+            checkTime = Time.realtimeSinceStartup + GlobalConfig.instance.unloadBundleInterval;
+            //todo 检查是否需要卸载资源包
+            for (int i = 0; i < _handles.Count; i++)
             {
-                throw new FileNotFoundException(arg0.path);
+                if (_handles[i].refCount > 0 || _handles[i].DefaultPackage)
+                {
+                    continue;
+                }
+
+                //todo 加入待卸载列表
+                unloadList.Add(new UnloadQueueTask()
+                {
+                    handle = _handles[i],
+                    time = Time.realtimeSinceStartup + GlobalConfig.instance.unloadBundleInterval
+                });
+                _handles.Remove(_handles[i]);
             }
 
-            bundleHandle.RemoveRef();
+            //todo 卸载资源包
+            for (int i = 0; i < unloadList.Count; i++)
+            {
+                if (unloadList[i].time > Time.realtimeSinceStartup)
+                {
+                    continue;
+                }
+
+                unloadList[i].handle.Dispose();
+                unloadList.RemoveAt(i);
+                i--;
+            }
+        }
+
+        public void AddResourcePackageHandle(ResourcePackageHandle handle)
+        {
+            _handles.Add(handle);
+        }
+
+        public void RemoveResourcePackageHandle(string name)
+        {
+            ResourcePackageHandle handle = _handles.Find(x => x.name == name);
+            if (handle is null)
+            {
+                return;
+            }
+
+            _handles.Remove(handle);
+            handle.Dispose();
+        }
+
+        public ResourcePackageHandle GetResourcePackageHandle(string name)
+        {
+            ResourcePackageHandle handle = _handles.Find(x => x.name == name);
+            if (handle is null)
+            {
+                UnloadQueueTask task = unloadList.Find(x => x.handle.name == name);
+                if (task != null)
+                {
+                    _handles.Add(task.handle);
+                    unloadList.Remove(task);
+                }
+            }
+
+            return handle;
+        }
+
+        public ResourcePackageHandle GetResourcePackageHandleWithAssetPath(string path)
+        {
+            ResourcePackageManifest manifest = ResourcePackageListManifest.GetResourcePackageManifestWithAssetName(path);
+            if (manifest is null)
+            {
+                return default;
+            }
+
+            return GetResourcePackageHandle(manifest.name);
         }
 
         /// <summary>
@@ -235,13 +322,10 @@ namespace ZGame.Resource
         public ResHandle LoadAsset(string path)
         {
             ResHandle result = default;
-            foreach (var VARIABLE in _resourceLoadingHandles)
+            IResourceLoadingHandle resourceLoadingHandle = _resourceLoadingHandles.Find(x => x.Contains(path));
+            if (resourceLoadingHandle is not null)
             {
-                result = VARIABLE.LoadAsset(path);
-                if (result is not null)
-                {
-                    break;
-                }
+                result = resourceLoadingHandle.LoadAsset(path);
             }
 
             return result;
@@ -255,13 +339,10 @@ namespace ZGame.Resource
         public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null)
         {
             ResHandle result = default;
-            foreach (var VARIABLE in _resourceLoadingHandles)
+            IResourceLoadingHandle resourceLoadingHandle = _resourceLoadingHandles.Find(x => x.Contains(path));
+            if (resourceLoadingHandle is not null)
             {
-                result = await VARIABLE.LoadAssetAsync(path, loadingHandle);
-                if (result is not null)
-                {
-                    break;
-                }
+                result = await resourceLoadingHandle.LoadAssetAsync(path);
             }
 
             return result;
@@ -316,25 +397,21 @@ namespace ZGame.Resource
         /// 回收资源
         /// </summary>
         /// <param name="obj"></param>
-        public void Release(ResHandle obj)
+        public void ReleaseAsset(ResHandle obj)
         {
-            foreach (var VARIABLE in _resourceLoadingHandles)
-            {
-                if (VARIABLE.Release(obj))
-                {
-                    return;
-                }
-            }
+            ReleaseAsset(obj.path);
         }
 
-        public void Dispose()
+        public void ReleaseAsset(string path)
         {
-            _resourceLoadingHandles.ForEach(x => x.Dispose());
-            _resourceResourcePackageLoadingHandle.Dispose();
-            _resourcePackageUpdateHandle.Dispose();
-            _resourceLoadingHandles.Clear();
-            _resourceResourcePackageLoadingHandle = null;
-            _resourcePackageUpdateHandle = null;
+            ResourcePackageHandle packageHandle = GetResourcePackageHandleWithAssetPath(path);
+            if (packageHandle is null)
+            {
+                _resourceLoadingHandles.ForEach(x => x.Release(path));
+                return;
+            }
+
+            packageHandle.Release(path);
         }
     }
 }

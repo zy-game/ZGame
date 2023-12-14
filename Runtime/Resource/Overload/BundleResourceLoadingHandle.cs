@@ -12,6 +12,11 @@ namespace ZGame.Resource
         {
         }
 
+        public bool Contains(string path)
+        {
+            return ResourceManager.instance.GetResourcePackageHandleWithAssetPath(path) is not null;
+        }
+
         public ResHandle LoadAsset(string path)
         {
             if (path.StartsWith("Resources") || path.StartsWith("http"))
@@ -19,21 +24,37 @@ namespace ZGame.Resource
                 return default;
             }
 
-            ResourcePackageHandle handle = BundleManager.instance.GetABHandleWithAssetPath(path);
+            ResourcePackageHandle handle = ResourceManager.instance.GetResourcePackageHandleWithAssetPath(path);
             if (handle is null)
             {
+                //todo 自动加载被释放的包
                 return default;
+            }
+
+            if (handle.TryGetValue(path, out ResHandle resHandle))
+            {
+                return resHandle;
             }
 
             if (path.EndsWith(".unity"))
             {
-                SceneManager.LoadScene(Path.GetFileNameWithoutExtension(path));
-                handle.AddRef();
+                resHandle = new ResHandle(handle, null, path);
+                handle.Setup(resHandle);
+                resHandle.LoadScene();
+                return resHandle;
+            }
+
+            var asset = handle.bundle.LoadAsset(path);
+            if (asset == null)
+            {
                 return default;
             }
 
-            return handle.LoadAsset(path);
+            resHandle = new ResHandle(handle, asset, path);
+            handle.Setup(resHandle);
+            return resHandle;
         }
+
 
         public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null)
         {
@@ -42,26 +63,38 @@ namespace ZGame.Resource
                 return default;
             }
 
-
-            ResourcePackageHandle handle = BundleManager.instance.GetABHandleWithAssetPath(path);
+            ResourcePackageHandle handle = ResourceManager.instance.GetResourcePackageHandleWithAssetPath(path);
             if (handle is null)
             {
+                //todo 自动加载被释放的包
                 return default;
+            }
+
+            if (handle.TryGetValue(path, out ResHandle resHandle))
+            {
+                return resHandle;
             }
 
             if (path.EndsWith(".unity"))
             {
-                await SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path)).ToUniTask(loadingHandle);
-                handle.AddRef();
+                resHandle = new ResHandle(handle, null, path);
+                handle.Setup(resHandle);
+                resHandle.LoadSceneAsync(loadingHandle);
+                return resHandle;
+            }
+
+            var asset = await handle.bundle.LoadAssetAsync(path).ToUniTask(loadingHandle);
+            if (asset == null)
+            {
                 return default;
             }
 
-            return await handle.LoadAssetAsync(path, loadingHandle);
+            handle.Setup(resHandle = new ResHandle(handle, asset, path));
+            return resHandle;
         }
 
-        public bool Release(ResHandle handle)
+        public void Release(string obj)
         {
-            return BundleManager.instance.Release(handle);
         }
     }
 }

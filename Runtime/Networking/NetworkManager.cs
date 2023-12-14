@@ -21,6 +21,22 @@ namespace ZGame.Networking
         private Dictionary<uint, IMessageHandler> _dispatchers = new();
         private Dictionary<string, IChannel> channels = new();
 
+        protected  override void OnDestroy()
+        {
+            foreach (var variable in channels.Values)
+            {
+                variable.Dispose();
+            }
+
+            channels.Clear();
+            foreach (var variable in _dispatchers.Values)
+            {
+                variable.Dispose();
+            }
+
+            _dispatchers.Clear();
+        }
+
         /// <summary>
         /// 连接远程地址
         /// </summary>
@@ -161,22 +177,6 @@ namespace ZGame.Networking
             }
 
             dispatcher.ReceiveHandle(channel, opcode, memoryStream);
-        }
-
-        public void Dispose()
-        {
-            foreach (var variable in channels.Values)
-            {
-                variable.Dispose();
-            }
-
-            channels.Clear();
-            foreach (var variable in _dispatchers.Values)
-            {
-                variable.Dispose();
-            }
-
-            _dispatchers.Clear();
         }
     }
 }

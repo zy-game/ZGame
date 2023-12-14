@@ -16,7 +16,8 @@ public class Startup : MonoBehaviour
 {
     private async void Start()
     {
-        LayerManager.instance.NewCamera("UICamera", 999, "UI");
+        CameraManager.instance.SetMainCamera();
+        CameraManager.instance.NewCamera("test", 0, "Default");
         Loading loading = UIManager.instance.TryOpen<Loading>();
         loading.SetTitle("正在获取配置信息...");
         if (GlobalConfig.current is null)

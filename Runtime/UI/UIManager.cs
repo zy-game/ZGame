@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
+using ZGame.Game;
 using ZGame.Resource;
 
 namespace ZGame.Window
@@ -12,9 +13,16 @@ namespace ZGame.Window
         private Dictionary<Type, UIBase> _windows = new Dictionary<Type, UIBase>();
 
 
-        protected void OnAwake()
+        protected override void OnDestroy()
         {
-            
+            foreach (var VARIABLE in _windows.Values)
+            {
+                VARIABLE.Disable();
+                VARIABLE.Dispose();
+                GameObject.DestroyImmediate(VARIABLE.gameObject);
+            }
+
+            _windows.Clear();
         }
 
         public UIBase Open(Type type)
@@ -39,7 +47,7 @@ namespace ZGame.Window
 
             Debug.Log("加载UI：" + type.Name);
             gameWindow = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
-            LayerManager.instance.TrySetup(gameWindow.gameObject, reference.layer, Vector3.zero, Vector3.zero, Vector3.one);
+            UILayerManager.instance.TrySetup(gameWindow.gameObject, reference.layer, Vector3.zero, Vector3.zero, Vector3.one);
             gameWindow.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
             _windows.Add(type, gameWindow);
             gameWindow.Awake();
@@ -89,18 +97,6 @@ namespace ZGame.Window
                 GameObject.DestroyImmediate(gameWindow.gameObject);
                 _windows.Remove(type);
             }
-        }
-
-        public void Dispose()
-        {
-            foreach (var VARIABLE in _windows.Values)
-            {
-                VARIABLE.Disable();
-                VARIABLE.Dispose();
-                GameObject.DestroyImmediate(VARIABLE.gameObject);
-            }
-
-            _windows.Clear();
         }
     }
 }

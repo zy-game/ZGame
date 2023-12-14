@@ -7,74 +7,77 @@ namespace ZGame
 {
     public class Singleton<T> where T : Singleton<T>, new()
     {
-        public static T instance => SinglePipeline.GetInstance();
+        public static T instance => GetInstance();
+        private static T _instance;
+        private static Bevaviour singleton;
+        public GameObject gameObject { get; private set; }
 
-
-        class SinglePipeline
+        private static T GetInstance()
         {
-            private static T _entity;
-            public static UnitySingleton singleton;
-
-            public static T GetInstance()
+            if (_instance is not null)
             {
-                if (_entity is not null)
-                {
-                    return _entity;
-                }
-
-                GameObject gameObject = new GameObject(typeof(T).Name.ToUpper());
-                singleton = gameObject.AddComponent<UnitySingleton>();
-                _entity = Activator.CreateInstance<T>();
-                singleton.Setup(_entity);
-                _entity.OnAwake();
-                GameObject.DontDestroyOnLoad(gameObject);
-                return _entity;
+                return _instance;
             }
+
+            _instance = Activator.CreateInstance<T>();
+            _instance.gameObject = new GameObject(typeof(T).Name.ToUpper());
+            singleton = _instance.gameObject.AddComponent<Bevaviour>();
+            GameObject.DontDestroyOnLoad(_instance.gameObject);
+            singleton.update.AddListener(_instance.OnUpdate);
+            singleton.fixedUpdate.AddListener(_instance.OnFixedUpdate);
+            singleton.lateUpdate.AddListener(_instance.OnLateUpdate);
+            singleton.onGUI.AddListener(_instance.OnGUI);
+            singleton.onApplicationQuit.AddListener(_instance.OnApplicationQuit);
+            singleton.onApplicationPause.AddListener(_instance.OnApplicationPause);
+            singleton.onApplicationFocus.AddListener(_instance.OnApplicationFocus);
+            singleton.onDestroy.AddListener(_instance.OnDestroy);
+            _instance.OnAwake();
+            return _instance;
         }
 
         public void StartCoroutine(IEnumerator enumerator)
         {
-            SinglePipeline.singleton?.StartCoroutine(enumerator);
+            singleton?.StartCoroutine(enumerator);
         }
 
         public void StopAllCoroutine()
         {
-            SinglePipeline.singleton?.StopAllCoroutines();
+            singleton?.StopAllCoroutines();
         }
 
-        internal protected virtual void OnAwake()
+        protected virtual void OnAwake()
         {
         }
 
-        internal protected virtual void OnDestroy()
+        protected virtual void OnDestroy()
         {
         }
 
-        internal protected virtual void OnUpdate()
+        protected virtual void OnUpdate()
         {
         }
 
-        internal protected virtual void OnFixedUpdate()
+        protected virtual void OnFixedUpdate()
         {
         }
 
-        internal protected virtual void OnLateUpdate()
+        protected virtual void OnLateUpdate()
         {
         }
 
-        internal protected virtual void OnGUI()
+        protected virtual void OnGUI()
         {
         }
 
-        internal protected virtual void OnApplicationQuit()
+        protected virtual void OnApplicationQuit()
         {
         }
 
-        internal protected virtual void OnApplicationPause(bool pause)
+        protected virtual void OnApplicationPause(bool pause)
         {
         }
 
-        internal protected virtual void OnApplicationFocus(bool focus)
+        protected virtual void OnApplicationFocus(bool focus)
         {
         }
     }

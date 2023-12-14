@@ -12,7 +12,6 @@ namespace ZGame.Resource
     {
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public async UniTask Loading(ILoadingHandle loadingHandle, params string[] paths)
@@ -52,7 +51,7 @@ namespace ZGame.Resource
                 string VARIABLE = fileList.Dequeue();
                 loadingHandle.SetTitle($"正在加载资源包: {VARIABLE}");
                 loadingHandle.Report(i / (float)count);
-                if (BundleManager.instance.GetABHandleWithName(VARIABLE) != null)
+                if (ResourceManager.instance.GetResourcePackageHandle(VARIABLE) != null)
                 {
                     continue;
                 }
@@ -67,7 +66,7 @@ namespace ZGame.Resource
                 loadingHandle.SetTitle($"正在加载资源包: {VARIABLE}");
                 loadingHandle.Report((i + 1) / (float)count);
                 AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
-                BundleManager.instance.Add(assetBundle);
+                ResourceManager.instance.AddResourcePackageHandle(new ResourcePackageHandle(assetBundle, false));
             }
 
             loadingHandle.SetTitle("资源加载完成...");
@@ -79,7 +78,7 @@ namespace ZGame.Resource
             while (fileList.Count > 0)
             {
                 string VARIABLE = fileList.Dequeue();
-                BundleManager.instance.Remove(VARIABLE);
+                ResourceManager.instance.RemoveResourcePackageHandle(VARIABLE);
             }
         }
     }

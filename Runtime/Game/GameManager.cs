@@ -14,8 +14,14 @@ namespace ZGame.Game
     public sealed class GameManager : Singleton<GameManager>
     {
         private Assembly assembly = default;
-        private GameHandle gameHandle = default;
+        private SubGameEntry gameHandle = default;
         private HashSet<string> aotList = new();
+
+        protected  override void OnDestroy()
+        {
+            gameHandle?.Dispose();
+            gameHandle = null;
+        }
 
         public async UniTask EntryGame(EntryConfig options, params object[] args)
         {
@@ -92,7 +98,7 @@ namespace ZGame.Game
                 throw new NullReferenceException(nameof(assembly));
             }
 
-            Type entryType = assembly.GetAllSubClasses<GameHandle>().FirstOrDefault();
+            Type entryType = assembly.GetAllSubClasses<SubGameEntry>().FirstOrDefault();
             if (entryType is null)
             {
                 throw new EntryPointNotFoundException();
@@ -103,13 +109,8 @@ namespace ZGame.Game
                 gameHandle.Dispose();
             }
 
-            gameHandle = Activator.CreateInstance(entryType) as GameHandle;
+            gameHandle = Activator.CreateInstance(entryType) as SubGameEntry;
             gameHandle.OnEntry(args);
-        }
-
-
-        public void Dispose()
-        {
         }
     }
 }

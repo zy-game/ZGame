@@ -7,23 +7,33 @@ namespace ZGame.Resource
 {
     class InternalResourceLoadingHandle : IResourceLoadingHandle
     {
-        private ResourcePackageHandle _handle;
+        private string handleName = "RESOURCES";
 
         public InternalResourceLoadingHandle()
         {
-            _handle = new ResourcePackageHandle("RESOURCES");
+            ResourceManager.instance.AddResourcePackageHandle(new ResourcePackageHandle(handleName, true));
+        }
+
+        public bool Contains(string path)
+        {
+            return path.StartsWith("Resources");
         }
 
         public void Dispose()
         {
-            _handle.Dispose();
-            _handle = null;
+            ResourceManager.instance.RemoveResourcePackageHandle(handleName);
             GC.SuppressFinalize(this);
         }
 
         public ResHandle LoadAsset(string path)
         {
             if (path.StartsWith("Resources") is false)
+            {
+                return default;
+            }
+
+            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            if (_handle is null)
             {
                 return default;
             }
@@ -50,6 +60,12 @@ namespace ZGame.Resource
                 return default;
             }
 
+            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            if (_handle is null)
+            {
+                return default;
+            }
+
             if (_handle.TryGetValue(path, out ResHandle resHandle))
             {
                 return resHandle;
@@ -66,15 +82,8 @@ namespace ZGame.Resource
             return resHandle;
         }
 
-        public bool Release(ResHandle handle)
+        public void Release(string handle)
         {
-            if (_handle.Contains(handle))
-            {
-                return false;
-            }
-
-            _handle.Release(handle);
-            return true;
         }
     }
 }

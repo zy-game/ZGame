@@ -21,3 +21,4 @@ MonoBehaviour:
     dll: OdinGame
     aot: []
   parallelRunnableCount: 10
+  unloadBundleInterval: 60

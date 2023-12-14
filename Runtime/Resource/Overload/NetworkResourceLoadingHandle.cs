@@ -9,17 +9,26 @@ namespace ZGame.Resource
 {
     class NetworkResourceLoadingHandle : IResourceLoadingHandle
     {
-        private ResourcePackageHandle _handle;
+        private string handleName = "NETWORK_RESOURCES";
 
         public NetworkResourceLoadingHandle()
         {
-            _handle = new ResourcePackageHandle("NETWORK_RESOURCES");
+            ResourceManager.instance.AddResourcePackageHandle(new ResourcePackageHandle(handleName, true));
+        }
+
+        public bool Contains(string path)
+        {
+            if (path.StartsWith("http"))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public void Dispose()
         {
-            _handle.Dispose();
-            _handle = null;
+            ResourceManager.instance.RemoveResourcePackageHandle(handleName);
             GC.SuppressFinalize(this);
         }
 
@@ -31,6 +40,12 @@ namespace ZGame.Resource
         public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null)
         {
             if (path.StartsWith("http") is false)
+            {
+                return default;
+            }
+
+            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            if (_handle is null)
             {
                 return default;
             }
@@ -93,15 +108,8 @@ namespace ZGame.Resource
             return resHandle;
         }
 
-        public bool Release(ResHandle handle)
+        public void Release(string handle)
         {
-            if (_handle.Contains(handle))
-            {
-                return false;
-            }
-
-            _handle.Release(handle);
-            return true;
         }
     }
 }

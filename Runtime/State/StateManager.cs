@@ -11,9 +11,16 @@ namespace ZGame.State
         private StateMachine _default;
         public StateMachine Default => _default;
 
-        internal protected override void OnAwake()
+         protected override void OnAwake()
         {
             _default = new StateMachine("DEFAULT_MACHINE");
+        }
+
+        protected  override void OnDestroy()
+        {
+            _default.Dispose();
+            _machines.ForEach(x => x.Dispose());
+            _machines.Clear();
         }
 
         /// <summary>
@@ -59,20 +66,13 @@ namespace ZGame.State
             return _machines.Find(x => x.name.Equals(name));
         }
 
-        internal protected override void OnUpdate()
+         protected override void OnUpdate()
         {
             _default.OnUpdate();
             for (int i = _machines.Count - 1; i >= 0; i--)
             {
                 _machines[i].OnUpdate();
             }
-        }
-
-        public void Dispose()
-        {
-            _default.Dispose();
-            _machines.ForEach(x => x.Dispose());
-            _machines.Clear();
         }
     }
 }

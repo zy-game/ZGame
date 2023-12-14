@@ -2,7 +2,7 @@ using System;
 
 namespace ZGame.Game
 {
-    public abstract class GameHandle : IDisposable
+    public abstract class SubGameEntry : IDisposable
     {
         public virtual void OnEntry(params object[] args)
         {

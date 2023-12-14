@@ -12,10 +12,10 @@ namespace ZGame
     {
         public static void OnDestroyEventCallback(this GameObject gameObject, UnityAction callback)
         {
-            UnitySingleton listener = gameObject.GetComponent<UnitySingleton>();
+            Bevaviour listener = gameObject.GetComponent<Bevaviour>();
             if (listener == null)
             {
-                listener = gameObject.AddComponent<UnitySingleton>();
+                listener = gameObject.AddComponent<Bevaviour>();
             }
 
             listener.onDestroy.AddListener(callback);

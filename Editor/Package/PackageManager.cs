@@ -11,6 +11,7 @@ using UnityEngine;
 namespace ZGame.Editor.Package
 {
     [BindScene("包管理")]
+    [SettingContent(typeof(PackageDataList))]
     public class PackageManager : PageScene
     {
         private const string configPath = "Assets/Settings/ProjectPackageList.asset";

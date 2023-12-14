@@ -10,19 +10,23 @@ namespace ZGame.Resource
     public class ResourcePackageHandle : IDisposable
     {
         public string name { get; }
-        private List<ResHandle> cacheList;
-        private AssetBundle bundle { get; }
+        public AssetBundle bundle { get; }
         public int refCount { get; private set; }
 
-        internal ResourcePackageHandle(string title)
+        public bool DefaultPackage { get; }
+
+        private List<ResHandle> cacheList;
+
+        internal ResourcePackageHandle(string title, bool isDefault)
         {
             refCount = 0;
             this.name = title;
+            this.DefaultPackage = isDefault;
             cacheList = new List<ResHandle>();
             Debug.Log("load success :" + title);
         }
 
-        internal ResourcePackageHandle(AssetBundle bundle) : this(bundle.name)
+        internal ResourcePackageHandle(AssetBundle bundle, bool isDefault) : this(bundle.name, isDefault)
         {
             this.bundle = bundle;
         }
@@ -48,63 +52,26 @@ namespace ZGame.Resource
             return handle is not null;
         }
 
-        public bool Contains(ResHandle obj)
-        {
-            return cacheList.Contains(obj);
-        }
 
-        public void Release(ResHandle obj)
+        public bool Release(string path)
         {
+            if (TryGetValue(path, out ResHandle obj) is false)
+            {
+                return false;
+            }
+
             obj.Release();
-            if (obj.refCount > 0)
-            {
-                return;
-            }
-
-            obj.Dispose();
-            cacheList.Remove(obj);
-        }
-
-        public ResHandle LoadAsset(string path)
-        {
-            if (TryGetValue(path, out ResHandle resHandle))
-            {
-                return resHandle;
-            }
-
-            var asset = bundle.LoadAsset(path);
-            if (asset == null)
-            {
-                return default;
-            }
-
-            cacheList.Add(resHandle = new ResHandle(this, asset, path));
-            return resHandle;
-        }
-
-        public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle)
-        {
-            if (TryGetValue(path, out ResHandle resHandle))
-            {
-                return resHandle;
-            }
-
-            var asset = await bundle.LoadAssetAsync(path).ToUniTask(loadingHandle);
-            if (asset == null)
-            {
-                return default;
-            }
-
-            cacheList.Add(resHandle = new ResHandle(this, asset, path));
-            return resHandle;
+            return true;
         }
 
         public void Dispose()
         {
-            bundle.Unload(true);
+            Debug.Log("释放资源包:" + name);
             refCount = 0;
             cacheList.ForEach(x => x.Dispose());
             cacheList.Clear();
+            bundle?.Unload(true);
+            Resources.UnloadUnusedAssets();
         }
     }
 }

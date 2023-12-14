@@ -15,13 +15,13 @@ namespace ZGame.FileSystem
         private List<VFSStream> ioList = new List<VFSStream>();
         private VFSSetting setting;
 
-        internal protected override void OnDestroy()
+         protected override void OnDestroy()
         {
             base.OnDestroy();
             ioList.ForEach(x => x.Dispose());
         }
 
-        internal protected override void OnAwake()
+         protected override void OnAwake()
         {
             base.OnAwake();
             setting = Resources.Load<VFSSetting>("Config/VFSSetting");

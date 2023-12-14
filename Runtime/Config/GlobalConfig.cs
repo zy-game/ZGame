@@ -16,6 +16,7 @@ namespace ZGame
     {
         public List<EntryConfig> entrys;
         public int parallelRunnableCount = 10;
+        public float unloadBundleInterval = 60f;
         private static GlobalConfig _global;
         private static EntryConfig _current;
 

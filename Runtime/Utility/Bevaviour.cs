@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 namespace ZGame
 {
-    class UnitySingleton : MonoBehaviour
+    class Bevaviour : MonoBehaviour
     {
         [HideInInspector] public UnityEvent update = new UnityEvent();
         [HideInInspector] public UnityEvent fixedUpdate = new UnityEvent();
@@ -15,17 +15,7 @@ namespace ZGame
         [HideInInspector] public UnityEvent onDestroy = new UnityEvent();
 
 
-        public void Setup<T>(T singleton) where T : Singleton<T>, new()
-        {
-            update.AddListener(singleton.OnUpdate);
-            fixedUpdate.AddListener(singleton.OnFixedUpdate);
-            lateUpdate.AddListener(singleton.OnLateUpdate);
-            onGUI.AddListener(singleton.OnGUI);
-            onApplicationQuit.AddListener(singleton.OnApplicationQuit);
-            onApplicationPause.AddListener(singleton.OnApplicationPause);
-            onApplicationFocus.AddListener(singleton.OnApplicationFocus);
-            onDestroy.AddListener(singleton.OnDestroy);
-        }
+
 
         public void SetupDestroy(UnityAction ac)
         {

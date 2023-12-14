@@ -1,30 +1,53 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using Cysharp.Threading.Tasks;
+using UnityEngine.SceneManagement;
 using ZGame.Window;
 
 namespace ZGame.Resource
 {
     class EditorModeResourceLoadingHandle : IResourceLoadingHandle
     {
-        private ResourcePackageHandle _handle;
+        private string handleName = "EDITOR_MODE_RESOURCES";
 
         public EditorModeResourceLoadingHandle()
         {
-            _handle = new ResourcePackageHandle("EDITOR_MODE_RESOURCES");
+            ResourceManager.instance.AddResourcePackageHandle(new ResourcePackageHandle(handleName, true));
         }
 
+        public bool Contains(string path)
+        {
+#if UNITY_EDITOR
+            return File.Exists(path);
+#endif
+            return false;
+        }
+        
         public void Dispose()
         {
-            _handle.Dispose();
-            _handle = null;
+            ResourceManager.instance.RemoveResourcePackageHandle(handleName);
             GC.SuppressFinalize(this);
         }
 
         public ResHandle LoadAsset(string path)
         {
 #if UNITY_EDITOR
+            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            if (_handle is null)
+            {
+                return default;
+            }
+
             if (_handle.TryGetValue(path, out ResHandle resHandle))
             {
+                return resHandle;
+            }
+
+            if (path.EndsWith(".unity"))
+            {
+                _handle.Setup(resHandle = new ResHandle(_handle, null, path));
+                resHandle.LoadScene();
                 return resHandle;
             }
 
@@ -43,21 +66,39 @@ namespace ZGame.Resource
         public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null)
         {
 #if UNITY_EDITOR
-            await UniTask.Delay(0);
-            return LoadAsset(path);
+            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            if (_handle is null)
+            {
+                return default;
+            }
+
+            if (_handle.TryGetValue(path, out ResHandle resHandle))
+            {
+                return resHandle;
+            }
+
+            if (path.EndsWith(".unity"))
+            {
+                _handle.Setup(resHandle = new ResHandle(_handle, null, path));
+                resHandle.LoadSceneAsync(loadingHandle);
+                return resHandle;
+            }
+
+            UnityEditor.AssetDatabaseLoadOperation operation = UnityEditor.AssetDatabase.LoadObjectAsync(path, 0);
+            await operation.ToUniTask(loadingHandle);
+            if (operation.LoadedObject == null)
+            {
+                return default;
+            }
+
+            _handle.Setup(resHandle = new ResHandle(_handle, operation.LoadedObject, path));
+            return resHandle;
 #endif
             return default;
         }
 
-        public bool Release(ResHandle handle)
+        public void Release(string handle)
         {
-            if (_handle.Contains(handle) is false)
-            {
-                return false;
-            }
-
-            _handle.Release(handle);
-            return true;
         }
     }
 }

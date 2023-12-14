@@ -5,24 +5,25 @@ namespace ZGame.Resource
 {
     public sealed class ResHandle : IDisposable
     {
-        private UnityEngine.Object obj;
+        private int count;
+        private object obj;
         private ResourcePackageHandle parent;
         public int refCount => count;
-        public string path { get; }
-        private int count;
+        public object asset => obj;
+        public string path { get; private set; }
 
-        public ResHandle(ResourcePackageHandle parent, UnityEngine.Object obj, string path)
+        public ResHandle(ResourcePackageHandle parent, object obj, string path)
         {
             this.obj = obj;
             this.path = path;
             this.parent = parent;
         }
 
-        public T Require<T>() where T : UnityEngine.Object
+        public T Require<T>()
         {
             count++;
             this.parent.AddRef();
-            return (T)obj;
+            return obj == null ? default(T) : (T)obj;
         }
 
         public void Release()
@@ -43,8 +44,10 @@ namespace ZGame.Resource
 
         public void Dispose()
         {
-            Resources.UnloadUnusedAssets();
             obj = null;
+            parent = null;
+            count = 0;
+            path = String.Empty;
         }
     }
 }

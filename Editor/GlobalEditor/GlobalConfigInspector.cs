@@ -29,7 +29,7 @@ namespace ZGame.Editor
                 globalConfig.entrys = new List<EntryConfig>();
             }
 
-            types = AppDomain.CurrentDomain.GetAllSubClasses<GameHandle>();
+            types = AppDomain.CurrentDomain.GetAllSubClasses<SubGameEntry>();
             resList = BuilderConfig.instance.packages?.Select(x => x.name).ToList();
         }
 
@@ -37,6 +37,7 @@ namespace ZGame.Editor
         {
             EditorGUI.BeginChangeCheck();
             globalConfig.parallelRunnableCount = EditorGUILayout.IntField("并发运行数量", globalConfig.parallelRunnableCount);
+            globalConfig.unloadBundleInterval = EditorGUILayout.FloatField("并发运行数量", globalConfig.unloadBundleInterval);
             for (int i = 0; i < globalConfig.entrys.Count; i++)
             {
                 GUILayout.BeginVertical(EditorStyles.helpBox);

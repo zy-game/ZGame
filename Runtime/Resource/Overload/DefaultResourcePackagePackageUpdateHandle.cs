@@ -17,7 +17,6 @@ namespace ZGame.Resource
     {
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public async UniTask Update(ILoadingHandle loadingHandle, params string[] paths)
