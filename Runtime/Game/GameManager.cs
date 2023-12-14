@@ -17,17 +17,17 @@ namespace ZGame.Game
         private SubGameEntry gameHandle = default;
         private HashSet<string> aotList = new();
 
-        protected  override void OnDestroy()
+        protected override void OnDestroy()
         {
             gameHandle?.Dispose();
             gameHandle = null;
         }
 
-        public async UniTask EntryGame(EntryConfig options, params object[] args)
+        public async UniTask EntryGame(GameConfig config, params object[] args)
         {
-            await LoadAOT(options);
-            await LoadDLL(options);
-            OnEntryGame(options, args);
+            await LoadAOT(config);
+            await LoadDLL(config);
+            OnEntryGame(config, args);
         }
 
         public void QuitGame()
@@ -39,34 +39,34 @@ namespace ZGame.Game
 #endif
         }
 
-        private async UniTask LoadDLL(EntryConfig options)
+        private async UniTask LoadDLL(GameConfig config)
         {
 #if UNITY_EDITOR
-            if (options.dll.IsNullOrEmpty())
+            if (config.dll.IsNullOrEmpty())
             {
-                throw new NullReferenceException(nameof(options.dll));
+                throw new NullReferenceException(nameof(config.dll));
             }
 
-            string dllName = Path.GetFileNameWithoutExtension(options.dll);
+            string dllName = Path.GetFileNameWithoutExtension(config.dll);
             assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             return;
 #endif
-            ResHandle textAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(options.dll) + ".bytes");
+            ResHandle textAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(config.dll) + ".bytes");
             if (textAsset == null)
             {
-                throw new NullReferenceException(options.dll);
+                throw new NullReferenceException(config.dll);
             }
 
-            assembly = Assembly.Load(textAsset.Require<TextAsset>().bytes);
+            assembly = Assembly.Load(textAsset.Get<TextAsset>().bytes);
         }
 
-        private async UniTask LoadAOT(EntryConfig options)
+        private async UniTask LoadAOT(GameConfig config)
         {
 #if UNITY_EDITOR
             return;
 #endif
             HomologousImageMode mode = HomologousImageMode.SuperSet;
-            foreach (var item in options.aot)
+            foreach (var item in config.aot)
             {
                 if (aotList.Contains(item))
                 {
@@ -79,7 +79,7 @@ namespace ZGame.Game
                     throw new Exception("加载AOT补元数据资源失败:" + item);
                 }
 
-                LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(textAsset.Require<TextAsset>().bytes, mode);
+                LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(textAsset.Get<TextAsset>().bytes, mode);
                 if (err != LoadImageErrorCode.OK)
                 {
                     Debug.LogError("加载AOT补元数据资源失败:" + item);
@@ -91,7 +91,7 @@ namespace ZGame.Game
             }
         }
 
-        private void OnEntryGame(EntryConfig options, params object[] args)
+        private void OnEntryGame(GameConfig config, params object[] args)
         {
             if (assembly is null)
             {

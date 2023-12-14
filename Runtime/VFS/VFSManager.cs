@@ -13,18 +13,16 @@ namespace ZGame.FileSystem
     {
         private List<VFSChunk> segments = new List<VFSChunk>();
         private List<VFSStream> ioList = new List<VFSStream>();
-        private VFSSetting setting;
 
-         protected override void OnDestroy()
+        protected override void OnDestroy()
         {
             base.OnDestroy();
             ioList.ForEach(x => x.Dispose());
         }
 
-         protected override void OnAwake()
+        protected override void OnAwake()
         {
             base.OnAwake();
-            setting = Resources.Load<VFSSetting>("Config/VFSSetting");
             string filePath = Application.persistentDataPath + "/vfs.ini";
             if (!File.Exists(filePath))
             {
@@ -102,16 +100,18 @@ namespace ZGame.FileSystem
         public VFSChunk[] GetFreeSgement(int lenght)
         {
             List<VFSChunk> result = new List<VFSChunk>();
-            int count = lenght / setting.chunkSize;
-            count = lenght > count * setting.chunkSize ? count + 1 : count;
+            int chunkSize = GlobalConfig.instance.vfsConfig.chunkSize;
+            int maxCount = GlobalConfig.instance.vfsConfig.chunkCount;
+            int count = lenght / chunkSize;
+            count = lenght > count * chunkSize ? count + 1 : count;
             IEnumerable<VFSChunk> temp = segments.Where(x => x.use is false);
 
             if (temp is null || temp.Count() < count)
             {
                 VFSStream handle = GetFileHandle(Guid.NewGuid().ToString().Replace("-", String.Empty));
-                for (int i = 0; i < setting.chunkCount; i++)
+                for (int i = 0; i < maxCount; i++)
                 {
-                    segments.Add(new VFSChunk(handle.name, setting.chunkSize, i * setting.chunkSize)
+                    segments.Add(new VFSChunk(handle.name, chunkSize, i * chunkSize)
                     {
                         time = DateTimeOffset.Now.ToUnixTimeSeconds()
                     });

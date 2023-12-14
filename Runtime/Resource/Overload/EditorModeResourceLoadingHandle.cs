@@ -23,7 +23,7 @@ namespace ZGame.Resource
 #endif
             return false;
         }
-        
+
         public void Dispose()
         {
             ResourceManager.instance.RemoveResourcePackageHandle(handleName);
@@ -47,7 +47,6 @@ namespace ZGame.Resource
             if (path.EndsWith(".unity"))
             {
                 _handle.Setup(resHandle = new ResHandle(_handle, null, path));
-                resHandle.LoadScene();
                 return resHandle;
             }
 
@@ -80,7 +79,6 @@ namespace ZGame.Resource
             if (path.EndsWith(".unity"))
             {
                 _handle.Setup(resHandle = new ResHandle(_handle, null, path));
-                resHandle.LoadSceneAsync(loadingHandle);
                 return resHandle;
             }
 

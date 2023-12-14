@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 namespace ZGame
 {
-    class Bevaviour : MonoBehaviour
+    class BevaviourScriptable : MonoBehaviour
     {
         [HideInInspector] public UnityEvent update = new UnityEvent();
         [HideInInspector] public UnityEvent fixedUpdate = new UnityEvent();
@@ -13,14 +13,6 @@ namespace ZGame
         [HideInInspector] public UnityEvent<bool> onApplicationPause = new UnityEvent<bool>();
         [HideInInspector] public UnityEvent<bool> onApplicationFocus = new UnityEvent<bool>();
         [HideInInspector] public UnityEvent onDestroy = new UnityEvent();
-
-
-
-
-        public void SetupDestroy(UnityAction ac)
-        {
-            onDestroy.AddListener(ac);
-        }
 
         private void Update()
         {

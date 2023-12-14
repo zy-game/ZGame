@@ -12,10 +12,10 @@ namespace ZGame
     {
         public static void OnDestroyEventCallback(this GameObject gameObject, UnityAction callback)
         {
-            Bevaviour listener = gameObject.GetComponent<Bevaviour>();
+            BevaviourScriptable listener = gameObject.GetComponent<BevaviourScriptable>();
             if (listener == null)
             {
-                listener = gameObject.AddComponent<Bevaviour>();
+                listener = gameObject.AddComponent<BevaviourScriptable>();
             }
 
             listener.onDestroy.AddListener(callback);

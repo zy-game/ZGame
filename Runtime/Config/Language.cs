@@ -18,9 +18,13 @@ namespace ZGame.Config
         UPDATE_RESOURCE_ERROR,
     }
 
-    public class Language : Singleton<Language>, IConfig
+    public class Language : SingletonScriptableObject<Language>
     {
         private Dictionary<int, string> _language = new();
+
+        protected override void OnAwake()
+        {
+        }
 
         public async void SwitchLanguage(LanguageDefine languageDefine)
         {

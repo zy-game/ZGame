@@ -40,7 +40,6 @@ namespace ZGame.Resource
             {
                 resHandle = new ResHandle(handle, null, path);
                 handle.Setup(resHandle);
-                resHandle.LoadScene();
                 return resHandle;
             }
 
@@ -79,7 +78,6 @@ namespace ZGame.Resource
             {
                 resHandle = new ResHandle(handle, null, path);
                 handle.Setup(resHandle);
-                resHandle.LoadSceneAsync(loadingHandle);
                 return resHandle;
             }
 

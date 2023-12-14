@@ -103,7 +103,7 @@ namespace ZGame.Game
             }
 
             Camera camera = new GameObject(name).AddComponent<Camera>();
-            camera.gameObject.AddComponent<ZGame.Bevaviour>().onDestroy.AddListener(() => { Remove2(name); });
+            camera.gameObject.AddComponent<ZGame.BevaviourScriptable>().onDestroy.AddListener(() => { Remove2(name); });
             camera.cullingMask = LayerMask.GetMask(renderLayers);
             SetSubCamera(camera, layer, renderLayers);
             Refresh();
@@ -185,6 +185,11 @@ namespace ZGame.Game
             }
 
             cameras.Clear();
+            if (_main == null)
+            {
+                return;
+            }
+
             GameObject.DestroyImmediate(_main.gameObject);
         }
     }

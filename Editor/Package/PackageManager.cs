@@ -43,18 +43,13 @@ namespace ZGame.Editor.Package
 
             OnShowPackageInstallHeader();
 
-            GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
-            showUnityPackageList = EditorGUILayout.Foldout(showUnityPackageList, "Unity Package List", EditorStyles.foldoutHeader);
-            GUILayout.EndHorizontal();
+            showUnityPackageList = OnShowFoldoutHeader("Unity Package List", showUnityPackageList);
             if (showUnityPackageList)
             {
                 OnShowNotInstallPackageList();
             }
 
-            GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
-            showInstalledPackageList = EditorGUILayout.Foldout(showInstalledPackageList, "Install Package List", EditorStyles.foldoutHeader);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            showInstalledPackageList = OnShowFoldoutHeader("Install Package List", showInstalledPackageList);
             if (showInstalledPackageList)
             {
                 OnShowPackageList();

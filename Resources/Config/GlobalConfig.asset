@@ -12,13 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4928ddc63e5a4cccb3beb164cf31d98d, type: 3}
   m_Name: GlobalConfig
   m_EditorClassIdentifier: 
-  entrys:
-  - active: 1
+  resConfig:
     oss: "\u6D4B\u8BD5-\u963F\u91CC\u4E91"
     address: https://test10291.oss-cn-chengdu.aliyuncs.com/
     module: test
-    runtime: 1
+    resMode: 0
+    unloadInterval: 60
+  gameConfig:
     dll: OdinGame
     aot: []
-  parallelRunnableCount: 10
-  unloadBundleInterval: 60
+  vfsConfig:
+    enable: 1
+    chunkSize: 1048576
+    chunkCount: 1024

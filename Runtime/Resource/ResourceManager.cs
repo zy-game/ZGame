@@ -29,15 +29,15 @@ namespace ZGame.Resource
         private List<UnloadQueueTask> unloadList = new List<UnloadQueueTask>();
         private float checkTime = 0;
 
-        protected  override void OnAwake()
+        protected override void OnAwake()
         {
-            checkTime = Time.realtimeSinceStartup + GlobalConfig.instance.unloadBundleInterval;
+            MoveNextTime();
             SetResourceUpdateHandle<DefaultResourcePackagePackageUpdateHandle>();
             SetupResourceBundleLoadingHandle<DefaultResourcePackageLoadingHandle>();
             SetupResourceLoadingHandle<InternalResourceLoadingHandle>();
             SetupResourceLoadingHandle<NetworkResourceLoadingHandle>();
 #if UNITY_EDITOR
-            if (GlobalConfig.current.runtime == RuntimeMode.Editor)
+            if (GlobalConfig.instance.resConfig.resMode == ResourceMode.Editor)
             {
                 SetupResourceLoadingHandle<EditorModeResourceLoadingHandle>();
                 return;
@@ -46,7 +46,7 @@ namespace ZGame.Resource
             SetupResourceLoadingHandle<BundleResourceLoadingHandle>();
         }
 
-        protected  override void OnDestroy()
+        protected override void OnDestroy()
         {
             _handles.ForEach(x => x.Dispose());
             _handles.Clear();
@@ -58,14 +58,20 @@ namespace ZGame.Resource
             _resourcePackageUpdateHandle = null;
         }
 
-        protected  override void OnUpdate()
+        private void MoveNextTime()
+        {
+            checkTime = Time.realtimeSinceStartup + GlobalConfig.instance.resConfig.unloadInterval;
+        }
+
+        protected override void OnUpdate()
         {
             if (Time.realtimeSinceStartup < checkTime)
             {
                 return;
             }
 
-            checkTime = Time.realtimeSinceStartup + GlobalConfig.instance.unloadBundleInterval;
+            MoveNextTime();
+
             //todo 检查是否需要卸载资源包
             for (int i = 0; i < _handles.Count; i++)
             {
@@ -78,7 +84,7 @@ namespace ZGame.Resource
                 unloadList.Add(new UnloadQueueTask()
                 {
                     handle = _handles[i],
-                    time = Time.realtimeSinceStartup + GlobalConfig.instance.unloadBundleInterval
+                    time = Time.realtimeSinceStartup + GlobalConfig.instance.resConfig.unloadInterval
                 });
                 _handles.Remove(_handles[i]);
             }
@@ -361,7 +367,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("args");
             }
 #if UNITY_EDITOR
-            if (GlobalConfig.current.runtime == RuntimeMode.Editor)
+            if (GlobalConfig.instance.resConfig.resMode == ResourceMode.Editor)
             {
                 loadingHandle?.Report(1);
                 return;
@@ -384,7 +390,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("args");
             }
 #if UNITY_EDITOR
-            if (GlobalConfig.current.runtime == RuntimeMode.Editor)
+            if (GlobalConfig.instance.resConfig.resMode == ResourceMode.Editor)
             {
                 loadingHandle?.Report(1);
                 return;

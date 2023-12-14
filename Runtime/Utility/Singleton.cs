@@ -9,7 +9,7 @@ namespace ZGame
     {
         public static T instance => GetInstance();
         private static T _instance;
-        private static Bevaviour singleton;
+        private static BevaviourScriptable singleton;
         public GameObject gameObject { get; private set; }
 
         private static T GetInstance()
@@ -20,8 +20,8 @@ namespace ZGame
             }
 
             _instance = Activator.CreateInstance<T>();
-            _instance.gameObject = new GameObject(typeof(T).Name.ToUpper());
-            singleton = _instance.gameObject.AddComponent<Bevaviour>();
+            _instance.gameObject = new GameObject(typeof(T).Name);
+            singleton = _instance.gameObject.AddComponent<BevaviourScriptable>();
             GameObject.DontDestroyOnLoad(_instance.gameObject);
             singleton.update.AddListener(_instance.OnUpdate);
             singleton.fixedUpdate.AddListener(_instance.OnFixedUpdate);

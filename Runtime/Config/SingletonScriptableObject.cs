@@ -2,7 +2,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace ZGame.Editor
+namespace ZGame
 {
     public abstract class SingletonScriptableObject<T> : ScriptableObject where T : SingletonScriptableObject<T>
     {
@@ -47,7 +47,8 @@ namespace ZGame.Editor
             ResourceReference reference = typeof(T).GetCustomAttribute<ResourceReference>();
             if (reference.path.StartsWith("Resources"))
             {
-                _instance = Resources.Load<T>(reference.path.Substring(reference.path.IndexOf("/")));
+                string path = reference.path.Substring(reference.path.IndexOf("/") + 1);
+                _instance = Resources.Load<T>(path);
                 if (_instance != null)
                 {
                     return;
