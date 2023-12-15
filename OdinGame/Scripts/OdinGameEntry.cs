@@ -1,3 +1,4 @@
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using ZGame;
@@ -14,9 +15,10 @@ namespace OdinGame.Scripts
             base.OnEntry(args);
             Debug.Log("OdinGameEntry OnEntry");
             Loading loading = UIManager.instance.TryOpen<Loading>();
-            ResHandle handle = await ResourceManager.instance.LoadAssetAsync("Assets/OdinGame/ArtRes/Scene/HomeScene.unity", loading);
+            ResHandle handle = await ResourceManager.instance.LoadAssetAsync("Assets/OdinGame/ArtRes/Scene/Game.unity", loading);
             await handle.OpenSceneAsync(loading);
             UIManager.instance.Close<Loading>();
+            World.DefaultGameObjectInjectionWorld.CreateSystem<MoveSystem>();
         }
 
         public override void Dispose()

@@ -36,6 +36,21 @@ namespace ZGame
             return string.IsNullOrEmpty(str);
         }
 
+        public static Type GetType(this AppDomain domain, string name)
+        {
+            foreach (var VARIABLE in domain.GetAssemblies())
+            {
+                foreach (var VARIABLE2 in VARIABLE.GetTypes())
+                {
+                    if (VARIABLE2.Name == name || VARIABLE2.FullName == name)
+                    {
+                        return VARIABLE2;
+                    }
+                }
+            }
+
+            return default;
+        }
 
         public static List<Type> GetAllSubClasses<T>(this AppDomain domain)
         {

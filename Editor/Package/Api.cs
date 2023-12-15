@@ -48,6 +48,12 @@ namespace ZGame.Editor.Package
             return _taskCompletionSource.Task;
         }
 
+        public static async void OnGetPackageVersionList(string url, Action<List<string>> versionCallback)
+        {
+            List<string> result = await GetPackageVersionList(url);
+            versionCallback?.Invoke(result);
+        }
+
         /// <summary>
         /// 获取包版本列表
         /// </summary>
@@ -70,7 +76,7 @@ namespace ZGame.Editor.Package
                     }
 
                     PackageInfo packageInfo = request.Result.First();
-                    taskCompletionSource.SetResult(packageInfo.versions.all.ToList());
+                    taskCompletionSource.SetResult(packageInfo.versions.all.Where(x => x.Contains("pre") is false && x.Contains("dev") is false && x.Contains("ex") is false).ToList());
                     yield break;
                 }
 
@@ -91,7 +97,7 @@ namespace ZGame.Editor.Package
                 }
 
                 GitData[] packages = JsonConvert.DeserializeObject<GitData[]>(request2.downloadHandler.text);
-                taskCompletionSource.SetResult(packages.Select(x => x.name).ToList());
+                taskCompletionSource.SetResult(packages.Select(x => x.name).Where(x => x.Contains("pre") is false && x.Contains("dev") is false && x.Contains("ex") is false).ToList());
             }
 
             EditorManager.StartCoroutine(OnStart());

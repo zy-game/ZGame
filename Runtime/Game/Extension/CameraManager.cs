@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -10,14 +11,16 @@ namespace ZGame.Game
     {
         class CameraItem
         {
-            public int index;
+            public int sort;
             public Camera camera;
         }
 
         private Camera _main;
-        public Camera main => _main;
-        private List<CameraItem> cameras = new List<CameraItem>();
+        private List<(int, Camera)> cameraList = new();
         private UniversalAdditionalCameraData universalAdditionalCameraData;
+        public Camera main => _main;
+
+        //public Camera[] cameras=> cameras.Select(x=>x.camera).ToArray();
 
         protected override void OnAwake()
         {
@@ -27,42 +30,26 @@ namespace ZGame.Game
         private void LoadSceneComplete(Scene scene, LoadSceneMode mode)
         {
             List<Camera> subCameras = new List<Camera>();
-            Camera sceneMainCamera = default;
+
+            List<UniversalAdditionalCameraData> universalAdditionalCameraDatas = new List<UniversalAdditionalCameraData>();
             foreach (var VARIABLE in scene.GetRootGameObjects())
             {
-                UniversalAdditionalCameraData universalAdditionalCameraData = VARIABLE.GetComponentInChildren<UniversalAdditionalCameraData>();
-                if (universalAdditionalCameraData == null)
-                {
-                    continue;
-                }
+                universalAdditionalCameraDatas.AddRange(VARIABLE.GetComponentsInChildren<UniversalAdditionalCameraData>());
+            }
 
+            UniversalAdditionalCameraData mainCamera = universalAdditionalCameraDatas.Find(x => x.renderType == CameraRenderType.Base);
+            if (mainCamera != null)
+            {
+                SetMainCamera(mainCamera.GetComponent<Camera>());
+                return;
+            }
+
+            foreach (var VARIABLE in universalAdditionalCameraDatas)
+            {
                 if (universalAdditionalCameraData.renderType == CameraRenderType.Overlay)
                 {
-                    subCameras.Add(VARIABLE.GetComponent<Camera>());
-                    subCameras.AddRange(universalAdditionalCameraData.cameraStack);
+                    SetSubCamera(VARIABLE.GetComponent<Camera>());
                 }
-                else
-                {
-                    if (sceneMainCamera != null)
-                    {
-                        Debug.LogError("出现多个主摄像机：" + scene.name);
-                        continue;
-                    }
-
-                    sceneMainCamera = VARIABLE.GetComponent<Camera>();
-                }
-            }
-
-            if (sceneMainCamera != null)
-            {
-                SetMainCamera(sceneMainCamera);
-            }
-
-            int layer = cameras.Count > 0 ? cameras.Max(x => x.index) : 0;
-            foreach (var VARIABLE in subCameras)
-            {
-                layer++;
-                SetSubCamera(VARIABLE, layer);
             }
         }
 
@@ -71,6 +58,7 @@ namespace ZGame.Game
             if (_main != null)
             {
                 GameObject.DestroyImmediate(_main.gameObject);
+                Clear();
             }
 
             if (camera == null)
@@ -86,6 +74,16 @@ namespace ZGame.Game
 
             _main = camera;
             Refresh();
+        }
+
+        public void Clear()
+        {
+            foreach (var VARIABLE in cameraList)
+            {
+                GameObject.DestroyImmediate(VARIABLE.Item2.gameObject);
+            }
+
+            cameraList.Clear();
         }
 
         /// <summary>
@@ -105,21 +103,29 @@ namespace ZGame.Game
             Camera camera = new GameObject(name).AddComponent<Camera>();
             camera.gameObject.AddComponent<ZGame.BevaviourScriptable>().onDestroy.AddListener(() => { Remove2(name); });
             camera.cullingMask = LayerMask.GetMask(renderLayers);
-            SetSubCamera(camera, layer, renderLayers);
-            Refresh();
-            return camera;
-        }
-
-        public void SetSubCamera(Camera camera, int layer, params string[] renderLayers)
-        {
             UniversalAdditionalCameraData cameraData = camera.gameObject.AddComponent<UniversalAdditionalCameraData>();
-            cameraData.renderType = CameraRenderType.Overlay;
             if (renderLayers.Length > 0)
             {
                 cameraData.volumeLayerMask = LayerMask.GetMask(renderLayers);
             }
 
-            cameras.Add(new CameraItem() { index = layer, camera = camera });
+            cameraData.renderType = CameraRenderType.Overlay;
+            SetSubCamera(camera);
+            Refresh();
+            return camera;
+        }
+
+        public void SetSubCamera(Camera camera)
+        {
+            if (camera == null)
+            {
+                return;
+            }
+
+            int sort = cameraList.Count == 0 ? 0 : cameraList.Max(x => x.Item1);
+            sort++;
+            cameraList.Add(new(sort, camera));
+            Refresh();
         }
 
         /// <summary>
@@ -128,8 +134,11 @@ namespace ZGame.Game
         public void Refresh()
         {
             universalAdditionalCameraData.cameraStack.Clear();
-            cameras.Sort((a, b) => a.index > b.index ? 1 : -1);
-            cameras.ForEach(x => universalAdditionalCameraData.cameraStack.Add(x.camera));
+            cameraList.Sort((a, b) => a.Item1 > b.Item1 ? 1 : -1);
+            foreach (var VARIABLE in cameraList)
+            {
+                universalAdditionalCameraData.cameraStack.Add(VARIABLE.Item2);
+            }
         }
 
         /// <summary>
@@ -139,13 +148,15 @@ namespace ZGame.Game
         /// <returns></returns>
         public Camera GetCamera(string name)
         {
-            CameraItem item = cameras.Find(x => x.camera.name == name);
-            if (item == null)
+            foreach (var VARIABLE in cameraList)
             {
-                return default;
+                if (VARIABLE.Item2.name == name)
+                {
+                    return VARIABLE.Item2;
+                }
             }
 
-            return item.camera;
+            return default;
         }
 
         /// <summary>
@@ -154,37 +165,38 @@ namespace ZGame.Game
         /// <param name="name"></param>
         public void RemoveCamera(string name)
         {
-            CameraItem item = cameras.Find(x => x.camera.name == name);
+            Camera item = GetCamera(name);
             if (item == null)
             {
                 return;
             }
 
-            cameras.Remove(item);
-            GameObject.DestroyImmediate(item.camera.gameObject);
+            GameObject.DestroyImmediate(item.gameObject);
             Refresh();
         }
 
         private void Remove2(string name)
         {
-            CameraItem item = cameras.Find(x => x.camera.name == name);
-            if (item == null)
+            for (int i = 0; i < cameraList.Count; i++)
             {
-                return;
+                if (cameraList[i].Item2.name == name)
+                {
+                    cameraList.RemoveAt(i);
+                    break;
+                }
             }
 
-            cameras.Remove(item);
             Refresh();
         }
 
         protected override void OnDestroy()
         {
-            foreach (var VARIABLE in cameras)
+            foreach (var VARIABLE in cameraList)
             {
-                GameObject.DestroyImmediate(VARIABLE.camera.gameObject);
+                GameObject.DestroyImmediate(VARIABLE.Item2.gameObject);
             }
 
-            cameras.Clear();
+            cameraList.Clear();
             if (_main == null)
             {
                 return;

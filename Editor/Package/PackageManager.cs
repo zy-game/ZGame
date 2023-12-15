@@ -65,8 +65,8 @@ namespace ZGame.Editor.Package
             if (Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.Return && url.IsNullOrEmpty() is false)
             {
                 index = 0;
-                versionMap = await Api.GetPackageVersionList(url);
                 Event.current.Use();
+                Api.OnGetPackageVersionList(url, result => versionMap = result);
             }
 
             if (versionMap is not null && versionMap.Count > 0)
