@@ -74,21 +74,21 @@ namespace ZGame.Editor
             coroutines.Clear();
         }
 
-        public bool OnShowFoldoutHeader(string name, bool show2)
+        public bool OnShowFoldoutHeader(string name, bool isOn)
         {
             Rect rect = EditorGUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
-            show2 = EditorGUILayout.Foldout(show2, "");
+            isOn = EditorGUILayout.Foldout(isOn, "");
             GUILayout.Space(-40);
             EditorGUILayout.LabelField(name, EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
             if (Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
             {
-                show2 = !show2;
+                isOn = !isOn;
                 Event.current.Use();
             }
 
             GUILayout.EndHorizontal();
-            return show2;
+            return isOn;
         }
 
         public virtual void OnEnable()
