@@ -85,6 +85,26 @@ namespace ZGame
             return result;
         }
 
+        public static Dictionary<Type, T> GetCustomAttributeMap<T>(this AppDomain domain) where T : Attribute
+        {
+            Dictionary<Type, T> map = new Dictionary<Type, T>();
+            foreach (var assembly in domain.GetAssemblies())
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    T attribute = type.GetCustomAttribute<T>();
+                    if (attribute is null)
+                    {
+                        continue;
+                    }
+
+                    map.Add(type, attribute);
+                }
+            }
+
+            return map;
+        }
+
         public static List<T> GetCustomAttributes<T>(this AppDomain domain) where T : Attribute
         {
             List<T> result = new List<T>();

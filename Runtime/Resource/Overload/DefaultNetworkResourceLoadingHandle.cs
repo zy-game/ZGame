@@ -7,13 +7,13 @@ using ZGame.Window;
 
 namespace ZGame.Resource
 {
-    class NetworkResourceLoadingHandle : IResourceLoadingHandle
+    class DefaultNetworkResourceLoadingHandle : IResourceLoadingHandle
     {
         private string handleName = "NETWORK_RESOURCES";
 
-        public NetworkResourceLoadingHandle()
+        public DefaultNetworkResourceLoadingHandle()
         {
-            ResourceManager.instance.AddResourcePackageHandle(new ResourcePackageHandle(handleName, true));
+            ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(handleName, true));
         }
 
         public bool Contains(string path)
@@ -44,7 +44,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
             if (_handle is null)
             {
                 return default;

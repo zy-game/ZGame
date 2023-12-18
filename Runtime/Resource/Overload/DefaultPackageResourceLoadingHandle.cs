@@ -6,7 +6,7 @@ using ZGame.Window;
 
 namespace ZGame.Resource
 {
-    class BundleResourceLoadingHandle : IResourceLoadingHandle
+    class DefaultPackageResourceLoadingHandle : IResourceLoadingHandle
     {
         public void Dispose()
         {
@@ -24,7 +24,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            ResourcePackageHandle handle = ResourceManager.instance.GetResourcePackageHandleWithAssetPath(path);
+            ResPackageHandle handle = ResourceManager.instance.GetResourcePackageHandleWithAssetPath(path);
             if (handle is null)
             {
                 //todo 自动加载被释放的包
@@ -62,7 +62,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            ResourcePackageHandle handle = ResourceManager.instance.GetResourcePackageHandleWithAssetPath(path);
+            ResPackageHandle handle = ResourceManager.instance.GetResourcePackageHandleWithAssetPath(path);
             if (handle is null)
             {
                 //todo 自动加载被释放的包

@@ -18,7 +18,8 @@ namespace OdinGame.Scripts
             ResHandle handle = await ResourceManager.instance.LoadAssetAsync("Assets/OdinGame/ArtRes/Scene/Game.unity", loading);
             await handle.OpenSceneAsync(loading);
             UIManager.instance.Close<Loading>();
-            World.DefaultGameObjectInjectionWorld.CreateSystem<MoveSystem>();
+            ResHandle handle2 = ResourceManager.instance.LoadAsset("Assets/OdinGame/ArtRes/Prefab/terrain.prefab");
+            handle2.Baker(World.DefaultGameObjectInjectionWorld);
         }
 
         public override void Dispose()

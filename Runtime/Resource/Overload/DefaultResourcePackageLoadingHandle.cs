@@ -66,7 +66,7 @@ namespace ZGame.Resource
                 loadingHandle.SetTitle($"正在加载资源包: {VARIABLE}");
                 loadingHandle.Report((i + 1) / (float)count);
                 AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
-                ResourceManager.instance.AddResourcePackageHandle(new ResourcePackageHandle(assetBundle, false));
+                ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(assetBundle, false));
             }
 
             loadingHandle.SetTitle("资源加载完成...");

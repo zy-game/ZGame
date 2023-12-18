@@ -13,7 +13,7 @@ using ZGame.Window;
 
 namespace ZGame.Resource
 {
-    class DefaultResourcePackagePackageUpdateHandle : IResourcePackageUpdateHandle
+    class DefaultResourcePackageUpdateHandle : IResourcePackageUpdateHandle
     {
         public void Dispose()
         {

@@ -14,7 +14,7 @@ namespace ZGame.Resource
     class UnloadQueueTask
     {
         public float time;
-        public ResourcePackageHandle handle;
+        public ResPackageHandle handle;
     }
 
     /// <summary>
@@ -25,25 +25,25 @@ namespace ZGame.Resource
         private IResourcePackageUpdateHandle _resourcePackageUpdateHandle;
         private IResourcePackageLoadingHandle _resourceResourcePackageLoadingHandle;
         private List<IResourceLoadingHandle> _resourceLoadingHandles = new List<IResourceLoadingHandle>();
-        private List<ResourcePackageHandle> _handles = new List<ResourcePackageHandle>();
+        private List<ResPackageHandle> _handles = new List<ResPackageHandle>();
         private List<UnloadQueueTask> unloadList = new List<UnloadQueueTask>();
         private float checkTime = 0;
 
         protected override void OnAwake()
         {
             MoveNextTime();
-            SetResourceUpdateHandle<DefaultResourcePackagePackageUpdateHandle>();
+            SetResourceUpdateHandle<DefaultResourcePackageUpdateHandle>();
             SetupResourceBundleLoadingHandle<DefaultResourcePackageLoadingHandle>();
-            SetupResourceLoadingHandle<InternalResourceLoadingHandle>();
-            SetupResourceLoadingHandle<NetworkResourceLoadingHandle>();
+            SetupResourceLoadingHandle<DefaultUnityResourceLoadingHandle>();
+            SetupResourceLoadingHandle<DefaultNetworkResourceLoadingHandle>();
 #if UNITY_EDITOR
             if (GlobalConfig.instance.resConfig.resMode == ResourceMode.Editor)
             {
-                SetupResourceLoadingHandle<EditorModeResourceLoadingHandle>();
+                SetupResourceLoadingHandle<DefaultEditorResourceLoadingHandle>();
                 return;
             }
 #endif
-            SetupResourceLoadingHandle<BundleResourceLoadingHandle>();
+            SetupResourceLoadingHandle<DefaultPackageResourceLoadingHandle>();
         }
 
         protected override void OnDestroy()
@@ -103,14 +103,14 @@ namespace ZGame.Resource
             }
         }
 
-        public void AddResourcePackageHandle(ResourcePackageHandle handle)
+        public void AddResourcePackageHandle(ResPackageHandle handle)
         {
             _handles.Add(handle);
         }
 
         public void RemoveResourcePackageHandle(string name)
         {
-            ResourcePackageHandle handle = _handles.Find(x => x.name == name);
+            ResPackageHandle handle = _handles.Find(x => x.name == name);
             if (handle is null)
             {
                 return;
@@ -120,9 +120,9 @@ namespace ZGame.Resource
             handle.Dispose();
         }
 
-        public ResourcePackageHandle GetResourcePackageHandle(string name)
+        public ResPackageHandle GetResourcePackageHandle(string name)
         {
-            ResourcePackageHandle handle = _handles.Find(x => x.name == name);
+            ResPackageHandle handle = _handles.Find(x => x.name == name);
             if (handle is null)
             {
                 UnloadQueueTask task = unloadList.Find(x => x.handle.name == name);
@@ -136,7 +136,7 @@ namespace ZGame.Resource
             return handle;
         }
 
-        public ResourcePackageHandle GetResourcePackageHandleWithAssetPath(string path)
+        public ResPackageHandle GetResourcePackageHandleWithAssetPath(string path)
         {
             ResourcePackageManifest manifest = ResourcePackageListManifest.GetResourcePackageManifestWithAssetName(path);
             if (manifest is null)
@@ -317,7 +317,7 @@ namespace ZGame.Resource
         /// <typeparam name="T"></typeparam>
         public void UnSetResourceUpdateHandle()
         {
-            SetResourceUpdateHandle<DefaultResourcePackagePackageUpdateHandle>();
+            SetResourceUpdateHandle<DefaultResourcePackageUpdateHandle>();
         }
 
         /// <summary>
@@ -410,7 +410,7 @@ namespace ZGame.Resource
 
         public void ReleaseAsset(string path)
         {
-            ResourcePackageHandle packageHandle = GetResourcePackageHandleWithAssetPath(path);
+            ResPackageHandle packageHandle = GetResourcePackageHandleWithAssetPath(path);
             if (packageHandle is null)
             {
                 _resourceLoadingHandles.ForEach(x => x.Release(path));

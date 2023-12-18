@@ -5,13 +5,13 @@ using ZGame.Window;
 
 namespace ZGame.Resource
 {
-    class InternalResourceLoadingHandle : IResourceLoadingHandle
+    class DefaultUnityResourceLoadingHandle : IResourceLoadingHandle
     {
         private string handleName = "RESOURCES";
 
-        public InternalResourceLoadingHandle()
+        public DefaultUnityResourceLoadingHandle()
         {
-            ResourceManager.instance.AddResourcePackageHandle(new ResourcePackageHandle(handleName, true));
+            ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(handleName, true));
         }
 
         public bool Contains(string path)
@@ -32,7 +32,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
             if (_handle is null)
             {
                 return default;
@@ -60,7 +60,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
             if (_handle is null)
             {
                 return default;

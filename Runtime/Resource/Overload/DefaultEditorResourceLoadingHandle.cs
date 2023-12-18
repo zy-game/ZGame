@@ -7,13 +7,13 @@ using ZGame.Window;
 
 namespace ZGame.Resource
 {
-    class EditorModeResourceLoadingHandle : IResourceLoadingHandle
+    class DefaultEditorResourceLoadingHandle : IResourceLoadingHandle
     {
         private string handleName = "EDITOR_MODE_RESOURCES";
 
-        public EditorModeResourceLoadingHandle()
+        public DefaultEditorResourceLoadingHandle()
         {
-            ResourceManager.instance.AddResourcePackageHandle(new ResourcePackageHandle(handleName, true));
+            ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(handleName, true));
         }
 
         public bool Contains(string path)
@@ -33,7 +33,7 @@ namespace ZGame.Resource
         public ResHandle LoadAsset(string path)
         {
 #if UNITY_EDITOR
-            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
             if (_handle is null)
             {
                 return default;
@@ -65,7 +65,7 @@ namespace ZGame.Resource
         public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null)
         {
 #if UNITY_EDITOR
-            ResourcePackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
+            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
             if (_handle is null)
             {
                 return default;

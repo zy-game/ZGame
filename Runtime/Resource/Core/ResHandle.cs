@@ -1,7 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Rendering;
+using Unity.Scenes;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -14,16 +20,16 @@ namespace ZGame.Resource
     {
         private int count;
         private object obj;
-        private ResourcePackageHandle parent;
+        private ResPackageHandle parent;
         public int refCount => count;
         public string path { get; private set; }
 
 
-        public static void OnCreate(ResourcePackageHandle parent, object obj, string path)
+        public static void OnCreate(ResPackageHandle parent, object obj, string path)
         {
         }
 
-        public ResHandle(ResourcePackageHandle parent, object obj, string path)
+        public ResHandle(ResPackageHandle parent, object obj, string path)
         {
             this.obj = obj;
             this.path = path;
@@ -35,6 +41,18 @@ namespace ZGame.Resource
             count++;
             this.parent.AddRef();
             return obj == null ? default(T) : (T)obj;
+        }
+
+        public Entity Baker(World world)
+        {
+            GameObject gameObject = Get<GameObject>();
+            if (gameObject == null)
+            {
+                return Entity.Null;
+            }
+
+
+            return IBakeingHandle.Baker(gameObject, world);
         }
 
         public void Release()

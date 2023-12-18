@@ -7,7 +7,7 @@ using ZGame.Window;
 
 namespace ZGame.Resource
 {
-    public class ResourcePackageHandle : IDisposable
+    public class ResPackageHandle : IDisposable
     {
         public string name { get; }
         public AssetBundle bundle { get; }
@@ -17,7 +17,7 @@ namespace ZGame.Resource
 
         private List<ResHandle> cacheList;
 
-        internal ResourcePackageHandle(string title, bool isDefault)
+        internal ResPackageHandle(string title, bool isDefault)
         {
             refCount = 0;
             this.name = title;
@@ -26,7 +26,7 @@ namespace ZGame.Resource
             Debug.Log("load success :" + title);
         }
 
-        internal ResourcePackageHandle(AssetBundle bundle, bool isDefault) : this(bundle.name, isDefault)
+        internal ResPackageHandle(AssetBundle bundle, bool isDefault) : this(bundle.name, isDefault)
         {
             this.bundle = bundle;
         }
