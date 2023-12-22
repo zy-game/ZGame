@@ -10,8 +10,8 @@ using UnityEngine;
 
 namespace ZGame.Editor.Package
 {
-    [BindScene("包管理")]
-    [SettingContent(typeof(PackageDataList))]
+    // [BindScene("包管理")]
+    // [SettingContent(typeof(PackageDataList))]
     public class PackageManager : PageScene
     {
         private const string configPath = "Assets/Settings/ProjectPackageList.asset";
@@ -57,7 +57,7 @@ namespace ZGame.Editor.Package
         }
 
 
-        private async void OnShowPackageInstallHeader()
+        private void OnShowPackageInstallHeader()
         {
             GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
             GUILayout.Label("Package Name");

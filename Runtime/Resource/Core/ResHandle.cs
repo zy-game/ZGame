@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Cysharp.Threading.Tasks;
 using TMPro;
-using Unity.Collections;
-using Unity.Entities;
-using Unity.Rendering;
-using Unity.Scenes;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -41,18 +35,6 @@ namespace ZGame.Resource
             count++;
             this.parent.AddRef();
             return obj == null ? default(T) : (T)obj;
-        }
-
-        public Entity Baker(World world)
-        {
-            GameObject gameObject = Get<GameObject>();
-            if (gameObject == null)
-            {
-                return Entity.Null;
-            }
-
-
-            return IBakeingHandle.Baker(gameObject, world);
         }
 
         public void Release()

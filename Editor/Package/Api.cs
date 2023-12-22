@@ -89,7 +89,7 @@ namespace ZGame.Editor.Package
                 request2.timeout = 10;
                 request2.useHttpContinue = true;
                 yield return request2.SendWebRequest();
-                if (request2.isNetworkError || request2.isHttpError || request2.result is not UnityWebRequest.Result.Success)
+                if (request2.result is not UnityWebRequest.Result.Success)
                 {
                     Debug.LogError(request2.error);
                     taskCompletionSource.SetResult(new List<string>());

@@ -67,8 +67,10 @@ namespace ZGame
             OnCreate(reference.path + ".asset");
         }
 
+
         private static void OnCreate(string path)
         {
+            PathHelper.TryCreateFolder(PathHelper.GetFolderPath(path));
             _instance = CreateInstance<T>();
             AssetDatabase.CreateAsset(_instance, path);
             AssetDatabase.SaveAssets();

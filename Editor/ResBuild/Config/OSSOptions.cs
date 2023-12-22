@@ -6,6 +6,7 @@ namespace ZGame.Editor.ResBuild.Config
     {
         Aliyun,
         Tencent,
+        Strwaming,
     }
     [Serializable]
     public class OSSOptions

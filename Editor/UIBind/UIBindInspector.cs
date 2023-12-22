@@ -28,7 +28,7 @@ namespace ZGame.Editor.UIBind
             setting.BindConfig.NameSpace = EditorGUILayout.TextField("NameSpace", setting.BindConfig.NameSpace);
 
             EditorGUILayout.BeginHorizontal();
-            setting.BindConfig.output = EditorGUILayout.ObjectField("Output", setting.BindConfig.output, typeof(DefaultAsset));
+            setting.BindConfig.output = EditorGUILayout.ObjectField("Output", setting.BindConfig.output, typeof(DefaultAsset), false);
             EditorGUILayout.EndHorizontal();
             this.BeginColor(ZStyle.inColor);
             GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.Height(1));
@@ -71,7 +71,6 @@ namespace ZGame.Editor.UIBind
 
             if (EditorGUI.EndChangeCheck())
             {
-                this.SaveChanges();
                 EditorUtility.SetDirty(setting);
             }
 

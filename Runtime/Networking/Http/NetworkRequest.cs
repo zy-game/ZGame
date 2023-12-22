@@ -28,7 +28,7 @@ namespace ZGame.Networking
         {
             Debug.Log("POST:" + url);
             string str = JsonConvert.SerializeObject(data);
-            UnityWebRequest request = UnityWebRequest.PostWwwForm(url, str);
+            UnityWebRequest request = UnityWebRequest.Post(url, str);
             request.timeout = 5;
             request.useHttpContinue = true;
             request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str));

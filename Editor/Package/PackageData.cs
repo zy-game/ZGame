@@ -23,7 +23,6 @@ namespace ZGame.Editor.Package
         [NonSerialized] public DependencyInfo[] dependenceis;
         [NonSerialized] public List<string> versions;
         [NonSerialized] public bool isWaiting = false;
-        [NonSerialized] private int start = 0;
         [NonSerialized] private int end = 11;
         [NonSerialized] private int cur = 0;
         [NonSerialized] public string icon = "";

@@ -82,14 +82,13 @@ namespace ZGame.Resource
                 return resHandle;
             }
 
-            UnityEditor.AssetDatabaseLoadOperation operation = UnityEditor.AssetDatabase.LoadObjectAsync(path, 0);
-            await operation.ToUniTask(loadingHandle);
-            if (operation.LoadedObject == null)
+            UnityEngine.Object asset = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(UnityEngine.Object));
+            if (asset == null)
             {
                 return default;
             }
 
-            _handle.Setup(resHandle = new ResHandle(_handle, operation.LoadedObject, path));
+            _handle.Setup(resHandle = new ResHandle(_handle, asset, path));
             return resHandle;
 #endif
             return default;

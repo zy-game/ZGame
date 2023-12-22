@@ -14,10 +14,9 @@ namespace ZGame.Editor
         private Vector2 menuRoll;
         private Vector2 pageRoll;
         private float leftWidth = 300;
-        int start = 0;
-        int end = 11;
-        int cur = 0;
-        string icon = "";
+        private int end = 11;
+        private int cur = 0;
+        private string icon = "";
         public PageScene current { get; private set; }
         public string search { get; private set; }
 
@@ -69,6 +68,7 @@ namespace ZGame.Editor
                 search = String.Empty;
                 Event.current.Use();
             }
+
             GUILayout.EndHorizontal();
 
             this.BeginColor(ZStyle.inColor);
