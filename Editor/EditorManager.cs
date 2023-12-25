@@ -23,8 +23,8 @@ namespace ZGame.Editor
         class SceneData
         {
             public bool show;
-            public PageScene scene;
-            public List<PageScene> childs;
+            public SubPage scene;
+            public List<SubPage> childs;
             public Type settingType;
             public Type parent;
         }
@@ -38,12 +38,12 @@ namespace ZGame.Editor
         static void OnScriptBuilderComplation()
         {
             sceneMaps = new List<SceneData>();
-            List<Type> types = AppDomain.CurrentDomain.GetAllSubClasses<PageScene>();
+            List<Type> types = AppDomain.CurrentDomain.GetAllSubClasses<SubPage>();
 
 
             foreach (var VARIABLE in types)
             {
-                BindScene editorScene = VARIABLE.GetCustomAttribute<BindScene>();
+                SubPageSetting editorScene = VARIABLE.GetCustomAttribute<SubPageSetting>();
 
                 if (editorScene is null)
                 {
@@ -52,16 +52,16 @@ namespace ZGame.Editor
 
                 SceneData sceneData = new SceneData();
                 sceneMaps.Add(sceneData);
-                sceneData.scene = (PageScene)Activator.CreateInstance(VARIABLE);
+                sceneData.scene = (SubPage)Activator.CreateInstance(VARIABLE);
                 sceneData.parent = editorScene.parent;
-                sceneData.childs = new List<PageScene>();
-                SettingContent settingContent = VARIABLE.GetCustomAttribute<SettingContent>();
-                if (settingContent is null)
+                sceneData.childs = new List<SubPage>();
+                ReferenceScriptableObject referenceScriptableObject = VARIABLE.GetCustomAttribute<ReferenceScriptableObject>();
+                if (referenceScriptableObject is null)
                 {
                     continue;
                 }
 
-                sceneData.settingType = settingContent.type;
+                sceneData.settingType = referenceScriptableObject.type;
             }
 
             for (int i = sceneMaps.Count - 1; i >= 0; i--)
@@ -132,18 +132,18 @@ namespace ZGame.Editor
                 return;
             }
 
-            PageScene pageScene = sceneMaps.Find(x => x.settingType == obj.GetType())?.scene;
-            if (pageScene is null)
+            SubPage subPage = sceneMaps.Find(x => x.settingType == obj.GetType())?.scene;
+            if (subPage is null)
             {
                 return;
             }
 
-            SwitchScene(pageScene);
+            SwitchScene(subPage);
         }
 
-        public static PageScene GetScene(Type type)
+        public static SubPage GetScene(Type type)
         {
-            if (type.IsSubclassOf(typeof(PageScene)) is false)
+            if (type.IsSubclassOf(typeof(SubPage)) is false)
             {
                 return default;
             }
@@ -164,28 +164,28 @@ namespace ZGame.Editor
             return default;
         }
 
-        public static T GetScene<T>() where T : PageScene
+        public static T GetScene<T>() where T : SubPage
         {
             return (T)GetScene(typeof(T));
         }
 
-        public static void SwitchScene<T>() where T : PageScene
+        public static void SwitchScene<T>(params object[] args) where T : SubPage
         {
-            SwitchScene(typeof(T));
+            SwitchScene(typeof(T), args);
         }
 
-        public static void SwitchScene(Type type)
+        public static void SwitchScene(Type type, params object[] args)
         {
             //检查type是否实现了PageScene
-            if (type.IsSubclassOf(typeof(PageScene)) is false)
+            if (type.IsSubclassOf(typeof(SubPage)) is false)
             {
                 return;
             }
 
-            SwitchScene(GetScene(type));
+            SwitchScene(GetScene(type), args);
         }
 
-        public static void SwitchScene(PageScene scene)
+        public static void SwitchScene(SubPage scene, params object[] args)
         {
             if (scene is null)
             {
@@ -200,7 +200,7 @@ namespace ZGame.Editor
             }
 
             _docker.current = scene;
-            _docker.current.OnEnable();
+            _docker.current.OnEnable(args);
             Refresh();
         }
 

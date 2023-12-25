@@ -8,15 +8,15 @@ using ZGame.Editor.ResBuild.Config;
 
 namespace ZGame.Editor.ResBuild
 {
-    [BindScene("版本管理", typeof(ResBuilder))]
-    public class ResUploader : PageScene
+    [SubPageSetting("版本管理", typeof(ResBuilder))]
+    public class ResUploader : SubPage
     {
         public OSSType type;
         private int selection = 0;
         private OSSManager manager;
         private string[] buckets;
 
-        public override void OnEnable()
+        public override void OnEnable(params object[] args)
         {
             manager = new OSSManager();
             OnRefresh();

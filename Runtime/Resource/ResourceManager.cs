@@ -342,7 +342,7 @@ namespace ZGame.Resource
         /// </summary>
         /// <param name="path">资源路径</param>
         /// <returns>资源加载任务</returns>
-        public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null)
+        public async UniTask<ResHandle> LoadAssetAsync(string path)
         {
             ResHandle result = default;
             IResourceLoadingHandle resourceLoadingHandle = _resourceLoadingHandles.Find(x => x.Contains(path));
@@ -360,7 +360,7 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async UniTask LoadingResourcePackageList(ILoadingHandle loadingHandle, params string[] args)
+        public async UniTask LoadingResourcePackageList(params string[] args)
         {
             if (args is null || args.Length == 0)
             {
@@ -369,12 +369,11 @@ namespace ZGame.Resource
 #if UNITY_EDITOR
             if (GlobalConfig.instance.resConfig.resMode == ResourceMode.Editor)
             {
-                loadingHandle?.Report(1);
                 return;
             }
 #endif
 
-            await _resourceResourcePackageLoadingHandle.Loading(loadingHandle, args);
+            await _resourceResourcePackageLoadingHandle.Loading(args);
         }
 
         /// <summary>
@@ -383,7 +382,7 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <exception cref="NullReferenceException"></exception>
-        public async UniTask CheckUpdateResourcePackageList(ILoadingHandle loadingHandle, params string[] args)
+        public async UniTask CheckUpdateResourcePackageList(params string[] args)
         {
             if (args is null || args.Length == 0)
             {
@@ -392,11 +391,10 @@ namespace ZGame.Resource
 #if UNITY_EDITOR
             if (GlobalConfig.instance.resConfig.resMode == ResourceMode.Editor)
             {
-                loadingHandle?.Report(1);
                 return;
             }
 #endif
-            await _resourcePackageUpdateHandle.Update(loadingHandle, args);
+            await _resourcePackageUpdateHandle.Update(args);
         }
 
         /// <summary>

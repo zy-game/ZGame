@@ -7,37 +7,44 @@ using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using ZGame.Config;
 using ZGame.Window;
+using Object = UnityEngine.Object;
 
-namespace ZGame.Editor.UIBind
+namespace ZGame.Editor.UIBindEditor
 {
-    [CustomEditor(typeof(UIBindEditor))]
-    public class UIBindInspector : UnityEditor.Editor
+    [CustomEditor(typeof(UIBind))]
+    public class UIBindInspector : CustomEditorWindow
     {
-        private UIBindEditor setting;
+        private UIBind setting;
 
 
         public void OnEnable()
         {
-            this.setting = (UIBindEditor)target;
+            this.setting = (UIBind)target;
         }
 
         public override void OnInspectorGUI()
         {
             EditorGUI.BeginChangeCheck();
-            setting.BindConfig.NameSpace = EditorGUILayout.TextField("NameSpace", setting.BindConfig.NameSpace);
+            setting.NameSpace = EditorGUILayout.TextField("NameSpace", setting.NameSpace);
 
             EditorGUILayout.BeginHorizontal();
-            setting.BindConfig.output = EditorGUILayout.ObjectField("Output", setting.BindConfig.output, typeof(DefaultAsset), false);
+            setting.output = EditorGUILayout.ObjectField("Output", setting.output, typeof(DefaultAsset), false);
+            if (GUILayout.Button("Generic", GUILayout.Width(60)))
+            {
+                UIBindRulerConfig.instance.GenericUIBindCode(setting);
+            }
+
             EditorGUILayout.EndHorizontal();
             this.BeginColor(ZStyle.inColor);
             GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.Height(1));
             this.EndColor();
 
 
-            if (setting.BindConfig.options == null)
+            if (setting.options == null)
             {
-                setting.BindConfig.options = new List<UIBindData>();
+                setting.options = new List<UIBindData>();
             }
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
@@ -45,16 +52,31 @@ namespace ZGame.Editor.UIBind
             GUILayout.BeginHorizontal();
             {
                 GUILayout.Label("Bind List:", EditorStyles.boldLabel);
+
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("", ZStyle.GUI_STYLE_ADD_BUTTON))
+                if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"), "StatusBarIcon"))
                 {
-                    setting.BindConfig.options.Add(new UIBindData());
+                    setting.options.Clear();
+                }
+
+                GUILayout.BeginVertical();
+                GUILayout.Space(-1);
+                if (GUILayout.Button(EditorGUIUtility.IconContent("RotateTool On"), "StatusBarIcon"))
+                {
+                    OnRefreshBindData();
+                }
+
+                GUILayout.EndVertical();
+
+                if (GUILayout.Button(EditorGUIUtility.IconContent("Toolbar Plus"), "StatusBarIcon"))
+                {
+                    setting.options.Add(new UIBindData());
                 }
 
                 GUILayout.EndHorizontal();
             }
 
-            if (setting.BindConfig.options.Count == 0)
+            if (setting.options.Count == 0)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
@@ -64,9 +86,45 @@ namespace ZGame.Editor.UIBind
             }
 
 
-            for (int i = setting.BindConfig.options.Count - 1; i >= 0; i--)
+            for (int i = setting.options.Count - 1; i >= 0; i--)
             {
-                OnDrawingBindItemData(setting.BindConfig.options[i]);
+                UIBindData options = setting.options[i];
+                if (options.target == null)
+                {
+                    if (options.path.IsNullOrEmpty() is false)
+                    {
+                        options.target = setting.transform.Find(options.path)?.gameObject;
+                    }
+                }
+
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(10);
+                options.isOn = EditorGUILayout.Foldout(options.isOn, "");
+                GUILayout.Space(-50);
+                options.target = EditorGUILayout.ObjectField(options.target, typeof(Object), true) as GameObject;
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("", ZStyle.GUI_STYLE_MINUS))
+                {
+                    setting.options.Remove(options);
+                    EditorUtility.SetDirty(setting);
+                    this.Repaint();
+                }
+
+                GUILayout.EndHorizontal();
+                if (options.name.IsNullOrEmpty())
+                {
+                    options.name = options.target?.name;
+                }
+
+                options.name = options.name?.Replace(" ", "(", ")");
+                if (options.isOn)
+                {
+                    OnDrawingBindItemData(setting.options[i]);
+                }
+
+                GUILayout.EndVertical();
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -75,256 +133,140 @@ namespace ZGame.Editor.UIBind
             }
 
             GUILayout.EndVertical();
+        }
 
-            if (GUILayout.Button("Generic"))
+        private bool GetPath(Transform _transform, out string path)
+        {
+            if (_transform.Equals(setting.transform))
             {
-                OnGenericCode();
+                path = String.Empty;
+                return false;
+            }
+
+            path = String.Empty;
+            while (_transform.Equals(setting.transform) is false)
+            {
+                if (_transform.parent is null)
+                {
+                    break;
+                }
+
+                path = _transform.name + "/" + path;
+                _transform = _transform.parent;
+            }
+
+            path = path.Substring(0, path.Length - 1);
+            return true;
+        }
+
+        private void OnRefreshBindData()
+        {
+            RectTransform[] rectTransforms = setting.GetComponentsInChildren<RectTransform>();
+            foreach (var VARIABLE in rectTransforms)
+            {
+                if (GetPath(VARIABLE.transform, out string path) is false)
+                {
+                    continue;
+                }
+
+                if (setting.options.Exists(x => x.path == path) || setting.options.Exists(x => x.name == VARIABLE.name))
+                {
+                    continue;
+                }
+
+                UIBindData data = new UIBindData();
+                data.target = VARIABLE.gameObject;
+                data.name = VARIABLE.name;
+                data.path = path;
+                data.selector = new Selector();
+                setting.options.Add(data);
             }
         }
 
         private void OnDrawingBindItemData(UIBindData options)
         {
-            GUILayout.BeginHorizontal(EditorStyles.toolbar);
             if (options.target == null)
-            {
-                if (options.path.IsNullOrEmpty() is false)
-                {
-                    options.target = setting.transform.Find(options.path)?.gameObject;
-                }
-            }
-
-            options.target = (GameObject)EditorGUILayout.ObjectField(options.target, typeof(GameObject), true);
-
-            List<string> items = new List<string>();
-            if (options.target != null)
-            {
-                options.path = GetPath(options.target.transform);
-                if (options.name.IsNullOrEmpty())
-                {
-                    options.name = options.target.name.Replace(" ", "(", ")");
-                }
-
-                options.name = EditorGUILayout.TextField(options.name);
-
-                Component[] opComs = options.target.GetComponents<Component>();
-                foreach (var VARIABLE in opComs)
-                {
-                    if (setting.BindConfig.reference.Contains(VARIABLE.GetType().Namespace))
-                    {
-                        continue;
-                    }
-
-                    setting.BindConfig.reference.Add(VARIABLE.GetType().Namespace);
-                }
-
-                items.AddRange(opComs.Select(x => x.GetType().FullName));
-
-                if (GUILayout.Button(options.selector.ToString(), EditorStyles.popup))
-                {
-                    GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Noting"), options.selector.isNone, () => { options.selector.Clear(); });
-                    menu.AddItem(new GUIContent("Everything"), options.selector.isAll, () => { options.selector.SelectAll(); });
-                    foreach (var VARIABLE in items)
-                    {
-                        menu.AddItem(new GUIContent(VARIABLE), options.selector.IsSelected(VARIABLE), () =>
-                        {
-                            if (options.selector.IsSelected(VARIABLE))
-                            {
-                                options.selector.UnSelect(VARIABLE);
-                            }
-                            else
-                            {
-                                options.selector.Select(VARIABLE);
-                            }
-                        });
-                    }
-
-                    menu.ShowAsContext();
-                }
-            }
-
-            options.language = EditorGUILayout.IntField(options.language);
-
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("", ZStyle.GUI_STYLE_MINUS))
-            {
-                setting.BindConfig.options.Remove(options);
-                EditorUtility.SetDirty(setting);
-                this.Repaint();
-            }
-
-            GUILayout.EndHorizontal();
-        }
-
-        private string GetPath(Transform _transform)
-        {
-            string path = "";
-            while (_transform.GetComponent<UIBindEditor>() == null)
-            {
-                if (_transform.parent == null)
-                {
-                    break;
-                }
-
-                path = $"{_transform.name}/{path}";
-                _transform = _transform.parent;
-            }
-
-            path = path.Substring(0, path.Length - 1);
-            return path;
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private void OnGenericCode()
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("using ZGame.Window;");
-            sb.AppendLine("using System;");
-            setting.BindConfig.reference.ForEach(x => sb.AppendLine($"using {x};"));
-            sb.AppendLine("/// <summary>");
-            sb.AppendLine("/// Createing with " + DateTime.Now.ToString("g"));
-            sb.AppendLine("/// by " + SystemInfo.deviceName);
-            sb.AppendLine("/// </summary>");
-            sb.AppendLine("namespace " + setting.BindConfig.NameSpace);
-            sb.AppendLine("{");
-            sb.AppendLine("\tpublic class UI_" + setting.name + " : UIBase");
-            sb.AppendLine("\t{");
-
-            foreach (var VARIABLE in setting.BindConfig.options)
-            {
-                foreach (var VARIABLE2 in VARIABLE.selector.reference)
-                {
-                    string[] ts = VARIABLE2.Split('.');
-                    sb.AppendLine($"\t\tpublic UIBind<{ts[ts.Length - 1]}> {ts[ts.Length - 1]}_{VARIABLE.name};");
-                }
-            }
-
-            sb.AppendLine("");
-            sb.AppendLine($"\t\tpublic UI_{setting.name}(GameObject gameObject) : base(gameObject)");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine("\t\tpublic override void Awake()");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tOnBind();");
-            sb.AppendLine("\t\t\tOnEventRegister();");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine("\t\tprotected virtual void OnBind()");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tif(this.gameObject == null)");
-            sb.AppendLine("\t\t\t{");
-            sb.AppendLine("\t\t\t\treturn;");
-            sb.AppendLine("\t\t\t}");
-            foreach (var VARIABLE in setting.BindConfig.options)
-            {
-                foreach (var VARIABLE2 in VARIABLE.selector.reference)
-                {
-                    string[] ts = VARIABLE2.Split('.');
-                    sb.AppendLine($"\t\t\t{ts[ts.Length - 1]}_{VARIABLE.name} = new UIBind<{ts[ts.Length - 1]}>(this.gameObject.transform.Find(\"{VARIABLE.path}\"));");
-                }
-            }
-
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine("\t\tprotected virtual void OnEventRegister()");
-            sb.AppendLine("\t\t{");
-            foreach (var VARIABLE in setting.BindConfig.options)
-            {
-                foreach (var VARIABLE2 in VARIABLE.selector.reference)
-                {
-                    string[] ts = VARIABLE2.Split('.');
-                    string name = $"{ts[ts.Length - 1]}_{VARIABLE.name}";
-                    if (VARIABLE2.EndsWith("Button"))
-                    {
-                        sb.AppendLine($"\t\t\t{name}?.Setup(new Action(on_invoke_{name}));");
-                    }
-                    else if (VARIABLE2.EndsWith("Toggle"))
-                    {
-                        sb.AppendLine($"\t\t\t{name}?.Setup(new Action<bool>(on_invoke_{name}));");
-                    }
-                    else if (VARIABLE2.EndsWith("Slider"))
-                    {
-                        sb.AppendLine($"\t\t\t{name}?.Setup(new Action<float>(on_invoke_{name}));");
-                    }
-                    else if (VARIABLE2.EndsWith("InputField"))
-                    {
-                        sb.AppendLine($"\t\t\t{name}?.Setup(new Action<string>(on_invoke_{name}));");
-                    }
-                }
-            }
-
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            foreach (var VARIABLE in setting.BindConfig.options)
-            {
-                foreach (var VARIABLE2 in VARIABLE.selector.reference)
-                {
-                    string[] ts = VARIABLE2.Split('.');
-                    string name = $"{ts[ts.Length - 1]}_{VARIABLE.name}";
-                    bool m = false;
-                    if (VARIABLE2.EndsWith("Button"))
-                    {
-                        sb.AppendLine("\t\tprotected virtual void on_invoke_{name}()");
-                        m = true;
-                    }
-                    else if (VARIABLE2.EndsWith("Toggle"))
-                    {
-                        sb.AppendLine($"\t\tprotected virtual void on_invoke_{name}(bool isOn)");
-                        m = true;
-                    }
-                    else if (VARIABLE2.EndsWith("Slider"))
-                    {
-                        sb.AppendLine($"\t\tprotected virtual void on_invoke_{name}(float value)");
-                        m = true;
-                    }
-                    else if (VARIABLE2.EndsWith("InputField"))
-                    {
-                        sb.AppendLine($"\t\tprotected virtual void on_invoke_{name}(string value)");
-                        m = true;
-                    }
-
-                    if (m)
-                    {
-                        sb.AppendLine("\t\t{");
-                        sb.AppendLine("\t\t}");
-                        sb.AppendLine("");
-                    }
-                }
-            }
-
-            sb.AppendLine("\t\tpublic override void Dispose()");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tbase.Dispose();");
-            foreach (var VARIABLE in setting.BindConfig.options)
-            {
-                foreach (var VARIABLE2 in VARIABLE.selector.reference)
-                {
-                    string[] ts = VARIABLE2.Split('.');
-                    sb.AppendLine($"\t\t\t{ts[ts.Length - 1]}_{VARIABLE.name}?.Dispose();");
-                }
-            }
-
-            sb.AppendLine("\t\t}");
-            // sb.AppendLine("");
-            // sb.AppendLine("\t\tpublic virtual void OnRefresh()");
-            // sb.AppendLine("\t\t{");
-            // sb.AppendLine("\t\t}");
-            sb.AppendLine("\t}");
-            sb.AppendLine("}");
-
-            string path = AssetDatabase.GetAssetPath(setting.BindConfig.output);
-            if (path.IsNullOrEmpty())
             {
                 return;
             }
 
-            File.WriteAllText($"{path}/UI_{setting.name}.cs", sb.ToString());
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            GUILayout.Space(10);
+            GetPath(options.target.transform, out string path);
+            options.path = path;
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Path", GUILayout.Width(110));
+            GUILayout.Label(options.path);
+            GUILayout.EndHorizontal();
+
+
+            List<Component> opComs = options.target.GetComponents<Component>().ToList();
+            options.selector.Add(opComs.Select(x => x.GetType().FullName).ToArray());
+
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Property Name", GUILayout.Width(110));
+            options.name = EditorGUILayout.TextField(options.name);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Bind Components", GUILayout.Width(110));
+            if (EditorGUILayout.DropdownButton(new GUIContent(options.selector.ToString()), FocusType.Passive)) //GUILayout.Button(options.selector.ToString(), EditorStyles.popup))
+            {
+                GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent("Noting"), options.selector.isNone, () => { options.selector.UnSelectAll(); });
+                menu.AddItem(new GUIContent("Everything"), options.selector.isAll, () => { options.selector.SelectAll(); });
+                foreach (var VARIABLE in options.selector.items)
+                {
+                    menu.AddItem(new GUIContent(VARIABLE.name), VARIABLE.isOn, () => { VARIABLE.isOn = !VARIABLE.isOn; });
+                }
+
+                menu.ShowAsContext();
+            }
+
+            GUILayout.EndHorizontal();
+
+
+            if (opComs.Exists(x => x is Image) is false
+                && opComs.Exists(x => x is Text) is false
+                && opComs.Exists(x => x is TMP_Text) is false
+                && opComs.Exists(x => x is RawImage) is false)
+            {
+                return;
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Is Bind Language", GUILayout.Width(110));
+            options.bindLanguage = GUILayout.Toggle(options.bindLanguage, "");
+            GUILayout.EndHorizontal();
+
+            if (options.bindLanguage is false)
+            {
+                return;
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Bind Language", GUILayout.Width(110));
+            LanguageDataList languageData = Language.instance._languages.Find(x => x.define == GlobalConfig.instance.language);
+            if (languageData is not null && languageData.items is not null && languageData.items.Count > 0)
+            {
+                LanguageItem item = languageData.items.Find(x => x.key == options.language);
+                if (item is not null)
+                {
+                    if (EditorGUILayout.DropdownButton(new GUIContent(item.value), FocusType.Passive))
+                    {
+                        List<string> selected = new List<string>() { item.value };
+                        List<string> languages = languageData.items.Select(x => x.value).ToList();
+                        ObjectSelectionWindow<string>.Show(new Vector2(200, 300), selected, languages, SelectionType.Single, () =>
+                        {
+                            int index = languageData.items.Find(x => x.value == selected[0]).key;
+                            options.language = index;
+                        });
+                    }
+                }
+            }
+
+            GUILayout.EndHorizontal();
         }
     }
 }

@@ -13,7 +13,7 @@ using UnityEngine.Serialization;
 
 namespace ZGame.Editor.Package
 {
-    [ResourceReference("Assets/Settings/PackageManager")]
+    [ResourceReference("Assets/Settings/PackageManager.asset")]
     public class PackageDataList : SingletonScriptableObject<PackageDataList>
     {
         /// <summary>

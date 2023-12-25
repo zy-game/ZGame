@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using UI;
 using UnityEngine;
 using UnityEngine.Networking;
 using ZGame.Config;
@@ -19,15 +20,16 @@ namespace ZGame.Resource
         {
         }
 
-        public async UniTask Update(ILoadingHandle loadingHandle, params string[] paths)
+        public async UniTask Update(params string[] paths)
         {
             if (paths is null || paths.Length == 0)
             {
                 return;
             }
 
-            loadingHandle.SetTitle(Language.instance.GetLanguage(100000));
-            loadingHandle.Report(0);
+            IProgressHandler handler = (IProgressHandler)UIManager.instance.TryOpenWindow(typeof(IProgressHandler));
+            handler.SetTitle(Language.instance.FindByKey(100000));
+            handler.Report(0);
             HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
             HashSet<string> urlList = new HashSet<string>();
             HashSet<string> failure = new HashSet<string>();
@@ -52,7 +54,7 @@ namespace ZGame.Resource
                         continue;
                     }
 
-                    bool state = await DownloadResource(VARIABLE, loadingHandle, crc);
+                    bool state = await DownloadResource(VARIABLE, handler, crc);
                     urlList.Add(VARIABLE);
                     if (state is false)
                     {
@@ -71,7 +73,7 @@ namespace ZGame.Resource
                         continue;
                     }
 
-                    bool state = await DownloadResource(packageManifest, loadingHandle);
+                    bool state = await DownloadResource(packageManifest, handler);
                     downloadList.Add(packageManifest);
                     if (state is false)
                     {
@@ -86,15 +88,15 @@ namespace ZGame.Resource
             }
 
             Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
-            MsgBox.Create(Language.instance.GetLanguage(InternalLanguage.UPDATE_RESOURCE_ERROR), GameManager.instance.QuitGame);
+            MsgBox.Create("更新资源失败", GameManager.instance.QuitGame);
         }
 
-        private async UniTask<bool> DownloadResource(ResourcePackageManifest resourcePackageManifest, ILoadingHandle loadingHandle)
+        private async UniTask<bool> DownloadResource(ResourcePackageManifest resourcePackageManifest, IProgressHandler loadingHandle)
         {
             return await DownloadResource(GlobalConfig.GetNetworkResourceUrl(resourcePackageManifest.name), loadingHandle, resourcePackageManifest.version);
         }
 
-        private async UniTask<bool> DownloadResource(string url, ILoadingHandle loadingHandle, uint crc = 0)
+        private async UniTask<bool> DownloadResource(string url, IProgressHandler loadingHandle, uint crc = 0)
         {
             UnityWebRequest request = UnityWebRequest.Get(url);
             request.timeout = 5;

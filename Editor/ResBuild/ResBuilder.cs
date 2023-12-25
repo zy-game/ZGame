@@ -11,16 +11,11 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    [BindScene("资源")]
-    [SettingContent(typeof(BuilderConfig))]
-    public class ResBuilder : PageScene
+    [SubPageSetting("资源")]
+    [ReferenceScriptableObject(typeof(BuilderConfig))]
+    public class ResBuilder : SubPage
     {
         private const string key = "__build config__";
-
-
-        public override void OnEnable()
-        {
-        }
 
         public override void OnGUI()
         {

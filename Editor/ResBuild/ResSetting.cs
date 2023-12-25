@@ -5,13 +5,9 @@ using ZGame.Editor.ResBuild.Config;
 
 namespace ZGame.Editor.ResBuild
 {
-    [BindScene("设置", typeof(ResBuilder))]
-    public class ResSetting : PageScene
+    [SubPageSetting("设置", typeof(ResBuilder))]
+    public class ResSetting : SubPage
     {
-        public override void OnEnable()
-        {
-        }
-
         public override void OnGUI()
         {
             EditorGUI.BeginChangeCheck();

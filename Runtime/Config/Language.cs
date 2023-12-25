@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Networking;
+using ZGame.Resource;
 
 namespace ZGame.Config
 {
@@ -11,73 +14,156 @@ namespace ZGame.Config
         Chinese,
     }
 
-    public enum InternalLanguage
+    public class LanguageReference
     {
-        UPDATE_RESOURCE_PROGRESS = 100000,
-        UPDATE_RESOURCE_FINISH,
-        UPDATE_RESOURCE_ERROR,
+        public int key;
+        public Transform transform;
+
+        internal LanguageReference(int key, Transform transform)
+        {
+            this.key = key;
+            this.transform = transform;
+        }
     }
 
+    [Serializable]
+    public class LanguageItem
+    {
+        public int key;
+        public string value;
+    }
+
+    [Serializable]
+    public class LanguageDataList
+    {
+        public LanguageDefine define;
+        public List<LanguageItem> items;
+    }
+
+    [ResourceReference("Assets/SuprePet/Config/Language.asset")]
     public class Language : SingletonScriptableObject<Language>
     {
-        private Dictionary<int, string> _language = new();
+        public List<LanguageDataList> _languages = new();
+        private List<LanguageReference> references = new();
+        private LanguageDataList _currentLanguage;
 
         protected override void OnAwake()
         {
+            SwitchLanguage(GlobalConfig.instance.language);
         }
 
+        /// <summary>
+        /// 切换多语言
+        /// </summary>
+        /// <param name="languageDefine"></param>
         public async void SwitchLanguage(LanguageDefine languageDefine)
         {
-            _language = await NetworkRequest.Get<Dictionary<int, string>>(GlobalConfig.GetNetworkResourceUrl($"language_{languageDefine}.ini"));
-            if (_language is null)
+            if (_currentLanguage is not null && _currentLanguage.define == languageDefine)
             {
-                _language = new Dictionary<int, string>();
-            }
-        }
-
-        public void BindLanguage(Transform transform, int key)
-        {
-            if (_language.TryGetValue(key, out string value) is false)
-            {
-                transform.GetComponent<Text>().text = "Error";
-                Debug.LogError($"Language key:{key} not found");
                 return;
             }
 
-            LanguageHandle handle = transform.GetComponent<LanguageHandle>();
-            if (handle is null)
+            _currentLanguage = _languages.Find(x => x.define == languageDefine);
+            Refresh();
+        }
+
+        /// <summary>
+        /// 设置多语言绑定
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="transform"></param>
+        public void Setup(int key, Transform transform)
+        {
+            if (references.Exists(x => x.transform.Equals(transform)))
             {
-                handle = transform.gameObject.AddComponent<LanguageHandle>();
+                return;
             }
 
-            handle.Setup(key);
+            references.Add(new LanguageReference(key, transform));
         }
 
-        public string GetLanguage(int key)
+        private void SetupLanguage(int key, Transform transform)
         {
-            if (_language.TryGetValue(key, out string value) is false)
+            string text = FindByKey(key);
+            if (text.EndsWith(".png") is false)
             {
-                return "Not Found";
+                TMP_Text tmpText = transform.GetComponent<TMP_Text>();
+                if (tmpText != null)
+                {
+                    tmpText.text = text;
+                    return;
+                }
+
+                Text textComponent = transform.GetComponent<Text>();
+                if (textComponent != null)
+                {
+                    textComponent.text = text;
+                }
+
+                return;
             }
 
-            return value;
-        }
-
-        public string GetLanguage(InternalLanguage language)
-        {
-            return GetLanguage((int)language);
-        }
-
-
-        class LanguageHandle : MonoBehaviour
-        {
-            public void Setup(int key)
+            ResHandle handle = ResourceManager.instance.LoadAsset(text);
+            if (handle.EnsureLoadSuccess() is false)
             {
+                return;
+            }
+
+            Image image = transform.GetComponent<Image>();
+            if (image != null)
+            {
+                image.sprite = handle.Get<Sprite>(transform.gameObject);
+                return;
+            }
+
+            RawImage rawImage = transform.GetComponent<RawImage>();
+            if (rawImage != null)
+            {
+                rawImage.texture = handle.Get<Texture2D>(transform.gameObject);
             }
         }
 
-        public void Dispose()
+        /// <summary>
+        /// 刷新所有绑定的多语言组件
+        /// </summary>
+        public void Refresh()
         {
+            for (int i = references.Count - 1; i >= 0; i--)
+            {
+                if (references[i].transform == null)
+                {
+                    references.Remove(references[i]);
+                    continue;
+                }
+
+                SetupLanguage(references[i].key, references[i].transform);
+            }
+        }
+
+        /// <summary>
+        /// 通过key获取多语言文本
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public string FindByKey(int key)
+        {
+            if (_currentLanguage is null)
+            {
+                SwitchLanguage(GlobalConfig.instance.language);
+            }
+
+            if (_currentLanguage.items is null || _currentLanguage.items.Count == 0)
+            {
+                return key.ToString();
+            }
+
+            LanguageItem item = _currentLanguage.items.Find(x => x.key == key);
+            if (item is null)
+            {
+                return "Not Language";
+            }
+
+            return item.value;
         }
     }
 }

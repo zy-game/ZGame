@@ -37,7 +37,7 @@ namespace ZGame.Resource
             throw new NotImplementedException();
         }
 
-        public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null)
+        public async UniTask<ResHandle> LoadAssetAsync(string path)
         {
             if (path.StartsWith("http") is false)
             {
@@ -66,7 +66,7 @@ namespace ZGame.Resource
                 case ".bmp":
                 case ".tga":
                     request = UnityWebRequestTexture.GetTexture(path);
-                    await request.SendWebRequest().ToUniTask(loadingHandle);
+                    await request.SendWebRequest().ToUniTask();
                     if (request.result is not UnityWebRequest.Result.Success)
                     {
                         return default;
@@ -83,7 +83,7 @@ namespace ZGame.Resource
                         ".wav" => AudioType.WAV,
                         ".ogg" => AudioType.OGGVORBIS,
                     });
-                    await request.SendWebRequest().ToUniTask(loadingHandle);
+                    await request.SendWebRequest().ToUniTask();
                     if (request.result is not UnityWebRequest.Result.Success)
                     {
                         return default;
@@ -94,7 +94,7 @@ namespace ZGame.Resource
                 case ".txt":
                 case ".json":
                     request = UnityWebRequest.Get(path);
-                    await request.SendWebRequest().ToUniTask(loadingHandle);
+                    await request.SendWebRequest().ToUniTask();
                     if (request.result is not UnityWebRequest.Result.Success)
                     {
                         return default;
@@ -104,7 +104,7 @@ namespace ZGame.Resource
                     break;
             }
 
-            _handle.Setup(resHandle = new ResHandle(_handle, asset, path));
+            _handle.Setup(resHandle = ResHandle.OnCreate(_handle, asset, path));
             return resHandle;
         }
 

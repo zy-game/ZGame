@@ -46,7 +46,7 @@ namespace ZGame.Resource
 
             if (path.EndsWith(".unity"))
             {
-                _handle.Setup(resHandle = new ResHandle(_handle, null, path));
+                _handle.Setup(resHandle = ResHandle.OnCreate(_handle, null, path));
                 return resHandle;
             }
 
@@ -56,13 +56,13 @@ namespace ZGame.Resource
                 return default;
             }
 
-            _handle.Setup(resHandle = new ResHandle(_handle, asset, path));
+            _handle.Setup(resHandle = ResHandle.OnCreate(_handle, asset, path));
             return resHandle;
 #endif
             return default;
         }
 
-        public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null)
+        public async UniTask<ResHandle> LoadAssetAsync(string path)
         {
 #if UNITY_EDITOR
             ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
@@ -78,7 +78,7 @@ namespace ZGame.Resource
 
             if (path.EndsWith(".unity"))
             {
-                _handle.Setup(resHandle = new ResHandle(_handle, null, path));
+                _handle.Setup(resHandle = ResHandle.OnCreate(_handle, null, path));
                 return resHandle;
             }
 
@@ -88,7 +88,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            _handle.Setup(resHandle = new ResHandle(_handle, asset, path));
+            _handle.Setup(resHandle = ResHandle.OnCreate(_handle, asset, path));
             return resHandle;
 #endif
             return default;

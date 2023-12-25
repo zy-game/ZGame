@@ -2,6 +2,7 @@
 using System.IO;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -19,22 +20,48 @@ namespace ZGame.Resource
         public string path { get; private set; }
 
 
-        public static void OnCreate(ResPackageHandle parent, object obj, string path)
+        public static ResHandle OnCreate(ResPackageHandle parent, object obj, string path)
         {
+            return new ResHandle()
+            {
+                obj = obj,
+                path = path,
+                parent = parent
+            };
         }
 
-        public ResHandle(ResPackageHandle parent, object obj, string path)
+        public bool EnsureLoadSuccess()
         {
-            this.obj = obj;
-            this.path = path;
-            this.parent = parent;
+            if (obj != null)
+            {
+                return true;
+            }
+
+            return false;
         }
 
-        public T Get<T>()
+        public T Get<T>(GameObject gameObject)
         {
             count++;
             this.parent.AddRef();
+            ListenerDestroyEvent(gameObject);
             return obj == null ? default(T) : (T)obj;
+        }
+
+        private void ListenerDestroyEvent(GameObject gameObject)
+        {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            ZGame.BevaviourScriptable bevaviour = gameObject.GetComponent<ZGame.BevaviourScriptable>();
+            if (bevaviour == null)
+            {
+                bevaviour = gameObject.AddComponent<ZGame.BevaviourScriptable>();
+            }
+
+            bevaviour.onDestroy.AddListener(() => { ResourceManager.instance.ReleaseAsset(this); });
         }
 
         public void Release()
@@ -53,7 +80,7 @@ namespace ZGame.Resource
 
         public Scene OpenScene()
         {
-            Scene scene = Get<Scene>();
+            Scene scene = Get<Scene>(default);
 
             if (obj != null && scene.isLoaded)
             {
@@ -72,12 +99,24 @@ namespace ZGame.Resource
                 scene = SceneManager.LoadScene(Path.GetFileNameWithoutExtension(path), parameters);
             }
 
+            SceneManager.sceneUnloaded += UnloadScene;
             return scene;
         }
 
-        public async UniTask<Scene> OpenSceneAsync(ILoadingHandle loadingHandle = null)
+        private void UnloadScene(Scene scene)
         {
-            Scene scene = Get<Scene>();
+            if (scene.path.Equals(path) is false)
+            {
+                return;
+            }
+
+            this.parent.RemoveRef();
+            SceneManager.sceneUnloaded -= UnloadScene;
+        }
+
+        public async UniTask<Scene> OpenSceneAsync()
+        {
+            Scene scene = Get<Scene>(default);
 
             if (obj != null && scene.isLoaded)
             {
@@ -97,8 +136,11 @@ namespace ZGame.Resource
                 operation = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path), parameters);
             }
 
-            await operation.ToUniTask(loadingHandle);
+            IProgressHandler handler = (IProgressHandler)UIManager.instance.TryOpenWindow(typeof(IProgressHandler));
+            await operation.ToUniTask(handler);
             scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
+            UIManager.instance.Close(typeof(IProgressHandler));
+            SceneManager.sceneUnloaded += UnloadScene;
             return scene;
         }
 
@@ -110,7 +152,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            GameObject gameObject = (GameObject)GameObject.Instantiate(Get<GameObject>());
+            GameObject gameObject = (GameObject)GameObject.Instantiate(Get<GameObject>(default));
             ListenerDestroyEvent(gameObject);
             return gameObject;
         }
@@ -149,16 +191,16 @@ namespace ZGame.Resource
             switch (component)
             {
                 case Image image:
-                    image.sprite = Get<Sprite>();
+                    image.sprite = Get<Sprite>(gameObject);
                     break;
                 case RawImage rawImage:
-                    rawImage.texture = Get<Texture2D>();
+                    rawImage.texture = Get<Texture2D>(gameObject);
                     break;
                 case AudioSource audioSource:
-                    audioSource.clip = Get<AudioClip>();
+                    audioSource.clip = Get<AudioClip>(gameObject);
                     break;
                 case VideoPlayer videoPlayer:
-                    videoPlayer.clip = Get<VideoClip>();
+                    videoPlayer.clip = Get<VideoClip>(gameObject);
                     break;
                 case TMP_InputField inputField:
                     switch (obj)
@@ -185,24 +227,6 @@ namespace ZGame.Resource
 
                     break;
             }
-
-            ListenerDestroyEvent(gameObject);
-        }
-
-        private void ListenerDestroyEvent(GameObject gameObject)
-        {
-            if (gameObject == null)
-            {
-                return;
-            }
-
-            ZGame.BevaviourScriptable bevaviour = gameObject.GetComponent<ZGame.BevaviourScriptable>();
-            if (bevaviour == null)
-            {
-                bevaviour = gameObject.AddComponent<ZGame.BevaviourScriptable>();
-            }
-
-            bevaviour.onDestroy.AddListener(() => { ResourceManager.instance.ReleaseAsset(this); });
         }
     }
 }

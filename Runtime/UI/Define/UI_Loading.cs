@@ -10,18 +10,18 @@ using TMPro;
 /// </summary>
 namespace ZGame.Window
 {
-    public class UI_Loading : UIBase
+    public class UIBind_Loading : UIBase
     {
-        public UIBind<RectTransform> RectTransform_Slider;
-        public UIBind<Slider> Slider_Slider;
-        public UIBind<RectTransform> RectTransform_Background;
-        public UIBind<CanvasRenderer> CanvasRenderer_Background;
-        public UIBind<Image> Image_Background;
-        public UIBind<RectTransform> RectTransform_TextTMP;
-        public UIBind<CanvasRenderer> CanvasRenderer_TextTMP;
-        public UIBind<TextMeshProUGUI> TextMeshProUGUI_TextTMP;
+        public RectTransform RectTransform_Slider;
+        public Slider Slider_Slider;
+        public RectTransform RectTransform_Background;
+        public CanvasRenderer CanvasRenderer_Background;
+        public Image Image_Background;
+        public RectTransform RectTransform_TextTMP;
+        public CanvasRenderer CanvasRenderer_TextTMP;
+        public TextMeshProUGUI TextMeshProUGUI_TextTMP;
 
-        public UI_Loading(GameObject gameObject) : base(gameObject)
+        public UIBind_Loading(GameObject gameObject) : base(gameObject)
         {
         }
 
@@ -38,36 +38,57 @@ namespace ZGame.Window
                 return;
             }
 
-            RectTransform_Slider = new UIBind<RectTransform>(this.gameObject.transform.Find("Panel/Slider"));
-            Slider_Slider = new UIBind<Slider>(this.gameObject.transform.Find("Panel/Slider"));
-            RectTransform_Background = new UIBind<RectTransform>(this.gameObject.transform.Find("Panel/Slider/Background"));
-            CanvasRenderer_Background = new UIBind<CanvasRenderer>(this.gameObject.transform.Find("Panel/Slider/Background"));
-            Image_Background = new UIBind<Image>(this.gameObject.transform.Find("Panel/Slider/Background"));
-            RectTransform_TextTMP = new UIBind<RectTransform>(this.gameObject.transform.Find("Panel/Text (TMP)"));
-            CanvasRenderer_TextTMP = new UIBind<CanvasRenderer>(this.gameObject.transform.Find("Panel/Text (TMP)"));
-            TextMeshProUGUI_TextTMP = new UIBind<TextMeshProUGUI>(this.gameObject.transform.Find("Panel/Text (TMP)"));
+            RectTransform_Slider = this.gameObject.transform.Find("Panel/Slider").GetComponent<RectTransform>();
+            Slider_Slider = this.gameObject.transform.Find("Panel/Slider").GetComponent<Slider>();
+            RectTransform_Background = this.gameObject.transform.Find("Panel/Slider/Background").GetComponent<RectTransform>();
+            CanvasRenderer_Background = this.gameObject.transform.Find("Panel/Slider/Background").GetComponent<CanvasRenderer>();
+            Image_Background = this.gameObject.transform.Find("Panel/Slider/Background").GetComponent<Image>();
+            RectTransform_TextTMP = this.gameObject.transform.Find("Panel/Text (TMP)").GetComponent<RectTransform>();
+            CanvasRenderer_TextTMP = this.gameObject.transform.Find("Panel/Text (TMP)").GetComponent<CanvasRenderer>();
+            TextMeshProUGUI_TextTMP = this.gameObject.transform.Find("Panel/Text (TMP)").GetComponent<TextMeshProUGUI>();
         }
 
         protected virtual void OnEventRegister()
         {
-            Slider_Slider?.Setup<float>(on_invoke_Slider_Slider);
+            Slider_Slider?.onValueChanged.RemoveAllListeners();
+            Slider_Slider?.onValueChanged.AddListener(on_handle_Slider_Slider);
         }
 
-        protected virtual void on_invoke_Slider_Slider(float value)
+        protected virtual void on_handle_Slider_Slider(float value)
         {
+        }
+
+        public void on_setup_TextTMP(string text)
+        {
+            if (TextMeshProUGUI_TextTMP == null)
+            {
+                return;
+            }
+
+            TextMeshProUGUI_TextTMP.text = text;
+        }
+
+        public void on_setup_SliderValue(float value)
+        {
+            if (Slider_Slider == null)
+            {
+                return;
+            }
+
+            Slider_Slider.value = value;
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            RectTransform_Slider?.Dispose();
-            Slider_Slider?.Dispose();
-            RectTransform_Background?.Dispose();
-            CanvasRenderer_Background?.Dispose();
-            Image_Background?.Dispose();
-            RectTransform_TextTMP?.Dispose();
-            CanvasRenderer_TextTMP?.Dispose();
-            TextMeshProUGUI_TextTMP?.Dispose();
+            RectTransform_Slider = null;
+            Slider_Slider = null;
+            RectTransform_Background = null;
+            CanvasRenderer_Background = null;
+            Image_Background = null;
+            RectTransform_TextTMP = null;
+            CanvasRenderer_TextTMP = null;
+            TextMeshProUGUI_TextTMP = null;
         }
     }
 }

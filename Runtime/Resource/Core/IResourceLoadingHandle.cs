@@ -8,7 +8,7 @@ namespace ZGame.Resource
     {
         bool Contains(string path);
         ResHandle LoadAsset(string path);
-        UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null);
+        UniTask<ResHandle> LoadAssetAsync(string path);
         void Release(string path);
     }
 }

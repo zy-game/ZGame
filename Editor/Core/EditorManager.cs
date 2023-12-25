@@ -17,7 +17,7 @@ namespace ZGame.Editor
         private int end = 11;
         private int cur = 0;
         private string icon = "";
-        public PageScene current { get; private set; }
+        public SubPage current { get; private set; }
         public string search { get; private set; }
 
         private void OnEnable()

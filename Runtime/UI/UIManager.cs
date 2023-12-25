@@ -8,11 +8,16 @@ using ZGame.Resource;
 
 namespace ZGame.Window
 {
+    /// <summary>
+    /// 界面管理器
+    /// </summary>
     public sealed class UIManager : Singleton<UIManager>
     {
         private Dictionary<Type, UIBase> _windows = new Dictionary<Type, UIBase>();
 
-
+        /// <summary>
+        /// 
+        /// </summary>
         protected override void OnDestroy()
         {
             foreach (var VARIABLE in _windows.Values)
@@ -25,11 +30,17 @@ namespace ZGame.Window
             _windows.Clear();
         }
 
+        /// <summary>
+        /// 打开窗口
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public UIBase Open(Type type)
         {
-            if (_windows.TryGetValue(type, out UIBase gameWindow))
+            UIBase uiBase = GetWindow(type);
+            if (uiBase is not null)
             {
-                return gameWindow;
+                return uiBase;
             }
 
             ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
@@ -46,57 +57,159 @@ namespace ZGame.Window
             }
 
             Debug.Log("加载UI：" + type.Name);
-            gameWindow = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
-            UILayerManager.instance.TrySetup(gameWindow.gameObject, reference.layer, Vector3.zero, Vector3.zero, Vector3.one);
-            gameWindow.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
-            _windows.Add(type, gameWindow);
-            gameWindow.Awake();
+            uiBase = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
+            UILayerManager.instance.TrySetup(uiBase.gameObject, 1, Vector3.zero, Vector3.zero, Vector3.one);
+            uiBase.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
+            _windows.Add(type, uiBase);
+            uiBase.Awake();
             Active(type);
-            return gameWindow;
+            return uiBase;
         }
 
+        /// <summary>
+        /// 获取窗口
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public UIBase GetWindow(Type type)
         {
-            if (_windows.TryGetValue(type, out UIBase gameWindow))
+            foreach (var VARIABLE in _windows)
             {
-                return gameWindow;
+                if (type.IsAssignableFrom(VARIABLE.Key) is false)
+                {
+                    continue;
+                }
+
+                return VARIABLE.Value;
             }
 
             return default;
         }
 
-        public bool HasShow(Type type)
-        {
-            return _windows.ContainsKey(type);
-        }
-
+        /// <summary>
+        /// 激活窗口
+        /// </summary>
+        /// <param name="type"></param>
         public void Active(Type type)
         {
-            if (_windows.TryGetValue(type, out UIBase gameWindow))
+            UIBase uiBase = GetWindow(type);
+            if (uiBase is null || uiBase.gameObject.activeSelf)
             {
-                gameWindow.gameObject.SetActive(true);
-                gameWindow.Enable();
+                return;
             }
+
+            uiBase.gameObject.SetActive(true);
+            uiBase.Enable();
         }
 
+        /// <summary>
+        /// 隐藏窗口
+        /// </summary>
+        /// <param name="type"></param>
         public void Inactive(Type type)
         {
-            if (_windows.TryGetValue(type, out UIBase gameWindow))
+            UIBase uiBase = GetWindow(type);
+            if (uiBase is null || uiBase.gameObject.activeSelf is false)
             {
-                gameWindow.gameObject.SetActive(false);
-                gameWindow.Disable();
+                return;
             }
+
+            uiBase.gameObject.SetActive(false);
+            uiBase.Disable();
         }
 
+        /// <summary>
+        /// 关闭窗口
+        /// </summary>
+        /// <param name="type"></param>
         public void Close(Type type)
         {
-            if (_windows.TryGetValue(type, out UIBase gameWindow))
+            UIBase uiBase = GetWindow(type);
+            if (uiBase is null)
             {
-                gameWindow.Disable();
-                gameWindow.Dispose();
-                GameObject.DestroyImmediate(gameWindow.gameObject);
-                _windows.Remove(type);
+                return;
             }
+
+            uiBase.Disable();
+            uiBase.Dispose();
+            GameObject.DestroyImmediate(uiBase.gameObject);
+            _windows.Remove(type);
+        }
+
+        /// <summary>
+        /// 打开窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Open<T>() where T : UIBase
+        {
+            return (T)Open(typeof(T));
+        }
+
+        /// <summary>
+        /// 获取窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetWindow<T>() where T : UIBase
+        {
+            return (T)GetWindow(typeof(T));
+        }
+
+        /// <summary>
+        /// 激活窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void Active<T>() where T : UIBase
+        {
+            Active(typeof(T));
+        }
+
+        /// <summary>
+        /// 窗口失活
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void Inactive<T>() where T : UIBase
+        {
+            Inactive(typeof(T));
+        }
+
+        /// <summary>
+        /// 尝试打开窗口
+        /// </summary>
+        /// <param name="system"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public UIBase TryOpenWindow(Type type)
+        {
+            UIBase uiBase = GetWindow(type);
+            if (uiBase is not null)
+            {
+                return uiBase;
+            }
+
+            return Open(type);
+        }
+
+        /// <summary>
+        /// 尝试打开窗口
+        /// </summary>
+        /// <param name="system"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public UIBase TryOpenWindow<T>() where T : UIBase
+        {
+            return TryOpenWindow(typeof(T));
+        }
+
+        /// <summary>
+        /// 关闭窗口
+        /// </summary>
+        /// <param name="system"></param>
+        /// <typeparam name="T"></typeparam>
+        public void Close<T>() where T : UIBase
+        {
+            Close(typeof(T));
         }
     }
 }

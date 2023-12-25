@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
+using UI;
 using UnityEngine;
 using ZGame.FileSystem;
 using ZGame.Window;
@@ -14,12 +15,13 @@ namespace ZGame.Resource
         {
         }
 
-        public async UniTask Loading(ILoadingHandle loadingHandle, params string[] paths)
+        public async UniTask Loading(params string[] paths)
         {
             Queue<string> fileList = new Queue<string>();
+            IProgressHandler handler = (IProgressHandler)UIManager.instance.TryOpenWindow(typeof(IProgressHandler));
             //todo 这里还需要注意实在webgl平台上面加载资源包的情况
-            loadingHandle.SetTitle("正在加载资源信息...");
-            loadingHandle.Report(0);
+            handler.SetTitle("正在加载资源信息...");
+            handler.Report(0);
             foreach (var VARIABLE in paths)
             {
                 if (VARIABLE.IsNullOrEmpty())
@@ -40,10 +42,10 @@ namespace ZGame.Resource
                 }
             }
 
-            await LoadBundleList(fileList, loadingHandle);
+            await LoadBundleList(fileList, handler);
         }
 
-        private async UniTask LoadBundleList(Queue<string> fileList, ILoadingHandle loadingHandle)
+        private async UniTask LoadBundleList(Queue<string> fileList, IProgressHandler loadingHandle)
         {
             int count = fileList.Count;
             for (int i = 0; i < count; i++)

@@ -18,16 +18,16 @@ public class Startup : MonoBehaviour
     {
         CameraManager.instance.SetMainCamera();
         CameraManager.instance.NewCamera("test", 0, "Default");
-        Loading loading = UIManager.instance.TryOpen<Loading>();
-        loading.SetTitle("正在获取配置信息...");
+        UIBind_Loading loading = UIManager.instance.Open<UIBind_Loading>();
+        loading.on_setup_TextTMP("正在获取配置信息...");
         if (GlobalConfig.instance.resConfig is null || GlobalConfig.instance.gameConfig is null)
         {
             Debug.LogError(new EntryPointNotFoundException());
             return;
         }
 
-        await ResourceManager.instance.CheckUpdateResourcePackageList(loading, GlobalConfig.instance.resConfig.module);
-        await ResourceManager.instance.LoadingResourcePackageList(loading, GlobalConfig.instance.resConfig.module);
+        await ResourceManager.instance.CheckUpdateResourcePackageList(GlobalConfig.instance.resConfig.module);
+        await ResourceManager.instance.LoadingResourcePackageList(GlobalConfig.instance.resConfig.module);
         await GameManager.instance.EntryGame(GlobalConfig.instance.gameConfig);
     }
 }

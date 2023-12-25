@@ -38,7 +38,7 @@ namespace ZGame.Resource
 
             if (path.EndsWith(".unity"))
             {
-                resHandle = new ResHandle(handle, null, path);
+                resHandle = ResHandle.OnCreate(handle, null, path);
                 handle.Setup(resHandle);
                 return resHandle;
             }
@@ -49,13 +49,13 @@ namespace ZGame.Resource
                 return default;
             }
 
-            resHandle = new ResHandle(handle, asset, path);
+            resHandle = ResHandle.OnCreate(handle, asset, path);
             handle.Setup(resHandle);
             return resHandle;
         }
 
 
-        public async UniTask<ResHandle> LoadAssetAsync(string path, ILoadingHandle loadingHandle = null)
+        public async UniTask<ResHandle> LoadAssetAsync(string path)
         {
             if (path.StartsWith("Resources") || path.StartsWith("http"))
             {
@@ -76,18 +76,18 @@ namespace ZGame.Resource
 
             if (path.EndsWith(".unity"))
             {
-                resHandle = new ResHandle(handle, null, path);
+                resHandle = ResHandle.OnCreate(handle, null, path);
                 handle.Setup(resHandle);
                 return resHandle;
             }
 
-            var asset = await handle.bundle.LoadAssetAsync(path).ToUniTask(loadingHandle);
+            var asset = await handle.bundle.LoadAssetAsync(path).ToUniTask();
             if (asset == null)
             {
                 return default;
             }
 
-            handle.Setup(resHandle = new ResHandle(handle, asset, path));
+            handle.Setup(resHandle = ResHandle.OnCreate(handle, asset, path));
             return resHandle;
         }
 

@@ -8,15 +8,15 @@ using ZGame.Game;
 
 namespace ZGame.Editor
 {
-    [BindScene("全局配置")]
-    [SettingContent(typeof(GlobalConfig))]
-    public class GlobalConfigEditor : PageScene
+    [SubPageSetting("全局配置")]
+    [ReferenceScriptableObject(typeof(GlobalConfig))]
+    public class GlobalConfigEditor : SubPage
     {
         private bool show1, show2, show3;
         private List<Type> types;
         private List<string> resList;
 
-        public override void OnEnable()
+        public override void OnEnable(params object[] args)
         {
             types = AppDomain.CurrentDomain.GetAllSubClasses<SubGameEntry>();
             resList = BuilderConfig.instance.packages?.Select(x => x.name).ToList();
@@ -42,7 +42,7 @@ namespace ZGame.Editor
                 OnShowVFSConfig(GlobalConfig.instance.vfsConfig);
             }
         }
-        
+
 
         private void OnShowResConfig(ResConfig config)
         {

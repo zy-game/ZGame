@@ -55,12 +55,12 @@ namespace ZGame.Editor.ResBuild
                 return builds;
             }
 
-            foreach (var VARIABLE in rulerData.selector.reference)
+            foreach (var VARIABLE in rulerData.selector.items)
             {
                 string[] fileList = Directory.GetFiles(path, "*" + VARIABLE, SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
                 builds.Add(new AssetBundleBuild()
                 {
-                    assetBundleName = $"{rulerData.folder.name}_{VARIABLE.Substring(1)}{BuilderConfig.instance.fileExtension}",
+                    assetBundleName = $"{rulerData.folder.name}_{VARIABLE.name.Substring(1)}{BuilderConfig.instance.fileExtension}",
                     assetNames = fileList
                 });
             }

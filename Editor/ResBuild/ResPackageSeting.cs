@@ -10,11 +10,11 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    [SettingContent(typeof(PackageSeting))]
-    [BindScene("包管理", typeof(ResBuilder))]
-    public class ResPackageSeting : PageScene
+    [ReferenceScriptableObject(typeof(PackageSeting))]
+    [SubPageSetting("包管理", typeof(ResBuilder))]
+    public class ResPackageSeting : SubPage
     {
-        public override void OnEnable()
+        public override void OnEnable(params object[] args)
         {
             foreach (var packageSeting in BuilderConfig.instance.packages)
             {
@@ -37,10 +37,7 @@ namespace ZGame.Editor.ResBuild
 
                     string path = AssetDatabase.GetAssetPath(rulerData.folder);
                     string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
-                    foreach (var VARIABLE2 in files)
-                    {
-                        rulerData.selector.Add(Path.GetExtension(VARIABLE2));
-                    }
+                    rulerData.selector.Add(files);
                 }
             }
         }
@@ -142,17 +139,7 @@ namespace ZGame.Editor.ResBuild
                                         menu.AddItem(new GUIContent("Everything"), rulerData.selector.isAll, () => { rulerData.selector.SelectAll(); });
                                         foreach (var VARIABLE in rulerData.selector.items)
                                         {
-                                            menu.AddItem(new GUIContent(VARIABLE), rulerData.selector.IsSelected(VARIABLE), () =>
-                                            {
-                                                if (rulerData.selector.IsSelected(VARIABLE))
-                                                {
-                                                    rulerData.selector.UnSelect(VARIABLE);
-                                                }
-                                                else
-                                                {
-                                                    rulerData.selector.Select(VARIABLE);
-                                                }
-                                            });
+                                            menu.AddItem(new GUIContent(VARIABLE.name), VARIABLE.isOn, () => { VARIABLE.isOn = !VARIABLE.isOn; });
                                         }
 
                                         menu.ShowAsContext();

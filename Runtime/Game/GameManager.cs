@@ -57,7 +57,7 @@ namespace ZGame.Game
                 throw new NullReferenceException(config.dll);
             }
 
-            assembly = Assembly.Load(textAsset.Get<TextAsset>().bytes);
+            assembly = Assembly.Load(textAsset.Get<TextAsset>(default).bytes);
         }
 
         private async UniTask LoadAOT(GameConfig config)
@@ -79,7 +79,7 @@ namespace ZGame.Game
                     throw new Exception("加载AOT补元数据资源失败:" + item);
                 }
 
-                LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(textAsset.Get<TextAsset>().bytes, mode);
+                LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(textAsset.Get<TextAsset>(default).bytes, mode);
                 if (err != LoadImageErrorCode.OK)
                 {
                     Debug.LogError("加载AOT补元数据资源失败:" + item);

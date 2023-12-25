@@ -8,6 +8,6 @@ namespace ZGame.Resource
 {
     public interface IResourcePackageUpdateHandle : IDisposable
     {
-        UniTask Update(ILoadingHandle loadingHandle, params string[] paths);
+        UniTask Update(params string[] paths);
     }
 }

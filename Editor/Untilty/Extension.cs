@@ -29,6 +29,17 @@ namespace ZGame.Editor
         {
             GUI.color = _color;
         }
+        
+        public static void BeginColor(this UnityEditor.PopupWindowContent window, Color color)
+        {
+            _color = GUI.color;
+            GUI.color = color;
+        }
+
+        public static void EndColor(this UnityEditor.PopupWindowContent window)
+        {
+            GUI.color = _color;
+        }
 
         public static void OnMouseLeftButtonDown(this EditorWindow window, Rect contains, Action action)
         {

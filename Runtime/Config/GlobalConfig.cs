@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using ZGame.Config;
 using ZGame.Resource;
 
 namespace ZGame
@@ -59,7 +60,7 @@ namespace ZGame
         public int chunkCount = 1024;
     }
 
-    [ResourceReference("Resources/Config/GlobalConfig")]
+    [ResourceReference("Resources/Config/GlobalConfig.asset")]
     public sealed class GlobalConfig : SingletonScriptableObject<GlobalConfig>
     {
         /// <summary>
@@ -77,6 +78,10 @@ namespace ZGame
         /// </summary>
         public VFSConfig vfsConfig;
 
+        /// <summary>
+        /// 默认语言
+        /// </summary>
+        public LanguageDefine language = LanguageDefine.English;
 
         protected override void OnAwake()
         {

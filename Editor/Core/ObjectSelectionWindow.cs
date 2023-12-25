@@ -5,51 +5,63 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace ZGame.Editor.Baker
+namespace ZGame.Editor
 {
-    public class ObjectSelectionWindow : PopupWindowContent
+    public enum SelectionType
     {
-        private bool[] isSelect;
-        private IList _source;
-        private IList _selection;
+        Single,
+        Multiple
+    }
+
+    public class ObjectSelectionWindow<T> : PopupWindowContent
+    {
+        private bool[] isSelected;
+        private List<T> _source;
+        private List<T> _selection;
         private string search;
         private Vector2 scroll;
         private Action _action;
+        private SelectionType _type;
+        private Vector2 _size;
+        private EditorWindow window;
 
-        public static void Show<T>(Rect rect, List<T> selection, List<T> source, Action closeCallback = null)
+        public static void Show(Vector2 size, List<T> selection, List<T> source, SelectionType type, Action closeCallback = null)
         {
-            ObjectSelectionWindow selectionWindow = new ObjectSelectionWindow();
+            ObjectSelectionWindow<T> selectionWindow = new ObjectSelectionWindow<T>();
             selectionWindow._source = source;
+            selectionWindow.isSelected = new bool[source.Count];
             selectionWindow._selection = selection;
-            selectionWindow.isSelect = new bool[source.Count];
             selectionWindow._action = closeCallback;
-            PopupWindow.Show(rect, selectionWindow);
+            selectionWindow._type = type;
+            selectionWindow.search = "";
+            selectionWindow._size = size;
+            PopupWindow.Show(new Rect(UnityEngine.Event.current.mousePosition, Vector2.zero), selectionWindow);
         }
 
         public override Vector2 GetWindowSize()
         {
-            return new Vector2(400, 600);
+            return _size;
         }
 
         public override void OnOpen()
         {
             for (int i = 0; i < _source.Count; i++)
             {
-                if (_selection.Contains(_source[i]))
-                {
-                    isSelect[i] = true;
-                }
+                isSelected[i] = _selection.Contains(_source[i]);
             }
         }
 
         public override void OnClose()
         {
-            _selection.Clear();
-            for (int i = 0; i < isSelect.Length; i++)
+            if (_type == SelectionType.Multiple)
             {
-                if (isSelect[i])
+                _selection.Clear();
+                for (int i = 0; i < isSelected.Length; i++)
                 {
-                    _selection.Add(_source[i]);
+                    if (isSelected[i])
+                    {
+                        _selection.Add(_source[i]);
+                    }
                 }
             }
 
@@ -66,11 +78,13 @@ namespace ZGame.Editor.Baker
             GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
             EditorGUILayout.LabelField("Selection", EditorStyles.boldLabel, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
-
+            this.BeginColor(ZStyle.inColor);
+            GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.Height(1));
+            this.EndColor();
             GUILayout.BeginHorizontal();
             search = GUILayout.TextField(search, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
-
+            GUILayout.Space(5);
             scroll = GUILayout.BeginScrollView(scroll);
             for (int i = 0; i < _source.Count; i++)
             {
@@ -90,7 +104,24 @@ namespace ZGame.Editor.Baker
                     continue;
                 }
 
-                isSelect[i] = GUILayout.Toggle(isSelect[i], name);
+                Rect rect2 = EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+                if (_type == SelectionType.Multiple)
+                {
+                    isSelected[i] = GUILayout.Toggle(isSelected[i], name);
+                }
+                else
+                {
+                    EditorGUILayout.LabelField(name, EditorStyles.boldLabel);
+                    if (Event.current.type == EventType.MouseUp && rect2.Contains(Event.current.mousePosition))
+                    {
+                        _selection.Clear();
+                        _selection.Add(_source[i]);
+                        Event.current.Use();
+                        EditorWindow.focusedWindow.Close();
+                    }
+                }
+
+                EditorGUILayout.EndHorizontal();
             }
 
             GUILayout.EndScrollView();

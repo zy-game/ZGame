@@ -12,7 +12,7 @@ namespace ZGame.Editor.Package
 {
     // [BindScene("包管理")]
     // [SettingContent(typeof(PackageDataList))]
-    public class PackageManager : PageScene
+    public class PackageManager : SubPage
     {
         private const string configPath = "Assets/Settings/ProjectPackageList.asset";
         private string url;
@@ -22,7 +22,7 @@ namespace ZGame.Editor.Package
         private bool showUnityPackageList = false;
         private bool showInstalledPackageList = false;
 
-        public override void OnEnable()
+        public override void OnEnable(params object[] args)
         {
             EditorManager.instance.Waiting();
             PackageDataList.instance.Refresh(EditorManager.instance.CloseWaiting);
