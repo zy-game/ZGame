@@ -36,12 +36,12 @@ namespace ZGame.Editor.ResBuild
                 GUILayout.Space(40);
                 GUILayout.Label(VARIABLE.describe);
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     EditorManager.SwitchScene<ResPackageSeting>();
                 }
 
-                if (GUILayout.Button("Build", EditorStyles.toolbarButton))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     OnBuildBundle(new BuilderOptions[1]
                     {

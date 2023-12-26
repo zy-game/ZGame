@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,21 +14,14 @@ namespace ZGame.Window
     /// </summary>
     public sealed class UIManager : Singleton<UIManager>
     {
-        private Dictionary<Type, UIBase> _windows = new Dictionary<Type, UIBase>();
+        private List<UIBase> _windows = new();
 
         /// <summary>
         /// 
         /// </summary>
         protected override void OnDestroy()
         {
-            foreach (var VARIABLE in _windows.Values)
-            {
-                VARIABLE.Disable();
-                VARIABLE.Dispose();
-                GameObject.DestroyImmediate(VARIABLE.gameObject);
-            }
-
-            _windows.Clear();
+            Clear();
         }
 
         /// <summary>
@@ -41,6 +35,16 @@ namespace ZGame.Window
             if (uiBase is not null)
             {
                 return uiBase;
+            }
+
+            if (type.IsInterface || type.IsAbstract)
+            {
+                type = AppDomain.CurrentDomain.GetAllSubClasses(type).FirstOrDefault();
+            }
+
+            if (type is null)
+            {
+                return default;
             }
 
             ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
@@ -60,7 +64,7 @@ namespace ZGame.Window
             uiBase = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
             UILayerManager.instance.TrySetup(uiBase.gameObject, 1, Vector3.zero, Vector3.zero, Vector3.one);
             uiBase.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
-            _windows.Add(type, uiBase);
+            _windows.Add(uiBase);
             uiBase.Awake();
             Active(type);
             return uiBase;
@@ -73,17 +77,12 @@ namespace ZGame.Window
         /// <returns></returns>
         public UIBase GetWindow(Type type)
         {
-            foreach (var VARIABLE in _windows)
+            if (type is null)
             {
-                if (type.IsAssignableFrom(VARIABLE.Key) is false)
-                {
-                    continue;
-                }
-
-                return VARIABLE.Value;
+                return default;
             }
 
-            return default;
+            return _windows.Find(x => type.IsAssignableFrom(x.GetType()));
         }
 
         /// <summary>
@@ -133,7 +132,7 @@ namespace ZGame.Window
             uiBase.Disable();
             uiBase.Dispose();
             GameObject.DestroyImmediate(uiBase.gameObject);
-            _windows.Remove(type);
+            _windows.Remove(uiBase);
         }
 
         /// <summary>
@@ -210,6 +209,18 @@ namespace ZGame.Window
         public void Close<T>() where T : UIBase
         {
             Close(typeof(T));
+        }
+
+        public void Clear()
+        {
+            foreach (var VARIABLE in _windows)
+            {
+                VARIABLE.Disable();
+                VARIABLE.Dispose();
+                GameObject.DestroyImmediate(VARIABLE.gameObject);
+            }
+
+            _windows.Clear();
         }
     }
 }

@@ -47,7 +47,7 @@ namespace ZGame.Config
         private List<LanguageReference> references = new();
         private LanguageDataList _currentLanguage;
 
-        protected override void OnAwake()
+        public override void OnAwake()
         {
             SwitchLanguage(GlobalConfig.instance.language);
         }

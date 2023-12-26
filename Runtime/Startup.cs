@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
 using HybridCLR;
+using UI;
 using UnityEngine;
 using ZGame;
 using ZGame.Game;
@@ -18,8 +19,8 @@ public class Startup : MonoBehaviour
     {
         CameraManager.instance.SetMainCamera();
         CameraManager.instance.NewCamera("test", 0, "Default");
-        UIBind_Loading loading = UIManager.instance.Open<UIBind_Loading>();
-        loading.on_setup_TextTMP("正在获取配置信息...");
+        ILoading loading = UIManager.instance.Open<ILoading>();
+        loading.SetTitle("正在获取配置信息...");
         if (GlobalConfig.instance.resConfig is null || GlobalConfig.instance.gameConfig is null)
         {
             Debug.LogError(new EntryPointNotFoundException());

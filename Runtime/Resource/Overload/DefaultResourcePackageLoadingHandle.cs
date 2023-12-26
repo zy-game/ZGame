@@ -18,7 +18,7 @@ namespace ZGame.Resource
         public async UniTask Loading(params string[] paths)
         {
             Queue<string> fileList = new Queue<string>();
-            IProgressHandler handler = (IProgressHandler)UIManager.instance.TryOpenWindow(typeof(IProgressHandler));
+            ILoading handler = (ILoading)UIManager.instance.TryOpenWindow(typeof(ILoading));
             //todo 这里还需要注意实在webgl平台上面加载资源包的情况
             handler.SetTitle("正在加载资源信息...");
             handler.Report(0);
@@ -45,7 +45,7 @@ namespace ZGame.Resource
             await LoadBundleList(fileList, handler);
         }
 
-        private async UniTask LoadBundleList(Queue<string> fileList, IProgressHandler loadingHandle)
+        private async UniTask LoadBundleList(Queue<string> fileList, ILoading loadingHandle)
         {
             int count = fileList.Count;
             for (int i = 0; i < count; i++)

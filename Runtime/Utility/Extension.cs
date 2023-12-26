@@ -54,13 +54,18 @@ namespace ZGame
 
         public static List<Type> GetAllSubClasses<T>(this AppDomain domain)
         {
+            return domain.GetAllSubClasses(typeof(T));
+        }
+
+
+        public static List<Type> GetAllSubClasses(this AppDomain domain, Type parent)
+        {
             List<Type> result = new List<Type>();
-            Type baseType = typeof(T);
             foreach (var VARIABLE in domain.GetAssemblies())
             {
                 foreach (var VARIABLE2 in VARIABLE.GetTypes())
                 {
-                    if (baseType.IsAssignableFrom(VARIABLE2) && VARIABLE2.IsInterface is false && VARIABLE2.IsAbstract is false)
+                    if (parent.IsAssignableFrom(VARIABLE2) && VARIABLE2.IsInterface is false && VARIABLE2.IsAbstract is false)
                     {
                         result.Add(VARIABLE2);
                     }

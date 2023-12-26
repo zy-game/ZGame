@@ -27,7 +27,7 @@ namespace ZGame.Resource
                 return;
             }
 
-            IProgressHandler handler = (IProgressHandler)UIManager.instance.TryOpenWindow(typeof(IProgressHandler));
+            ILoading handler = (ILoading)UIManager.instance.TryOpenWindow(typeof(ILoading));
             handler.SetTitle(Language.instance.FindByKey(100000));
             handler.Report(0);
             HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
@@ -88,15 +88,15 @@ namespace ZGame.Resource
             }
 
             Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
-            MsgBox.Create("更新资源失败", GameManager.instance.QuitGame);
+            IMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
         }
 
-        private async UniTask<bool> DownloadResource(ResourcePackageManifest resourcePackageManifest, IProgressHandler loadingHandle)
+        private async UniTask<bool> DownloadResource(ResourcePackageManifest resourcePackageManifest, ILoading loadingHandle)
         {
             return await DownloadResource(GlobalConfig.GetNetworkResourceUrl(resourcePackageManifest.name), loadingHandle, resourcePackageManifest.version);
         }
 
-        private async UniTask<bool> DownloadResource(string url, IProgressHandler loadingHandle, uint crc = 0)
+        private async UniTask<bool> DownloadResource(string url, ILoading loadingHandle, uint crc = 0)
         {
             UnityWebRequest request = UnityWebRequest.Get(url);
             request.timeout = 5;

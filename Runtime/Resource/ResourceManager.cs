@@ -188,7 +188,6 @@ namespace ZGame.Resource
             }
 
             _resourceLoadingHandles.Add(resourceLoadingHelper);
-            Debug.Log("Setup Resource Loading Handle:" + resourceLoadingHelper.GetType().Name);
         }
 
         /// <summary>

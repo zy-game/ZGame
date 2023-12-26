@@ -92,9 +92,9 @@ namespace ZGame.Editor
             menuRoll = GUILayout.BeginScrollView(menuRoll);
             foreach (var VARIABLE in sceneMaps)
             {
-                if (OnDrwaingMeunItem(this.current.Equals(VARIABLE.scene), VARIABLE.scene.name, 0, VARIABLE.childs.Count > 0, ref VARIABLE.show))
+                if (OnDrwaingMeunItem(this.current.Equals(VARIABLE), VARIABLE.name, 0, VARIABLE.childs.Count > 0, ref VARIABLE.show))
                 {
-                    SwitchScene(VARIABLE.scene);
+                    SwitchScene(VARIABLE);
                 }
 
                 if (VARIABLE.childs.Count == 0 || VARIABLE.show is false)
@@ -191,7 +191,7 @@ namespace ZGame.Editor
         {
             isWaiting = false;
             Refresh();
-            instance.RemoveNotification();
+            _docker.RemoveNotification();
             if (waiting == null)
             {
                 return;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using ZGame.Config;
 using ZGame.Editor.ResBuild.Config;
 using ZGame.Game;
 
@@ -24,6 +25,13 @@ namespace ZGame.Editor
 
         public override void OnGUI()
         {
+            EditorGUI.BeginChangeCheck();
+            GlobalConfig.instance.language = (LanguageDefine)EditorGUILayout.EnumPopup("语言", GlobalConfig.instance.language);
+            if (EditorGUI.EndChangeCheck())
+            {
+                GlobalConfig.OnSave();
+            }
+
             show1 = OnShowFoldoutHeader("Resource Config", show1);
             if (show1)
             {
@@ -83,6 +91,7 @@ namespace ZGame.Editor
         private void OnShowGameConfig(GameConfig config)
         {
             EditorGUI.BeginChangeCheck();
+
             int last = types.FindIndex(x => x.Assembly.GetName().Name == config.dll);
             int i = EditorGUILayout.Popup("模块入口", last, types.Select(x => x.FullName).ToArray());
             if (i >= 0 && i < types.Count && last != i)

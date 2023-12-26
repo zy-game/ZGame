@@ -17,18 +17,14 @@ namespace ZGame
                 if (_instance == null)
                 {
                     OnLoad();
+                    _instance.OnAwake();
                 }
 
                 return _instance;
             }
         }
 
-        protected abstract void OnAwake();
-
-        protected virtual void OnSaved()
-        {
-        }
-
+        public abstract void OnAwake();
 
         public static void OnSave()
         {
@@ -37,7 +33,6 @@ namespace ZGame
                 return;
             }
 
-            _instance.OnSaved();
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(_instance);
             UnityEditor.AssetDatabase.SaveAssets();
@@ -53,14 +48,18 @@ namespace ZGame
                 return;
             }
 
-            if (reference.path.StartsWith("Assets"))
+            if (reference.path.StartsWith("Resources"))
+            {
+                string path = reference.path.Substring(reference.path.IndexOf("/") + 1);
+                path = path.Substring(0, path.LastIndexOf("."));
+                _instance = Resources.Load<T>(path);
+            }
+            else
             {
 #if UNITY_EDITOR
-                if (Application.isPlaying is false)
-                {
-                    _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(reference.path);
-                }
-                else
+                _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(reference.path);
+#endif
+                if (_instance == null && Application.isPlaying)
                 {
                     ResHandle handle = ResourceManager.instance.LoadAsset(reference.path);
                     if (handle is not null || handle.EnsureLoadSuccess())
@@ -68,16 +67,11 @@ namespace ZGame
                         _instance = handle.Get<T>(null);
                     }
                 }
-#endif
-            }
-            else
-            {
-                string path = reference.path.Substring(reference.path.IndexOf("/") + 1);
-                _instance = Resources.Load<T>(path);
             }
 
             if (_instance != null)
             {
+              
                 return;
             }
 

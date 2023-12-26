@@ -30,7 +30,7 @@ namespace ZGame.Editor.Package
         [NonSerialized] public List<PackageData> remotePackages;
         [NonSerialized] public bool isInit;
 
-        protected override void OnAwake()
+        public override void OnAwake()
         {
             packages = packages ?? new List<PackageData>();
             localPackages = new List<PackageData>();

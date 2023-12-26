@@ -4,31 +4,33 @@ using UnityEngine.UI;
 
 namespace ZGame.Window
 {
-    public abstract class UIBase : IDisposable
+    /// <summary>
+    /// UI界面
+    /// </summary>
+    public interface UIBase : IDisposable
     {
-        public string name { get; }
-        public GameObject gameObject { get; }
+        string name { get; }
+        GameObject gameObject { get; }
 
-        public UIBase(GameObject gameObject)
-        {
-            this.name = gameObject.name;
-            this.gameObject = gameObject;
-        }
 
-        public virtual void Awake()
-        {
-        }
+        /// <summary>
+        /// 激活界面
+        /// </summary>
+        void Awake();
 
-        public virtual void Enable()
-        {
-        }
+        /// <summary>
+        /// 现实2界面
+        /// </summary>
+        void Enable();
 
-        public virtual void Disable()
-        {
-        }
+        /// <summary>
+        /// 隐藏界面
+        /// </summary>
+        void Disable();
 
-        public virtual void Dispose()
-        {
-        }
+        /// <summary>
+        /// 释放UI界面
+        /// </summary>
+        void Dispose();
     }
 }

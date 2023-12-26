@@ -12,7 +12,7 @@ namespace ZGame.Editor.PSD2GUI
     {
         public List<PSDImport> imports;
 
-        protected override void OnAwake()
+        public override void OnAwake()
         {
             if (imports is null)
             {

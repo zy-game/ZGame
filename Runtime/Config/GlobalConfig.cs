@@ -83,7 +83,7 @@ namespace ZGame
         /// </summary>
         public LanguageDefine language = LanguageDefine.English;
 
-        protected override void OnAwake()
+        public override void OnAwake()
         {
             gameConfig ??= new GameConfig();
             resConfig ??= new ResConfig();

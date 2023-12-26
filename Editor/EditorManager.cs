@@ -15,131 +15,70 @@ namespace ZGame.Editor
     public partial class EditorManager
     {
         private static EditorManager _docker;
-        private static List<SceneData> sceneMaps;
+        private static List<SubPage> sceneMaps;
         private static UnityEngine.Object openScriptableObject;
         private EditorCoroutine waiting;
         private bool isWaiting;
 
-        class SceneData
-        {
-            public bool show;
-            public SubPage scene;
-            public List<SubPage> childs;
-            public Type settingType;
-            public Type parent;
-        }
-
-        public static EditorManager instance
-        {
-            get { return _docker; }
-        }
 
         [UnityEditor.Callbacks.DidReloadScripts]
         static void OnScriptBuilderComplation()
         {
-            sceneMaps = new List<SceneData>();
+            sceneMaps = new List<SubPage>();
             List<Type> types = AppDomain.CurrentDomain.GetAllSubClasses<SubPage>();
 
 
             foreach (var VARIABLE in types)
             {
-                SubPageSetting editorScene = VARIABLE.GetCustomAttribute<SubPageSetting>();
+                SubPageSetting setting = VARIABLE.GetCustomAttribute<SubPageSetting>();
 
-                if (editorScene is null)
+                if (setting is null || setting.parent is not null)
                 {
                     continue;
                 }
 
-                SceneData sceneData = new SceneData();
-                sceneMaps.Add(sceneData);
-                sceneData.scene = (SubPage)Activator.CreateInstance(VARIABLE);
-                sceneData.parent = editorScene.parent;
-                sceneData.childs = new List<SubPage>();
-                ReferenceScriptableObject referenceScriptableObject = VARIABLE.GetCustomAttribute<ReferenceScriptableObject>();
-                if (referenceScriptableObject is null)
-                {
-                    continue;
-                }
-
-                sceneData.settingType = referenceScriptableObject.type;
+                sceneMaps.Add((SubPage)Activator.CreateInstance(VARIABLE));
             }
 
-            for (int i = sceneMaps.Count - 1; i >= 0; i--)
+            foreach (var VARIABLE in types)
             {
-                SceneData sceneData = sceneMaps[i];
-                if (sceneData.parent is null)
+                SubPageSetting setting = VARIABLE.GetCustomAttribute<SubPageSetting>();
+                if (setting is null || setting.parent is null)
                 {
                     continue;
                 }
 
-                SceneData parent = sceneMaps.Find(x => x.scene.GetType() == sceneData.parent);
-                if (parent is null)
+                foreach (var VARIABLE2 in sceneMaps)
                 {
-                    continue;
+                    if (VARIABLE2.GetType().Equals(setting.parent))
+                    {
+                        VARIABLE2.childs.Add((SubPage)Activator.CreateInstance(VARIABLE));
+                        break;
+                    }
                 }
-
-                parent.childs.Add(sceneData.scene);
-                sceneMaps.RemoveAt(i);
             }
-
 
             if (EditorWindow.HasOpenInstances<EditorManager>() is false)
             {
                 return;
             }
 
+            _docker = EditorManager.GetWindow<EditorManager>();
             OpenScene();
         }
+
 
         [MenuItem("Tools/ZGame Editor %L")]
         static void OpenScene()
         {
-            OpenScene(null);
+            if (EditorWindow.HasOpenInstances<EditorManager>() is false)
+            {
+                _docker = EditorManager.GetWindow<EditorManager>();
+            }
+
+            SwitchScene(sceneMaps.FirstOrDefault());
         }
 
-        [OnOpenAsset()]
-        static bool OnOpened(int id, int line)
-        {
-            UnityEngine.Object target = UnityEditor.EditorUtility.InstanceIDToObject(id);
-            if (target == null)
-            {
-                return false;
-            }
-
-            if (sceneMaps.Exists(x => x.settingType == target.GetType()) is false)
-            {
-                return false;
-            }
-
-            OpenScene(target);
-            return true;
-        }
-
-        static void OpenScene(Object obj)
-        {
-            if (_docker == null)
-            {
-                _docker = GetWindow<EditorManager>(false, "编辑器", true);
-                if (_docker == null)
-                {
-                    return;
-                }
-            }
-
-            if (obj == null)
-            {
-                SwitchScene(sceneMaps.FirstOrDefault()?.scene);
-                return;
-            }
-
-            SubPage subPage = sceneMaps.Find(x => x.settingType == obj.GetType())?.scene;
-            if (subPage is null)
-            {
-                return;
-            }
-
-            SwitchScene(subPage);
-        }
 
         public static SubPage GetScene(Type type)
         {
@@ -150,15 +89,18 @@ namespace ZGame.Editor
 
             foreach (var VARIABLE in sceneMaps)
             {
-                if (VARIABLE.scene.GetType().Equals(type))
+                if (VARIABLE.GetType().Equals(type))
                 {
-                    return VARIABLE.scene;
+                    return VARIABLE;
                 }
 
-                if (VARIABLE.childs.Exists(x => x.GetType().Equals(type)))
+                SubPage page = VARIABLE.childs.Find(x => x.GetType().Equals(type));
+                if (page is null)
                 {
-                    return VARIABLE.childs.Find(x => x.GetType().Equals(type));
+                    continue;
                 }
+
+                return page;
             }
 
             return default;
@@ -192,6 +134,11 @@ namespace ZGame.Editor
                 return;
             }
 
+            if (_docker == null)
+            {
+                _docker = EditorManager.GetWindow<EditorManager>();
+            }
+
             if (_docker.current is not null)
             {
                 _docker.CloseWaiting();
@@ -206,7 +153,22 @@ namespace ZGame.Editor
 
         public static EditorCoroutine StartCoroutine(IEnumerator enumerator)
         {
-            return instance.current.StartCoroutine(enumerator);
+            if (_docker is null)
+            {
+                return default;
+            }
+
+            return _docker.current.StartCoroutine(enumerator);
+        }
+
+        public static void ShowWait()
+        {
+            _docker.Waiting();
+        }
+
+        public static void CloseWait()
+        {
+            _docker.CloseWaiting();
         }
 
         public static void Refresh()

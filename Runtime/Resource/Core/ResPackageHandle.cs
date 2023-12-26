@@ -23,7 +23,6 @@ namespace ZGame.Resource
             this.name = title;
             this.DefaultPackage = isDefault;
             cacheList = new List<ResHandle>();
-            Debug.Log("load success :" + title);
         }
 
         internal ResPackageHandle(AssetBundle bundle, bool isDefault) : this(bundle.name, isDefault)

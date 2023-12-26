@@ -11,7 +11,7 @@ using ZGame.Config;
 using ZGame.Window;
 using Object = UnityEngine.Object;
 
-namespace ZGame.Editor.UIBindEditor
+namespace ZGame.Editor.PSD2GUI
 {
     [CustomEditor(typeof(UIBind))]
     public class UIBindInspector : CustomEditorWindow
@@ -29,11 +29,27 @@ namespace ZGame.Editor.UIBindEditor
             EditorGUI.BeginChangeCheck();
             setting.NameSpace = EditorGUILayout.TextField("NameSpace", setting.NameSpace);
 
+
             EditorGUILayout.BeginHorizontal();
             setting.output = EditorGUILayout.ObjectField("Output", setting.output, typeof(DefaultAsset), false);
-            if (GUILayout.Button("Generic", GUILayout.Width(60)))
+            if (EditorGUILayout.DropdownButton(new GUIContent("Generic"), FocusType.Passive, GUILayout.Width(70)))
             {
-                UIBindRulerConfig.instance.GenericUIBindCode(setting);
+                if (setting.output == null)
+                {
+                    EditorUtility.DisplayDialog("Error", "Please select output path", "OK");
+                    return;
+                }
+
+                if (setting.options.Count == 0)
+                {
+                    EditorUtility.DisplayDialog("Error", "Please select bind list", "OK");
+                    return;
+                }
+
+                GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent("Generic UIBind"), false, () => { UIBindRulerConfig.instance.GenericUIBindCode(setting, false); });
+                menu.AddItem(new GUIContent("Generic UIBind And UICode"), false, () => { UIBindRulerConfig.instance.GenericUIBindCode(setting, true); });
+                menu.ShowAsContext();
             }
 
             EditorGUILayout.EndHorizontal();
@@ -54,21 +70,21 @@ namespace ZGame.Editor.UIBindEditor
                 GUILayout.Label("Bind List:", EditorStyles.boldLabel);
 
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button(EditorGUIUtility.IconContent("d_TreeEditor.Trash"), "StatusBarIcon"))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     setting.options.Clear();
                 }
 
                 GUILayout.BeginVertical();
                 GUILayout.Space(-1);
-                if (GUILayout.Button(EditorGUIUtility.IconContent("RotateTool On"), "StatusBarIcon"))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.REFRESH_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     OnRefreshBindData();
                 }
 
                 GUILayout.EndVertical();
 
-                if (GUILayout.Button(EditorGUIUtility.IconContent("Toolbar Plus"), "StatusBarIcon"))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     setting.options.Add(new UIBindData());
                 }
@@ -113,9 +129,9 @@ namespace ZGame.Editor.UIBindEditor
                 }
 
                 GUILayout.EndHorizontal();
-                if (options.name.IsNullOrEmpty())
+                if (options.target != null)
                 {
-                    options.name = options.target?.name;
+                    options.name = options.target.name;
                 }
 
                 options.name = options.name?.Replace(" ", "(", ")");
@@ -199,19 +215,12 @@ namespace ZGame.Editor.UIBindEditor
             GUILayout.Label(options.path);
             GUILayout.EndHorizontal();
 
-
             List<Component> opComs = options.target.GetComponents<Component>().ToList();
             options.selector.Add(opComs.Select(x => x.GetType().FullName).ToArray());
 
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Property Name", GUILayout.Width(110));
-            options.name = EditorGUILayout.TextField(options.name);
-            GUILayout.EndHorizontal();
-
             GUILayout.BeginHorizontal();
             GUILayout.Label("Bind Components", GUILayout.Width(110));
-            if (EditorGUILayout.DropdownButton(new GUIContent(options.selector.ToString()), FocusType.Passive)) //GUILayout.Button(options.selector.ToString(), EditorStyles.popup))
+            if (EditorGUILayout.DropdownButton(new GUIContent(options.selector.ToString()), FocusType.Passive))
             {
                 GenericMenu menu = new GenericMenu();
                 menu.AddItem(new GUIContent("Noting"), options.selector.isNone, () => { options.selector.UnSelectAll(); });

@@ -24,14 +24,14 @@ namespace ZGame.Editor.Package
 
         public override void OnEnable(params object[] args)
         {
-            EditorManager.instance.Waiting();
-            PackageDataList.instance.Refresh(EditorManager.instance.CloseWaiting);
+            EditorManager.ShowWait();
+            PackageDataList.instance.Refresh(OnDisable);
         }
 
 
         public override void OnDisable()
         {
-            EditorManager.instance.RemoveNotification();
+            EditorManager.CloseWait();
         }
 
         public override void OnGUI()

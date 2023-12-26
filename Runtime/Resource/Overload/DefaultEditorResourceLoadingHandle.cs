@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using ZGame.Window;
 
@@ -44,6 +45,7 @@ namespace ZGame.Resource
                 return resHandle;
             }
 
+            Debug.Log("Load Assets:" + path);
             if (path.EndsWith(".unity"))
             {
                 _handle.Setup(resHandle = ResHandle.OnCreate(_handle, null, path));

@@ -191,9 +191,9 @@ namespace ZGame.Game
 
         protected override void OnDestroy()
         {
-            foreach (var VARIABLE in cameraList)
+            for (int i = cameraList.Count - 1; i >= 0; i--)
             {
-                GameObject.DestroyImmediate(VARIABLE.Item2.gameObject);
+                GameObject.DestroyImmediate(cameraList[i].Item2.gameObject);
             }
 
             cameraList.Clear();

@@ -48,6 +48,14 @@ namespace ZGame.Editor
 
         public static Color inColor = new Color(1f, 0.92f, 0.01f, .8f);
         public static Color outColor = new Color(0, 0, 0, 0.2f);
+
+        public static string PLAY_BUTTON_ICON = "d_forward@2x";
+        public static string DELETE_BUTTON_ICON = "d_TreeEditor.Trash";
+        public static string SETTING_BUTTON_ICON = "SettingsIcon";
+        public static string ADD_BUTTON_ICON = "d_CreateAddNew";
+        public static string HEADER_BUTTON_STYLE = "StatusBarIcon";
+        public static string REFRESH_BUTTON_ICON = "RotateTool On";
+        public static string ITEM_BACKGROUND_STYLE = "DD Background";
     }
 
 #if UNITY_EDITOR

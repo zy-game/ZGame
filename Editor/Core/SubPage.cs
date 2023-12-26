@@ -15,18 +15,25 @@ namespace ZGame.Editor
     {
         public string name { get; private set; }
         public SubPage parent { get; private set; }
+        public List<SubPage> childs { get; private set; }
+        public bool show;
         public Rect position { get; set; }
         public string search { get; set; }
 
+        private Type referenceType;
         private Dictionary<IEnumerator, EditorCoroutine> coroutines = new Dictionary<IEnumerator, EditorCoroutine>();
+        private static event Func<Type, bool> OnOpenAssetCallback;
 
         public SubPage()
         {
-            Init();
-        }
+            ReferenceScriptableObject reference = this.GetType().GetCustomAttribute<ReferenceScriptableObject>();
+            if (reference is not null)
+            {
+                referenceType = reference.type;
+                OnOpenAssetCallback += OnOpenAsset;
+            }
 
-        void Init()
-        {
+            childs = new List<SubPage>();
             SubPageSetting attribute = this.GetType().GetCustomAttribute<SubPageSetting>();
             if (attribute is null)
             {
@@ -34,12 +41,35 @@ namespace ZGame.Editor
             }
 
             this.name = attribute.name;
-            if (attribute.parent is null)
+        }
+
+        private bool OnOpenAsset(Type type)
+        {
+            if (type.Equals(referenceType) is false)
             {
-                return;
+                return false;
             }
 
-            this.parent = EditorManager.GetScene(attribute.parent);
+            EditorManager.SwitchScene(this);
+            return true;
+        }
+
+
+        [OnOpenAsset()]
+        static bool OnOpened(int id, int line)
+        {
+            UnityEngine.Object target = UnityEditor.EditorUtility.InstanceIDToObject(id);
+            if (target == null)
+            {
+                return false;
+            }
+
+            if (OnOpenAssetCallback is null)
+            {
+                return false;
+            }
+
+            return OnOpenAssetCallback(target.GetType());
         }
 
         public EditorCoroutine StartCoroutine(IEnumerator enumerator)
@@ -74,13 +104,21 @@ namespace ZGame.Editor
             coroutines.Clear();
         }
 
-        public bool OnShowFoldoutHeader(string name, bool isOn)
+        public bool OnShowFoldoutHeader(string name, bool isOn, Action added = null)
         {
             Rect rect = EditorGUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
             isOn = EditorGUILayout.Foldout(isOn, "");
             GUILayout.Space(-40);
             EditorGUILayout.LabelField(name, EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
+            if (added is not null)
+            {
+                if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
+                {
+                    added();
+                }
+            }
+
             if (Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
             {
                 isOn = !isOn;
@@ -90,6 +128,7 @@ namespace ZGame.Editor
             GUILayout.EndHorizontal();
             return isOn;
         }
+
 
         public virtual void OnEnable(params object[] args)
         {

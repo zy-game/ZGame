@@ -30,7 +30,7 @@ namespace ZGame.Editor.ResBuild.Config
             }
         }
 
-        protected override void OnAwake()
+        public override void OnAwake()
         {
             ossList = ossList ?? new();
             packages = packages ?? new();
