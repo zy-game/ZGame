@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Object = UnityEngine.Object;
 
 namespace ZGame.Window
 {
     public class UIBind : MonoBehaviour
     {
 #if UNITY_EDITOR
+        [SerializeField] public ScriptableObject language;
         [SerializeField] public string NameSpace;
         [SerializeField] public UnityEngine.Object output;
         [SerializeField] public List<string> reference = new List<string>();

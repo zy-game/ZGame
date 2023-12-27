@@ -196,9 +196,9 @@ namespace ZGame.Window
         /// <param name="system"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public UIBase TryOpenWindow<T>() where T : UIBase
+        public T TryOpenWindow<T>() where T : UIBase
         {
-            return TryOpenWindow(typeof(T));
+            return (T)TryOpenWindow(typeof(T));
         }
 
         /// <summary>

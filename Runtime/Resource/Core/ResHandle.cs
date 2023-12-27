@@ -89,7 +89,7 @@ namespace ZGame.Resource
 
             LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
 #if UNITY_EDITOR
-            if (GlobalConfig.instance.resConfig.resMode == ResourceMode.Editor)
+            if (GlobalConfig.instance.curEntry.resMode == ResourceMode.Editor)
             {
                 scene = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(path, parameters);
             }
@@ -126,7 +126,7 @@ namespace ZGame.Resource
             AsyncOperation operation = default;
             LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
 #if UNITY_EDITOR
-            if (GlobalConfig.instance.resConfig.resMode == ResourceMode.Editor)
+            if (GlobalConfig.instance.curEntry.resMode == ResourceMode.Editor)
             {
                 operation = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, parameters);
             }

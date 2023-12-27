@@ -23,7 +23,7 @@ namespace ZGame.Game
             gameHandle = null;
         }
 
-        public async UniTask EntryGame(GameConfig config, params object[] args)
+        public async UniTask EntryGame(EntryConfig config, params object[] args)
         {
             await LoadAOT(config);
             await LoadDLL(config);
@@ -39,34 +39,34 @@ namespace ZGame.Game
 #endif
         }
 
-        private async UniTask LoadDLL(GameConfig config)
+        private async UniTask LoadDLL(EntryConfig config)
         {
 #if UNITY_EDITOR
-            if (config.dll.IsNullOrEmpty())
+            if (config.entryName.IsNullOrEmpty())
             {
-                throw new NullReferenceException(nameof(config.dll));
+                throw new NullReferenceException(nameof(config.entryName));
             }
 
-            string dllName = Path.GetFileNameWithoutExtension(config.dll);
+            string dllName = Path.GetFileNameWithoutExtension(config.entryName);
             assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             return;
 #endif
-            ResHandle textAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(config.dll) + ".bytes");
+            ResHandle textAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(config.entryName) + ".bytes");
             if (textAsset == null)
             {
-                throw new NullReferenceException(config.dll);
+                throw new NullReferenceException(config.entryName);
             }
 
             assembly = Assembly.Load(textAsset.Get<TextAsset>(default).bytes);
         }
 
-        private async UniTask LoadAOT(GameConfig config)
+        private async UniTask LoadAOT(EntryConfig config)
         {
 #if UNITY_EDITOR
             return;
 #endif
             HomologousImageMode mode = HomologousImageMode.SuperSet;
-            foreach (var item in config.aot)
+            foreach (var item in config.references)
             {
                 if (aotList.Contains(item))
                 {
@@ -91,7 +91,7 @@ namespace ZGame.Game
             }
         }
 
-        private void OnEntryGame(GameConfig config, params object[] args)
+        private void OnEntryGame(EntryConfig config, params object[] args)
         {
             if (assembly is null)
             {

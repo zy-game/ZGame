@@ -22,8 +22,9 @@ namespace ZGame.Editor.ResBuild
             EditorGUI.BeginChangeCheck();
 
 
-            GUILayout.BeginVertical("Package List", EditorStyles.helpBox);
-            GUILayout.Space(20);
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Package List", EditorStyles.boldLabel);
+            GUILayout.Space(5);
             foreach (var VARIABLE in BuilderConfig.instance.packages)
             {
                 if (VARIABLE.items == null || (search.IsNullOrEmpty() is false && VARIABLE.name.StartsWith(search) is false))
@@ -31,7 +32,7 @@ namespace ZGame.Editor.ResBuild
                     continue;
                 }
 
-                GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
+                GUILayout.BeginHorizontal(ZStyle.ITEM_BACKGROUND_STYLE);
                 VARIABLE.selection = GUILayout.Toggle(VARIABLE.selection, VARIABLE.name, GUILayout.Width(300));
                 GUILayout.Space(40);
                 GUILayout.Label(VARIABLE.describe);

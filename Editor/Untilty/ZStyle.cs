@@ -56,6 +56,7 @@ namespace ZGame.Editor
         public static string HEADER_BUTTON_STYLE = "StatusBarIcon";
         public static string REFRESH_BUTTON_ICON = "RotateTool On";
         public static string ITEM_BACKGROUND_STYLE = "DD Background";
+        public static string MORE_BUTTON_ICON = "d_more";
     }
 
 #if UNITY_EDITOR

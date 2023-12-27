@@ -20,19 +20,32 @@ namespace ZGame.Editor
         private List<T> _selection;
         private string search;
         private Vector2 scroll;
-        private Action _action;
+        private Action<List<T>> _multipleAction;
+        private Action<T> _singleAction;
         private SelectionType _type;
         private Vector2 _size;
         private EditorWindow window;
 
-        public static void Show(Vector2 size, List<T> selection, List<T> source, SelectionType type, Action closeCallback = null)
+        public static void ShowSingle(Vector2 size, List<T> source, Action<T> closeCallback = null)
+        {
+            ObjectSelectionWindow<T> selectionWindow = new ObjectSelectionWindow<T>();
+            selectionWindow._source = source;
+            selectionWindow.isSelected = new bool[source.Count];
+            selectionWindow._singleAction = closeCallback;
+            selectionWindow._type = SelectionType.Single;
+            selectionWindow.search = "";
+            selectionWindow._size = size;
+            PopupWindow.Show(new Rect(UnityEngine.Event.current.mousePosition, Vector2.zero), selectionWindow);
+        }
+
+        public static void ShowMultiple(Vector2 size, List<T> selection, List<T> source, Action<List<T>> closeCallback = null)
         {
             ObjectSelectionWindow<T> selectionWindow = new ObjectSelectionWindow<T>();
             selectionWindow._source = source;
             selectionWindow.isSelected = new bool[source.Count];
             selectionWindow._selection = selection;
-            selectionWindow._action = closeCallback;
-            selectionWindow._type = type;
+            selectionWindow._multipleAction = closeCallback;
+            selectionWindow._type = SelectionType.Multiple;
             selectionWindow.search = "";
             selectionWindow._size = size;
             PopupWindow.Show(new Rect(UnityEngine.Event.current.mousePosition, Vector2.zero), selectionWindow);
@@ -45,9 +58,12 @@ namespace ZGame.Editor
 
         public override void OnOpen()
         {
-            for (int i = 0; i < _source.Count; i++)
+            if (_type == SelectionType.Multiple)
             {
-                isSelected[i] = _selection.Contains(_source[i]);
+                for (int i = 0; i < _source.Count; i++)
+                {
+                    isSelected[i] = _selection.Contains(_source[i]);
+                }
             }
         }
 
@@ -63,9 +79,9 @@ namespace ZGame.Editor
                         _selection.Add(_source[i]);
                     }
                 }
-            }
 
-            _action?.Invoke();
+                _multipleAction?.Invoke(_selection);
+            }
         }
 
         public override void OnGUI(Rect rect)
@@ -114,8 +130,7 @@ namespace ZGame.Editor
                     EditorGUILayout.LabelField(name, EditorStyles.boldLabel);
                     if (Event.current.type == EventType.MouseUp && rect2.Contains(Event.current.mousePosition))
                     {
-                        _selection.Clear();
-                        _selection.Add(_source[i]);
+                        _singleAction?.Invoke(_source[i]);
                         Event.current.Use();
                         EditorWindow.focusedWindow.Close();
                     }

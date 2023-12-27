@@ -29,6 +29,11 @@ namespace ZGame.Editor.PSD2GUI
             EditorGUI.BeginChangeCheck();
             setting.NameSpace = EditorGUILayout.TextField("NameSpace", setting.NameSpace);
 
+            setting.language = (ScriptableObject)EditorGUILayout.ObjectField("Language", setting.language, typeof(ScriptableObject), false);
+            if (setting.language != null)
+            {
+                ILocalliztion.Setup((ILocalliztion)setting.language);
+            }
 
             EditorGUILayout.BeginHorizontal();
             setting.output = EditorGUILayout.ObjectField("Output", setting.output, typeof(DefaultAsset), false);
@@ -245,7 +250,7 @@ namespace ZGame.Editor.PSD2GUI
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Is Bind Language", GUILayout.Width(110));
+            GUILayout.Label("Language", GUILayout.Width(110));
             options.bindLanguage = GUILayout.Toggle(options.bindLanguage, "");
             GUILayout.EndHorizontal();
 
@@ -255,27 +260,79 @@ namespace ZGame.Editor.PSD2GUI
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Bind Language", GUILayout.Width(110));
-            LanguageDataList languageData = Language.instance._languages.Find(x => x.define == GlobalConfig.instance.language);
-            if (languageData is not null && languageData.items is not null && languageData.items.Count > 0)
+            GUILayout.Label("Bind", GUILayout.Width(110));
+            List<string> languageData = ILocalliztion.GetValues();
+            if (languageData is null || languageData.Count == 0)
             {
-                LanguageItem item = languageData.items.Find(x => x.key == options.language);
-                if (item is not null)
+                GUILayout.EndHorizontal();
+                return;
+            }
+
+            SetLanguage(options);
+            if (EditorGUILayout.DropdownButton(new GUIContent(ILocalliztion.Get(options.language)), FocusType.Passive))
+            {
+                ObjectSelectionWindow<string>.ShowSingle(new Vector2(200, 300), languageData, (args) =>
                 {
-                    if (EditorGUILayout.DropdownButton(new GUIContent(item.value), FocusType.Passive))
-                    {
-                        List<string> selected = new List<string>() { item.value };
-                        List<string> languages = languageData.items.Select(x => x.value).ToList();
-                        ObjectSelectionWindow<string>.Show(new Vector2(200, 300), selected, languages, SelectionType.Single, () =>
-                        {
-                            int index = languageData.items.Find(x => x.value == selected[0]).key;
-                            options.language = index;
-                        });
-                    }
-                }
+                    Debug.Log(args);
+                    options.language = ILocalliztion.GetKey(args);
+                    SetLanguage(options);
+                });
             }
 
             GUILayout.EndHorizontal();
+        }
+
+        private void SetLanguage(UIBindData options)
+        {
+            string text = ILocalliztion.Get(options.language);
+            if (text.EndsWith(".png") is false)
+            {
+                Text t = options.target.GetComponent<Text>();
+                if (t != null)
+                {
+                    t.text = text;
+                    return;
+                }
+
+                TMP_Text t2 = options.target.GetComponent<TMP_Text>();
+                if (t2 != null)
+                {
+                    t2.text = text;
+                    return;
+                }
+
+                return;
+            }
+
+            Image i = options.target.GetComponent<Image>();
+            if (i != null)
+            {
+                if (text.StartsWith("Resources"))
+                {
+                    i.sprite = Resources.Load<Sprite>(text);
+                }
+                else
+                {
+                    i.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(text);
+                }
+
+                return;
+            }
+
+            RawImage i2 = options.target.GetComponent<RawImage>();
+            if (i2 != null)
+            {
+                if (text.StartsWith("Resources"))
+                {
+                    i2.texture = Resources.Load<Texture>(text);
+                }
+                else
+                {
+                    i2.texture = AssetDatabase.LoadAssetAtPath<Texture>(text);
+                }
+
+                return;
+            }
         }
     }
 }

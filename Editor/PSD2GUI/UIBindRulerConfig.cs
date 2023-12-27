@@ -6,6 +6,8 @@ using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using ZGame.Config;
+using ZGame.Resource;
 using ZGame.Window;
 
 namespace ZGame.Editor.PSD2GUI
@@ -19,6 +21,7 @@ namespace ZGame.Editor.PSD2GUI
         InputField,
         Text,
         Image,
+        RawImage,
         ScrollRect,
         Dropdown,
         RectTransform,
@@ -79,8 +82,10 @@ namespace ZGame.Editor.PSD2GUI
                     new() { nameSpace = "UnityEngine.EventSystems", isDefault = true },
                     new() { nameSpace = "TMPro", isDefault = true },
                     new() { nameSpace = "System", isDefault = true },
-                    new() { nameSpace = "ZGame.Window", isDefault = true },
                     new() { nameSpace = "ZGame", isDefault = true },
+                    new() { nameSpace = "ZGame.Window", isDefault = true },
+                    new() { nameSpace = "ZGame.Config", isDefault = true },
+                    new() { nameSpace = "ZGame.Resource", isDefault = true },
                 };
                 Debug.Log("initialize namespace");
             }
@@ -101,6 +106,7 @@ namespace ZGame.Editor.PSD2GUI
                     new() { fullName = typeof(TextMeshProUGUI).FullName, prefix = "text_", type = UIBindRulerType.TMP_Text, isDefault = true },
                     new() { fullName = typeof(TMP_InputField).FullName, prefix = "input_", type = UIBindRulerType.TMP_InputField, isDefault = true },
                     new() { fullName = typeof(TMP_Dropdown).FullName, prefix = "dorp_", type = UIBindRulerType.TMP_Dropdown, isDefault = true },
+                    new() { fullName = typeof(TMP_Text).FullName, prefix = "text_", type = UIBindRulerType.TMP_Text, isDefault = true },
                 };
                 Debug.Log("initialize ruler list");
             }
@@ -170,6 +176,7 @@ namespace ZGame.Editor.PSD2GUI
             List<string> callbackList = new List<string>();
             List<string> setupList = new List<string>();
             List<string> disposeList = new List<string>();
+            List<string> language = new List<string>();
             foreach (var VARIABLE in setting.options)
             {
                 fieldList.Add($"\t\tpublic GameObject {VARIABLE.name};");
@@ -219,7 +226,7 @@ namespace ZGame.Editor.PSD2GUI
 
                             setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(bool isOn)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.SetIsOnWithoutNotify(isOn);");
@@ -240,7 +247,7 @@ namespace ZGame.Editor.PSD2GUI
 
                             setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(float value)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.SetValueWithoutNotify(value);");
@@ -269,7 +276,7 @@ namespace ZGame.Editor.PSD2GUI
 
                             setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(string value)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.SetTextWithoutNotify(value);");
@@ -277,7 +284,7 @@ namespace ZGame.Editor.PSD2GUI
 
                             setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(TMP_FontAsset fontAsset)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.SetGlobalFontAsset(fontAsset);");
@@ -285,7 +292,7 @@ namespace ZGame.Editor.PSD2GUI
                             setupList.Add("");
                             setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(int size)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.SetGlobalPointSize(size);");
@@ -314,7 +321,7 @@ namespace ZGame.Editor.PSD2GUI
 
                             setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(int index)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.SetValueWithoutNotify(index);");
@@ -322,7 +329,7 @@ namespace ZGame.Editor.PSD2GUI
                             setupList.Add("");
                             setupList.Add($"\t\tpublic void on_add_{VARIABLE.name}(List<string> items)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.AddOptions(items);");
@@ -330,7 +337,7 @@ namespace ZGame.Editor.PSD2GUI
                             setupList.Add("");
                             setupList.Add($"\t\tpublic void on_add_{VARIABLE.name}(List<Sprite> items)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.AddOptions(items);");
@@ -338,7 +345,7 @@ namespace ZGame.Editor.PSD2GUI
                             setupList.Add("");
                             setupList.Add($"\t\tpublic void on_add_{VARIABLE.name}(List<OptionData> items)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.AddOptions(items);");
@@ -348,9 +355,21 @@ namespace ZGame.Editor.PSD2GUI
                         case UIBindRulerType.Image:
                             initFieldList.Add($"\t\t\t{fieldName} = this.{VARIABLE.name}.GetComponent<Image>();");
 
+                            setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(string path)");
+                            setupList.Add("\t\t{");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
+                            setupList.Add($"\t\t\t\treturn;");
+                            setupList.Add("");
+                            setupList.Add($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(ILocalliztion.Get(00));");
+                            setupList.Add($"\t\t\tif (handle.EnsureLoadSuccess() == false)");
+                            setupList.Add($"\t\t\t\treturn;");
+                            setupList.Add($"\t\t\t{fieldName}.sprite = handle.Get<Sprite>({fieldName}.gameObject);");
+                            setupList.Add("\t\t}");
+                            setupList.Add("");
+
                             setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.sprite = sprite;");
@@ -358,12 +377,65 @@ namespace ZGame.Editor.PSD2GUI
                             setupList.Add("");
                             setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(Texture2D texture)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);");
                             setupList.Add("\t\t}");
                             setupList.Add("");
+
+                            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
+                            {
+                                language.Add($"\t\t\t on_setup_{VARIABLE.name}(ILocalliztion.Get({VARIABLE.language}));");
+                            }
+
+                            break;
+                        case UIBindRulerType.RawImage:
+                            initFieldList.Add($"\t\t\t{fieldName} = this.{VARIABLE.name}.GetComponent<RawImage>();");
+
+                            setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(string path)");
+                            setupList.Add("\t\t{");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
+                            setupList.Add($"\t\t\t\treturn;");
+                            setupList.Add("");
+                            setupList.Add($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(ILocalliztion.Get(00));");
+                            setupList.Add($"\t\t\tif (handle.EnsureLoadSuccess() == false)");
+                            setupList.Add($"\t\t\t\treturn;");
+                            setupList.Add($"\t\t\t{fieldName}.texture = handle.Get<Texture2D>({fieldName}.gameObject);");
+                            setupList.Add("\t\t}");
+                            setupList.Add("");
+
+                            setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
+                            setupList.Add("\t\t{");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
+                            setupList.Add($"\t\t\t\treturn;");
+                            setupList.Add("");
+                            setupList.Add($"\t\t\t{fieldName}.texture = sprite.texture;");
+                            setupList.Add("\t\t}");
+                            setupList.Add("");
+                            setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(Texture2D texture)");
+                            setupList.Add("\t\t{");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
+                            setupList.Add($"\t\t\t\treturn;");
+                            setupList.Add("");
+                            setupList.Add($"\t\t\t{fieldName}.texture = texture;");
+                            setupList.Add("\t\t}");
+                            setupList.Add("");
+
+                            setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(RendererTexture texture)");
+                            setupList.Add("\t\t{");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
+                            setupList.Add($"\t\t\t\treturn;");
+                            setupList.Add("");
+                            setupList.Add($"\t\t\t{fieldName}.texture = texture;");
+                            setupList.Add("\t\t}");
+                            setupList.Add("");
+
+                            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
+                            {
+                                language.Add($"\t\t\t on_setup_{VARIABLE.name}(ILocalliztion.Get({VARIABLE.language}));");
+                            }
+
                             break;
                         case UIBindRulerType.TMP_Text:
                         case UIBindRulerType.Text:
@@ -378,12 +450,18 @@ namespace ZGame.Editor.PSD2GUI
 
                             setupList.Add($"\t\tpublic void on_setup_{VARIABLE.name}(string text)");
                             setupList.Add("\t\t{");
-                            setupList.Add($"\t\t\tif ({fieldName}!= null)");
+                            setupList.Add($"\t\t\tif ({fieldName}== null)");
                             setupList.Add($"\t\t\t\treturn;");
                             setupList.Add("");
                             setupList.Add($"\t\t\t{fieldName}.text = text;");
                             setupList.Add("\t\t}");
                             setupList.Add("");
+
+                            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
+                            {
+                                language.Add($"\t\t\t on_setup_{VARIABLE.name}(ILocalliztion.Get({VARIABLE.language}));");
+                            }
+
                             break;
                     }
                 }
@@ -418,8 +496,15 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("");
             sb.AppendLine("\t\t\tOnBindField();");
             sb.AppendLine("\t\t\tOnBindEvents();");
+            sb.AppendLine("\t\t\tSetLanguage();");
             sb.AppendLine("\t\t}");
             sb.AppendLine("");
+
+            sb.AppendLine("\t\tprivate void SetLanguage()");
+            sb.AppendLine("\t\t{");
+            language.ForEach(x => sb.AppendLine(x));
+            sb.AppendLine("\t\t}");
+
             sb.AppendLine("\t\tpublic virtual void Enable()");
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t}");

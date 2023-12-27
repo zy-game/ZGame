@@ -2,12 +2,7 @@ using System;
 
 namespace ZGame.Editor.ResBuild.Config
 {
-    public enum OSSType
-    {
-        Aliyun,
-        Tencent,
-        Strwaming,
-    }
+
     [Serializable]
     public class OSSOptions
     {

@@ -24,7 +24,7 @@ namespace ZGame.Networking
             return GetData<T>(request);
         }
 
-        public static async UniTask<T> Post<T>(string url, Dictionary<string, string> headers, object data)
+        public static async UniTask<T> Post<T>(string url, object data, Dictionary<string, string> headers = null)
         {
             Debug.Log("POST:" + url);
             string str = JsonConvert.SerializeObject(data);
@@ -46,6 +46,7 @@ namespace ZGame.Networking
                 return default;
             }
 
+            Debug.Log("POST:" + url + "  " + request.downloadHandler.text);
             return GetData<T>(request);
         }
 

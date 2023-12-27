@@ -113,7 +113,7 @@ namespace ZGame.Editor
             GUILayout.FlexibleSpace();
             if (added is not null)
             {
-                if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     added();
                 }

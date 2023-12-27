@@ -12,8 +12,8 @@ namespace ZGame.Editor.ExcelExprot
     [SubPageSetting("Excel Editor", typeof(ExcelExportManager))]
     public class ExportEditorWindow : SubPage
     {
-        private Exporter exporter;
-        private ExportSet options;
+        private ExcelExporter exporter;
+        private ExportOptions options;
         private int index = 0;
         private GUIContent[] tableNames;
 
@@ -24,10 +24,15 @@ namespace ZGame.Editor.ExcelExprot
                 return;
             }
 
-            exporter = args[0] as Exporter;
-            exporter?.LoadFile();
-            options = exporter?.options?.First();
-            tableNames = exporter?.options?.Select(x => new GUIContent(x.table)).ToArray();
+            exporter = args[0] as ExcelExporter;
+            if (exporter is null)
+            {
+                return;
+            }
+
+            exporter.LoadFile();
+            options = exporter.options.First();
+            tableNames = exporter.options.Select(x => new GUIContent(x.table)).ToArray();
         }
 
         public override void OnGUI()
@@ -37,28 +42,6 @@ namespace ZGame.Editor.ExcelExprot
                 return;
             }
 
-            // GUILayout.BeginHorizontal();
-            // GUILayout.Label("表名");
-            // if (EditorGUILayout.DropdownButton(new GUIContent(options.table), FocusType.Passive, GUILayout.Width(200)))
-            // {
-            //     GenericMenu menu = new GenericMenu();
-            //     for (int i = 0; i < exporter.options.Count; i++)
-            //     {
-            //         ExportSet set = exporter.options[i];
-            //         if (set is null)
-            //         {
-            //             continue;
-            //         }
-            //
-            //         menu.AddItem(new GUIContent(set.table), false, () => { this.options = set; });
-            //     }
-            //
-            //     menu.ShowAsContext();
-            // }
-            //
-            // GUILayout.FlexibleSpace();
-            // GUILayout.EndHorizontal();
-
             index = GUILayout.Toolbar(index, tableNames, EditorStyles.toolbarButton);
             if (index < 0 || index >= exporter.options.Count)
             {
@@ -67,17 +50,28 @@ namespace ZGame.Editor.ExcelExprot
 
             options = exporter.options[index];
             GUILayout.BeginVertical();
+            EditorGUI.BeginChangeCheck();
             options.nameSpace = EditorGUILayout.TextField("命名空间", options.nameSpace);
             options.headerRow = EditorGUILayout.IntField("表头行", options.headerRow);
+            options.typeRow = EditorGUILayout.IntField("字段类型行", options.typeRow);
             options.dataRow = EditorGUILayout.IntField("数据起始行", options.dataRow);
-            options.typeRow = EditorGUILayout.IntField("字段类型起始行", options.typeRow);
-            options.isExport = EditorGUILayout.Toggle("Export", options.isExport);
-            options.name = EditorGUILayout.TextField("文件名", options.name);
+            options.isExport = EditorGUILayout.Toggle("是否导出", options.isExport);
+            options.name = EditorGUILayout.TextField("导出文件名", options.name);
             options.type = (ExportType)EditorGUILayout.EnumPopup("导出类型", options.type);
-            options.output = (UnityEngine.Object)EditorGUILayout.ObjectField("输出路径", options.output, typeof(UnityEngine.Object), false);
+            if (options.type == ExportType.Csharp)
+            {
+                options.code = (UnityEngine.Object)EditorGUILayout.ObjectField("代码保存路径", options.code, typeof(UnityEngine.Object), false);
+            }
+
+            options.output = (UnityEngine.Object)EditorGUILayout.ObjectField("配置输出路径", options.output, typeof(UnityEngine.Object), false);
+            if (EditorGUI.EndChangeCheck())
+            {
+                ExcelExportList.OnSave();
+            }
+
             if (GUILayout.Button("Generic"))
             {
-                exporter.Export(options);
+                ExcelExportList.instance.Generic(options);
             }
 
             GUILayout.EndVertical();

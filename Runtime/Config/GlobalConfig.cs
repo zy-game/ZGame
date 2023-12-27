@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Serialization;
 using ZGame.Config;
@@ -16,18 +17,70 @@ namespace ZGame
         Simulator,
     }
 
-    [Serializable]
-    public class ResConfig
+    public enum OSSType
     {
+        Aliyun,
+        Tencent,
+        Strwaming,
+    }
+
+
+    [Serializable]
+    public class IPConfig
+    {
+        /// <summary>
+        /// 标题
+        /// </summary>
+        public string title;
+
+        /// <summary>
+        /// 地址
+        /// </summary>
+        public string address;
+
+        /// <summary>
+        /// 端口
+        /// </summary>
+        public int port;
+
+        public string GetUrl(string path)
+        {
+            return $"{address}:{port}{path}";
+        }
+    }
+
+    [Serializable]
+    public class EntryConfig
+    {
+        /// <summary>
+        /// 标题
+        /// </summary>
+        public string title;
+
+        /// <summary>
+        /// 入口DLL名称
+        /// </summary>
+        public string entryName;
+
+        /// <summary>
+        /// assembly 路径
+        /// </summary>
+        public string path;
+
+        /// <summary>
+        /// 默认语言
+        /// </summary>
+        public LanguageDefine language = LanguageDefine.English;
+
         /// <summary>
         /// 云存储
         /// </summary>
         public string oss;
 
         /// <summary>
-        /// 资源配置
+        /// 资源服务名称
         /// </summary>
-        public string address;
+        public string ossTitle;
 
         /// <summary>
         /// 默认资源模块
@@ -43,13 +96,13 @@ namespace ZGame
         /// 卸载间隔时间
         /// </summary>
         public float unloadInterval = 60f;
-    }
 
-    [Serializable]
-    public class GameConfig
-    {
-        public string dll;
-        public List<string> aot;
+        /// <summary>
+        /// 引用DLL
+        /// </summary>
+        public List<string> references;
+
+        [NonSerialized] public AssemblyDefinitionAsset assembly;
     }
 
     [Serializable]
@@ -64,29 +117,42 @@ namespace ZGame
     public sealed class GlobalConfig : SingletonScriptableObject<GlobalConfig>
     {
         /// <summary>
-        /// 资源配置
-        /// </summary>
-        public ResConfig resConfig;
-
-        /// <summary>
-        /// 默认子游戏配置
-        /// </summary>
-        public GameConfig gameConfig;
-
-        /// <summary>
         /// 虚拟文件系统设置
         /// </summary>
         public VFSConfig vfsConfig;
 
+        public string curEntryName;
+        public string curAddressName;
+
         /// <summary>
-        /// 默认语言
+        /// 当前游戏入口配置
         /// </summary>
-        public LanguageDefine language = LanguageDefine.English;
+        public EntryConfig curEntry
+        {
+            get { return entries.Find(x => x.title == curEntryName); }
+        }
+
+        /// <summary>
+        /// 当前游戏地址
+        /// </summary>
+        public IPConfig curAddress
+        {
+            get { return address.Find(x => x.title == curAddressName); }
+        }
+
+        /// <summary>
+        /// 游戏入口列表
+        /// </summary>
+        public List<EntryConfig> entries;
+
+        /// <summary>
+        /// 地址列表
+        /// </summary>
+        public List<IPConfig> address;
+
 
         public override void OnAwake()
         {
-            gameConfig ??= new GameConfig();
-            resConfig ??= new ResConfig();
             vfsConfig ??= new VFSConfig();
         }
 
@@ -107,7 +173,7 @@ namespace ZGame
         /// <returns></returns>
         public static string GetNetworkResourceUrl(string fileName)
         {
-            return $"{instance.resConfig.address}{GetPlatformName()}/{fileName}";
+            return $"{instance.curEntry.oss}{GetPlatformName()}/{fileName}";
         }
     }
 }

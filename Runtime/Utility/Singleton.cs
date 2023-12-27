@@ -43,9 +43,14 @@ namespace ZGame
             return _instance;
         }
 
-        public void StartCoroutine(IEnumerator enumerator)
+        public Coroutine StartCoroutine(IEnumerator enumerator)
         {
-            singleton?.StartCoroutine(enumerator);
+            return singleton?.StartCoroutine(enumerator);
+        }
+
+        public void StopCoroutine(Coroutine coroutine)
+        {
+            singleton?.StopCoroutine(coroutine);
         }
 
         public void StopAllCoroutine()

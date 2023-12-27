@@ -63,19 +63,19 @@ namespace ZGame.Editor
                 return;
             }
 
-            _docker = EditorManager.GetWindow<EditorManager>();
             OpenScene();
+        }
+
+        private static EditorManager TryOpenManager()
+        {
+            return _docker = EditorManager.GetWindow<EditorManager>(false, "工具集", true);
         }
 
 
         [MenuItem("Tools/ZGame Editor %L")]
         static void OpenScene()
         {
-            if (EditorWindow.HasOpenInstances<EditorManager>() is false)
-            {
-                _docker = EditorManager.GetWindow<EditorManager>();
-            }
-
+            TryOpenManager();
             SwitchScene(sceneMaps.FirstOrDefault());
         }
 
@@ -136,7 +136,7 @@ namespace ZGame.Editor
 
             if (_docker == null)
             {
-                _docker = EditorManager.GetWindow<EditorManager>();
+                TryOpenManager();
             }
 
             if (_docker.current is not null)
