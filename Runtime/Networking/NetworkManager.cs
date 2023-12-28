@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Text;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using UnityEngine;
@@ -21,7 +23,7 @@ namespace ZGame.Networking
         private Dictionary<uint, IMessageHandler> _dispatchers = new();
         private Dictionary<string, IChannel> channels = new();
 
-        protected  override void OnDestroy()
+        protected override void OnDestroy()
         {
             foreach (var variable in channels.Values)
             {
@@ -177,6 +179,53 @@ namespace ZGame.Networking
             }
 
             dispatcher.ReceiveHandle(channel, opcode, memoryStream);
+        }
+
+        public static async UniTask<T> Get<T>(string url)
+        {
+            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            {
+                request.useHttpContinue = true;
+                request.SetRequestHeader("Content-Type", "application/json");
+                await request.SendWebRequest().ToUniTask();
+                Debug.Log($"GET:{url} result:{request.downloadHandler.text}");
+                return request.GetData<T>();
+            }
+        }
+
+        public static async UniTask<T> Post<T>(string url, object data, Dictionary<string, object> headers = null)
+        {
+            string str = JsonConvert.SerializeObject(data);
+            using (UnityWebRequest request = UnityWebRequest.Post(url, str))
+            {
+                request.useHttpContinue = true;
+                request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str));
+                request.SetRequestHeader("Content-Type", "application/json");
+                if (headers is not null)
+                {
+                    foreach (var VARIABLE in headers)
+                    {
+                        request.SetRequestHeader(VARIABLE.Key, VARIABLE.Value.ToString());
+                    }
+                }
+
+                await request.SendWebRequest().ToUniTask();
+                Debug.Log($"POST:{url} data:{str} result:{request.downloadHandler.text} header:{JsonConvert.SerializeObject(headers)}");
+                return request.GetData<T>();
+            }
+        }
+
+        public static async UniTask<string> Head(string url, string headName)
+        {
+            using (UnityWebRequest request = UnityWebRequest.Head(url))
+            {
+                request.useHttpContinue = true;
+                await request.SendWebRequest().ToUniTask();
+                Debug.Log($"HEAD:{url} result:{request.downloadHandler.text}");
+                string result = request.GetResponseHeader(headName);
+                request.Dispose();
+                return result;
+            }
         }
     }
 }

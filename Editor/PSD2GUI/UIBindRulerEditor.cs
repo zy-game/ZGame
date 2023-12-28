@@ -29,22 +29,10 @@ namespace ZGame.Editor.PSD2GUI
             });
             if (nameSpaceFoldout)
             {
-                bool isEnd = false;
-                EditorGUI.BeginDisabledGroup(true);
                 for (int i = UIBindRulerConfig.instance.nameSpaces.Count - 1; i >= 0; i--)
                 {
                     ReferenceNameSpace item = UIBindRulerConfig.instance.nameSpaces[i];
-                    if (item.isDefault is false)
-                    {
-                        if (isEnd is false)
-                        {
-                            EditorGUI.EndDisabledGroup();
-                            isEnd = true;
-                        }
-
-                        continue;
-                    }
-
+                    EditorGUI.BeginDisabledGroup(item.isDefault);
                     GUILayout.BeginHorizontal();
                     item.nameSpace = EditorGUILayout.TextField("Element " + i, item.nameSpace, GUILayout.Width(500));
                     GUILayout.FlexibleSpace();
@@ -55,10 +43,6 @@ namespace ZGame.Editor.PSD2GUI
                     }
 
                     GUILayout.EndHorizontal();
-                }
-
-                if (isEnd is false)
-                {
                     EditorGUI.EndDisabledGroup();
                 }
 
@@ -73,26 +57,12 @@ namespace ZGame.Editor.PSD2GUI
 
             if (typeFoldout)
             {
-                EditorGUI.BeginDisabledGroup(true);
-                bool isEnd = false;
-
                 for (int i = UIBindRulerConfig.instance.rules.Count - 1; i >= 0; i--)
                 {
                     UIBindRulerItem item = UIBindRulerConfig.instance.rules[i];
-                    if (item.isDefault is false)
-                    {
-                        if (isEnd is false)
-                        {
-                            EditorGUI.EndDisabledGroup();
-                            isEnd = true;
-                        }
 
-                        continue;
-                    }
-
+                    EditorGUI.BeginDisabledGroup(item.isDefault);
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("组件类型");
-                    item.type = (UIBindRulerType)EditorGUILayout.EnumPopup(item.type, GUILayout.Width(200));
                     GUILayout.Label("组件路径");
                     item.fullName = EditorGUILayout.TextField(item.fullName, GUILayout.Width(200));
                     GUILayout.Label("前缀");
@@ -105,10 +75,6 @@ namespace ZGame.Editor.PSD2GUI
                     }
 
                     GUILayout.EndHorizontal();
-                }
-
-                if (isEnd is false)
-                {
                     EditorGUI.EndDisabledGroup();
                 }
             }

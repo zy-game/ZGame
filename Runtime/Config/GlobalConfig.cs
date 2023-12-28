@@ -175,5 +175,10 @@ namespace ZGame
         {
             return $"{instance.curEntry.oss}{GetPlatformName()}/{fileName}";
         }
+
+        public static string GetApiUrl(string path)
+        {
+            return $"{instance.curAddress.GetUrl(path)}";
+        }
     }
 }

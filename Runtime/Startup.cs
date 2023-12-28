@@ -17,8 +17,7 @@ public class Startup : MonoBehaviour
 {
     private async void Start()
     {
-        CameraManager.instance.SetMainCamera();
-        CameraManager.instance.NewCamera("test", 0, "Default");
+        GameManager.instance.Initialized();
         ILoading loading = UIManager.instance.Open<ILoading>();
         loading.SetTitle("正在获取配置信息...");
         if (GlobalConfig.instance.curEntry is null)

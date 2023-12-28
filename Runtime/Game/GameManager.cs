@@ -17,6 +17,43 @@ namespace ZGame.Game
         private SubGameEntry gameHandle = default;
         private HashSet<string> aotList = new();
 
+        public static World DefaultWorld { get; private set; }
+
+        private Dictionary<string, World> worlds = new();
+
+        internal void Initialized()
+        {
+            DefaultWorld = CreateWorld("DEFAULT_WORLD");
+        }
+
+        public World CreateWorld(string name)
+        {
+            if (worlds.TryGetValue(name, out World world))
+            {
+                return world;
+            }
+
+            world = new(name);
+            worlds.Add(name, world);
+            return world;
+        }
+
+        public World GetWorld(string name)
+        {
+            if (worlds.TryGetValue(name, out World world))
+            {
+                return world;
+            }
+
+            return default;
+        }
+
+        public void RemoveWorld(string name)
+        {
+            worlds.Remove(name);
+        }
+
+
         protected override void OnDestroy()
         {
             gameHandle?.Dispose();

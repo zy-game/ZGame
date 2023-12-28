@@ -16,7 +16,7 @@ namespace ZGame.Window
         /// <summary>
         /// 激活界面
         /// </summary>
-        void Awake();
+        void Awake(params object[] args);
 
         /// <summary>
         /// 现实2界面

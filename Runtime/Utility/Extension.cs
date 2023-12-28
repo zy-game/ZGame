@@ -3,13 +3,49 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Networking;
 
 namespace ZGame
 {
     public static partial class Extension
     {
+        public static Color ToColor(this string hex)
+        {
+            return ColorUtility.TryParseHtmlString(hex, out Color color) ? color : Color.white;
+        }
+
+        public static string ToHex(this Color color)
+        {
+            return ColorUtility.ToHtmlStringRGB(color);
+        }
+
+        public static T GetData<T>(this UnityWebRequest request)
+        {
+            if (request.result is not UnityWebRequest.Result.Success)
+            {
+                return default;
+            }
+
+            object _data = default;
+            if (typeof(T) == typeof(string))
+            {
+                _data = request.downloadHandler.text;
+            }
+            else if (typeof(T) == typeof(byte[]))
+            {
+                _data = request.downloadHandler.data;
+            }
+            else
+            {
+                _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
+            }
+
+            return (T)_data;
+        }
+
         public static void OnDestroyEventCallback(this GameObject gameObject, UnityAction callback)
         {
             BevaviourScriptable listener = gameObject.GetComponent<BevaviourScriptable>();

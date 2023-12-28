@@ -10,7 +10,7 @@ namespace UI
 
         public static IMsgBox Show(string title, string content, Action onYes, Action onNo)
         {
-            IMsgBox msgBox = UIManager.instance.TryOpenWindow<IMsgBox>();
+            IMsgBox msgBox = UIManager.instance.Open<IMsgBox>();
             if (msgBox is null)
             {
                 Debug.Log("??");

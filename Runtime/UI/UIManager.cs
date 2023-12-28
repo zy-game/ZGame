@@ -29,7 +29,7 @@ namespace ZGame.Window
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public UIBase Open(Type type)
+        public UIBase Open(Type type, params object[] args)
         {
             UIBase uiBase = GetWindow(type);
             if (uiBase is not null)
@@ -50,7 +50,7 @@ namespace ZGame.Window
             ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
             if (reference is null || reference.path.IsNullOrEmpty())
             {
-                Debug.LogError("没找到资源引用");
+                Debug.LogError("没找到资源引用:" + type.Name);
                 return default;
             }
 
@@ -140,9 +140,9 @@ namespace ZGame.Window
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T Open<T>() where T : UIBase
+        public T Open<T>(params object[] args) where T : UIBase
         {
-            return (T)Open(typeof(T));
+            return (T)Open(typeof(T), args);
         }
 
         /// <summary>
@@ -171,34 +171,6 @@ namespace ZGame.Window
         public void Inactive<T>() where T : UIBase
         {
             Inactive(typeof(T));
-        }
-
-        /// <summary>
-        /// 尝试打开窗口
-        /// </summary>
-        /// <param name="system"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public UIBase TryOpenWindow(Type type)
-        {
-            UIBase uiBase = GetWindow(type);
-            if (uiBase is not null)
-            {
-                return uiBase;
-            }
-
-            return Open(type);
-        }
-
-        /// <summary>
-        /// 尝试打开窗口
-        /// </summary>
-        /// <param name="system"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T TryOpenWindow<T>() where T : UIBase
-        {
-            return (T)TryOpenWindow(typeof(T));
         }
 
         /// <summary>

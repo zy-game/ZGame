@@ -27,7 +27,7 @@ namespace ZGame.Resource
                 return;
             }
 
-            ILoading handler = (ILoading)UIManager.instance.TryOpenWindow(typeof(ILoading));
+            ILoading handler = (ILoading)UIManager.instance.Open(typeof(ILoading));
             handler.SetTitle(ILocalliztion.Get(100000));
             handler.Report(0);
             HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
@@ -47,7 +47,7 @@ namespace ZGame.Resource
                         continue;
                     }
 
-                    string tag = await NetworkRequest.Head(VARIABLE, "eTag");
+                    string tag = await NetworkManager.Head(VARIABLE, "eTag");
                     uint crc = Crc32.GetCRC32Str(tag);
                     if (VFSManager.instance.Exist(Path.GetFileName(VARIABLE), crc))
                     {
@@ -73,7 +73,7 @@ namespace ZGame.Resource
                         continue;
                     }
 
-                    bool state = await DownloadResource(packageManifest, handler);
+                    bool state = await DownloadResource(GlobalConfig.GetNetworkResourceUrl(packageManifest.name), handler, packageManifest.version);
                     downloadList.Add(packageManifest);
                     if (state is false)
                     {
@@ -89,11 +89,6 @@ namespace ZGame.Resource
 
             Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
             IMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
-        }
-
-        private async UniTask<bool> DownloadResource(ResourcePackageManifest resourcePackageManifest, ILoading loadingHandle)
-        {
-            return await DownloadResource(GlobalConfig.GetNetworkResourceUrl(resourcePackageManifest.name), loadingHandle, resourcePackageManifest.version);
         }
 
         private async UniTask<bool> DownloadResource(string url, ILoading loadingHandle, uint crc = 0)

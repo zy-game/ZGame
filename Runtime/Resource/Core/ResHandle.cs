@@ -136,7 +136,7 @@ namespace ZGame.Resource
                 operation = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path), parameters);
             }
 
-            ILoading handler = (ILoading)UIManager.instance.TryOpenWindow(typeof(ILoading));
+            ILoading handler = (ILoading)UIManager.instance.Open<ILoading>();
             await operation.ToUniTask(handler);
             scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
             UIManager.instance.Close(typeof(ILoading));

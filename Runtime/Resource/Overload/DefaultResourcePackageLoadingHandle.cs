@@ -18,7 +18,7 @@ namespace ZGame.Resource
         public async UniTask Loading(params string[] paths)
         {
             Queue<string> fileList = new Queue<string>();
-            ILoading handler = (ILoading)UIManager.instance.TryOpenWindow(typeof(ILoading));
+            ILoading handler = (ILoading)UIManager.instance.Open(typeof(ILoading));
             //todo 这里还需要注意实在webgl平台上面加载资源包的情况
             handler.SetTitle("正在加载资源信息...");
             handler.Report(0);

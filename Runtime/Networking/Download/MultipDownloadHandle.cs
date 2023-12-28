@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using UnityEngine.Networking;
 
 namespace ZGame.Networking
 {
@@ -60,60 +59,6 @@ namespace ZGame.Networking
             for (int i = 0; i < _handles.Length; i++)
             {
                 _handles[i].Dispose();
-            }
-        }
-
-        class DownloadHandle : IDisposable, IProgress<float>
-        {
-            private DownloadData data;
-            public float progress;
-
-            public DownloadHandle(DownloadData data)
-            {
-                this.data = data;
-            }
-
-            public async UniTask OnStart()
-            {
-                string etag = await NetworkRequest.Head(data.url, "ETag");
-                data.crc = Crc32.GetCRC32Str(etag);
-                UnityWebRequest request = UnityWebRequest.Get(data.url);
-                request.timeout = 5;
-                request.useHttpContinue = true;
-                await request.SendWebRequest().ToUniTask(this);
-                progress = 1;
-                data.isDone = request.isDone;
-                if (request.isDone)
-                {
-                    data.bytes = request.downloadHandler.data;
-                }
-
-                request.Dispose();
-            }
-
-            public void Dispose()
-            {
-                data = null;
-                progress = 0;
-            }
-
-            public void Report(float value)
-            {
-                progress = value;
-            }
-        }
-
-        public class DownloadData : IDisposable
-        {
-            public string name;
-            public string url;
-            public bool isDone;
-            public byte[] bytes;
-            public uint crc;
-
-            public void Dispose()
-            {
-                // TODO 在此释放托管资源
             }
         }
     }
