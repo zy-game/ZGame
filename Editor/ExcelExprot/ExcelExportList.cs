@@ -393,7 +393,7 @@ namespace ZGame.Editor.ExcelExprot
                 list.Add(item);
             }
 
-            string path = Path.Combine(AssetDatabase.GetAssetPath(exportSet.output), exportSet.name + "Config.json");
+            string path = Path.Combine(AssetDatabase.GetAssetPath(exportSet.output), exportSet.name + ".json");
             if (File.Exists(path))
             {
                 File.Delete(path);

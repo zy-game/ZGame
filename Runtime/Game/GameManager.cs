@@ -14,57 +14,81 @@ namespace ZGame.Game
     public sealed class GameManager : Singleton<GameManager>
     {
         private Assembly assembly = default;
-        private SubGameEntry gameHandle = default;
-        private HashSet<string> aotList = new();
-
+        private SubGame gameHandle = default;
+        private List<World> worlds = new();
         public static World DefaultWorld { get; private set; }
-
-        private Dictionary<string, World> worlds = new();
 
         internal void Initialized()
         {
             DefaultWorld = CreateWorld("DEFAULT_WORLD");
         }
 
+        protected override void OnFixedUpdate()
+        {
+            for (int i = worlds.Count - 1; i >= 0; i--)
+            {
+                worlds[i].OnFixedUpdate();
+            }
+        }
+
         public World CreateWorld(string name)
         {
-            if (worlds.TryGetValue(name, out World world))
+            World world = GetWorld(name);
+            if (world is not null)
             {
                 return world;
             }
 
             world = new(name);
-            worlds.Add(name, world);
+            worlds.Add(world);
             return world;
         }
 
         public World GetWorld(string name)
         {
-            if (worlds.TryGetValue(name, out World world))
-            {
-                return world;
-            }
-
-            return default;
+            return worlds.Find(x => x.name == name);
         }
 
         public void RemoveWorld(string name)
         {
-            worlds.Remove(name);
+            if (name == "DEFAULT_WORLD")
+            {
+                return;
+            }
+
+            World world = GetWorld(name);
+            if (world is null)
+            {
+                return;
+            }
+
+            world.Dispose();
+            worlds.Remove(world);
         }
 
 
         protected override void OnDestroy()
         {
+            foreach (World world in worlds)
+            {
+                world.Dispose();
+            }
+
+            worlds.Clear();
             gameHandle?.Dispose();
             gameHandle = null;
         }
 
-        public async UniTask EntryGame(EntryConfig config, params object[] args)
+        public async UniTask<bool> EntryGame(EntryConfig config, params object[] args)
         {
-            await LoadAOT(config);
-            await LoadDLL(config);
-            OnEntryGame(config, args);
+            SubGame gameEntry = await SubGame.LoadGame(config);
+            if (gameEntry is null)
+            {
+                return false;
+            }
+
+            gameHandle = gameEntry;
+            return true;
         }
 
         public void QuitGame()
@@ -74,80 +98,6 @@ namespace ZGame.Game
 #else
             Application.Quit();
 #endif
-        }
-
-        private async UniTask LoadDLL(EntryConfig config)
-        {
-#if UNITY_EDITOR
-            if (config.entryName.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(config.entryName));
-            }
-
-            string dllName = Path.GetFileNameWithoutExtension(config.entryName);
-            assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
-            return;
-#endif
-            ResHandle textAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(config.entryName) + ".bytes");
-            if (textAsset == null)
-            {
-                throw new NullReferenceException(config.entryName);
-            }
-
-            assembly = Assembly.Load(textAsset.Get<TextAsset>(default).bytes);
-        }
-
-        private async UniTask LoadAOT(EntryConfig config)
-        {
-#if UNITY_EDITOR
-            return;
-#endif
-            HomologousImageMode mode = HomologousImageMode.SuperSet;
-            foreach (var item in config.references)
-            {
-                if (aotList.Contains(item))
-                {
-                    continue;
-                }
-
-                ResHandle textAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(item) + ".bytes");
-                if (textAsset == null)
-                {
-                    throw new Exception("加载AOT补元数据资源失败:" + item);
-                }
-
-                LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(textAsset.Get<TextAsset>(default).bytes, mode);
-                if (err != LoadImageErrorCode.OK)
-                {
-                    Debug.LogError("加载AOT补元数据资源失败:" + item);
-                    continue;
-                }
-
-                aotList.Add(item);
-                Debug.Log("加载补充元数据成功：" + item);
-            }
-        }
-
-        private void OnEntryGame(EntryConfig config, params object[] args)
-        {
-            if (assembly is null)
-            {
-                throw new NullReferenceException(nameof(assembly));
-            }
-
-            Type entryType = assembly.GetAllSubClasses<SubGameEntry>().FirstOrDefault();
-            if (entryType is null)
-            {
-                throw new EntryPointNotFoundException();
-            }
-
-            if (gameHandle is not null)
-            {
-                gameHandle.Dispose();
-            }
-
-            gameHandle = Activator.CreateInstance(entryType) as SubGameEntry;
-            gameHandle.OnEntry(args);
         }
     }
 }

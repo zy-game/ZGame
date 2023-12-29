@@ -28,7 +28,7 @@ namespace ZGame.Resource
             }
 
             ILoading handler = (ILoading)UIManager.instance.Open(typeof(ILoading));
-            handler.SetTitle(ILocalliztion.Get(100000));
+            handler.SetTitle(Localliztion.Get(100000));
             handler.Report(0);
             HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
             HashSet<string> urlList = new HashSet<string>();

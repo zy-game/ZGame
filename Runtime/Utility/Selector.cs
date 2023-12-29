@@ -50,6 +50,17 @@ namespace ZGame
 
         public void Add(params string[] args)
         {
+            List<string> temp = args.ToList();
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (temp.Contains(items[i].name))
+                {
+                    continue;
+                }
+
+                items.Remove(items[i]);
+            }
+
             foreach (var VARIABLE in args)
             {
                 if (items.Exists(x => x.name == VARIABLE))

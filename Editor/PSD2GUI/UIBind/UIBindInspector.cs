@@ -17,22 +17,25 @@ namespace ZGame.Editor.PSD2GUI
     public class UIBindInspector : CustomEditorWindow
     {
         private UIBind setting;
-
+        private bool isSetLanguage = false;
 
         public void OnEnable()
         {
             this.setting = (UIBind)target;
         }
 
+
         public override void OnInspectorGUI()
         {
             EditorGUI.BeginChangeCheck();
             setting.NameSpace = EditorGUILayout.TextField("NameSpace", setting.NameSpace);
 
-            setting.language = (ScriptableObject)EditorGUILayout.ObjectField("Language", setting.language, typeof(ScriptableObject), false);
-            if (setting.language != null)
+            setting.language = (TextAsset)EditorGUILayout.ObjectField("Language", setting.language, typeof(TextAsset), false);
+            if (setting.language != null && isSetLanguage is false)
             {
-                ILocalliztion.Setup((ILocalliztion)setting.language);
+                Localliztion.Setup(setting.language);
+                isSetLanguage = true;
+                Localliztion.Switch(GlobalConfig.instance.curEntry.language);
             }
 
             EditorGUILayout.BeginHorizontal();
@@ -221,6 +224,7 @@ namespace ZGame.Editor.PSD2GUI
             GUILayout.EndHorizontal();
 
             List<Component> opComs = options.target.GetComponents<Component>().ToList();
+
             options.selector.Add(opComs.Select(x => x.GetType().FullName).ToArray());
 
             GUILayout.BeginHorizontal();
@@ -261,7 +265,7 @@ namespace ZGame.Editor.PSD2GUI
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Bind", GUILayout.Width(110));
-            List<string> languageData = ILocalliztion.GetValues();
+            List<string> languageData = Localliztion.GetValues();
             if (languageData is null || languageData.Count == 0)
             {
                 GUILayout.EndHorizontal();
@@ -269,12 +273,11 @@ namespace ZGame.Editor.PSD2GUI
             }
 
             SetLanguage(options);
-            if (EditorGUILayout.DropdownButton(new GUIContent(ILocalliztion.Get(options.language)), FocusType.Passive))
+            if (EditorGUILayout.DropdownButton(new GUIContent(Localliztion.Get(options.language)), FocusType.Passive))
             {
                 ObjectSelectionWindow<string>.ShowSingle(new Vector2(200, 300), languageData, (args) =>
                 {
-                    Debug.Log(args);
-                    options.language = ILocalliztion.GetKey(args);
+                    options.language = Localliztion.GetKey(args);
                     SetLanguage(options);
                 });
             }
@@ -284,7 +287,7 @@ namespace ZGame.Editor.PSD2GUI
 
         private void SetLanguage(UIBindData options)
         {
-            string text = ILocalliztion.Get(options.language);
+            string text = Localliztion.Get(options.language);
             if (text.EndsWith(".png") is false)
             {
                 Text t = options.target.GetComponent<Text>();

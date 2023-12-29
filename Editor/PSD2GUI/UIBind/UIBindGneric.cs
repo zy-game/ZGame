@@ -97,235 +97,259 @@ namespace ZGame.Editor.PSD2GUI
                     switch (typeName)
                     {
                         case "Button":
-                            AddEvent($"\t\t\t{fieldName}?.onClick.RemoveAllListeners();");
-                            AddEvent($"\t\t\t{fieldName}?.onClick.AddListener(on_handle_{VARIABLE.name});");
-                            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}()");
-                            AddCallback("\t\t{");
-                            AddCallback("");
-                            AddCallback("\t\t}");
-                            AddCallback("");
+                            GenericButtonComponent(VARIABLE, fieldName);
                             break;
                         case "Toggle":
-                            AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
-                            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name});");
-
-                            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}(bool isOn)");
-                            AddCallback("\t\t{");
-                            AddCallback("");
-                            AddCallback("\t\t}");
-                            AddCallback("");
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(bool isOn)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.SetIsOnWithoutNotify(isOn);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
+                            GenericToggleComponent(VARIABLE, fieldName);
                             break;
                         case "Slider":
-                            AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
-                            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name});");
-
-                            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}(float value)");
-                            AddCallback("\t\t{");
-                            AddCallback("");
-                            AddCallback("\t\t}");
-                            AddCallback("");
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(float value)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.SetValueWithoutNotify(value);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
+                            GenericSliderComponent(VARIABLE, fieldName);
                             break;
                         case "TMP_InputField":
                         case "InputField":
-                            AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
-                            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name});");
-
-                            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}(string value)");
-                            AddCallback("\t\t{");
-                            AddCallback("");
-                            AddCallback("\t\t}");
-                            AddCallback("");
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string value)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.SetTextWithoutNotify(value);");
-                            AddSetup("\t\t}");
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(TMP_FontAsset fontAsset)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.SetGlobalFontAsset(fontAsset);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(int size)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.SetGlobalPointSize(size);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
+                            GenericInputFieldComponent(VARIABLE, fieldName);
                             break;
                         case "TMP_Dropdown":
                         case "Dropdown":
-                            AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
-                            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name});");
-
-                            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}(int value)");
-                            AddCallback("\t\t{");
-                            AddCallback("");
-                            AddCallback("\t\t}");
-                            AddCallback("");
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(int index)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.SetValueWithoutNotify(index);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-                            AddSetup($"\t\tpublic void on_add_{VARIABLE.name}(List<string> items)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-                            AddSetup($"\t\tpublic void on_add_{VARIABLE.name}(List<Sprite> items)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-                            AddSetup($"\t\tpublic void on_add_{VARIABLE.name}(List<OptionData> items)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
+                            GenericDropdownComponent(VARIABLE, fieldName);
                             break;
                         case "Image":
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string path)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(ILocalliztion.Get(00));");
-                            AddSetup($"\t\t\tif (handle.EnsureLoadSuccess() == false)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup($"\t\t\t{fieldName}.sprite = handle.Get<Sprite>({fieldName}.gameObject);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.sprite = sprite;");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Texture2D texture)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-
-                            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
-                            {
-                                AddLanguage($"\t\t\t on_setup_{VARIABLE.name}(ILocalliztion.Get({VARIABLE.language}));");
-                            }
-
+                            GenericImageComponent(VARIABLE, fieldName);
                             break;
                         case "RawImage":
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string path)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(ILocalliztion.Get(00));");
-                            AddSetup($"\t\t\tif (handle.EnsureLoadSuccess() == false)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup($"\t\t\t{fieldName}.texture = handle.Get<Texture2D>({fieldName}.gameObject);");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.texture = sprite.texture;");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Texture2D texture)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.texture = texture;");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(RenderTexture texture)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.texture = texture;");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-
-                            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
-                            {
-                                AddLanguage($"\t\t\t on_setup_{VARIABLE.name}(ILocalliztion.Get({VARIABLE.language}));");
-                            }
-
+                            GenericRawImageComponent(VARIABLE, fieldName);
                             break;
                         case "TextMeshProUGUI":
                         case "TMP_Text":
                         case "Text":
-                            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string text)");
-                            AddSetup("\t\t{");
-                            AddSetup($"\t\t\tif ({fieldName}== null)");
-                            AddSetup($"\t\t\t\treturn;");
-                            AddSetup("");
-                            AddSetup($"\t\t\t{fieldName}.text = text;");
-                            AddSetup("\t\t}");
-                            AddSetup("");
-
-                            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
-                            {
-                                AddLanguage($"\t\t\t on_setup_{VARIABLE.name}(ILocalliztion.Get({VARIABLE.language}));");
-                            }
-
+                            GenericTextComponent(VARIABLE, fieldName);
                             break;
                     }
                 }
+            }
+        }
+
+        private void GenericButtonComponent(UIBindData VARIABLE, string fieldName)
+        {
+            AddEvent($"\t\t\t{fieldName}?.onClick.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onClick.AddListener(on_handle_{VARIABLE.name});");
+            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}()");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
+        }
+
+        private void GenericToggleComponent(UIBindData VARIABLE, string fieldName)
+        {
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name});");
+            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}(bool isOn)");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(bool isOn)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.SetIsOnWithoutNotify(isOn);");
+            AddSetup("\t\t}");
+            AddSetup("");
+        }
+
+        private void GenericSliderComponent(UIBindData VARIABLE, string fieldName)
+        {
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name});");
+            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}(float value)");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(float value)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.SetValueWithoutNotify(value);");
+            AddSetup("\t\t}");
+            AddSetup("");
+        }
+
+        private void GenericInputFieldComponent(UIBindData VARIABLE, string fieldName)
+        {
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name});");
+            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}(string value)");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string value)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.SetTextWithoutNotify(value);");
+            AddSetup("\t\t}");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(TMP_FontAsset fontAsset)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.SetGlobalFontAsset(fontAsset);");
+            AddSetup("\t\t}");
+            AddSetup("");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(int size)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.SetGlobalPointSize(size);");
+            AddSetup("\t\t}");
+            AddSetup("");
+        }
+
+        private void GenericDropdownComponent(UIBindData VARIABLE, string fieldName)
+        {
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name});");
+            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}(int value)");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(int index)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.SetValueWithoutNotify(index);");
+            AddSetup("\t\t}");
+            AddSetup("");
+            AddSetup($"\t\tpublic void on_add_{VARIABLE.name}(List<string> items)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
+            AddSetup("\t\t}");
+            AddSetup("");
+            AddSetup($"\t\tpublic void on_add_{VARIABLE.name}(List<Sprite> items)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
+            AddSetup("\t\t}");
+            AddSetup("");
+            AddSetup($"\t\tpublic void on_add_{VARIABLE.name}(List<OptionData> items)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
+            AddSetup("\t\t}");
+            AddSetup("");
+        }
+
+        private void GenericImageComponent(UIBindData VARIABLE, string fieldName)
+        {
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string path)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(path);");
+            AddSetup($"\t\t\tif (handle.EnsureLoadSuccess() == false)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup($"\t\t\t{fieldName}.sprite = handle.Get<Sprite>({fieldName}.gameObject);");
+            AddSetup("\t\t}");
+            AddSetup("");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.sprite = sprite;");
+            AddSetup("\t\t}");
+            AddSetup("");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Texture2D texture)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);");
+            AddSetup("\t\t}");
+            AddSetup("");
+            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
+            {
+                AddLanguage($"\t\t\t on_setup_{VARIABLE.name}(Localliztion.Get({VARIABLE.language}));");
+            }
+        }
+
+        private void GenericRawImageComponent(UIBindData VARIABLE, string fieldName)
+        {
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string path)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(path);");
+            AddSetup($"\t\t\tif (handle.EnsureLoadSuccess() == false)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup($"\t\t\t{fieldName}.texture = handle.Get<Texture2D>({fieldName}.gameObject);");
+            AddSetup("\t\t}");
+            AddSetup("");
+
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.texture = sprite.texture;");
+            AddSetup("\t\t}");
+            AddSetup("");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Texture2D texture)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.texture = texture;");
+            AddSetup("\t\t}");
+            AddSetup("");
+
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(RenderTexture texture)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.texture = texture;");
+            AddSetup("\t\t}");
+            AddSetup("");
+
+            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
+            {
+                AddLanguage($"\t\t\t on_setup_{VARIABLE.name}(Localliztion.Get({VARIABLE.language}));");
+            }
+        }
+
+        private void GenericTextComponent(UIBindData VARIABLE, string fieldName)
+        {
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string text)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\tif ({fieldName}== null)");
+            AddSetup($"\t\t\t\treturn;");
+            AddSetup("");
+            AddSetup($"\t\t\t{fieldName}.text = text;");
+            AddSetup("\t\t}");
+            AddSetup("");
+
+            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
+            {
+                AddLanguage($"\t\t\t on_setup_{VARIABLE.name}(Localliztion.Get({VARIABLE.language}));");
             }
         }
 
