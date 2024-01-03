@@ -172,10 +172,16 @@ namespace ZGame.Editor.PSD2GUI
             EditorUtility.SetDirty(setting);
             UIBindGneric gneric = new UIBindGneric(setting);
             File.WriteAllText($"{AssetDatabase.GetAssetPath(setting.output)}/UIBind_{setting.name}.cs", gneric.GetBindCode());
-
+            string output = $"{AssetDatabase.GetAssetPath(setting.output)}/UICode_{setting.name}.cs";
             if (isGenericUICode)
             {
-                File.WriteAllText($"{AssetDatabase.GetAssetPath(setting.output)}/UICode_{setting.name}.cs", gneric.GetOverloadCode());
+                if (File.Exists(output))
+                {
+                    if (EditorUtility.DisplayDialog("Warning", "当前UI代码文件已经存在, 是否覆盖写入?", "Yes", "No"))
+                    {
+                        File.WriteAllText(output, gneric.GetOverloadCode());
+                    }
+                }
             }
 
             AssetDatabase.SaveAssets();

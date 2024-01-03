@@ -12,7 +12,7 @@ namespace ZGame.Editor.ResBuild
 {
     [ReferenceScriptableObject(typeof(PackageSeting))]
     [SubPageSetting("包管理", typeof(ResBuilder))]
-    public class ResPackageSeting : SubPage
+    public class ResPackageSetting : SubPage
     {
         public override void OnEnable(params object[] args)
         {
@@ -37,7 +37,16 @@ namespace ZGame.Editor.ResBuild
 
                     string path = AssetDatabase.GetAssetPath(rulerData.folder);
                     string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
-                    rulerData.selector.Add(files);
+                    foreach (var VARIABLE in files)
+                    {
+                        string ex = Path.GetExtension(VARIABLE);
+                        if (rulerData.selector.Contains(ex) || ex.Equals(".meta"))
+                        {
+                            continue;
+                        }
+
+                        rulerData.selector.Add(ex);
+                    }
                 }
             }
         }
@@ -96,6 +105,7 @@ namespace ZGame.Editor.ResBuild
             }
             package.name = EditorGUILayout.TextField("规则名称", package.name);
             package.describe = EditorGUILayout.TextField("描述", package.describe);
+            package.oss = (OSSType)EditorGUILayout.EnumPopup("服务器地址", package.oss);
             EditorGUI.BeginChangeCheck();
             {
                 if (package.items == null)
@@ -122,41 +132,7 @@ namespace ZGame.Editor.ResBuild
                     }
                     for (int i = 0; i < package.items.Count; i++)
                     {
-                        RulerData rulerData = package.items[i];
-                        GUILayout.BeginHorizontal();
-                        {
-                            rulerData.use = EditorGUILayout.Toggle(rulerData.use, GUILayout.Width(20));
-                            rulerData.folder = EditorGUILayout.ObjectField(rulerData.folder, typeof(DefaultAsset), false);
-                            GUILayout.BeginHorizontal();
-                            {
-                                rulerData.buildType = (BuildType)EditorGUILayout.EnumPopup(rulerData.buildType, GUILayout.Width(200));
-                                if (rulerData.folder != null && rulerData.buildType == BuildType.AssetType)
-                                {
-                                    if (GUILayout.Button(rulerData.selector.ToString(), EditorStyles.popup, GUILayout.Width(200)))
-                                    {
-                                        GenericMenu menu = new GenericMenu();
-                                        menu.AddItem(new GUIContent("Noting"), rulerData.selector.isNone, () => { rulerData.selector.Clear(); });
-                                        menu.AddItem(new GUIContent("Everything"), rulerData.selector.isAll, () => { rulerData.selector.SelectAll(); });
-                                        foreach (var VARIABLE in rulerData.selector.items)
-                                        {
-                                            menu.AddItem(new GUIContent(VARIABLE.name), VARIABLE.isOn, () => { VARIABLE.isOn = !VARIABLE.isOn; });
-                                        }
-
-                                        menu.ShowAsContext();
-                                    }
-                                }
-
-                                GUILayout.EndHorizontal();
-                            }
-                            GUILayout.FlexibleSpace();
-                            if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
-                            {
-                                package.items.RemoveAt(i);
-                                EditorManager.Refresh();
-                            }
-
-                            GUILayout.EndHorizontal();
-                        }
+                        OnDrawingRuleItem(package.items[i], package);
                     }
 
                     GUILayout.EndVertical();
@@ -166,6 +142,44 @@ namespace ZGame.Editor.ResBuild
                 {
                     OnEnable();
                 }
+            }
+        }
+
+        private void OnDrawingRuleItem(RulerData rulerData, PackageSeting package)
+        {
+            GUILayout.BeginHorizontal();
+            {
+                rulerData.use = EditorGUILayout.Toggle(rulerData.use, GUILayout.Width(20));
+                rulerData.folder = EditorGUILayout.ObjectField(rulerData.folder, typeof(DefaultAsset), false);
+                GUILayout.BeginHorizontal();
+                {
+                    rulerData.buildType = (BuildType)EditorGUILayout.EnumPopup("打包方式", rulerData.buildType, GUILayout.Width(200));
+                    if (rulerData.folder != null && rulerData.buildType == BuildType.AssetType)
+                    {
+                        if (GUILayout.Button(rulerData.selector.ToString(), EditorStyles.popup, GUILayout.Width(200)))
+                        {
+                            GenericMenu menu = new GenericMenu();
+                            menu.AddItem(new GUIContent("Noting"), rulerData.selector.isNone, () => { rulerData.selector.Clear(); });
+                            menu.AddItem(new GUIContent("Everything"), rulerData.selector.isAll, () => { rulerData.selector.SelectAll(); });
+                            foreach (var VARIABLE in rulerData.selector.items)
+                            {
+                                menu.AddItem(new GUIContent(VARIABLE.name), VARIABLE.isOn, () => { VARIABLE.isOn = !VARIABLE.isOn; });
+                            }
+
+                            menu.ShowAsContext();
+                        }
+                    }
+
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
+                {
+                    package.items.Remove(rulerData);
+                    EditorManager.Refresh();
+                }
+
+                GUILayout.EndHorizontal();
             }
         }
     }

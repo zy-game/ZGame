@@ -22,31 +22,50 @@ namespace ZGame.Game
         private List<Tuple<int, Camera>> subCameras = new();
         private UniversalAdditionalCameraData universalAdditionalCameraData;
 
+
+        /// <summary>
+        /// 世界名
+        /// </summary>
         public string name
         {
             get { return _name; }
         }
 
+        /// <summary>
+        /// 主相机
+        /// </summary>
         public Camera main
         {
             get { return _camera; }
         }
 
+        /// <summary>
+        /// 主灯光
+        /// </summary>
         public Light mainLight
         {
             get { return _light; }
         }
 
+        /// <summary>
+        /// 当前世界时数
+        /// </summary>
         public int Hour
         {
             get { return _hour; }
         }
 
+        /// <summary>
+        /// 当前世界分数
+        /// </summary>
         public int Minute
         {
             get { return _minute; }
         }
 
+        /// <summary>
+        /// 当前世界的秒数
+        /// </summary>
         public int Second
         {
             get { return _second; }
@@ -70,7 +89,12 @@ namespace ZGame.Game
             RefreshTime();
         }
 
-        public void SetupGlobalLight(Color color, params string[] layers)
+        /// <summary>
+        /// 设置全局光
+        /// </summary>
+        /// <param name="color"></param>
+        /// <param name="layers"></param>
+        public void SetupMainLight(Color color, params string[] layers)
         {
             if (mainLight != null)
             {
@@ -88,16 +112,21 @@ namespace ZGame.Game
             _light.color = color;
         }
 
+        /// <summary>
+        /// 设置相机输出
+        /// </summary>
+        /// <param name="texture"></param>
         public void SetupMainCameraOutput(RenderTexture texture)
         {
             _camera.targetTexture = texture;
             _camera.fieldOfView = 10;
             _camera.clearFlags = CameraClearFlags.Color;
         }
-        
-        
-        
 
+        /// <summary>
+        /// 设置主相机的渲染层级
+        /// </summary>
+        /// <param name="layers"></param>
         public void SetupMainCameraRenderLayer(params string[] layers)
         {
             if (universalAdditionalCameraData == null || _camera == null)
@@ -109,6 +138,10 @@ namespace ZGame.Game
             universalAdditionalCameraData.volumeLayerMask = LayerMask.GetMask(layers);
         }
 
+        /// <summary>
+        /// 设置阳光颜色
+        /// </summary>
+        /// <param name="gradient"></param>
         public void SetSunshine(Gradient gradient)
         {
             sunshineGradient = gradient;
@@ -127,6 +160,13 @@ namespace ZGame.Game
             Color color = sunshineGradient.Evaluate(hourPercent);
         }
 
+        /// <summary>
+        /// 设置时间
+        /// </summary>
+        /// <param name="house"></param>
+        /// <param name="minute"></param>
+        /// <param name="second"></param>
+        /// <param name="timeSpeed"></param>
         public void SetWorldTime(int house, int minute, int second, int timeSpeed)
         {
             this._hour = house;
@@ -136,12 +176,19 @@ namespace ZGame.Game
             RefreshSunshine();
         }
 
+        /// <summary>
+        /// 设置天空盒
+        /// </summary>
+        /// <param name="material"></param>
         public void SetSkybox(Material material)
         {
             skybox.material = material;
             main.clearFlags = CameraClearFlags.Skybox;
         }
 
+        /// <summary>
+        /// 关闭天空盒
+        /// </summary>
         public void CloseSkybox()
         {
             skybox.enabled = false;
@@ -149,6 +196,11 @@ namespace ZGame.Game
             main.backgroundColor = Color.clear;
         }
 
+        /// <summary>
+        /// 设置子摄像机
+        /// </summary>
+        /// <param name="camera"></param>
+        /// <param name="sort"></param>
         public void SetSubCamera(Camera camera, int sort)
         {
             UniversalAdditionalCameraData universalAdditionalCameraData = main.gameObject.AddComponent<UniversalAdditionalCameraData>();
@@ -159,6 +211,13 @@ namespace ZGame.Game
             RefreshSubCamera();
         }
 
+        /// <summary>
+        /// 设置子摄像机
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="sort"></param>
+        /// <param name="layers"></param>
+        /// <returns></returns>
         public Camera SetSubCamera(string name, int sort, params string[] layers)
         {
             Camera camera = new GameObject(name).AddComponent<Camera>();
@@ -180,6 +239,9 @@ namespace ZGame.Game
             }
         }
 
+        /// <summary>
+        /// 刷新时间
+        /// </summary>
         public void RefreshTime()
         {
             _second += _speed;
@@ -206,18 +268,19 @@ namespace ZGame.Game
 
         public void Dispose()
         {
-            GameObject.DestroyImmediate(_light);
-            GameObject.DestroyImmediate(_camera);
             foreach (var item in subCameras)
             {
-                GameObject.DestroyImmediate(item.Item2);
+                GameObject.DestroyImmediate(item.Item2.gameObject);
             }
 
+            GameObject.DestroyImmediate(_light.gameObject);
+            GameObject.DestroyImmediate(_camera.gameObject);
             subCameras.Clear();
             sunshineGradient = null;
             skybox = null;
             _light = null;
             _camera = null;
+            GC.SuppressFinalize(this);
         }
     }
 }

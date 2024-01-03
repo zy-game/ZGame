@@ -9,7 +9,7 @@ namespace ZGame.IM
         public string text { get; }
         public string nick { get; }
         public EmotionEvent.Types.SpaffCode spaffCode { get; }
-        public AudioClip audio { get; }
+        public AudioClip audio { get; private set; }
 
         public IMChatItem(string nick)
         {
@@ -30,6 +30,7 @@ namespace ZGame.IM
 
         public void Dispose()
         {
+            audio = null;
         }
     }
 }

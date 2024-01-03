@@ -100,8 +100,8 @@ namespace ZGame.FileSystem
         public VFSChunk[] GetFreeSgement(int lenght)
         {
             List<VFSChunk> result = new List<VFSChunk>();
-            int chunkSize = GlobalConfig.instance.vfsConfig.chunkSize;
-            int maxCount = GlobalConfig.instance.vfsConfig.chunkCount;
+            int chunkSize = BasicConfig.instance.vfsConfig.chunkSize;
+            int maxCount = BasicConfig.instance.vfsConfig.chunkCount;
             int count = lenght / chunkSize;
             count = lenght > count * chunkSize ? count + 1 : count;
             IEnumerable<VFSChunk> temp = segments.Where(x => x.use is false);

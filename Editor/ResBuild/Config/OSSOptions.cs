@@ -13,5 +13,7 @@ namespace ZGame.Editor.ResBuild.Config
         public string region;
         public string key;
         public string password;
+
+        public string BucketFullName => $"{bucket}-{appid}";
     }
 }

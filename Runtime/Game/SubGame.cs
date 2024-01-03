@@ -12,6 +12,7 @@ namespace ZGame.Game
     public abstract class SubGame : IDisposable
     {
         public Assembly assembly { get; private set; }
+        public EntryConfig config { get; private set; }
 
         public virtual void OnEntry(params object[] args)
         {
@@ -37,21 +38,28 @@ namespace ZGame.Game
 
             SubGame subGameEntry = Activator.CreateInstance(entryType) as SubGame;
             subGameEntry.assembly = assembly;
+            subGameEntry.config = config;
             subGameEntry.OnEntry(args);
             return subGameEntry;
         }
 
         private static async UniTask<Assembly> LoadGameAssembly(EntryConfig config)
         {
+            bool isInternal = false;
 #if UNITY_EDITOR
-            if (config.entryName.IsNullOrEmpty())
+            isInternal = true;
+#endif
+            if (config.mode is ResourceMode.Editor || isInternal)
             {
-                throw new NullReferenceException(nameof(config.entryName));
+                if (config.entryName.IsNullOrEmpty())
+                {
+                    throw new NullReferenceException(nameof(config.entryName));
+                }
+
+                string dllName = Path.GetFileNameWithoutExtension(config.entryName);
+                return AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             }
 
-            string dllName = Path.GetFileNameWithoutExtension(config.entryName);
-            return AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
-#endif
             ResHandle textAsset = default;
             HomologousImageMode mode = HomologousImageMode.SuperSet;
             foreach (var item in config.references)

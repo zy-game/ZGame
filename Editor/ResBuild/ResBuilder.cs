@@ -39,7 +39,7 @@ namespace ZGame.Editor.ResBuild
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    EditorManager.SwitchScene<ResPackageSeting>();
+                    EditorManager.SwitchScene<ResPackageSetting>();
                 }
 
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))

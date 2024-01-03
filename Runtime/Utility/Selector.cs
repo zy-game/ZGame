@@ -47,6 +47,10 @@ namespace ZGame
             items.Clear();
         }
 
+        public bool Contains(string name)
+        {
+            return items.Exists(x => x.name == name);
+        }
 
         public void Add(params string[] args)
         {

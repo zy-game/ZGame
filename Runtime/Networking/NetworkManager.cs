@@ -189,7 +189,9 @@ namespace ZGame.Networking
                 request.SetRequestHeader("Content-Type", "application/json");
                 await request.SendWebRequest().ToUniTask();
                 Debug.Log($"GET:{url} result:{request.downloadHandler.text}");
-                return request.GetData<T>();
+                T result = request.GetData<T>();
+                request.Dispose();
+                return result;
             }
         }
 
@@ -210,8 +212,10 @@ namespace ZGame.Networking
                 }
 
                 await request.SendWebRequest().ToUniTask();
-                Debug.Log($"POST:{url} data:{str} result:{request.downloadHandler.text} header:{JsonConvert.SerializeObject(headers)}");
-                return request.GetData<T>();
+                Debug.Log($"POST:{url} data:{str} result:{request.downloadHandler.text}");
+                T result = request.GetData<T>();
+                request.Dispose();
+                return result;
             }
         }
 

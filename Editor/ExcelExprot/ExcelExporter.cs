@@ -27,10 +27,10 @@ namespace ZGame.Editor.ExcelExprot
         public ExportType type;
         public string table;
         public bool isExport;
-        public int dataRow;
-        public int typeRow;
+        public int dataRow = 3;
+        public int typeRow = 1;
         public string nameSpace;
-        public int headerRow;
+        public int headerRow = 0;
         [NonSerialized] public DataTable dataTable;
     }
 

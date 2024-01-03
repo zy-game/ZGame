@@ -17,6 +17,7 @@ namespace ZGame.Editor.PSD2GUI
 
         public override void OnInspectorGUI()
         {
+            EditorGUI.BeginChangeCheck();
             template.type = (SwitchType2)EditorGUILayout.EnumPopup("Type", template.type);
             switch (template.type)
             {
@@ -31,6 +32,41 @@ namespace ZGame.Editor.PSD2GUI
                 case SwitchType2.GameObject:
                     template.options.gameObject = (GameObject)EditorGUILayout.ObjectField("GameObject", template.options.gameObject, typeof(GameObject), false);
                     break;
+            }
+
+            template.paramType = (ParamType)EditorGUILayout.EnumPopup("ParamType", template.paramType);
+            switch (template.paramType)
+            {
+                case ParamType.Int:
+
+                    template._v1 = (int)EditorGUILayout.IntField("Int", template._v1);
+                    break;
+                case ParamType.Float:
+                    template._v2 = (float)EditorGUILayout.FloatField("Float", template._v2);
+                    break;
+                case ParamType.String:
+                    template._v3 = (string)EditorGUILayout.TextField("String", template._v3);
+                    break;
+                case ParamType.Bool:
+                    template._v4 = (bool)EditorGUILayout.Toggle("Bool", template._v4);
+                    break;
+                case ParamType.Vector2:
+                    template._v5 = (Vector2)EditorGUILayout.Vector2Field("Vector2", template._v5);
+                    break;
+                case ParamType.Vector3:
+                    template._v6 = (Vector3)EditorGUILayout.Vector3Field("Vector3", template._v6);
+                    break;
+                case ParamType.Vector4:
+                    template._v7 = (Vector4)EditorGUILayout.Vector4Field("Vector4", template._v7);
+                    break;
+                case ParamType.Color:
+                    template._v8 = (Color)EditorGUILayout.ColorField("Color", template._v8);
+                    break;
+            }
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                EditorUtility.SetDirty(template);
             }
         }
     }

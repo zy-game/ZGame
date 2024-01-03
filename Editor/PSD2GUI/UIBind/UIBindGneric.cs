@@ -124,9 +124,53 @@ namespace ZGame.Editor.PSD2GUI
                         case "Text":
                             GenericTextComponent(VARIABLE, fieldName);
                             break;
+                        case "LongPresseButton":
+                            GenericLongPressButtonComponent(VARIABLE, fieldName);
+                            break;
+                        case "UISwitcher":
+                            GenericUISwitcherComponent(VARIABLE, fieldName);
+                            break;
                     }
                 }
             }
+        }
+
+        private void GenericUISwitcherComponent(UIBindData variable, string fieldName)
+        {
+            AddEvent($"\t\t\t{fieldName}?.onSelect.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onSelect.AddListener(on_handle_switch_{variable.name});");
+            AddCallback($"\t\tprotected virtual void on_handle_switch_{variable.name}(object obj)");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
+        }
+
+        private void GenericLongPressButtonComponent(UIBindData variable, string fieldName)
+        {
+            AddEvent($"\t\t\t{fieldName}?.onCancel.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onCancel.AddListener(on_handle_{variable.name}_Cancel);");
+            AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_Cancel()");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
+
+            AddEvent($"\t\t\t{fieldName}?.onDown.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onDown.AddListener(on_handle_{variable.name}_Down);");
+            AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_Down()");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
+
+            AddEvent($"\t\t\t{fieldName}?.onDown.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onDown.AddListener(on_handle_{variable.name}_Up);");
+            AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_Up()");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
         }
 
         private void GenericButtonComponent(UIBindData VARIABLE, string fieldName)
@@ -263,7 +307,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t\treturn;");
             AddSetup("");
             AddSetup($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(path);");
-            AddSetup($"\t\t\tif (handle.EnsureLoadSuccess() == false)");
+            AddSetup($"\t\t\tif (handle.IsSuccess() == false)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup($"\t\t\t{fieldName}.sprite = handle.Get<Sprite>({fieldName}.gameObject);");
             AddSetup("\t\t}");
@@ -298,7 +342,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t\treturn;");
             AddSetup("");
             AddSetup($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(path);");
-            AddSetup($"\t\t\tif (handle.EnsureLoadSuccess() == false)");
+            AddSetup($"\t\t\tif (handle.IsSuccess() == false)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup($"\t\t\t{fieldName}.texture = handle.Get<Texture2D>({fieldName}.gameObject);");
             AddSetup("\t\t}");
@@ -338,12 +382,12 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericTextComponent(UIBindData VARIABLE, string fieldName)
         {
-            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string text)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(object info)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup("");
-            AddSetup($"\t\t\t{fieldName}.text = text;");
+            AddSetup($"\t\t\t{fieldName}.text = info == null ? \"\" : info.ToString();");
             AddSetup("\t\t}");
             AddSetup("");
 

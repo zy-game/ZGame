@@ -36,6 +36,7 @@ namespace ZGame.Editor.ResBuild.Config
         [NonSerialized] public bool selection;
         public string name;
         public string describe;
+        public OSSType oss;
         public List<RulerData> items;
 
         public static PackageSeting Create(string name, string describe = "")

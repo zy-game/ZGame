@@ -38,7 +38,10 @@ namespace ZGame.Editor.ResBuild
             if (selection.Equals(_selection) is false)
             {
                 selection = _selection;
-                OnRefresh();
+                if (selection >= 0 && selection < list.Length - 1)
+                {
+                    OnRefresh();
+                }
             }
 
             if (GUILayout.Button("刷新", EditorStyles.toolbarButton))
@@ -58,8 +61,8 @@ namespace ZGame.Editor.ResBuild
 
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginVertical("File List", EditorStyles.helpBox);
-            GUILayout.Space(15);
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("File List", EditorStyles.boldLabel);
             if (manager is not null)
             {
                 OnDrawingFolder(manager.root, 0);
@@ -76,12 +79,24 @@ namespace ZGame.Editor.ResBuild
                 return;
             }
 
-            manager.Refresh(BuilderConfig.instance.ossList.Where(x => x.type == type).ElementAt(selection));
+            IEnumerable<OSSOptions> enumerable = BuilderConfig.instance.ossList.Where(x => x.type == type);
+            if (enumerable is null || enumerable.Count() <= 0)
+            {
+                manager.Refresh(null);
+                return;
+            }
+
+            manager.Refresh(enumerable.ElementAt(selection));
         }
 
 
         private void OnDrawingFolder(OSSObject folder, int offset)
         {
+            if (folder is null)
+            {
+                return;
+            }
+
             GUILayout.BeginHorizontal();
             {
                 GUILayout.Space(offset);

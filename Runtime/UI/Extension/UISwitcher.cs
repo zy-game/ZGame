@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -11,6 +12,7 @@ namespace ZGame.Window
     {
         public bool isOn;
         public object userData;
+        public ParamType paramType;
         public Sprite activeSprite;
         public Sprite inactiveSprite;
         public string activeText;
@@ -37,12 +39,7 @@ namespace ZGame.Window
         public UISwitcherTemplate template;
         public List<UISwitcherTemplate> tables = new List<UISwitcherTemplate>();
         public UnityEvent<object> onSelect;
-        private List<object> _userData = new List<object>();
 
-        public List<object> selected
-        {
-            get { return _userData; }
-        }
 
         private void Awake()
         {
@@ -55,7 +52,6 @@ namespace ZGame.Window
 
             if (type == SwitchType.Multiple)
             {
-                _userData.Clear();
                 tables.ForEach(x => x.Unselect());
                 return;
             }
@@ -100,13 +96,22 @@ namespace ZGame.Window
             if (type == SwitchType.Multiple)
             {
                 tables[index].Select();
-                if (!_userData.Contains(tables[index].options.userData))
-                {
-                    _userData.Add(tables[index].options.userData);
-                }
-
                 return;
             }
+        }
+
+        public List<object> GetSeleected()
+        {
+            List<object> list = new List<object>();
+            for (int i = 0; i < tables.Count; i++)
+            {
+                if (tables[i].isSelect)
+                {
+                    list.Add(tables[i].param);
+                }
+            }
+
+            return list;
         }
 
         public void Select(int index)
@@ -127,21 +132,19 @@ namespace ZGame.Window
                 tables[index].Select();
                 if (onSelect != null)
                 {
-                    onSelect.Invoke(tables[index].options.userData);
+                    onSelect.Invoke(tables[index].param);
                 }
 
                 return;
             }
 
-            if (_userData.Contains(tables[index].options.userData))
+            if (tables[index].isSelect)
             {
                 tables[index].Unselect();
-                _userData.Remove(tables[index].options.userData);
                 return;
             }
 
             tables[index].Select();
-            _userData.Add(tables[index].options.userData);
         }
 
         public void Add(params SwitchOptions[] args)
@@ -155,6 +158,37 @@ namespace ZGame.Window
             {
                 var item = Instantiate(template, transform);
                 item.options = args[i];
+                item.type = template.type;
+                item.paramType = args[i].paramType;
+                item.isSelect = false;
+                switch (args[i].paramType)
+                {
+                    case ParamType.Int:
+                        item._v1 = (int)args[i].userData;
+                        break;
+                    case ParamType.Float:
+                        item._v2 = (float)args[i].userData;
+                        break;
+                    case ParamType.String:
+                        item._v3 = (string)args[i].userData;
+                        break;
+                    case ParamType.Bool:
+                        item._v4 = (bool)args[i].userData;
+                        break;
+                    case ParamType.Vector2:
+                        item._v5 = (Vector2)args[i].userData;
+                        break;
+                    case ParamType.Vector3:
+                        item._v6 = (Vector3)args[i].userData;
+                        break;
+                    case ParamType.Vector4:
+                        item._v7 = (Vector4)args[i].userData;
+                        break;
+                    case ParamType.Color:
+                        item._v8 = (Color)args[i].userData;
+                        break;
+                }
+
                 tables.Add(item);
                 item.Unselect();
             }

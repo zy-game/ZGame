@@ -30,7 +30,7 @@ namespace ZGame.Resource
             };
         }
 
-        public bool EnsureLoadSuccess()
+        public bool IsSuccess()
         {
             if (obj != null)
             {
@@ -89,7 +89,7 @@ namespace ZGame.Resource
 
             LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
 #if UNITY_EDITOR
-            if (GlobalConfig.instance.curEntry.resMode == ResourceMode.Editor)
+            if (BasicConfig.instance.resMode == ResourceMode.Editor)
             {
                 scene = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(path, parameters);
             }
@@ -126,7 +126,7 @@ namespace ZGame.Resource
             AsyncOperation operation = default;
             LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
 #if UNITY_EDITOR
-            if (GlobalConfig.instance.curEntry.resMode == ResourceMode.Editor)
+            if (BasicConfig.instance.resMode == ResourceMode.Editor)
             {
                 operation = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, parameters);
             }
@@ -136,10 +136,10 @@ namespace ZGame.Resource
                 operation = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path), parameters);
             }
 
-            ILoading handler = (ILoading)UIManager.instance.Open<ILoading>();
+            UILoading handler = (UILoading)UIManager.instance.Open<UILoading>();
             await operation.ToUniTask(handler);
             scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
-            UIManager.instance.Close(typeof(ILoading));
+            UIManager.instance.Close(typeof(UILoading));
             SceneManager.sceneUnloaded += UnloadScene;
             return scene;
         }

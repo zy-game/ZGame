@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using ZGame.Game;
 using ZGame.Networking;
 using ZGame.Resource;
 
@@ -38,8 +40,21 @@ namespace ZGame.Config
         {
         }
 
-        public static void Setup(string url)
+        public static async UniTask Setup(string url)
         {
+            TextAsset asset = default;
+            if (url.StartsWith("http"))
+            {
+                string data = await NetworkManager.Get<string>(url);
+                asset = new TextAsset(data);
+            }
+            else
+            {
+                ResHandle languageHandle = ResourceManager.instance.LoadAsset(url);
+                asset = languageHandle.Get<TextAsset>(GameManager.DefaultWorld.main.gameObject);
+            }
+
+            Setup(asset);
         }
 
         public static void Setup(TextAsset asset)

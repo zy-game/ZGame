@@ -68,7 +68,7 @@ namespace ZGame
                 if (_instance == null && Application.isPlaying)
                 {
                     ResHandle handle = ResourceManager.instance.LoadAsset(reference.path);
-                    if (handle is not null || handle.EnsureLoadSuccess())
+                    if (handle is not null || handle.IsSuccess())
                     {
                         _instance = handle.Get<T>(null);
                     }

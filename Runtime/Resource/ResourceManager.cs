@@ -37,7 +37,7 @@ namespace ZGame.Resource
             SetupResourceLoadingHandle<DefaultUnityResourceLoadingHandle>();
             SetupResourceLoadingHandle<DefaultNetworkResourceLoadingHandle>();
 #if UNITY_EDITOR
-            if (GlobalConfig.instance.curEntry.resMode == ResourceMode.Editor)
+            if (BasicConfig.instance.resMode == ResourceMode.Editor)
             {
                 SetupResourceLoadingHandle<DefaultEditorResourceLoadingHandle>();
                 return;
@@ -60,7 +60,7 @@ namespace ZGame.Resource
 
         private void MoveNextTime()
         {
-            checkTime = Time.realtimeSinceStartup + GlobalConfig.instance.curEntry.unloadInterval;
+            checkTime = Time.realtimeSinceStartup + BasicConfig.instance.curEntry.unloadInterval;
         }
 
         protected override void OnUpdate()
@@ -84,7 +84,7 @@ namespace ZGame.Resource
                 unloadList.Add(new UnloadQueueTask()
                 {
                     handle = _handles[i],
-                    time = Time.realtimeSinceStartup + GlobalConfig.instance.curEntry.unloadInterval
+                    time = Time.realtimeSinceStartup + BasicConfig.instance.curEntry.unloadInterval
                 });
                 _handles.Remove(_handles[i]);
             }
@@ -366,7 +366,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("args");
             }
 #if UNITY_EDITOR
-            if (GlobalConfig.instance.curEntry.resMode == ResourceMode.Editor)
+            if (BasicConfig.instance.resMode == ResourceMode.Editor)
             {
                 return;
             }
@@ -388,7 +388,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("args");
             }
 #if UNITY_EDITOR
-            if (GlobalConfig.instance.curEntry.resMode == ResourceMode.Editor)
+            if (BasicConfig.instance.resMode == ResourceMode.Editor)
             {
                 return;
             }

@@ -27,7 +27,7 @@ namespace ZGame.Resource
                 return;
             }
 
-            ILoading handler = (ILoading)UIManager.instance.Open(typeof(ILoading));
+            UILoading handler = (UILoading)UIManager.instance.Open(typeof(UILoading));
             handler.SetTitle(Localliztion.Get(100000));
             handler.Report(0);
             HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
@@ -73,7 +73,7 @@ namespace ZGame.Resource
                         continue;
                     }
 
-                    bool state = await DownloadResource(GlobalConfig.GetNetworkResourceUrl(packageManifest.name), handler, packageManifest.version);
+                    bool state = await DownloadResource(BasicConfig.GetNetworkResourceUrl(packageManifest.name), handler, packageManifest.version);
                     downloadList.Add(packageManifest);
                     if (state is false)
                     {
@@ -88,17 +88,17 @@ namespace ZGame.Resource
             }
 
             Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
-            IMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
+            UIMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
         }
 
-        private async UniTask<bool> DownloadResource(string url, ILoading loadingHandle, uint crc = 0)
+        private async UniTask<bool> DownloadResource(string url, UILoading uiLoadingHandle, uint crc = 0)
         {
             UnityWebRequest request = UnityWebRequest.Get(url);
             request.timeout = 5;
             request.useHttpContinue = true;
-            loadingHandle.SetTitle(Path.GetFileName(url));
-            await request.SendWebRequest().ToUniTask(loadingHandle);
-            loadingHandle.Report(1);
+            uiLoadingHandle.SetTitle(Path.GetFileName(url));
+            await request.SendWebRequest().ToUniTask(uiLoadingHandle);
+            uiLoadingHandle.Report(1);
             bool success = request.result is UnityWebRequest.Result.Success;
             if (success)
             {

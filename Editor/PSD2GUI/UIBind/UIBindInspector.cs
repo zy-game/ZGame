@@ -35,7 +35,7 @@ namespace ZGame.Editor.PSD2GUI
             {
                 Localliztion.Setup(setting.language);
                 isSetLanguage = true;
-                Localliztion.Switch(GlobalConfig.instance.curEntry.language);
+                Localliztion.Switch(BasicConfig.instance.curEntry.language);
             }
 
             EditorGUILayout.BeginHorizontal();

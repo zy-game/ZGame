@@ -19,14 +19,22 @@ namespace ZGame.Editor.ResBuild
 
         public void Refresh(OSSOptions options)
         {
+            root?.Dispose();
+
+            if (options == null)
+            {
+                root = null;
+                return;
+            }
+
+            root = new OSSObject(options.bucket, true);
             api = options.type switch
             {
-                OSSType.Aliyun => new AliyunApi(options),
-                OSSType.Tencent => new TencentApi(options),
-                _ => null
+                OSSType.Aliyun => new AliyunCloudApi(options),
+                OSSType.Tencent => new TencentCloudApi(options),
+                _ => new StreamingApi(options)
             };
-            root?.Dispose();
-            root = new OSSObject(options.bucket, true);
+
             List<OSSObject> files = api.GetObjectList();
             foreach (var VARIABLE in files)
             {

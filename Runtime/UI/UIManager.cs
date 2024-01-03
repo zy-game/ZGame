@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UI;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Game;
@@ -15,13 +16,16 @@ namespace ZGame.Window
     public sealed class UIManager : Singleton<UIManager>
     {
         private List<UIBase> _windows = new();
+        private Dictionary<Type, Type> basicTypes = new();
 
         /// <summary>
-        /// 
+        /// 打开窗口
         /// </summary>
-        protected override void OnDestroy()
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Open<T>(params object[] args) where T : UIBase
         {
-            Clear();
+            return (T)Open(typeof(T), args);
         }
 
         /// <summary>
@@ -37,24 +41,14 @@ namespace ZGame.Window
                 return uiBase;
             }
 
-            if (type.IsInterface || type.IsAbstract)
-            {
-                type = AppDomain.CurrentDomain.GetAllSubClasses(type).FirstOrDefault();
-            }
+            type = GetUIType(type);
 
             if (type is null)
             {
                 return default;
             }
 
-            ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
-            if (reference is null || reference.path.IsNullOrEmpty())
-            {
-                Debug.LogError("没找到资源引用:" + type.Name);
-                return default;
-            }
-
-            ResHandle resObject = ResourceManager.instance.LoadAsset(reference.path);
+            ResHandle resObject = GetResHandle(type);
             if (resObject is null)
             {
                 return default;
@@ -68,6 +62,44 @@ namespace ZGame.Window
             uiBase.Awake();
             Active(type);
             return uiBase;
+        }
+
+        private ResHandle GetResHandle(Type type)
+        {
+            ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
+            if (reference is null || reference.path.IsNullOrEmpty())
+            {
+                Debug.LogError("没找到资源引用:" + type.Name);
+                return default;
+            }
+
+            return ResourceManager.instance.LoadAsset(reference.path);
+        }
+
+        private Type GetUIType(Type type)
+        {
+            if (type.IsInterface || type.IsAbstract)
+            {
+                if (basicTypes.TryGetValue(type, out Type basicType) is false)
+                {
+                    basicType = AppDomain.CurrentDomain.GetAllSubClasses(type).FirstOrDefault();
+                    basicTypes.Add(type, basicType);
+                }
+
+                type = basicType;
+            }
+
+            return type;
+        }
+
+        /// <summary>
+        /// 获取窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetWindow<T>()
+        {
+            return (T)GetWindow(typeof(T));
         }
 
         /// <summary>
@@ -88,6 +120,15 @@ namespace ZGame.Window
         /// <summary>
         /// 激活窗口
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void Active<T>()
+        {
+            Active(typeof(T));
+        }
+
+        /// <summary>
+        /// 激活窗口
+        /// </summary>
         /// <param name="type"></param>
         public void Active(Type type)
         {
@@ -99,6 +140,15 @@ namespace ZGame.Window
 
             uiBase.gameObject.SetActive(true);
             uiBase.Enable();
+        }
+
+        /// <summary>
+        /// 窗口失活
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void Inactive<T>()
+        {
+            Inactive(typeof(T));
         }
 
         /// <summary>
@@ -120,8 +170,18 @@ namespace ZGame.Window
         /// <summary>
         /// 关闭窗口
         /// </summary>
+        /// <param name="system"></param>
+        /// <typeparam name="T"></typeparam>
+        public void Close<T>(bool dispose = true)
+        {
+            Close(typeof(T), dispose);
+        }
+
+        /// <summary>
+        /// 关闭窗口
+        /// </summary>
         /// <param name="type"></param>
-        public void Close(Type type)
+        public void Close(Type type, bool dispose = true)
         {
             UIBase uiBase = GetWindow(type);
             if (uiBase is null)
@@ -136,53 +196,8 @@ namespace ZGame.Window
         }
 
         /// <summary>
-        /// 打开窗口
+        /// 清理所有UI
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T Open<T>(params object[] args) where T : UIBase
-        {
-            return (T)Open(typeof(T), args);
-        }
-
-        /// <summary>
-        /// 获取窗口
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T GetWindow<T>() where T : UIBase
-        {
-            return (T)GetWindow(typeof(T));
-        }
-
-        /// <summary>
-        /// 激活窗口
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public void Active<T>() where T : UIBase
-        {
-            Active(typeof(T));
-        }
-
-        /// <summary>
-        /// 窗口失活
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public void Inactive<T>() where T : UIBase
-        {
-            Inactive(typeof(T));
-        }
-
-        /// <summary>
-        /// 关闭窗口
-        /// </summary>
-        /// <param name="system"></param>
-        /// <typeparam name="T"></typeparam>
-        public void Close<T>() where T : UIBase
-        {
-            Close(typeof(T));
-        }
-
         public void Clear()
         {
             foreach (var VARIABLE in _windows)

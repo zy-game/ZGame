@@ -100,6 +100,17 @@ namespace ZGame.Editor.ExcelExprot
             for (int i = ExportList.Count - 1; i >= 0; i--)
             {
                 ExportOptions options = ExportList[i];
+                if (options.dataTable is null)
+                {
+                    ExcelExporter exporter = GetExporter(options.parent);
+                    if (exporter is null)
+                    {
+                        return;
+                    }
+
+                    options.dataTable = exporter.GetTable(options.name);
+                }
+
                 if (options.type == ExportType.Json)
                 {
                     ExportJson(options);
@@ -107,17 +118,6 @@ namespace ZGame.Editor.ExcelExprot
                 }
                 else
                 {
-                    if (options.dataTable is null)
-                    {
-                        ExcelExporter exporter = GetExporter(options.parent);
-                        if (exporter is null)
-                        {
-                            return;
-                        }
-
-                        options.dataTable = exporter.GetTable(options.name);
-                    }
-
                     ExportCSharpCode(options);
                 }
             }
@@ -191,6 +191,7 @@ namespace ZGame.Editor.ExcelExprot
             string itemTypeName = exportSet.name + "_item";
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("using System;");
+            sb.AppendLine("using System.Linq;");
             sb.AppendLine("using System.Collections;");
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using UnityEngine;");
@@ -249,6 +250,66 @@ namespace ZGame.Editor.ExcelExprot
             sb.AppendLine("\t\t\t{");
             sb.AppendLine($"\t\t\t\tcfgList = new List<{itemTypeName}>();");
             sb.AppendLine("\t\t\t}");
+            sb.AppendLine("\t\t}");
+
+            sb.AppendLine($"\t\tpublic {itemTypeName} GetByFieldName(string fieldName, object value)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\tif (cfgList is null)");
+            sb.AppendLine("\t\t\t{");
+            sb.AppendLine("\t\t\t\treturn default;");
+            sb.AppendLine("\t\t\t}");
+
+            sb.AppendLine("\t\t\tswitch (fieldName)");
+            sb.AppendLine("\t\t\t{");
+            for (int i = 0; i < header.ItemArray.Length; i++)
+            {
+                string name = header.ItemArray[i].ToString();
+                if (name.Equals("#") || name.Equals(String.Empty))
+                {
+                    continue;
+                }
+
+                sb.AppendLine($"\t\t\t\tcase \"{name}\":");
+                sb.AppendLine($"\t\t\t\t\treturn cfgList.Find(x => x.{name}.ToString().Equals(value.ToString()));");
+            }
+
+            sb.AppendLine("\t\t\t}");
+
+            sb.AppendLine("\t\t\treturn default;");
+            sb.AppendLine("\t\t}");
+
+            sb.AppendLine($"\t\tpublic List<T> GetValues<T>(string fieldName)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\tif (cfgList is null)");
+            sb.AppendLine("\t\t\t{");
+            sb.AppendLine("\t\t\t\treturn default;");
+            sb.AppendLine("\t\t\t}");
+
+            sb.AppendLine("\t\t\tswitch (fieldName)");
+            sb.AppendLine("\t\t\t{");
+            for (int i = 0; i < header.ItemArray.Length; i++)
+            {
+                string name = header.ItemArray[i].ToString();
+                if (name.Equals("#") || name.Equals(String.Empty))
+                {
+                    continue;
+                }
+
+                sb.AppendLine($"\t\t\t\tcase \"{name}\":");
+                sb.AppendLine($"\t\t\t\t\treturn cfgList.Select(x => x.{name}).Cast<T>().ToList();");
+            }
+
+            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("\t\t\treturn default;");
+            sb.AppendLine("\t\t}");
+
+            sb.AppendLine($"\t\tpublic {itemTypeName} GetByKey({typeRow[0].ToString()} key)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\tif (cfgList is null)");
+            sb.AppendLine("\t\t\t{");
+            sb.AppendLine("\t\t\t\treturn default;");
+            sb.AppendLine("\t\t\t}");
+            sb.AppendLine($"\t\t\treturn cfgList.Find(x => x.{header.ItemArray[0].ToString()} == key);");
             sb.AppendLine("\t\t}");
 
             sb.AppendLine("\t}");
@@ -342,6 +403,7 @@ namespace ZGame.Editor.ExcelExprot
             {
                 return;
             }
+
 
             DataRow header = exportSet.dataTable.Rows[exportSet.headerRow];
             if (header is null)

@@ -38,7 +38,7 @@ namespace ZGame.Resource
             ResourcePackageListManifest resourcePackageListManifest = _manifests.Find(x => x.name == name);
             if (resourcePackageListManifest is null)
             {
-                resourcePackageListManifest = await NetworkManager.Get<ResourcePackageListManifest>(GlobalConfig.GetNetworkResourceUrl(name + ".ini"));
+                resourcePackageListManifest = await NetworkManager.Get<ResourcePackageListManifest>(BasicConfig.GetNetworkResourceUrl(name + ".ini"));
                 if (resourcePackageListManifest is null)
                 {
                     return default;

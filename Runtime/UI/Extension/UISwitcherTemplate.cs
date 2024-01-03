@@ -12,6 +12,34 @@ namespace ZGame.Window
         private Text text;
         private TextMeshProUGUI textMeshProUGUI;
         public bool isSelect;
+        public ParamType paramType;
+        public int _v1;
+        public float _v2;
+        public string _v3;
+        public bool _v4;
+        public Vector2 _v5;
+        public Vector3 _v6;
+        public Vector4 _v7;
+        public Color _v8;
+
+        public object param
+        {
+            get
+            {
+                return paramType switch
+                {
+                    ParamType.Int => _v1,
+                    ParamType.Float => _v2,
+                    ParamType.String => _v3,
+                    ParamType.Bool => _v4,
+                    ParamType.Vector2 => _v5,
+                    ParamType.Vector3 => _v6,
+                    ParamType.Vector4 => _v7,
+                    ParamType.Color => _v8,
+                    _ => null
+                };
+            }
+        }
 
         private void Awake()
         {
