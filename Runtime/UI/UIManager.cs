@@ -59,7 +59,7 @@ namespace ZGame.Window
             UILayers.instance.TrySetup(uiBase.gameObject, 1, Vector3.zero, Vector3.zero, Vector3.one);
             uiBase.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
             _windows.Add(uiBase);
-            uiBase.Awake();
+            uiBase.Awake(args);
             Active(type);
             return uiBase;
         }

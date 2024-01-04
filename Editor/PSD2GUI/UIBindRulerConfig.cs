@@ -179,9 +179,11 @@ namespace ZGame.Editor.PSD2GUI
                 {
                     if (EditorUtility.DisplayDialog("Warning", "当前UI代码文件已经存在, 是否覆盖写入?", "Yes", "No"))
                     {
-                        File.WriteAllText(output, gneric.GetOverloadCode());
+                        File.Delete(output);
                     }
                 }
+
+                File.WriteAllText(output, gneric.GetOverloadCode());
             }
 
             AssetDatabase.SaveAssets();

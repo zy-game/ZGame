@@ -26,12 +26,23 @@ namespace ZGame.Editor.PSD2GUI
                 template.limitTime = 0.5f;
             }
 
-            SerializedProperty onDown = serializedObject.FindProperty("_onDown");
-            EditorGUILayout.PropertyField(onDown);
-            SerializedProperty onUp = serializedObject.FindProperty("_onUp");
-            EditorGUILayout.PropertyField(onUp);
-            SerializedProperty onCancel = serializedObject.FindProperty("_onCancel");
-            EditorGUILayout.PropertyField(onCancel);
+            SerializedProperty onDown = serializedObject.FindProperty("onDown");
+            if (onDown != null)
+            {
+                EditorGUILayout.PropertyField(onDown);
+            }
+
+            SerializedProperty onUp = serializedObject.FindProperty("onUp");
+            if (onUp != null)
+            {
+                EditorGUILayout.PropertyField(onUp);
+            }
+
+            SerializedProperty onCancel = serializedObject.FindProperty("onCancel");
+            if (onCancel != null)
+            {
+                EditorGUILayout.PropertyField(onCancel);
+            }
 
             if (EditorGUI.EndChangeCheck())
             {

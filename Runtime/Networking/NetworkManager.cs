@@ -197,7 +197,7 @@ namespace ZGame.Networking
 
         public static async UniTask<T> Post<T>(string url, object data, Dictionary<string, object> headers = null)
         {
-            string str = JsonConvert.SerializeObject(data);
+            string str = data is string ? data as string : JsonConvert.SerializeObject(data);
             using (UnityWebRequest request = UnityWebRequest.Post(url, str))
             {
                 request.useHttpContinue = true;
@@ -227,6 +227,19 @@ namespace ZGame.Networking
                 await request.SendWebRequest().ToUniTask();
                 Debug.Log($"HEAD:{url} result:{request.downloadHandler.text}");
                 string result = request.GetResponseHeader(headName);
+                request.Dispose();
+                return result;
+            }
+        }
+
+        public static async UniTask<AudioClip> GetAudioClip(string url)
+        {
+            Debug.Log("AUDIO:" + url);
+            using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.MPEG))
+            {
+                request.useHttpContinue = true;
+                await request.SendWebRequest().ToUniTask();
+                AudioClip result = DownloadHandlerAudioClip.GetContent(request);
                 request.Dispose();
                 return result;
             }

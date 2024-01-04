@@ -111,7 +111,7 @@ namespace ZGame.Editor.PSD2GUI
                             break;
                         case "TMP_Dropdown":
                         case "Dropdown":
-                            GenericDropdownComponent(VARIABLE, fieldName);
+                            GenericDropdownComponent(VARIABLE, fieldName, rule.ComponentName);
                             break;
                         case "Image":
                             GenericImageComponent(VARIABLE, fieldName);
@@ -164,8 +164,8 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t}");
             AddCallback("");
 
-            AddEvent($"\t\t\t{fieldName}?.onDown.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onDown.AddListener(on_handle_{variable.name}_Up);");
+            AddEvent($"\t\t\t{fieldName}?.onUp.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onUp.AddListener(on_handle_{variable.name}_Up);");
             AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_Up()");
             AddCallback("\t\t{");
             AddCallback("");
@@ -256,7 +256,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup("");
         }
 
-        private void GenericDropdownComponent(UIBindData VARIABLE, string fieldName)
+        private void GenericDropdownComponent(UIBindData VARIABLE, string fieldName, string componentName)
         {
             AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
             AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name});");
@@ -289,7 +289,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
             AddSetup("\t\t}");
             AddSetup("");
-            AddSetup($"\t\tpublic void on_add_{VARIABLE.name}(List<OptionData> items)");
+            AddSetup($"\t\tpublic void on_add_{VARIABLE.name}(List<{componentName}.OptionData> items)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -437,6 +437,7 @@ namespace ZGame.Editor.PSD2GUI
             StringBuilder sb = new StringBuilder();
 
             UIBindRulerConfig.instance.nameSpaces.ForEach(x => sb.AppendLine("using " + x.nameSpace + ";"));
+            sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("/// <summary>");
             sb.AppendLine("/// Createing with " + DateTime.Now.ToString("g"));
             sb.AppendLine("/// by " + SystemInfo.deviceName);
