@@ -65,7 +65,7 @@ namespace ZGame.Sound
             _handles.Remove(handle);
         }
 
-        public void PlayBackSound(string clipName, Action<bool> playCallback = null)
+        public void PlayBackSound(string clipName, Action<PlayState> playCallback = null)
         {
             SoundPlayableHandle handle = GetPlayer(BACK_MUSIC);
             if (handle is null)
@@ -76,7 +76,7 @@ namespace ZGame.Sound
             handle.Play(clipName, playCallback);
         }
 
-        public void PlayBackSound(AudioClip clip, Action<bool> playCallback = null)
+        public void PlayBackSound(AudioClip clip, Action<PlayState> playCallback = null)
         {
             SoundPlayableHandle handle = GetPlayer(BACK_MUSIC);
             if (handle is null)
@@ -87,7 +87,7 @@ namespace ZGame.Sound
             handle.Play(clip, playCallback);
         }
 
-        public void PlayEffectSound(string clipName, Action<bool> playCallback = null)
+        public void PlayEffectSound(string clipName, Action<PlayState> playCallback = null)
         {
             SoundPlayableHandle handle = GetPlayer(EFFECT_SOUND);
             if (handle is null)
@@ -98,7 +98,7 @@ namespace ZGame.Sound
             handle.Play(clipName, playCallback);
         }
 
-        public void PlayEffectSound(AudioClip clip, Action<bool> playCallback = null)
+        public void PlayEffectSound(AudioClip clip, Action<PlayState> playCallback = null)
         {
             SoundPlayableHandle handle = GetPlayer(EFFECT_SOUND);
             if (handle is null)
@@ -123,6 +123,17 @@ namespace ZGame.Sound
         public void StopSound(string clipName)
         {
             SoundPlayableHandle handle = GetPlayerWithClipName(clipName);
+            if (handle is null)
+            {
+                return;
+            }
+
+            handle.Stop();
+        }
+
+        public void StopAll()
+        {
+            SoundPlayableHandle handle = GetPlayer(EFFECT_SOUND);
             if (handle is null)
             {
                 return;

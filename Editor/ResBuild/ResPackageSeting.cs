@@ -5,13 +5,14 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.ResBuild.Config;
+using ZGame.Resource.Config;
 using ZGame.Window;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
     [ReferenceScriptableObject(typeof(PackageSeting))]
-    [SubPageSetting("包管理", typeof(ResBuilder))]
+    [SubPageSetting("资源包管理", typeof(ResBuilder))]
     public class ResPackageSetting : SubPage
     {
         public override void OnEnable(params object[] args)
@@ -105,7 +106,37 @@ namespace ZGame.Editor.ResBuild
             }
             package.name = EditorGUILayout.TextField("规则名称", package.name);
             package.describe = EditorGUILayout.TextField("描述", package.describe);
-            package.oss = (OSSType)EditorGUILayout.EnumPopup("服务器地址", package.oss);
+            if (package.service == null || package.service.items == null || package.service.Count == 0)
+            {
+                package.service = new Selector();
+            }
+
+            package.service.Add(OSSConfig.instance.ossList.Select(x => x.title).ToArray());
+            if (package.dependcies is null || package.dependcies is null || package.dependcies.Count == 0)
+            {
+                package.dependcies = new Selector();
+            }
+
+            package.dependcies.Add(BuilderConfig.instance.packages.Where(x => x.name != package.name).Select(x => x.name).ToArray());
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("依赖包", GUILayout.Width(150));
+            if (EditorGUILayout.DropdownButton(new GUIContent(package.dependcies.ToString()), FocusType.Passive))
+            {
+                package.dependcies.ShowContext();
+            }
+
+            GUILayout.EndHorizontal();
+
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("资源服", GUILayout.Width(150));
+            if (EditorGUILayout.DropdownButton(new GUIContent(package.service.ToString()), FocusType.Passive))
+            {
+                package.service.ShowContext();
+            }
+
+            GUILayout.EndHorizontal();
             EditorGUI.BeginChangeCheck();
             {
                 if (package.items == null)
@@ -153,7 +184,7 @@ namespace ZGame.Editor.ResBuild
                 rulerData.folder = EditorGUILayout.ObjectField(rulerData.folder, typeof(DefaultAsset), false);
                 GUILayout.BeginHorizontal();
                 {
-                    rulerData.buildType = (BuildType)EditorGUILayout.EnumPopup("打包方式", rulerData.buildType, GUILayout.Width(200));
+                    rulerData.buildType = (BuildType)EditorGUILayout.EnumPopup("打包方式", rulerData.buildType, GUILayout.Width(300));
                     if (rulerData.folder != null && rulerData.buildType == BuildType.AssetType)
                     {
                         if (GUILayout.Button(rulerData.selector.ToString(), EditorStyles.popup, GUILayout.Width(200)))

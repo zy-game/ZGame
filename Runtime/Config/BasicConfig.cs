@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Serialization;
 using ZGame.Config;
@@ -17,8 +16,15 @@ namespace ZGame
         Simulator,
     }
 
+    public enum CodeMode
+    {
+        Native,
+        Hotfix,
+    }
+
     public enum OSSType
     {
+        None,
         Aliyun,
         Tencent,
         Streaming,
@@ -45,6 +51,10 @@ namespace ZGame
 
         public string GetUrl(string path)
         {
+            if (port == 0)
+            {
+                return $"{address}{path}";
+            }
             return $"{address}:{port}{path}";
         }
     }
@@ -71,11 +81,11 @@ namespace ZGame
         /// 默认语言
         /// </summary>
         public LanguageDefine language = LanguageDefine.English;
-        
+
         /// <summary>
         /// 运行模式
         /// </summary>
-        public ResourceMode mode;
+        public CodeMode mode;
 
         /// <summary>
         /// 默认资源模块
@@ -92,7 +102,14 @@ namespace ZGame
         /// </summary>
         public List<string> references;
 
-        [NonSerialized] public AssemblyDefinitionAsset assembly;
+        /// <summary>
+        /// 资源服务名称
+        /// </summary>
+        public string ossTitle;
+
+#if UNITY_EDITOR
+        [NonSerialized] public UnityEditorInternal.AssemblyDefinitionAsset assembly;
+#endif
     }
 
     [Serializable]
@@ -131,21 +148,6 @@ namespace ZGame
         /// 当前选择的服务器地址
         /// </summary>
         public string curAddressName;
-
-        /// <summary>
-        /// 云存储
-        /// </summary>
-        public string ossAddress;
-
-        /// <summary>
-        /// 资源服务名称
-        /// </summary>
-        public string ossTitle;
-
-        /// <summary>
-        /// 资源服务器类型
-        /// </summary>
-        public OSSType ossType;
 
         /// <summary>
         /// 资源模式
@@ -194,8 +196,15 @@ namespace ZGame
             return "android";
 #elif UNITY_IPHONE
             return "ios";
+#elif UNITY_WEBGL
+            return "web";
 #endif
             return "windows";
+        }
+
+        public static string GetPlatformOutputPath(string output)
+        {
+            return $"{output}/{GetPlatformName()}";
         }
 
         /// <summary>
@@ -203,15 +212,15 @@ namespace ZGame
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public static string GetNetworkResourceUrl(string fileName)
-        {
-            if (instance.ossType == OSSType.Streaming)
-            {
-                return $"{Application.streamingAssetsPath}/{fileName}";
-            }
-
-            return $"{instance.ossAddress}{GetPlatformName()}/{fileName}";
-        }
+        // public static string GetNetworkResourceUrl(string fileName)
+        // {
+        //     if (instance.curEntry.ossType == OSSType.Streaming)
+        //     {
+        //         return $"{Application.streamingAssetsPath}/{fileName}";
+        //     }
+        //
+        //     return $"{instance.curEntry.ossAddress}{GetPlatformName()}/{fileName}";
+        // }
 
         /// <summary>
         /// 获取服务器接口

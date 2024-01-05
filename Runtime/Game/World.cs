@@ -273,8 +273,16 @@ namespace ZGame.Game
                 GameObject.DestroyImmediate(item.Item2.gameObject);
             }
 
-            GameObject.DestroyImmediate(_light.gameObject);
-            GameObject.DestroyImmediate(_camera.gameObject);
+            if (_light != null)
+            {
+                GameObject.DestroyImmediate(_light.gameObject);
+            }
+
+            if (_camera != null)
+            {
+                GameObject.DestroyImmediate(_camera.gameObject);
+            }
+
             subCameras.Clear();
             sunshineGradient = null;
             skybox = null;

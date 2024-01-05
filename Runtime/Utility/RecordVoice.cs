@@ -21,6 +21,8 @@ namespace ZGame
         /// <summary>由录音产生的AudioClip的采样率</summary>
         public int Frequency { get; set; }
 
+        public int position { get; set; }
+
         protected override void OnAwake()
         {
             m_samplesLength = 128;
@@ -49,6 +51,7 @@ namespace ZGame
 
         public AudioClip End()
         {
+            position = Microphone.GetPosition(DeviceNameMIC);
             Microphone.End(DeviceNameMIC);
             m_isTiming = false;
             return m_resultClip;

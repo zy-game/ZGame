@@ -9,6 +9,7 @@ using UnityEngine;
 using ZGame.Config;
 using ZGame.Editor.ResBuild.Config;
 using ZGame.Game;
+using ZGame.Resource.Config;
 
 namespace ZGame.Editor
 {
@@ -46,32 +47,7 @@ namespace ZGame.Editor
                 BasicConfig.instance.curAddressName = BasicConfig.instance.address[curIndex].title;
             }
 
-            GUILayout.BeginHorizontal();
-            last = BuilderConfig.instance.ossList.FindIndex(x => x.title == BasicConfig.instance.ossTitle);
-            curIndex = EditorGUILayout.Popup("资源服务器地址", last, BuilderConfig.instance.ossList.Select(x => x.title).ToArray());
-
-            if (curIndex >= 0 && curIndex < BuilderConfig.instance.ossList.Count && last != curIndex)
-            {
-                OSSOptions ossOptions = BuilderConfig.instance.ossList[curIndex];
-                BasicConfig.instance.ossTitle = ossOptions.title;
-                BasicConfig.instance.ossType = ossOptions.type;
-                if (ossOptions.type == OSSType.Aliyun)
-                {
-                    BasicConfig.instance.ossAddress = $"https://{ossOptions.bucket}.oss-{ossOptions.region}.aliyuncs.com/";
-                }
-                else if (ossOptions.type == OSSType.Tencent)
-                {
-                    BasicConfig.instance.ossAddress = $"https://{ossOptions.bucket}.cos.{ossOptions.region}.myqcloud.com/";
-                }
-                else
-                {
-                    BasicConfig.instance.ossAddress = String.Empty;
-                }
-            }
-
-            GUILayout.EndHorizontal();
             BasicConfig.instance.resMode = (ResourceMode)EditorGUILayout.EnumPopup("资源模式", BasicConfig.instance.resMode);
-
             if (EditorGUI.EndChangeCheck())
             {
                 BasicConfig.OnSave();
@@ -145,19 +121,27 @@ namespace ZGame.Editor
             {
                 config.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(config.path);
             }
-            config.mode = (ResourceMode)EditorGUILayout.EnumPopup("模式", config.mode);
-            
+
+            config.mode = (CodeMode)EditorGUILayout.EnumPopup("模式", config.mode);
+
             var resList = BuilderConfig.instance.packages.Select(x => x.name).ToList();
             int last = resList.FindIndex(x => x == config.module);
-            int i = EditorGUILayout.Popup("资源包", last, resList.ToArray());
-            if (i >= 0 && i < resList.Count)
+            int curIndex = EditorGUILayout.Popup("资源包", last, resList.ToArray());
+            if (curIndex >= 0 && curIndex < resList.Count)
             {
-                config.module = resList[i];
+                config.module = resList[curIndex];
             }
 
+            last = OSSConfig.instance.ossList.FindIndex(x => x.title == config.ossTitle);
+            curIndex = EditorGUILayout.Popup("资源服务器地址", last, OSSConfig.instance.ossList.Select(x => x.title).ToArray());
+
+            if (curIndex >= 0 && curIndex < OSSConfig.instance.ossList.Count && last != curIndex)
+            {
+                OSSOptions ossOptions = OSSConfig.instance.ossList[curIndex];
+                config.ossTitle = ossOptions.title;
+            }
 
             config.unloadInterval = EditorGUILayout.Slider("包检查间隔时间", config.unloadInterval, 30, ushort.MaxValue);
-
             config.assembly = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Assembly", config.assembly, typeof(AssemblyDefinitionAsset), false);
             if (config.assembly != null)
             {

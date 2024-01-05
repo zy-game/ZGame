@@ -45,11 +45,7 @@ namespace ZGame.Game
 
         private static async UniTask<Assembly> LoadGameAssembly(EntryConfig config)
         {
-            bool isInternal = false;
-#if UNITY_EDITOR
-            isInternal = true;
-#endif
-            if (config.mode is ResourceMode.Editor || isInternal)
+            if (config.mode is CodeMode.Native || Application.isEditor)
             {
                 if (config.entryName.IsNullOrEmpty())
                 {

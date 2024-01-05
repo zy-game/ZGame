@@ -185,6 +185,7 @@ namespace ZGame.Networking
         {
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
+                Debug.Log($"{url}");
                 request.useHttpContinue = true;
                 request.SetRequestHeader("Content-Type", "application/json");
                 await request.SendWebRequest().ToUniTask();
@@ -197,6 +198,7 @@ namespace ZGame.Networking
 
         public static async UniTask<T> Post<T>(string url, object data, Dictionary<string, object> headers = null)
         {
+            Debug.Log(url);
             string str = data is string ? data as string : JsonConvert.SerializeObject(data);
             using (UnityWebRequest request = UnityWebRequest.Post(url, str))
             {
@@ -212,7 +214,7 @@ namespace ZGame.Networking
                 }
 
                 await request.SendWebRequest().ToUniTask();
-                Debug.Log($"POST:{url} data:{str} result:{request.downloadHandler.text}");
+                Debug.Log($"POST:{url} result:{request.downloadHandler.text}");
                 T result = request.GetData<T>();
                 request.Dispose();
                 return result;
@@ -241,6 +243,19 @@ namespace ZGame.Networking
                 await request.SendWebRequest().ToUniTask();
                 AudioClip result = DownloadHandlerAudioClip.GetContent(request);
                 request.Dispose();
+                return result;
+            }
+        }
+
+        public static async UniTask<T> GetStreamingAsset<T>(string url)
+        {
+            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            {
+                Debug.Log(url);
+                request.useHttpContinue = true;
+                await request.SendWebRequest().ToUniTask();
+                Debug.Log($"GET:{url} result:{request.downloadHandler.text}");
+                T result = JsonConvert.DeserializeObject<T>(DownloadHandlerBuffer.GetContent(request));
                 return result;
             }
         }

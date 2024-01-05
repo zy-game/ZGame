@@ -60,12 +60,11 @@ namespace ZGame.Window
                 return;
             }
 
+            isDown = false;
             if (onUp != null)
             {
                 onUp.Invoke();
             }
-
-            isDown = false;
         }
 
         public override void OnPointerUp(PointerEventData eventData)
@@ -87,12 +86,11 @@ namespace ZGame.Window
             base.OnPointerExit(eventData);
             if (isDown)
             {
+                isDown = false;
                 if (onCancel != null)
                 {
                     onCancel.Invoke();
                 }
-
-                isDown = false;
             }
         }
     }

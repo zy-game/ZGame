@@ -28,7 +28,7 @@ namespace ZGame.Sound
         {
             if (current is not null && _source.isPlaying is false)
             {
-                current.callback?.Invoke(false);
+                current.callback?.Invoke(PlayState.Complete);
                 current.Dispose();
                 current = null;
                 return;
@@ -43,7 +43,7 @@ namespace ZGame.Sound
             Player();
         }
 
-        public void Play(string clipName, Action<bool> playCallback)
+        public void Play(string clipName, Action<PlayState> playCallback)
         {
             AudioPlayable playable = new AudioPlayable() { clipName = clipName, callback = playCallback };
             if (current is not null)
@@ -56,7 +56,7 @@ namespace ZGame.Sound
             Player();
         }
 
-        public void Play(AudioClip clip, Action<bool> playCallback)
+        public void Play(AudioClip clip, Action<PlayState> playCallback)
         {
             AudioPlayable playable = new AudioPlayable() { clip = clip, callback = playCallback };
             if (current is not null)
@@ -89,16 +89,29 @@ namespace ZGame.Sound
 
             _source.clip = current.clip;
             _source.Play();
-            current.callback?.Invoke(true);
+            current.callback?.Invoke(PlayState.Playing);
         }
 
         public void Pause()
         {
+            if (current is not null)
+            {
+                current.callback?.Invoke(PlayState.Paused);
+            }
+
             _source.Pause();
         }
 
         public void Stop()
         {
+            if (current is not null)
+            {
+                current.callback?.Invoke(PlayState.Stopped);
+                current.Dispose();
+                current = null;
+            }
+
+            waiting.Clear();
             _source.Stop();
         }
 

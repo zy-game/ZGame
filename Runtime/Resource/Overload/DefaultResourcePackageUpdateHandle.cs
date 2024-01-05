@@ -10,6 +10,7 @@ using ZGame.Config;
 using ZGame.FileSystem;
 using ZGame.Game;
 using ZGame.Networking;
+using ZGame.Resource.Config;
 using ZGame.Window;
 
 namespace ZGame.Resource
@@ -20,65 +21,36 @@ namespace ZGame.Resource
         {
         }
 
-        public async UniTask Update(params string[] paths)
+        public async UniTask UpdateResourcePackageList(EntryConfig config)
         {
-            if (paths is null || paths.Length == 0)
-            {
-                return;
-            }
-
             UILoading handler = (UILoading)UIManager.instance.Open(typeof(UILoading));
             handler.SetTitle(Localliztion.Get(100000));
             handler.Report(0);
             HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
-            HashSet<string> urlList = new HashSet<string>();
             HashSet<string> failure = new HashSet<string>();
-            foreach (var VARIABLE in paths)
+            List<ResourcePackageManifest> result = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
+            foreach (var packageManifest in result)
             {
-                if (VARIABLE.IsNullOrEmpty())
+                if (downloadList.Contains(packageManifest))
                 {
                     continue;
                 }
 
-                if (VARIABLE.StartsWith("http"))
+                string url = OSSConfig.instance.GetFilePath(config.ossTitle, packageManifest.name);
+                using (UnityWebRequest request = UnityWebRequest.Get(url))
                 {
-                    if (urlList.Contains(VARIABLE))
-                    {
-                        continue;
-                    }
-
-                    string tag = await NetworkManager.Head(VARIABLE, "eTag");
-                    uint crc = Crc32.GetCRC32Str(tag);
-                    if (VFSManager.instance.Exist(Path.GetFileName(VARIABLE), crc))
-                    {
-                        continue;
-                    }
-
-                    bool state = await DownloadResource(VARIABLE, handler, crc);
-                    urlList.Add(VARIABLE);
-                    if (state is false)
-                    {
-                        failure.Add(VARIABLE);
-                    }
-
-                    continue;
-                }
-
-
-                List<ResourcePackageManifest> result = await ResourcePackageListManifest.CheckNeedUpdatePackageList(VARIABLE);
-                foreach (var packageManifest in result)
-                {
-                    if (downloadList.Contains(packageManifest))
-                    {
-                        continue;
-                    }
-
-                    bool state = await DownloadResource(BasicConfig.GetNetworkResourceUrl(packageManifest.name), handler, packageManifest.version);
-                    downloadList.Add(packageManifest);
-                    if (state is false)
+                    request.timeout = 5;
+                    request.useHttpContinue = true;
+                    handler.SetTitle(Path.GetFileName(url));
+                    await request.SendWebRequest().ToUniTask(handler);
+                    handler.Report(1);
+                    if (request.result is not UnityWebRequest.Result.Success)
                     {
                         failure.Add(packageManifest.name);
+                        continue;
                     }
+
+                    await VFSManager.instance.WriteAsync(Path.GetFileName(url), request.downloadHandler.data, packageManifest.version);
                 }
             }
 
@@ -89,29 +61,6 @@ namespace ZGame.Resource
 
             Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
             UIMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
-        }
-
-        private async UniTask<bool> DownloadResource(string url, UILoading uiLoadingHandle, uint crc = 0)
-        {
-            UnityWebRequest request = UnityWebRequest.Get(url);
-            request.timeout = 5;
-            request.useHttpContinue = true;
-            uiLoadingHandle.SetTitle(Path.GetFileName(url));
-            await request.SendWebRequest().ToUniTask(uiLoadingHandle);
-            uiLoadingHandle.Report(1);
-            bool success = request.result is UnityWebRequest.Result.Success;
-            if (success)
-            {
-                if (crc == 0)
-                {
-                    crc = Crc32.GetCRC32Str(request.GetRequestHeader("eTag"));
-                }
-
-                await VFSManager.instance.WriteAsync(Path.GetFileName(url), request.downloadHandler.data, crc);
-            }
-
-            request.Dispose();
-            return success;
         }
     }
 }

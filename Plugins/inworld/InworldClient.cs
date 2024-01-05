@@ -327,6 +327,7 @@ namespace Inworld
         // Marks session end.
         public void EndAudio(Routing routing)
         {
+            Debug.Log("End Audio Event");
             if (SessionStarted)
                 m_CurrentConnection?.outgoingEventsQueue.Enqueue
                 (
@@ -349,10 +350,14 @@ namespace Inworld
         public void SendAudio(AudioChunk audioEvent)
         {
             if (SessionStarted)
+            {
+                Debug.Log("Send Audio Event");
+
                 m_CurrentConnection?.outgoingEventsQueue.Enqueue(new RPCMessage()
                 {
                     Packet = audioEvent.ToGrpc()
                 });
+            }
         }
 
         public bool GetAudioChunk(out AudioChunk chunk)

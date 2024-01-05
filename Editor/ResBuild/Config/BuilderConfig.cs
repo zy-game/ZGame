@@ -11,7 +11,6 @@ namespace ZGame.Editor.ResBuild.Config
     {
         public BuildTarget target;
         public string fileExtension;
-        public List<OSSOptions> ossList;
         public bool useActiveTarget = true;
         public List<PackageSeting> packages;
         public BuildAssetBundleOptions comperss;
@@ -32,7 +31,6 @@ namespace ZGame.Editor.ResBuild.Config
 
         public override void OnAwake()
         {
-            ossList = ossList ?? new();
             packages = packages ?? new();
         }
     }

@@ -9,8 +9,5 @@ namespace ZGame.Resource
         public uint version;
         public string owner;
         public string[] files;
-        public Dependencies[] dependencies;
-        
-        
     }
 }

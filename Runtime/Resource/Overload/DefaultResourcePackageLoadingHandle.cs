@@ -4,7 +4,9 @@ using System.IO;
 using Cysharp.Threading.Tasks;
 using UI;
 using UnityEngine;
+using UnityEngine.Networking;
 using ZGame.FileSystem;
+using ZGame.Resource.Config;
 using ZGame.Window;
 
 namespace ZGame.Resource
@@ -15,72 +17,44 @@ namespace ZGame.Resource
         {
         }
 
-        public async UniTask Loading(params string[] paths)
+        public async UniTask LoadingResourcePackageList(EntryConfig config)
         {
-            Queue<string> fileList = new Queue<string>();
             UILoading handler = (UILoading)UIManager.instance.Open(typeof(UILoading));
             //todo 这里还需要注意实在webgl平台上面加载资源包的情况
             handler.SetTitle("正在加载资源信息...");
             handler.Report(0);
-            foreach (var VARIABLE in paths)
+            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(config.module);
+            int index = 0;
+            while (index < manifests.Count)
             {
-                if (VARIABLE.IsNullOrEmpty())
+                handler.Report(index / (float)manifests.Count);
+                if (ResourceManager.instance.GetResourcePackageHandle(manifests[index].name) == null)
                 {
-                    continue;
-                }
+                    AssetBundle assetBundle = default;
+                    byte[] bytes = await VFSManager.instance.ReadAsync(manifests[index].name);
+                    if (bytes is null || bytes.Length == 0)
+                    {
+                        Clear(manifests);
+                        handler.SetTitle("资源加载失败...");
+                        return;
+                    }
 
-                if (VARIABLE.StartsWith("http"))
-                {
-                    fileList.Enqueue(Path.GetFileName(VARIABLE));
-                    continue;
-                }
-
-                List<ResourcePackageManifest> manifests = await ResourcePackageListManifest.GetPackageList(VARIABLE);
-                foreach (var VARIABLE2 in manifests)
-                {
-                    fileList.Enqueue(VARIABLE2.name);
+                    assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
+                    ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(assetBundle, false));
+                    index++;
                 }
             }
 
-            await LoadBundleList(fileList, handler);
+            handler.SetTitle("资源加载完成...");
+            handler.Report(1);
         }
 
-        private async UniTask LoadBundleList(Queue<string> fileList, UILoading uiLoadingHandle)
+
+        private void Clear(List<ResourcePackageManifest> fileList)
         {
-            int count = fileList.Count;
-            for (int i = 0; i < count; i++)
+            foreach (var VARIABLE in fileList)
             {
-                string VARIABLE = fileList.Dequeue();
-                uiLoadingHandle.SetTitle($"正在加载资源包: {VARIABLE}");
-                uiLoadingHandle.Report(i / (float)count);
-                if (ResourceManager.instance.GetResourcePackageHandle(VARIABLE) != null)
-                {
-                    continue;
-                }
-
-                byte[] bytes = await VFSManager.instance.ReadAsync(VARIABLE);
-                if (bytes is null || bytes.Length == 0)
-                {
-                    Clear(fileList);
-                    return;
-                }
-
-                uiLoadingHandle.SetTitle($"正在加载资源包: {VARIABLE}");
-                uiLoadingHandle.Report((i + 1) / (float)count);
-                AssetBundle assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
-                ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(assetBundle, false));
-            }
-
-            uiLoadingHandle.SetTitle("资源加载完成...");
-            uiLoadingHandle.Report(1);
-        }
-
-        private void Clear(Queue<string> fileList)
-        {
-            while (fileList.Count > 0)
-            {
-                string VARIABLE = fileList.Dequeue();
-                ResourceManager.instance.RemoveResourcePackageHandle(VARIABLE);
+                ResourceManager.instance.RemoveResourcePackageHandle(VARIABLE.name);
             }
         }
     }

@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.ResBuild.Config;
 using ZGame.Resource;
+using ZGame.Resource.Config;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
@@ -91,21 +92,19 @@ namespace ZGame.Editor.ResBuild
             }
 
             BuildTarget target = BuilderConfig.instance.useActiveTarget ? EditorUserBuildSettings.activeBuildTarget : BuilderConfig.instance.target;
-            string output = target switch
-            {
-                BuildTarget.StandaloneWindows64 => BuilderConfig.output + "windows",
-                BuildTarget.Android => BuilderConfig.output + "android",
-                BuildTarget.WebGL => BuilderConfig.output + "webgl",
-                BuildTarget.iOS => BuilderConfig.output + "ios",
-                _ => BuilderConfig.output + "none"
-            };
-
+            string output = BasicConfig.GetPlatformOutputPath(BuilderConfig.output);
             if (Directory.Exists(output) is false)
             {
                 Directory.CreateDirectory(output);
             }
 
             var manifest = BuildPipeline.BuildAssetBundles(output, list.ToArray(), BuildAssetBundleOptions.None, target);
+            OnUploadResourcePackageList(output, CreatePackageManifest(output, manifest, builds), builds);
+            EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
+        }
+
+        private List<ResourcePackageListManifest> CreatePackageManifest(string output, AssetBundleManifest manifest, params BuilderOptions[] builds)
+        {
             BuildPipeline.GetCRCForAssetBundle(new DirectoryInfo(output).Name, out uint crc);
             List<ResourcePackageListManifest> packageListManifests = new List<ResourcePackageListManifest>();
             foreach (var VARIABLE in builds)
@@ -123,18 +122,8 @@ namespace ZGame.Editor.ResBuild
                         name = VARIABLE.builds[i].assetBundleName.ToLower(),
                         version = crc,
                         owner = packageListManifest.name,
-                        dependencies = new Dependencies[dependencies.Length],
                         files = VARIABLE.builds[i].assetNames.Select(x => x.Replace("\\", "/")).ToArray()
                     };
-                    for (int j = 0; j < packageListManifest.packages[i].dependencies.Length; j++)
-                    {
-                        BuildPipeline.GetCRCForAssetBundle(output + "/" + dependencies[j], out crc);
-                        packageListManifest.packages[i].dependencies[j] = new Dependencies()
-                        {
-                            name = dependencies[j],
-                            version = crc
-                        };
-                    }
                 }
 
                 packageListManifests.Add(packageListManifest);
@@ -142,19 +131,42 @@ namespace ZGame.Editor.ResBuild
 
             foreach (var VARIABLE in packageListManifests)
             {
-                for (int i = 0; i < VARIABLE.packages.Length; i++)
-                {
-                    for (int j = 0; j < VARIABLE.packages[i].dependencies.Length; j++)
-                    {
-                        var result = packageListManifests.Find(x => x.Contains(VARIABLE.packages[i].dependencies[j].name));
-                        VARIABLE.packages[i].dependencies[j].owner = result.name;
-                    }
-                }
-
                 File.WriteAllText($"{output}/{VARIABLE.name}.ini", JsonConvert.SerializeObject(VARIABLE));
             }
 
-            EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
+            return packageListManifests;
+        }
+
+        private void OnUploadResourcePackageList(string output, List<ResourcePackageListManifest> manifests, params BuilderOptions[] builds)
+        {
+            int allCount = builds.Sum(x => x.builds.Length * x.seting.service.Selected.Length);
+            int successCount = 0;
+            foreach (var options in builds)
+            {
+                foreach (var VARIABLE in options.seting.service.Selected)
+                {
+                    OSSOptions oss = OSSConfig.instance.ossList.Find(x => x.title == VARIABLE);
+                    if (oss is null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var bundle in options.builds)
+                    {
+                        oss.Upload(output + "/" + bundle.assetBundleName);
+                        successCount++;
+                        EditorUtility.DisplayProgressBar("上传进度", successCount + "/" + allCount, successCount / (float)allCount);
+                    }
+
+                    foreach (ResourcePackageListManifest manifest in manifests)
+                    {
+                        oss.Upload(output + "/" + manifest.name + ".ini");
+                    }
+                }
+            }
+
+
+            EditorUtility.ClearProgressBar();
         }
     }
 }

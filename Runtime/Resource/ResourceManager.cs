@@ -65,42 +65,42 @@ namespace ZGame.Resource
 
         protected override void OnUpdate()
         {
-            if (Time.realtimeSinceStartup < checkTime)
-            {
-                return;
-            }
-
-            MoveNextTime();
-
-            //todo 检查是否需要卸载资源包
-            for (int i = 0; i < _handles.Count; i++)
-            {
-                if (_handles[i].refCount > 0 || _handles[i].DefaultPackage)
-                {
-                    continue;
-                }
-
-                //todo 加入待卸载列表
-                unloadList.Add(new UnloadQueueTask()
-                {
-                    handle = _handles[i],
-                    time = Time.realtimeSinceStartup + BasicConfig.instance.curEntry.unloadInterval
-                });
-                _handles.Remove(_handles[i]);
-            }
-
-            //todo 卸载资源包
-            for (int i = 0; i < unloadList.Count; i++)
-            {
-                if (unloadList[i].time > Time.realtimeSinceStartup)
-                {
-                    continue;
-                }
-
-                unloadList[i].handle.Dispose();
-                unloadList.RemoveAt(i);
-                i--;
-            }
+            // if (Time.realtimeSinceStartup < checkTime)
+            // {
+            //     return;
+            // }
+            //
+            // MoveNextTime();
+            //
+            // //todo 检查是否需要卸载资源包
+            // for (int i = 0; i < _handles.Count; i++)
+            // {
+            //     if (_handles[i].refCount > 0 || _handles[i].DefaultPackage)
+            //     {
+            //         continue;
+            //     }
+            //
+            //     //todo 加入待卸载列表
+            //     unloadList.Add(new UnloadQueueTask()
+            //     {
+            //         handle = _handles[i],
+            //         time = Time.realtimeSinceStartup + BasicConfig.instance.curEntry.unloadInterval
+            //     });
+            //     _handles.Remove(_handles[i]);
+            // }
+            //
+            // //todo 卸载资源包
+            // for (int i = 0; i < unloadList.Count; i++)
+            // {
+            //     if (unloadList[i].time > Time.realtimeSinceStartup)
+            //     {
+            //         continue;
+            //     }
+            //
+            //     unloadList[i].handle.Dispose();
+            //     unloadList.RemoveAt(i);
+            //     i--;
+            // }
         }
 
         public void AddResourcePackageHandle(ResPackageHandle handle)
@@ -138,7 +138,7 @@ namespace ZGame.Resource
 
         public ResPackageHandle GetResourcePackageHandleWithAssetPath(string path)
         {
-            ResourcePackageManifest manifest = ResourcePackageListManifest.GetResourcePackageManifestWithAssetName(path);
+            ResourcePackageManifest manifest = PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path);
             if (manifest is null)
             {
                 return default;
@@ -359,11 +359,11 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async UniTask LoadingResourcePackageList(params string[] args)
+        public async UniTask LoadingResourcePackageList(EntryConfig config)
         {
-            if (args is null || args.Length == 0)
+            if (config is null)
             {
-                throw new ArgumentNullException("args");
+                throw new ArgumentNullException("config");
             }
 #if UNITY_EDITOR
             if (BasicConfig.instance.resMode == ResourceMode.Editor)
@@ -372,7 +372,7 @@ namespace ZGame.Resource
             }
 #endif
 
-            await _resourceResourcePackageLoadingHandle.Loading(args);
+            await _resourceResourcePackageLoadingHandle.LoadingResourcePackageList(config);
         }
 
         /// <summary>
@@ -381,9 +381,9 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <exception cref="NullReferenceException"></exception>
-        public async UniTask CheckUpdateResourcePackageList(params string[] args)
+        public async UniTask CheckUpdateResourcePackageList(EntryConfig config)
         {
-            if (args is null || args.Length == 0)
+            if (config is null)
             {
                 throw new ArgumentNullException("args");
             }
@@ -393,7 +393,7 @@ namespace ZGame.Resource
                 return;
             }
 #endif
-            await _resourcePackageUpdateHandle.Update(args);
+            await _resourcePackageUpdateHandle.UpdateResourcePackageList(config);
         }
 
         /// <summary>

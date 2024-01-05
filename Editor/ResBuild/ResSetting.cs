@@ -2,6 +2,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.ResBuild.Config;
+using ZGame.Resource.Config;
 
 namespace ZGame.Editor.ResBuild
 {
@@ -28,26 +29,28 @@ namespace ZGame.Editor.ResBuild
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
             {
-                BuilderConfig.instance.ossList.Add(new OSSOptions());
+                OSSConfig.instance.ossList.Add(new OSSOptions());
                 BuilderConfig.OnSave();
+                OSSConfig.OnSave();
                 EditorManager.Refresh();
             }
 
             GUILayout.EndHorizontal();
-            for (int i = 0; i < BuilderConfig.instance.ossList.Count; i++)
+            for (int i = 0; i < OSSConfig.instance.ossList.Count; i++)
             {
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
                 {
-                    BuilderConfig.instance.ossList.RemoveAt(i);
+                    OSSConfig.instance.ossList.RemoveAt(i);
                     BuilderConfig.OnSave();
+                    OSSConfig.OnSave();
                     EditorManager.Refresh();
                 }
 
                 GUILayout.EndHorizontal();
-                DrawingOptionsItem(BuilderConfig.instance.ossList[i]);
+                DrawingOptionsItem(OSSConfig.instance.ossList[i]);
                 GUILayout.EndVertical();
             }
 
@@ -57,6 +60,7 @@ namespace ZGame.Editor.ResBuild
             if (EditorGUI.EndChangeCheck())
             {
                 BuilderConfig.OnSave();
+                OSSConfig.OnSave();
             }
         }
 

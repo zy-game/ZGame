@@ -18,18 +18,35 @@ namespace ZGame
 
         public bool isAll
         {
-            get { return items.Exists(x => x.isOn == false) is false; }
+            get
+            {
+                if (Count == 0)
+                {
+                    return false;
+                }
+
+                return items.Exists(x => x.isOn == false) is false;
+            }
         }
 
         public bool isNone
         {
-            get { return items.Where(x => x.isOn).Count() == 0; }
+            get { return Count == 0 || items.Where(x => x.isOn).Count() == 0; }
         }
 
+        public string[] Selected
+        {
+            get { return items.Where(x => x.isOn).Select(x => x.name).ToArray(); }
+        }
+
+        public int Count
+        {
+            get { return items.Count; }
+        }
 
         public override string ToString()
         {
-            if (isAll)
+            if (isAll && items.Count > 5)
             {
                 return "Everyting";
             }
@@ -38,6 +55,7 @@ namespace ZGame
             {
                 return "Nothing";
             }
+
 
             return string.Join(",", items.Where(x => x.isOn).Select(x => x.name));
         }
@@ -132,5 +150,30 @@ namespace ZGame
 
             return selected.isOn;
         }
+
+#if UNITY_EDITOR
+        public void ShowContext()
+        {
+            UnityEditor.GenericMenu menu = new UnityEditor.GenericMenu();
+            menu.AddItem(new UnityEngine.GUIContent("Noting"), isNone, () => { UnSelectAll(); });
+            menu.AddItem(new UnityEngine.GUIContent("Everyting"), isAll, () => { SelectAll(); });
+            foreach (var oss in items)
+            {
+                menu.AddItem(new UnityEngine.GUIContent(oss.name), oss.isOn, () =>
+                {
+                    if (IsSelected(oss.name))
+                    {
+                        UnSelect(oss.name);
+                    }
+                    else
+                    {
+                        Select(oss.name);
+                    }
+                });
+            }
+
+            menu.ShowAsContext();
+        }
+#endif
     }
 }

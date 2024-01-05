@@ -17,18 +17,18 @@ namespace ZGame.IM
     {
         private List<IMClient> handlers = new();
 
-        // private int m_AudioRate = 16000;
-        // private int m_BufferSeconds = 1;
-        // private string m_CurrentDevice = null;
-        // private AudioClip m_Recording;
-        // public bool isRecording = false;
+        private int m_AudioRate = 16000;
+        private int m_BufferSeconds = 1;
+        private string m_CurrentDevice = null;
+        private AudioClip m_Recording;
+        public bool isRecording = false;
         private const int k_SizeofInt16 = sizeof(short);
 
-        // private int m_BufferSize;
-        // private float m_CDCounter;
-        // private int m_LastPosition;
-        // private float[] clipData;
-        // private byte[] chunk;
+        private int m_BufferSize;
+        private float m_CDCounter;
+        private int m_LastPosition;
+        private float[] clipData;
+        private byte[] chunk;
         private UniTaskCompletionSource<bool> _completionSource;
 
         public IMClient current { get; private set; }
@@ -36,10 +36,10 @@ namespace ZGame.IM
 
         protected override void OnAwake()
         {
-            // m_BufferSize = m_BufferSeconds * m_AudioRate;
-            // chunk = new byte[m_BufferSize * 1 * k_SizeofInt16];
-            // clipData = new float[m_BufferSize * 1];
-            // m_CurrentDevice = Microphone.devices.FirstOrDefault();
+            m_BufferSize = m_BufferSeconds * m_AudioRate;
+            chunk = new byte[m_BufferSize * 1 * k_SizeofInt16];
+            clipData = new float[m_BufferSize * 1];
+            m_CurrentDevice = Microphone.devices.FirstOrDefault();
         }
 
         protected override void OnDestroy()
@@ -54,7 +54,7 @@ namespace ZGame.IM
 
         protected override void OnUpdate()
         {
-            // OnCheckRecording();
+            OnCheckRecording();
             for (int i = 0; i < handlers.Count; i++)
             {
                 handlers[i].OnRecvieMessage();
@@ -74,6 +74,7 @@ namespace ZGame.IM
                 handlers.Add(client);
             }
 
+            current = client;
             return success;
         }
 
@@ -133,100 +134,87 @@ namespace ZGame.IM
             handler.SendChat(content);
         }
 
-        public void SendChat(string id, AudioClip clip)
+        public void SendAudio(AudioClip clip)
         {
-            float[] data = new float[clip.samples];
-            if (clip.GetData(data, 0) is false)
+            current.OnStartAudioChat();
+            float[] simples = new float[clip.samples];
+            byte[] chunk = Extension.GetRealAudio(ref clip); //new byte[simples.Length * k_SizeofInt16];
+            // clip.GetData(simples, 0);
+            // WavUtility.ConvertAudioClipDataToInt16ByteArray(simples, simples.Length, chunk);
+            ByteString audioData = ByteString.CopyFrom(chunk, 0, chunk.Length);
+            current.SendAudio(audioData);
+            current.OnStopAudioChat();
+        }
+
+        public void StartRecording()
+        {
+            if (current is null)
+            {
+                return;
+            }
+#if !UNITY_WEBGL
+            isRecording = true;
+            m_Recording = Microphone.Start(m_CurrentDevice, true, m_BufferSeconds, m_AudioRate);
+            current.OnStartAudioChat();
+#endif
+        }
+
+
+        private void OnCheckRecording()
+        {
+#if!UNITY_WEBGL
+            if (isRecording is false)
             {
                 return;
             }
 
-            byte[] outData = new byte[data.Length * sizeof(short)];
-            for (int i = 0; i < data.Length; i++)
+            if (!Microphone.IsRecording(m_CurrentDevice))
+                StartRecording();
+            if (m_CDCounter <= 0)
             {
-                short temshort = (short)(data[i] * short.MaxValue);
-                byte[] temdata = BitConverter.GetBytes(temshort);
-                outData[i * 2] = temdata[0];
-                outData[i * 2 + 1] = temdata[1];
+                m_CDCounter = 0.1f;
+                Collect();
             }
 
-            ByteString audioData = ByteString.CopyFrom(outData, 0, outData.Length);
-            current.SendAudio(audioData);
+            m_CDCounter -= Time.deltaTime;
+#endif
         }
 
-//         public void StartRecording()
-//         {
-// #if !UNITY_WEBGL
-//             if (Microphone.IsRecording(m_CurrentDevice))
-//             {
-//                 return;
-//             }
-//
-//             isRecording = true;
-//             m_Recording = Microphone.Start(m_CurrentDevice, true, m_BufferSeconds, m_AudioRate);
-//             current.OnStartAudioChat();
-// #endif
-//         }
-//
-//
-//         private void OnCheckRecording()
-//         {
-// #if!UNITY_WEBGL
-//             if (isRecording is false)
-//             {
-//                 return;
-//             }
-//
-//             if (!Microphone.IsRecording(m_CurrentDevice))
-//                 StartRecording();
-//             if (m_CDCounter <= 0)
-//             {
-//                 m_CDCounter = 0.1f;
-//                 Collect();
-//             }
-//
-//             m_CDCounter -= Time.deltaTime;
-// #endif
-//         }
-//
-//         public virtual void StopRecording()
-//         {
-//             isRecording = false;
-// #if !UNITY_WEBGL
-//             current.OnStopAudioChat();
-//             Microphone.End(null);
-//             IMChatItem chatItem = new IMChatItem(current.robot, m_Recording, SpaffCode.Neutral);
-//             current.chats.Add(chatItem);
-//             current.OnRecvieChatHandle(chatItem);
-// #endif
-//         }
-//
-//
-//         private int GetAudioData()
-//         {
-//             int nSize = 0;
-// #if !UNITY_WEBGL
-//             int nPosition = Microphone.GetPosition(m_CurrentDevice);
-//             if (nPosition < m_LastPosition)
-//                 nPosition = m_BufferSize;
-//             if (nPosition <= m_LastPosition)
-//                 return -1;
-//             nSize = nPosition - m_LastPosition;
-//             if (!m_Recording.GetData(clipData, m_LastPosition))
-//                 return -1;
-//             m_LastPosition = nPosition % m_BufferSize;
-// #endif
-//             return nSize;
-//         }
-//
-//         private void Collect()
-//         {
-//             int nSize = GetAudioData();
-//             if (nSize < 0)
-//                 return;
-//             WavUtility.ConvertAudioClipDataToInt16ByteArray(clipData, nSize * m_Recording.channels, chunk);
-//             ByteString audioData = ByteString.CopyFrom(chunk, 0, nSize * m_Recording.channels * k_SizeofInt16);
-//             current.SendAudio(audioData);
-//         }
+        public virtual void StopRecording()
+        {
+            isRecording = false;
+#if !UNITY_WEBGL
+            current.OnStopAudioChat();
+            Microphone.End(null);
+#endif
+        }
+
+
+        private int GetAudioData()
+        {
+            int nSize = 0;
+#if !UNITY_WEBGL
+            int nPosition = Microphone.GetPosition(m_CurrentDevice);
+            if (nPosition < m_LastPosition)
+                nPosition = m_BufferSize;
+            if (nPosition <= m_LastPosition)
+                return -1;
+            nSize = nPosition - m_LastPosition;
+            if (!m_Recording.GetData(clipData, m_LastPosition))
+                return -1;
+            m_LastPosition = nPosition % m_BufferSize;
+#endif
+            return nSize;
+        }
+
+        private void Collect()
+        {
+            int nSize = GetAudioData();
+            if (nSize < 0)
+                return;
+            WavUtility.ConvertAudioClipDataToInt16ByteArray(clipData, nSize * m_Recording.channels, chunk);
+            ByteString audioData = ByteString.CopyFrom(chunk, 0, nSize * m_Recording.channels * k_SizeofInt16);
+            current.SendAudio(audioData);
+        }
     }
 }

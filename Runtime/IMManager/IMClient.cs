@@ -91,6 +91,7 @@ namespace ZGame.IM
             }
 
             _client.StartSession();
+            Debug.Log("会话已打开：" + id);
             _completionSource.TrySetResult(true);
         }
 
