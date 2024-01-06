@@ -130,9 +130,15 @@ namespace ZGame.Editor.PSD2GUI
                         case "UISwitcher":
                             GenericUISwitcherComponent(VARIABLE, fieldName);
                             break;
+                        case "UIToolbar":
+                            break;
                     }
                 }
             }
+        }
+        
+        private void GenericToolbarComponent(UIBindData variable, string fieldName)
+        {
         }
 
         private void GenericUISwitcherComponent(UIBindData variable, string fieldName)
@@ -167,6 +173,14 @@ namespace ZGame.Editor.PSD2GUI
             AddEvent($"\t\t\t{fieldName}?.onUp.RemoveAllListeners();");
             AddEvent($"\t\t\t{fieldName}?.onUp.AddListener(on_handle_{variable.name}_Up);");
             AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_Up()");
+            AddCallback("\t\t{");
+            AddCallback("");
+            AddCallback("\t\t}");
+            AddCallback("");
+            
+            AddEvent($"\t\t\t{fieldName}?.onClick.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onClick.AddListener(on_handle_{variable.name}_Click);");
+            AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_Click()");
             AddCallback("\t\t{");
             AddCallback("");
             AddCallback("\t\t}");

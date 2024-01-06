@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Google.Protobuf;
 using Inworld;
 using Inworld.Grpc;
+using Newtonsoft.Json;
 using UnityEngine;
 using AudioChunk = Inworld.Packets.AudioChunk;
 using InworldPacket = Inworld.Packets.InworldPacket;
@@ -38,8 +39,7 @@ namespace ZGame.IM
         {
             if (_client == null || _client.SessionStarted is false)
             {
-                Debug.Log("会话已关闭：" + id);
-                return;
+                _client.StartSession();
             }
 
             TextEvent packet = new TextEvent();
@@ -130,12 +130,17 @@ namespace ZGame.IM
 
             if (_client.GetAudioChunk(out AudioChunk audioChunk))
             {
-    
                 AudioClip clip = WavUtility.ToAudioClip(audioChunk.Chunk.ToByteArray());
                 chat = new IMChatItem(robot, clip, _code);
             }
             else if (packet is TextEvent textEvent)
             {
+                Debug.Log(JsonConvert.SerializeObject(textEvent));
+                if (textEvent.SourceType == Inworld.Grpc.TextEvent.Types.SourceType.SpeechToText)
+                {
+                    return;
+                }
+
                 chat = new IMChatItem(robot, textEvent.Text, _code);
             }
 
@@ -150,9 +155,14 @@ namespace ZGame.IM
 
         public void SendAudio(ByteString audioChunk)
         {
-            if (_client is null || _client.SessionStarted is false)
+            if (_client is null)
             {
                 return;
+            }
+
+            if (_client.SessionStarted is false)
+            {
+                _client.StartSession();
             }
 
             Routing routing = Routing.FromPlayerToAgent(_agent);
@@ -161,9 +171,14 @@ namespace ZGame.IM
 
         public void OnStartAudioChat()
         {
-            if (_client is null || _client.SessionStarted is false)
+            if (_client is null)
             {
                 return;
+            }
+
+            if (_client.SessionStarted is false)
+            {
+                _client.StartSession();
             }
 
             _client.StartAudio(Routing.FromPlayerToAgent(_agent));
@@ -171,9 +186,14 @@ namespace ZGame.IM
 
         public void OnStopAudioChat()
         {
-            if (_client is null || _client.SessionStarted is false)
+            if (_client is null)
             {
                 return;
+            }
+
+            if (_client.SessionStarted is false)
+            {
+                _client.StartSession();
             }
 
             _client.EndAudio(Routing.FromPlayerToAgent(_agent));

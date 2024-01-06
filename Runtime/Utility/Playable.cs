@@ -7,18 +7,22 @@ namespace ZGame
         None,
         Playing,
         Paused,
-        Stopped,
         Complete,
     }
 
     public class Playable : IDisposable
     {
-        public string clipName;
-        public Action<PlayState> callback;
+        public string name { get; }
+
+        public Playable(string name)
+        {
+            this.name = name;
+        }
+
+
 
         public virtual void Dispose()
         {
-            callback = null;
         }
     }
 }

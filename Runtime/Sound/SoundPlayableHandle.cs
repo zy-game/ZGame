@@ -8,12 +8,35 @@ namespace ZGame.Sound
     public class SoundPlayableHandle : IDisposable
     {
         private AudioSource _source;
-        private Queue<AudioPlayable> waiting;
         private AudioPlayable current;
+        private Queue<AudioPlayable> waiting;
         public string name => _source.name;
-        public string clipName { get; private set; }
 
-        public float volume => _source.volume;
+        public string clipName
+        {
+            get
+            {
+                if (_source == null || _source.clip == null)
+                {
+                    return String.Empty;
+                }
+
+                return _source.clip.name;
+            }
+        }
+
+        public float volume
+        {
+            get
+            {
+                if (_source == null)
+                {
+                    return 0;
+                }
+
+                return _source.volume;
+            }
+        }
 
         public SoundPlayableHandle(string name, bool isLoop)
         {
@@ -26,9 +49,9 @@ namespace ZGame.Sound
 
         public void OnUpdate()
         {
-            if (current is not null && _source.isPlaying is false)
+            if (current != null && _source.isPlaying is false)
             {
-                current.callback?.Invoke(PlayState.Complete);
+                current.SetState(PlayState.Complete);
                 current.Dispose();
                 current = null;
                 return;
@@ -39,64 +62,46 @@ namespace ZGame.Sound
                 return;
             }
 
-            current = waiting.Dequeue();
-            Player();
+            Player(waiting.Dequeue());
         }
 
         public void Play(string clipName, Action<PlayState> playCallback)
         {
-            AudioPlayable playable = new AudioPlayable() { clipName = clipName, callback = playCallback };
+            AudioPlayable playable = new AudioPlayable(clipName, playCallback);
             if (current is not null)
             {
                 waiting.Enqueue(playable);
                 return;
             }
 
-            current = playable;
-            Player();
+            Player(playable);
         }
 
         public void Play(AudioClip clip, Action<PlayState> playCallback)
         {
-            AudioPlayable playable = new AudioPlayable() { clip = clip, callback = playCallback };
+            AudioPlayable playable = new AudioPlayable(clip, playCallback);
             if (current is not null)
             {
                 waiting.Enqueue(playable);
                 return;
             }
 
-            current = playable;
-            Player();
+            Player(playable);
         }
 
-        private void Player()
+        private void Player(AudioPlayable playable)
         {
-            if (current is null)
-            {
-                return;
-            }
-
-            if (current.clip == null)
-            {
-                current._resHandle = ResourceManager.instance.LoadAsset(current.clipName);
-                if (current._resHandle.IsSuccess() is false)
-                {
-                    return;
-                }
-
-                current.clip = current._resHandle.Get<AudioClip>(null);
-            }
-
-            _source.clip = current.clip;
+            current = playable;
+            _source.clip = playable.clip;
             _source.Play();
-            current.callback?.Invoke(PlayState.Playing);
+            current.SetState(PlayState.Playing);
         }
 
         public void Pause()
         {
             if (current is not null)
             {
-                current.callback?.Invoke(PlayState.Paused);
+                current.SetState(PlayState.Paused);
             }
 
             _source.Pause();
@@ -106,7 +111,7 @@ namespace ZGame.Sound
         {
             if (current is not null)
             {
-                current.callback?.Invoke(PlayState.Stopped);
+                current.SetState(PlayState.Complete);
                 current.Dispose();
                 current = null;
             }

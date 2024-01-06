@@ -13,6 +13,20 @@ namespace ZGame
 {
     public static partial class Extension
     {
+
+        public static void SetParent(this GameObject gameObject, Transform parent)
+        {
+            gameObject.transform.SetParent(parent);
+        }
+        
+        public static void SetParent(this GameObject gameObject, Transform parent, Vector3 position,Vector3 rotation,Vector3 scale)
+        {
+            gameObject.transform.SetParent(parent);
+            gameObject.transform.position = position;
+            gameObject.transform.rotation = Quaternion.Euler(rotation);
+            gameObject.transform.localScale = scale;
+        }
+
         public static string ToBase64String(this AudioClip clip)
         {
             int position = clip.samples;

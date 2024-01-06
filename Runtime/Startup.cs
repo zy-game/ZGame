@@ -10,7 +10,6 @@ using UnityEngine;
 using ZGame;
 using ZGame.Game;
 using ZGame.Resource;
-using ZGame.State;
 using ZGame.Window;
 
 public class Startup : MonoBehaviour

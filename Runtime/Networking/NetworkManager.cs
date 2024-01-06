@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using Cysharp.Threading.Tasks;
+using Inworld;
 using Newtonsoft.Json;
 using ProtoBuf;
 using ProtoBuf.Meta;
@@ -198,7 +199,6 @@ namespace ZGame.Networking
 
         public static async UniTask<T> Post<T>(string url, object data, Dictionary<string, object> headers = null)
         {
-            Debug.Log(url);
             string str = data is string ? data as string : JsonConvert.SerializeObject(data);
             using (UnityWebRequest request = UnityWebRequest.Post(url, str))
             {
@@ -214,7 +214,7 @@ namespace ZGame.Networking
                 }
 
                 await request.SendWebRequest().ToUniTask();
-                Debug.Log($"POST:{url} result:{request.downloadHandler.text}");
+                // Debug.Log($"POST:{url} result:{request.downloadHandler.text}");
                 T result = request.GetData<T>();
                 request.Dispose();
                 return result;
@@ -236,13 +236,20 @@ namespace ZGame.Networking
 
         public static async UniTask<AudioClip> GetAudioClip(string url)
         {
-            Debug.Log("AUDIO:" + url);
             using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.MPEG))
             {
                 request.useHttpContinue = true;
+                AudioClip result = default;
+                
                 await request.SendWebRequest().ToUniTask();
-                AudioClip result = DownloadHandlerAudioClip.GetContent(request);
-                request.Dispose();
+                if (request.result is not UnityWebRequest.Result.Success)
+                {
+                    return default;
+                }
+
+
+                result = DownloadHandlerAudioClip.GetContent(request);
+                result.name = url;
                 return result;
             }
         }

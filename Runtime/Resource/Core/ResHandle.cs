@@ -30,6 +30,11 @@ namespace ZGame.Resource
             };
         }
 
+        public bool Is<T>()
+        {
+            return obj is T;
+        }
+
         public bool IsSuccess()
         {
             if (obj != null)

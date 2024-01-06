@@ -21,7 +21,7 @@ namespace ZGame.Game
         private Gradient sunshineGradient;
         private List<Tuple<int, Camera>> subCameras = new();
         private UniversalAdditionalCameraData universalAdditionalCameraData;
-
+        private List<Actorable> _actors = new();
 
         /// <summary>
         /// 世界名
@@ -86,7 +86,34 @@ namespace ZGame.Game
 
         public void OnFixedUpdate()
         {
-            RefreshTime();
+            _second += _speed;
+            if (_second < 60)
+            {
+                return;
+            }
+
+            _second = 0;
+            _minute++;
+            if (_minute < 60)
+            {
+                return;
+            }
+
+            _minute = 0;
+            _hour++;
+            RefreshSunshine();
+            if (_hour >= 24)
+            {
+                _hour = 0;
+            }
+        }
+
+        public void OnUpdate()
+        {
+            for (int i = _actors.Count - 1; i >= 0; i--)
+            {
+                _actors[i].OnUpdate();
+            }
         }
 
         /// <summary>
@@ -94,7 +121,7 @@ namespace ZGame.Game
         /// </summary>
         /// <param name="color"></param>
         /// <param name="layers"></param>
-        public void SetupMainLight(Color color, params string[] layers)
+        public void SetupLight(Color color, params string[] layers)
         {
             if (mainLight != null)
             {
@@ -116,7 +143,7 @@ namespace ZGame.Game
         /// 设置相机输出
         /// </summary>
         /// <param name="texture"></param>
-        public void SetupMainCameraOutput(RenderTexture texture)
+        public void SetupCameraOutput(RenderTexture texture)
         {
             _camera.targetTexture = texture;
             _camera.fieldOfView = 10;
@@ -127,7 +154,7 @@ namespace ZGame.Game
         /// 设置主相机的渲染层级
         /// </summary>
         /// <param name="layers"></param>
-        public void SetupMainCameraRenderLayer(params string[] layers)
+        public void SetupCameraRenderLayer(params string[] layers)
         {
             if (universalAdditionalCameraData == null || _camera == null)
             {
@@ -239,30 +266,33 @@ namespace ZGame.Game
             }
         }
 
-        /// <summary>
-        /// 刷新时间
-        /// </summary>
-        public void RefreshTime()
+        public void SetActor(Actorable actor)
         {
-            _second += _speed;
-            if (_second < 60)
-            {
-                return;
-            }
+            _actors.Add(actor);
+        }
 
-            _second = 0;
-            _minute++;
-            if (_minute < 60)
-            {
-                return;
-            }
+        public void RemoveActor(Actorable actor)
+        {
+            _actors.Remove(actor);
+        }
 
-            _minute = 0;
-            _hour++;
-            RefreshSunshine();
-            if (_hour >= 24)
+        public Actorable GetActor(string name)
+        {
+            return _actors.Find(x => x.name == name);
+        }
+
+        public Actorable CreateActor(string name, string modelPath)
+        {
+            Actorable actor = Actorable.Create<Actorable>(name, modelPath);
+            SetActor(actor);
+            return actor;
+        }
+
+        public void ClearActor()
+        {
+            for (var i = 0; i < _actors.Count; i++)
             {
-                _hour = 0;
+                _actors[i].Dispose();
             }
         }
 

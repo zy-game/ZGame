@@ -31,6 +31,14 @@ namespace ZGame.Game
             }
         }
 
+        protected override void OnUpdate()
+        {
+            for (int i = worlds.Count - 1; i >= 0; i--)
+            {
+                worlds[i].OnUpdate();
+            }
+        }
+
         public World CreateWorld(string name)
         {
             World world = GetWorld(name);
