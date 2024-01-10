@@ -152,11 +152,19 @@ namespace ZGame
         }
 
 #if UNITY_EDITOR
-        public void ShowContext()
+        public void ShowContext(Action action)
         {
             UnityEditor.GenericMenu menu = new UnityEditor.GenericMenu();
-            menu.AddItem(new UnityEngine.GUIContent("Noting"), isNone, () => { UnSelectAll(); });
-            menu.AddItem(new UnityEngine.GUIContent("Everyting"), isAll, () => { SelectAll(); });
+            menu.AddItem(new UnityEngine.GUIContent("Noting"), isNone, () =>
+            {
+                UnSelectAll();
+                action?.Invoke();
+            });
+            menu.AddItem(new UnityEngine.GUIContent("Everyting"), isAll, () =>
+            {
+                SelectAll();
+                action?.Invoke();
+            });
             foreach (var oss in items)
             {
                 menu.AddItem(new UnityEngine.GUIContent(oss.name), oss.isOn, () =>
@@ -169,6 +177,8 @@ namespace ZGame
                     {
                         Select(oss.name);
                     }
+
+                    action?.Invoke();
                 });
             }
 

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace ZGame.Window
 {
-    public class UISwitcherTemplate : Template
+    public class UISwitcherTemplate : MonoBehaviour
     {
         public SwitchType2 type;
         public SwitchOptions options;

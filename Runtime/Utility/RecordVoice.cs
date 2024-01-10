@@ -1,5 +1,8 @@
+using System;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Google.Protobuf;
+using Inworld;
 using UnityEngine;
 
 namespace ZGame
@@ -7,92 +10,116 @@ namespace ZGame
     /// <summary>收录声音</summary>
     public class RecordVoice : Singleton<RecordVoice>
     {
+        private int _rate;
+        private int _position;
+        private int _limit_time;
+        private string _divName;
+        private Action _timeout;
         private float m_startTime;
         private bool m_isTiming = false;
-        private int m_samplesLength;
         private AudioClip m_resultClip = null;
 
-        /// <summary>设备名麦克风</summary>
-        public string DeviceNameMIC { get; set; }
+        /// <summary>
+        /// 录音设备名
+        /// </summary>
+        public string micName
+        {
+            get { return _divName; }
+        }
 
-        /// <summary>录音产生的AudioClip的长度</summary>
-        public int LengthSec { get; set; }
+        /// <summary>
+        /// 最大录音时长
+        /// </summary>
+        public int limitTime
+        {
+            get { return _limit_time; }
+        }
 
-        /// <summary>由录音产生的AudioClip的采样率</summary>
-        public int Frequency { get; set; }
+        /// <summary>
+        /// 录音码率
+        /// </summary>
+        public int rate
+        {
+            get { return _rate; }
+        }
 
-        public int position { get; set; }
+        /// <summary>
+        /// 录音数据位置
+        /// </summary>
+        public int position
+        {
+            get { return _position; }
+        }
 
         protected override void OnAwake()
         {
-            m_samplesLength = 128;
-            DeviceNameMIC = Microphone.devices.FirstOrDefault(); //获取设备麦克风："Built-in Microphone"
-            LengthSec = 60; //ASR最长60秒
-            Frequency = 16000;
+            _divName = Microphone.devices.FirstOrDefault();
+            _limit_time = 60;
+            _rate = 16000;
+        }
+
+
+        public void SetLimitTime(int time, Action timeout)
+        {
+            _limit_time = time;
+        }
+
+        public void SetRecordRate(int rate)
+        {
+            _rate = rate;
+        }
+
+        public void SetMicName(string name)
+        {
+            _divName = name;
         }
 
         protected override void OnUpdate()
         {
             if (m_isTiming)
             {
-                if (Time.realtimeSinceStartup - m_startTime >= LengthSec)
+                if (Time.realtimeSinceStartup - m_startTime >= _limit_time)
                 {
                     End();
+                    _timeout?.Invoke();
                 }
             }
         }
 
         public void Start()
         {
-            m_resultClip = Microphone.Start(DeviceNameMIC, false, LengthSec, Frequency);
             m_isTiming = true;
+            m_resultClip = Microphone.Start(_divName, false, _limit_time, _rate);
             m_startTime = Time.realtimeSinceStartup;
         }
 
-        public AudioClip End()
+        public void End()
         {
-            position = Microphone.GetPosition(DeviceNameMIC);
-            Microphone.End(DeviceNameMIC);
+            _position = Microphone.GetPosition(_divName);
+            Microphone.End(_divName);
             m_isTiming = false;
-            return m_resultClip;
         }
 
-        public float GetVolume()
+        public void Clear()
         {
-            float levelMax = 0;
-            if (Microphone.IsRecording(DeviceNameMIC))
-            {
-                float[] samples = new float[m_samplesLength];
-                int startPosition = Microphone.GetPosition(DeviceNameMIC) - (m_samplesLength + 1);
-                if (startPosition >= 0)
-                {
-                    //当麦克风还未正式启动时，该值会为负值，AudioClip.GetData函数会报错
-                    m_resultClip.GetData(samples, startPosition);
-                    for (int i = 0; i < m_samplesLength; i++)
-                    {
-                        float wavePeak = samples[i];
-                        if (levelMax < wavePeak)
-                        {
-                            levelMax = wavePeak;
-                        }
-                    }
-
-                    levelMax = levelMax * 99;
-                    Debug.Log("麦克风音量：" + levelMax);
-                }
-            }
-
-            return levelMax;
+            m_resultClip = null;
         }
 
-        public float GetTime()
+        public AudioClip GetVoiceAudioClip()
         {
-            return Time.realtimeSinceStartup - m_startTime;
+            float[] simples = new float[m_resultClip.samples];
+            byte[] chunk = new byte[position * sizeof(short)];
+            m_resultClip.GetData(simples, 0);
+            AudioClip clip = AudioClip.Create("mySound", m_resultClip.channels * position, m_resultClip.channels, _rate, false, false);
+            float[] temp = new float[m_resultClip.channels * position];
+            Array.Copy(simples, 0, temp, 0, m_resultClip.channels * position);
+            clip.SetData(temp, 0);
+            return clip;
         }
 
-        public AudioClip GetResult()
+        public string GetVoiceBase64String()
         {
-            return m_resultClip;
+            return GetVoiceAudioClip().ToBase64String();
         }
     }
 }

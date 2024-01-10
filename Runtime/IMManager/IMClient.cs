@@ -26,30 +26,13 @@ namespace ZGame.IM
 
         public string robot { get; private set; }
         public List<IMChatItem> chats { get; private set; }
-        public string id { get; } = Guid.NewGuid().ToString();
+        public string id => handler.id;
 
         public IMClient(IMHandler handler)
         {
             this.handler = handler;
-            this.handler.id = id;
         }
 
-
-        public void SendChat(string text)
-        {
-            if (_client == null || _client.SessionStarted is false)
-            {
-                _client.StartSession();
-            }
-
-            TextEvent packet = new TextEvent();
-            packet.SourceType = Inworld.Grpc.TextEvent.Types.SourceType.TypedIn;
-            packet.Final = true;
-            packet.Text = text;
-            packet.Routing = Routing.FromPlayerToAgent(_agent);
-            _client.SendEvent(new RPCMessage(packet));
-            OnRecvieChatHandle(new IMChatItem(String.Empty, text));
-        }
 
         private void OnRecvieEventHandler(RuntimeStatus arg1, string arg2)
         {
@@ -105,7 +88,6 @@ namespace ZGame.IM
             robot = Path.GetFileNameWithoutExtension(_character);
             _completionSource = new UniTaskCompletionSource<bool>();
             _client.GetAppAuth(_setting.workspace, _setting.key, _setting.secret);
-
             return _completionSource.Task;
         }
 
@@ -125,51 +107,40 @@ namespace ZGame.IM
             if (packet is Inworld.Packets.EmotionEvent emotionEvent)
             {
                 _code = emotionEvent.SpaffCode;
-                return;
             }
-
-            if (_client.GetAudioChunk(out AudioChunk audioChunk))
+            else if (_client.GetAudioChunk(out AudioChunk audioChunk))
             {
                 AudioClip clip = WavUtility.ToAudioClip(audioChunk.Chunk.ToByteArray());
                 chat = new IMChatItem(robot, clip, _code);
             }
             else if (packet is TextEvent textEvent)
             {
-                Debug.Log(JsonConvert.SerializeObject(textEvent));
-                if (textEvent.SourceType == Inworld.Grpc.TextEvent.Types.SourceType.SpeechToText)
+                if (textEvent.SourceType is not Inworld.Grpc.TextEvent.Types.SourceType.SpeechToText)
                 {
-                    return;
+                    chat = new IMChatItem(robot, textEvent.Text, _code);
                 }
-
-                chat = new IMChatItem(robot, textEvent.Text, _code);
             }
-
-            if (chat is null)
-            {
-                return;
-            }
-
 
             OnRecvieChatHandle(chat);
         }
 
-        public void SendAudio(ByteString audioChunk)
+        public void SendChat(string text)
         {
-            if (_client is null)
-            {
-                return;
-            }
-
-            if (_client.SessionStarted is false)
+            if (_client == null || _client.SessionStarted is false)
             {
                 _client.StartSession();
             }
 
-            Routing routing = Routing.FromPlayerToAgent(_agent);
-            _client.SendAudio(new AudioChunk(audioChunk, routing));
+            TextEvent packet = new TextEvent();
+            packet.SourceType = Inworld.Grpc.TextEvent.Types.SourceType.TypedIn;
+            packet.Final = true;
+            packet.Text = text;
+            packet.Routing = Routing.FromPlayerToAgent(_agent);
+            _client.SendEvent(new RPCMessage(packet));
+            OnRecvieChatHandle(new IMChatItem(String.Empty, text));
         }
 
-        public void OnStartAudioChat()
+        public void SendAudio(AudioClip clip, int lenght)
         {
             if (_client is null)
             {
@@ -182,25 +153,24 @@ namespace ZGame.IM
             }
 
             _client.StartAudio(Routing.FromPlayerToAgent(_agent));
-        }
-
-        public void OnStopAudioChat()
-        {
-            if (_client is null)
-            {
-                return;
-            }
-
-            if (_client.SessionStarted is false)
-            {
-                _client.StartSession();
-            }
-
+            float[] simples = new float[clip.samples];
+            byte[] chunk = new byte[lenght * sizeof(short)];
+            clip.GetData(simples, 0);
+            WavUtility.ConvertAudioClipDataToInt16ByteArray(simples, lenght * clip.channels, chunk);
+            ByteString audioData = ByteString.CopyFrom(chunk, 0, lenght * clip.channels * sizeof(short));
+            Routing routing = Routing.FromPlayerToAgent(_agent);
+            _client.SendAudio(new AudioChunk(audioData, routing));
             _client.EndAudio(Routing.FromPlayerToAgent(_agent));
+            OnRecvieChatHandle(new IMChatItem(String.Empty, clip));
         }
 
         public void OnRecvieChatHandle(IMChatItem chat)
         {
+            if (chat is null)
+            {
+                return;
+            }
+
             chats.Add(chat);
             handler.OnRecvieChatHandle(chat);
         }

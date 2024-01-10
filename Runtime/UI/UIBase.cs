@@ -7,30 +7,57 @@ namespace ZGame.Window
     /// <summary>
     /// UI界面
     /// </summary>
-    public interface UIBase : IDisposable
+    public class UIBase : UIForm
     {
-        string name { get; }
-        GameObject gameObject { get; }
+        public string name { get; }
+        public GameObject gameObject { get; }
+        public Transform transform { get; }
+        public RectTransform rect_transform { get; }
+
+        public UIBase(GameObject gameObject)
+        {
+            this.gameObject = gameObject;
+            this.name = gameObject.name;
+            this.transform = gameObject.transform;
+            this.rect_transform = gameObject.GetComponent<RectTransform>();
+        }
 
 
         /// <summary>
         /// 激活界面
         /// </summary>
-        void Awake(params object[] args);
+        public virtual void Awake(params object[] args)
+        {
+        }
 
         /// <summary>
-        /// 现实2界面
+        /// 显示界面
         /// </summary>
-        void Enable();
+        public virtual void Enable()
+        {
+        }
 
         /// <summary>
         /// 隐藏界面
         /// </summary>
-        void Disable();
+        public virtual void Disable()
+        {
+        }
 
         /// <summary>
         /// 释放UI界面
         /// </summary>
-        void Dispose();
+        public virtual void Dispose()
+        {
+        }
+
+
+        public void StartCountDown(int count, float interval)
+        {
+        }
+
+        public void StopCountDown()
+        {
+        }
     }
 }

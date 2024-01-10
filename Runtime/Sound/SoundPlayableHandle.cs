@@ -11,6 +11,19 @@ namespace ZGame.Sound
         private AudioPlayable current;
         private Queue<AudioPlayable> waiting;
         public string name => _source.name;
+        
+        public bool isPlaying
+        {
+            get
+            {
+                if (_source == null)
+                {
+                    return false;
+                }
+
+                return _source.isPlaying;
+            }
+        }
 
         public string clipName
         {

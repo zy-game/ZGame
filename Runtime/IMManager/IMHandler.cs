@@ -15,7 +15,7 @@ namespace ZGame.IM
 {
     public interface IMHandler : IDisposable
     {
-        string id { get; set; }
+        string id { get; }
 
         void OnRecvieChatHandle(IMChatItem chatItem);
     }

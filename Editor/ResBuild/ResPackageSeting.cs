@@ -123,7 +123,7 @@ namespace ZGame.Editor.ResBuild
             GUILayout.Label("依赖包", GUILayout.Width(150));
             if (EditorGUILayout.DropdownButton(new GUIContent(package.dependcies.ToString()), FocusType.Passive))
             {
-                package.dependcies.ShowContext();
+                package.dependcies.ShowContext(BuilderConfig.OnSave);
             }
 
             GUILayout.EndHorizontal();
@@ -133,7 +133,7 @@ namespace ZGame.Editor.ResBuild
             GUILayout.Label("资源服", GUILayout.Width(150));
             if (EditorGUILayout.DropdownButton(new GUIContent(package.service.ToString()), FocusType.Passive))
             {
-                package.service.ShowContext();
+                package.service.ShowContext(BuilderConfig.OnSave);
             }
 
             GUILayout.EndHorizontal();

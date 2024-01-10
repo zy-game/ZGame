@@ -15,7 +15,7 @@ namespace ZGame.Window
     /// </summary>
     public sealed class UIManager : Singleton<UIManager>
     {
-        private List<UIBase> _windows = new();
+        private List<UIForm> _windows = new();
         private Dictionary<Type, Type> basicTypes = new();
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace ZGame.Window
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T Open<T>(params object[] args) where T : UIBase
+        public T Open<T>(params object[] args) where T : UIForm
         {
             return (T)Open(typeof(T), args);
         }
@@ -33,9 +33,9 @@ namespace ZGame.Window
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public UIBase Open(Type type, params object[] args)
+        public UIForm Open(Type type, params object[] args)
         {
-            UIBase uiBase = GetWindow(type);
+            UIForm uiBase = GetWindow(type);
             if (uiBase is not null)
             {
                 return uiBase;
@@ -107,7 +107,7 @@ namespace ZGame.Window
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public UIBase GetWindow(Type type)
+        public UIForm GetWindow(Type type)
         {
             if (type is null)
             {
@@ -132,7 +132,7 @@ namespace ZGame.Window
         /// <param name="type"></param>
         public void Active(Type type)
         {
-            UIBase uiBase = GetWindow(type);
+            UIForm uiBase = GetWindow(type);
             if (uiBase is null || uiBase.gameObject.activeSelf)
             {
                 return;
@@ -157,7 +157,7 @@ namespace ZGame.Window
         /// <param name="type"></param>
         public void Inactive(Type type)
         {
-            UIBase uiBase = GetWindow(type);
+            UIForm uiBase = GetWindow(type);
             if (uiBase is null || uiBase.gameObject.activeSelf is false)
             {
                 return;
@@ -183,7 +183,7 @@ namespace ZGame.Window
         /// <param name="type"></param>
         public void Close(Type type, bool dispose = true)
         {
-            UIBase uiBase = GetWindow(type);
+            UIForm uiBase = GetWindow(type);
             if (uiBase is null)
             {
                 return;

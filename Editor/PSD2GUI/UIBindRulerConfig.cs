@@ -37,7 +37,7 @@ namespace ZGame.Editor.PSD2GUI
         public string prefix;
         public bool isDefault;
 
-        public string ComponentName
+        public string TypeName
         {
             get
             {
@@ -56,8 +56,9 @@ namespace ZGame.Editor.PSD2GUI
             }
         }
 
-        public void Gneric(UIBindGneric gneric)
+        public string GetFieldName(string name)
         {
+            return name.StartsWith(prefix) ? name : prefix + name;
         }
     }
 
@@ -83,6 +84,7 @@ namespace ZGame.Editor.PSD2GUI
                     new() { nameSpace = "UnityEngine", isDefault = true },
                     new() { nameSpace = "UnityEngine.UI", isDefault = true },
                     new() { nameSpace = "UnityEngine.EventSystems", isDefault = true },
+                    new() { nameSpace = "UnityEngine.Events", isDefault = true },
                     new() { nameSpace = "TMPro", isDefault = true },
                     new() { nameSpace = "System", isDefault = true },
                     new() { nameSpace = "ZGame", isDefault = true },
@@ -90,7 +92,6 @@ namespace ZGame.Editor.PSD2GUI
                     new() { nameSpace = "ZGame.Config", isDefault = true },
                     new() { nameSpace = "ZGame.Resource", isDefault = true },
                 };
-                Debug.Log("initialize namespace");
             }
 
             if (rules is null || rules.Count == 0)
@@ -112,11 +113,8 @@ namespace ZGame.Editor.PSD2GUI
                     new() { fullName = typeof(TMP_Text).FullName, prefix = "text_", isDefault = true },
                     new() { fullName = typeof(RawImage).FullName, prefix = "raw_", isDefault = true },
                 };
-                Debug.Log("initialize ruler list");
             }
 
-            // rules.Sort((a, b) => a.isDefault ? -1 : 1);
-            // nameSpaces.Sort((a, b) => a.isDefault ? -1 : 1);
             OnSave();
         }
 
@@ -131,6 +129,12 @@ namespace ZGame.Editor.PSD2GUI
             }
 
             return null;
+        }
+
+        public bool TryGetRuler(string name, out UIBindRulerItem rulerItem)
+        {
+            rulerItem = GetRule(name);
+            return rulerItem is not null;
         }
 
         public void AddNameSpace(string nameSpace)
@@ -170,11 +174,23 @@ namespace ZGame.Editor.PSD2GUI
         {
             OnAwake();
             EditorUtility.SetDirty(setting);
-            UIBindGneric gneric = new UIBindGneric(setting);
-            File.WriteAllText($"{AssetDatabase.GetAssetPath(setting.output)}/UIBind_{setting.name}.cs", gneric.GetBindCode());
-            string output = $"{AssetDatabase.GetAssetPath(setting.output)}/UICode_{setting.name}.cs";
+            UIBindGeneric generic = new UIBindGeneric(setting);
+            string output = $"{AssetDatabase.GetAssetPath(setting.output)}/Base/UIBind_{setting.name}.cs";
+            if (Directory.Exists(Path.GetDirectoryName(output)) is false)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(output));
+            }
+
+            File.WriteAllText(output, generic.GetBindCode());
+
             if (isGenericUICode)
             {
+                output = $"{AssetDatabase.GetAssetPath(setting.output)}/Overload/UICode_{setting.name}.cs";
+                if (Directory.Exists(Path.GetDirectoryName(output)) is false)
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(output));
+                }
+
                 if (File.Exists(output))
                 {
                     if (EditorUtility.DisplayDialog("Warning", "当前UI代码文件已经存在, 是否覆盖写入?", "Yes", "No"))
@@ -183,7 +199,7 @@ namespace ZGame.Editor.PSD2GUI
                     }
                 }
 
-                File.WriteAllText(output, gneric.GetOverloadCode());
+                File.WriteAllText(output, generic.GetOverloadCode());
             }
 
             AssetDatabase.SaveAssets();

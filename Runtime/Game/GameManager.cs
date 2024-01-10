@@ -20,6 +20,7 @@ namespace ZGame.Game
 
         internal void Initialized()
         {
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;
             DefaultWorld = CreateWorld("DEFAULT_WORLD");
         }
 

@@ -6,11 +6,13 @@ namespace ZGame.Game
 {
     public class Actorable : IDisposable
     {
+        private string _id;
         private string _name;
         private GameObject _gameObject;
         private SkinManager _skinManager;
         private StateManager _stateManager;
         private AnimatorManager _animatorManager;
+        public string id => _id;
         public string name => _name;
         public GameObject gameObject => _gameObject;
         public SkinManager skinManager => _skinManager;
@@ -27,6 +29,7 @@ namespace ZGame.Game
             }
 
             T actor = Activator.CreateInstance<T>();
+            actor._id = ID.GetString();
             actor._name = name;
             actor._gameObject = handle.Instantiate();
             Animator animator = actor._gameObject.GetComponentInChildren<Animator>();

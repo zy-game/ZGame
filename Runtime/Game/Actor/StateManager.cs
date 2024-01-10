@@ -34,8 +34,18 @@ namespace ZGame.Game
             Switch(GetState<T>());
         }
 
+        public void Switch(Predicate<Stateable> filter)
+        {
+            Switch(_states.Find(filter));
+        }
+
         public void Switch(Stateable state)
         {
+            if (state is null)
+            {
+                return;
+            }
+
             if (_current != null)
             {
                 _current.Inactive();

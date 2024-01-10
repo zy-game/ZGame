@@ -3,7 +3,7 @@ using ZGame.Window;
 
 namespace UI
 {
-    public interface UITips : UIBase
+    public interface UITips : UIForm
     {
         void Setup(string content);
 

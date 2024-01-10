@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Config;
+using ZGame.Editor.ResBuild.Config;
 using ZGame.Window;
 using Object = UnityEngine.Object;
 
@@ -22,45 +23,50 @@ namespace ZGame.Editor.PSD2GUI
         public void OnEnable()
         {
             this.setting = (UIBind)target;
+
+            this.setting.templetee = setting.GetComponentInParent<UIBind>() != null;
         }
 
 
         public override void OnInspectorGUI()
         {
             EditorGUI.BeginChangeCheck();
-            setting.NameSpace = EditorGUILayout.TextField("NameSpace", setting.NameSpace);
-
-            setting.language = (TextAsset)EditorGUILayout.ObjectField("Language", setting.language, typeof(TextAsset), false);
-            if (setting.language != null && isSetLanguage is false)
+            setting.NameSpace = EditorGUILayout.TextField(this.setting.templetee ? "Template Name" : "NameSpace", setting.NameSpace);
+            if (this.setting.templetee is false)
             {
-                Localliztion.Setup(setting.language);
-                isSetLanguage = true;
-                Localliztion.Switch(BasicConfig.instance.curEntry.language);
-            }
-
-            EditorGUILayout.BeginHorizontal();
-            setting.output = EditorGUILayout.ObjectField("Output", setting.output, typeof(DefaultAsset), false);
-            if (EditorGUILayout.DropdownButton(new GUIContent("Generic"), FocusType.Passive, GUILayout.Width(70)))
-            {
-                if (setting.output == null)
+                setting.language = (TextAsset)EditorGUILayout.ObjectField("Language", setting.language, typeof(TextAsset), false);
+                if (setting.language != null && isSetLanguage is false)
                 {
-                    EditorUtility.DisplayDialog("Error", "Please select output path", "OK");
-                    return;
+                    Localliztion.Setup(setting.language);
+                    isSetLanguage = true;
+                    Localliztion.Switch(BasicConfig.instance.curEntry.language);
                 }
 
-                if (setting.options.Count == 0)
+                EditorGUILayout.BeginHorizontal();
+                setting.output = EditorGUILayout.ObjectField("Output", setting.output, typeof(DefaultAsset), false);
+                if (EditorGUILayout.DropdownButton(new GUIContent("Generic"), FocusType.Passive, GUILayout.Width(70)))
                 {
-                    EditorUtility.DisplayDialog("Error", "Please select bind list", "OK");
-                    return;
+                    if (setting.output == null)
+                    {
+                        EditorUtility.DisplayDialog("Error", "Please select output path", "OK");
+                        return;
+                    }
+
+                    if (setting.options.Count == 0)
+                    {
+                        EditorUtility.DisplayDialog("Error", "Please select bind list", "OK");
+                        return;
+                    }
+
+                    GenericMenu menu = new GenericMenu();
+                    menu.AddItem(new GUIContent("Generic UIBind"), false, () => { UIBindRulerConfig.instance.GenericUIBindCode(setting, false); });
+                    menu.AddItem(new GUIContent("Generic UIBind And UICode"), false, () => { UIBindRulerConfig.instance.GenericUIBindCode(setting, true); });
+                    menu.ShowAsContext();
                 }
 
-                GenericMenu menu = new GenericMenu();
-                menu.AddItem(new GUIContent("Generic UIBind"), false, () => { UIBindRulerConfig.instance.GenericUIBindCode(setting, false); });
-                menu.AddItem(new GUIContent("Generic UIBind And UICode"), false, () => { UIBindRulerConfig.instance.GenericUIBindCode(setting, true); });
-                menu.ShowAsContext();
+                EditorGUILayout.EndHorizontal();
             }
 
-            EditorGUILayout.EndHorizontal();
             this.BeginColor(ZStyle.inColor);
             GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.Height(1));
             this.EndColor();
@@ -203,6 +209,16 @@ namespace ZGame.Editor.PSD2GUI
                 data.name = VARIABLE.name;
                 data.path = path;
                 data.selector = new Selector();
+                data.selector.Add(VARIABLE.GetComponents(typeof(Component)).Select(x => x.GetType().FullName).ToArray());
+                data.selector.items.ForEach(x =>
+                {
+                    if (UIBindRulerConfig.instance.TryGetRuler(x.name, out var rulerItem) is false)
+                    {
+                        return;
+                    }
+
+                    x.isOn = VARIABLE.name.StartsWith(rulerItem.prefix);
+                });
                 setting.options.Add(data);
             }
         }
@@ -231,15 +247,7 @@ namespace ZGame.Editor.PSD2GUI
             GUILayout.Label("Bind Components", GUILayout.Width(110));
             if (EditorGUILayout.DropdownButton(new GUIContent(options.selector.ToString()), FocusType.Passive))
             {
-                GenericMenu menu = new GenericMenu();
-                menu.AddItem(new GUIContent("Noting"), options.selector.isNone, () => { options.selector.UnSelectAll(); });
-                menu.AddItem(new GUIContent("Everything"), options.selector.isAll, () => { options.selector.SelectAll(); });
-                foreach (var VARIABLE in options.selector.items)
-                {
-                    menu.AddItem(new GUIContent(VARIABLE.name), VARIABLE.isOn, () => { VARIABLE.isOn = !VARIABLE.isOn; });
-                }
-
-                menu.ShowAsContext();
+                options.selector.ShowContext(() => { EditorUtility.SetDirty(setting); });
             }
 
             GUILayout.EndHorizontal();

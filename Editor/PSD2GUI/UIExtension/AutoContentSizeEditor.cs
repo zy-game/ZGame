@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using ZGame.Window;
 
 namespace ZGame.Editor.PSD2GUI
@@ -8,45 +10,89 @@ namespace ZGame.Editor.PSD2GUI
     [CustomEditor(typeof(AutoContentSize))]
     public class AutoContentSizeEditor : CustomEditorWindow
     {
-        private AutoContentSize autoContentSize;
-        private Vector2 sizeDelta;
+        private AutoContentSize _content;
         private RectTransform source;
+        private ContentSizeFitter fitter;
 
         public void OnEnable()
         {
-            autoContentSize = target as AutoContentSize;
-            source = autoContentSize.GetComponent<RectTransform>();
-            sizeDelta = source.sizeDelta;
+            _content = target as AutoContentSize;
+            source = _content.GetComponent<RectTransform>();
+            fitter = _content.GetComponent<ContentSizeFitter>();
+            _content.Refresh();
         }
 
         public override void OnInspectorGUI()
         {
-            if (autoContentSize == null)
+            if (_content == null)
             {
                 return;
             }
 
+            if (_content.targets == null)
+            {
+                _content.targets = new();
+            }
+
             EditorGUI.BeginChangeCheck();
 
-            autoContentSize.target = (RectTransform)EditorGUILayout.ObjectField("Target", autoContentSize.target, typeof(RectTransform), true);
-            autoContentSize.offset = EditorGUILayout.Vector2Field("Offset", autoContentSize.offset);
-            autoContentSize.useMinSize = EditorGUILayout.Toggle("Use Min Size", autoContentSize.useMinSize);
-            if (autoContentSize.useMinSize)
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.BeginHorizontal();
             {
-                autoContentSize.minSize = EditorGUILayout.Vector2Field("Min Size", autoContentSize.minSize);
+                GUILayout.Label("Target List", EditorStyles.boldLabel);
+
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+                {
+                    _content.targets.Clear();
+                }
+
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+                {
+                    _content.targets.Add(new AutoContentOptions());
+                }
+
+                GUILayout.EndHorizontal();
+            }
+            this.BeginColor(ZStyle.inColor);
+            GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.Height(1));
+            this.EndColor();
+
+
+            for (int i = _content.targets.Count - 1; i >= 0; i--)
+            {
+                AutoContentOptions options = _content.targets[i];
+
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                options.HorizontalMode = (ContentSizeFitter.FitMode)EditorGUILayout.EnumPopup("Horizontal Mode", options.HorizontalMode);
+                options.VerticalMode = (ContentSizeFitter.FitMode)EditorGUILayout.EnumPopup("Vertical Mode", options.VerticalMode);
+                options.target = EditorGUILayout.ObjectField(new GUIContent("Target"), options.target, typeof(RectTransform), true) as RectTransform;
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+                {
+                    _content.targets.RemoveAt(i);
+                }
+
+                GUILayout.EndVertical();
             }
 
-            autoContentSize.useMaxSize = EditorGUILayout.Toggle("Use Max Size", autoContentSize.useMaxSize);
-            if (autoContentSize.useMaxSize)
-            {
-                autoContentSize.maxSize = EditorGUILayout.Vector2Field("Max Size", autoContentSize.maxSize);
-            }
+            GUILayout.EndVertical();
 
-            if (EditorGUI.EndChangeCheck() || sizeDelta != source.sizeDelta)
+            _content.layout = (LayoutAxis)EditorGUILayout.EnumPopup("Layout", _content.layout);
+            _content.offset = EditorGUILayout.Vector2Field("Offset", _content.offset);
+            _content.useMinSize = (bool)EditorGUILayout.Toggle("Use Min Size", _content.useMinSize);
+            EditorGUI.BeginDisabledGroup(!_content.useMinSize);
+            _content.minSize = EditorGUILayout.Vector2Field("Min Size", _content.minSize);
+            EditorGUI.EndDisabledGroup();
+
+            _content.useMaxSize = (bool)EditorGUILayout.Toggle("Use Max Size", _content.useMaxSize);
+            EditorGUI.BeginDisabledGroup(!_content.useMaxSize);
+            _content.maxSize = EditorGUILayout.Vector2Field("Max Size", _content.maxSize);
+            EditorGUI.EndDisabledGroup();
+            _content.Refresh();
+            if (EditorGUI.EndChangeCheck())
             {
-                autoContentSize.Refresh();
-                sizeDelta = source.sizeDelta;
-                EditorUtility.SetDirty(autoContentSize);
+                EditorUtility.SetDirty(_content);
             }
         }
     }

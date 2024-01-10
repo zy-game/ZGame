@@ -266,6 +266,7 @@ namespace ZGame.Game
             }
         }
 
+        
         public void SetActor(Actorable actor)
         {
             _actors.Add(actor);

@@ -7,31 +7,7 @@ using UnityEngine.UI;
 
 namespace ZGame.Window
 {
-    [Serializable]
-    public class SwitchOptions
-    {
-        public bool isOn;
-        public object userData;
-        public ParamType paramType;
-        public Sprite activeSprite;
-        public Sprite inactiveSprite;
-        public string activeText;
-        public string inactiveText;
-        public GameObject gameObject;
-    }
 
-    public enum SwitchType2 : byte
-    {
-        Sprite,
-        Text,
-        GameObject,
-    }
-
-    public enum SwitchType : byte
-    {
-        Single,
-        Multiple,
-    }
 
     public class UISwitcher : MonoBehaviour
     {

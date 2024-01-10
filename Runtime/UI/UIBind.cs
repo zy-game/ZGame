@@ -11,6 +11,7 @@ namespace ZGame.Window
 #if UNITY_EDITOR
         [SerializeField] public TextAsset language;
         [SerializeField] public string NameSpace;
+        [SerializeField] public bool templetee;
         [SerializeField] public UnityEngine.Object output;
         [SerializeField] public List<string> reference = new List<string>();
         [SerializeField] public List<UIBindData> options = new List<UIBindData>();

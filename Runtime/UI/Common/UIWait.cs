@@ -2,7 +2,7 @@ using ZGame.Window;
 
 namespace UI
 {
-    public interface UIWait : UIBase
+    public interface UIWait : UIForm
     {
         public static void Show(string s)
         {

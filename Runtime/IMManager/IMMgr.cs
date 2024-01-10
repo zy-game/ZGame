@@ -37,8 +37,8 @@ namespace ZGame.IM
         protected override void OnAwake()
         {
             m_BufferSize = m_BufferSeconds * m_AudioRate;
-            chunk = new byte[m_BufferSize * 1 * k_SizeofInt16];
-            clipData = new float[m_BufferSize * 1];
+            chunk = new byte[m_BufferSize * k_SizeofInt16];
+            clipData = new float[m_BufferSize];
             m_CurrentDevice = Microphone.devices.FirstOrDefault();
         }
 
@@ -54,7 +54,6 @@ namespace ZGame.IM
 
         protected override void OnUpdate()
         {
-            OnCheckRecording();
             for (int i = 0; i < handlers.Count; i++)
             {
                 handlers[i].OnRecvieMessage();
@@ -79,24 +78,16 @@ namespace ZGame.IM
         }
 
         /// <summary>
-        /// 创建新会话
-        /// </summary>
-        /// <param name="character"></param>
-        /// <param name="setting"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public async UniTask<bool> Setup<T>(string character, InworldConfig setting) where T : IMHandler
-        {
-            T handle = Activator.CreateInstance<T>();
-            return await Setup(character, setting, handle);
-        }
-
-        /// <summary>
         /// 关闭会话
         /// </summary>
         /// <param name="id"></param>
         public void CloseSession(string id)
         {
+            if (id.IsNullOrEmpty())
+            {
+                return;
+            }
+
             IMClient handler = GetSession(id);
             if (handler is null)
             {
@@ -114,6 +105,11 @@ namespace ZGame.IM
         /// <returns></returns>
         public IMClient GetSession(string id)
         {
+            if (id.IsNullOrEmpty())
+            {
+                return default;
+            }
+
             return handlers.Find(x => x.id == id);
         }
 
@@ -134,87 +130,15 @@ namespace ZGame.IM
             handler.SendChat(content);
         }
 
-        public void SendAudio(AudioClip clip)
+        public void SendAudio(AudioClip clip, int lenght)
         {
-            current.OnStartAudioChat();
-            float[] simples = new float[clip.samples];
-            byte[] chunk = Extension.GetRealAudio(ref clip); //new byte[simples.Length * k_SizeofInt16];
-            // clip.GetData(simples, 0);
-            // WavUtility.ConvertAudioClipDataToInt16ByteArray(simples, simples.Length, chunk);
-            ByteString audioData = ByteString.CopyFrom(chunk, 0, chunk.Length);
-            current.SendAudio(audioData);
-            current.OnStopAudioChat();
-        }
-
-        public void StartRecording()
-        {
-            if (current is null)
+            if (clip == null)
             {
-                return;
-            }
-#if !UNITY_WEBGL
-            isRecording = true;
-            m_Recording = Microphone.Start(m_CurrentDevice, true, m_BufferSeconds, m_AudioRate);
-            current.OnStartAudioChat();
-#endif
-        }
-
-
-        private void OnCheckRecording()
-        {
-#if!UNITY_WEBGL
-            if (isRecording is false)
-            {
+                Debug.Log("空数据");
                 return;
             }
 
-            if (!Microphone.IsRecording(m_CurrentDevice))
-                StartRecording();
-            if (m_CDCounter <= 0)
-            {
-                m_CDCounter = 0.1f;
-                Collect();
-            }
-
-            m_CDCounter -= Time.deltaTime;
-#endif
-        }
-
-        public virtual void StopRecording()
-        {
-            isRecording = false;
-#if !UNITY_WEBGL
-            current.OnStopAudioChat();
-            Microphone.End(null);
-#endif
-        }
-
-
-        private int GetAudioData()
-        {
-            int nSize = 0;
-#if !UNITY_WEBGL
-            int nPosition = Microphone.GetPosition(m_CurrentDevice);
-            if (nPosition < m_LastPosition)
-                nPosition = m_BufferSize;
-            if (nPosition <= m_LastPosition)
-                return -1;
-            nSize = nPosition - m_LastPosition;
-            if (!m_Recording.GetData(clipData, m_LastPosition))
-                return -1;
-            m_LastPosition = nPosition % m_BufferSize;
-#endif
-            return nSize;
-        }
-
-        private void Collect()
-        {
-            int nSize = GetAudioData();
-            if (nSize < 0)
-                return;
-            WavUtility.ConvertAudioClipDataToInt16ByteArray(clipData, nSize * m_Recording.channels, chunk);
-            ByteString audioData = ByteString.CopyFrom(chunk, 0, nSize * m_Recording.channels * k_SizeofInt16);
-            current.SendAudio(audioData);
+            current.SendAudio(clip, lenght);
         }
     }
 }

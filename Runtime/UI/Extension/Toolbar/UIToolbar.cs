@@ -7,11 +7,8 @@ namespace ZGame.Window
 {
     public class UIToolbar : MonoBehaviour
     {
-        public SubScene current;
-
-        public List<Button> buttons;
-
-        public List<SubScene> scenes;
+        public SubSceneTemplete current;
+        public List<SubSceneTemplete> scenes;
 
         public void OnEnable()
         {
@@ -21,6 +18,11 @@ namespace ZGame.Window
             }
 
             Switch(current.sceneName);
+        }
+
+        public void AddScene(SubSceneTemplete scene)
+        {
+            scenes.Add(scene);
         }
 
         public void Switch(string sceneName)

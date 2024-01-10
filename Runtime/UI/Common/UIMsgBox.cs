@@ -4,7 +4,7 @@ using ZGame.Window;
 
 namespace UI
 {
-    public interface UIMsgBox : UIBase
+    public interface UIMsgBox : UIForm
     {
         void Setup(string title, string content, Action onYes, Action onNo);
 

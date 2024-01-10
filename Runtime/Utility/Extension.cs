@@ -50,7 +50,7 @@ namespace ZGame
         /// </summary>
         /// <param name="recordedClip"></param>
         /// <returns></returns>
-        public static byte[] GetRealAudio(ref AudioClip recordedClip)
+        public static byte[] GetRealAudio(this AudioClip recordedClip)
         {
             int position = recordedClip.samples;
             float[] soundata = new float[position * recordedClip.channels];

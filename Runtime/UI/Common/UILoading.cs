@@ -3,7 +3,7 @@ using ZGame.Window;
 
 namespace ZGame.Window
 {
-    public interface UILoading : UIBase, IProgress<float>
+    public interface UILoading : UIForm, IProgress<float>
     {
         void SetTitle(string title);
 

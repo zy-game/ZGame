@@ -76,6 +76,11 @@ namespace ZGame.Sound
             handle.Play(clipName, playCallback);
         }
 
+        public bool IsEffectPlaying()
+        {
+            return _handles.Find(x => x.name == EFFECT_SOUND).isPlaying;
+        }
+
         public void PlayBackSound(AudioClip clip, Action<PlayState> playCallback = null)
         {
             SoundPlayableHandle handle = GetPlayer(BACK_MUSIC);

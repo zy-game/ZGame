@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using HybridCLR;
 using UI;
 using UnityEngine;
+using UnityEngine.UI;
 using ZGame;
 using ZGame.Game;
 using ZGame.Resource;
@@ -16,6 +17,7 @@ public class Startup : MonoBehaviour
 {
     private async void Start()
     {
+        
         GameManager.instance.Initialized();
         UILoading uiLoading = UIManager.instance.Open<UILoading>();
         uiLoading.SetTitle("正在获取配置信息...");
