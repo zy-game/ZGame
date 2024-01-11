@@ -43,9 +43,9 @@ namespace ZGame.Editor.PSD2GUI
         {
             foreach (var VARIABLE in setting.options)
             {
-                AddField($"\t\tpublic GameObject {VARIABLE.name};");
-                AddDispose($"\t\t\t{VARIABLE.name} = null;");
-                AddInit($"\t\t\t{VARIABLE.name} = this.gameObject.transform.Find(\"{VARIABLE.path}\").gameObject;");
+                AddField($"\t\tpublic GameObject go_{VARIABLE.name};");
+                AddDispose($"\t\t\tgo_{VARIABLE.name} = null;");
+                AddInit($"\t\t\tgo_{VARIABLE.name} = this.gameObject.transform.Find(\"{VARIABLE.path}\").gameObject;");
                 foreach (var VARIABLE2 in VARIABLE.selector.items)
                 {
                     if (VARIABLE2.isOn is false)
@@ -132,7 +132,7 @@ namespace ZGame.Editor.PSD2GUI
             else
             {
                 AddField($"\t\tpublic {rule.TypeName} {rule.GetFieldName(variable.name)};");
-                AddInit($"\t\t\t{rule.GetFieldName(variable.name)} = this.{variable.name}.GetComponent<{rule.TypeName}>();");
+                AddInit($"\t\t\t{rule.GetFieldName(variable.name)} =  this.go_{variable.name}.GetComponent<{rule.TypeName}>();");
                 AddDispose($"\t\t\t{rule.GetFieldName(variable.name)} = null;");
             }
         }
@@ -610,7 +610,16 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine($"\t\tpublic UICode_{setting.name}(GameObject gameObject) : base(gameObject)");
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t}");
-            callbackList.ForEach(x => sb.AppendLine(x.Replace("virtual", "override")));
+            int index = 0;
+            callbackList.ForEach(x =>
+            {
+                if (index % 5 != 2)
+                {
+                    sb.AppendLine(x.Replace("virtual", "override"));
+                }
+
+                index++;
+            });
             sb.AppendLine("\t}");
             sb.AppendLine("}");
             return sb.ToString();
@@ -626,7 +635,7 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine($"\t\t\t{{");
             sb.AppendLine($"\t\t\t}}");
             sb.AppendLine("");
-            sb.AppendLine("\t\t\tpublic override void Awake(params object[] args)");
+            sb.AppendLine("\t\t\tpublic override void Awake()");
             sb.AppendLine("\t\t\t{");
             sb.AppendLine("\t\t\t\tif(this.gameObject == null)");
             sb.AppendLine("\t\t\t\t{");
@@ -684,7 +693,7 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t}");
             sb.AppendLine("");
-            sb.AppendLine("\t\tpublic override void Awake(params object[] args)");
+            sb.AppendLine("\t\tpublic override void Awake()");
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t\tif(this.gameObject == null)");
             sb.AppendLine("\t\t\t{");
@@ -713,14 +722,6 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("");
             callbackList.ForEach(x => sb.AppendLine(x));
             setupList.ForEach(x => sb.AppendLine(x));
-            sb.AppendLine("\t\tpublic override void Enable()");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine("\t\tpublic override void Disable()");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
             sb.AppendLine("\t\tpublic override void Dispose()");
             sb.AppendLine("\t\t{");
             disposeList.ForEach(x => sb.AppendLine(x));

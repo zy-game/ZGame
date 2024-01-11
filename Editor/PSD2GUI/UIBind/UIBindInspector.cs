@@ -23,8 +23,7 @@ namespace ZGame.Editor.PSD2GUI
         public void OnEnable()
         {
             this.setting = (UIBind)target;
-
-            this.setting.templetee = setting.GetComponentInParent<UIBind>() != null;
+            this.setting.templetee = setting.transform.parent != null && setting.transform.parent.GetComponentInParent<UIBind>() != null;
         }
 
 

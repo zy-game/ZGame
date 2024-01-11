@@ -23,9 +23,8 @@ namespace ZGame.Resource
 
         public async UniTask UpdateResourcePackageList(EntryConfig config)
         {
-            UILoading handler = (UILoading)UIManager.instance.Open(typeof(UILoading));
-            handler.SetTitle(Localliztion.Get(100000));
-            handler.Report(0);
+            UILoading.SetTitle(Localliztion.Get(100000));
+            UILoading.SetProgress(0);
             HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
             HashSet<string> failure = new HashSet<string>();
             List<ResourcePackageManifest> result = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
@@ -41,9 +40,9 @@ namespace ZGame.Resource
                 {
                     request.timeout = 5;
                     request.useHttpContinue = true;
-                    handler.SetTitle(Path.GetFileName(url));
-                    await request.SendWebRequest().ToUniTask(handler);
-                    handler.Report(1);
+                    UILoading.SetTitle(Path.GetFileName(url));
+                    await request.SendWebRequest().ToUniTask(UILoading.Show());
+                    UILoading.SetProgress(1);
                     if (request.result is not UnityWebRequest.Result.Success)
                     {
                         failure.Add(packageManifest.name);

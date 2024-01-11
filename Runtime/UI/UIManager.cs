@@ -15,7 +15,7 @@ namespace ZGame.Window
     /// </summary>
     public sealed class UIManager : Singleton<UIManager>
     {
-        private List<UIForm> _windows = new();
+        private List<UIBase> _windows = new();
         private Dictionary<Type, Type> basicTypes = new();
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace ZGame.Window
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T Open<T>(params object[] args) where T : UIForm
+        public T Open<T>(params object[] args) where T : UIBase
         {
             return (T)Open(typeof(T), args);
         }
@@ -31,41 +31,31 @@ namespace ZGame.Window
         /// <summary>
         /// 打开窗口
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Open<T>(string resPath, params object[] args) where T : UIBase
+        {
+            return (T)Open(typeof(T), resPath, args);
+        }
+
+        /// <summary>
+        /// 打开窗口
+        /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public UIForm Open(Type type, params object[] args)
+        public UIBase Open(Type type, params object[] args)
         {
-            UIForm uiBase = GetWindow(type);
+            if (type is null || type.IsInterface || type.IsAbstract)
+            {
+                return default;
+            }
+
+            UIBase uiBase = GetWindow(type);
             if (uiBase is not null)
             {
                 return uiBase;
             }
 
-            type = GetUIType(type);
-
-            if (type is null)
-            {
-                return default;
-            }
-
-            ResHandle resObject = GetResHandle(type);
-            if (resObject is null)
-            {
-                return default;
-            }
-
-            Debug.Log("加载UI：" + type.Name);
-            uiBase = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
-            UILayers.instance.TrySetup(uiBase.gameObject, 1, Vector3.zero, Vector3.zero, Vector3.one);
-            uiBase.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
-            _windows.Add(uiBase);
-            uiBase.Awake(args);
-            Active(type);
-            return uiBase;
-        }
-
-        private ResHandle GetResHandle(Type type)
-        {
             ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
             if (reference is null || reference.path.IsNullOrEmpty())
             {
@@ -73,31 +63,51 @@ namespace ZGame.Window
                 return default;
             }
 
-            return ResourceManager.instance.LoadAsset(reference.path);
+            return Open(type, reference.path, args);
         }
 
-        private Type GetUIType(Type type)
+        /// <summary>
+        /// 打开窗口
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public UIBase Open(Type type, string resPath, params object[] args)
         {
-            if (type.IsInterface || type.IsAbstract)
+            Debug.Log(typeof(UIBase).IsAssignableFrom(type));
+            if (type is null || type.IsInterface || type.IsAbstract)
             {
-                if (basicTypes.TryGetValue(type, out Type basicType) is false)
-                {
-                    basicType = AppDomain.CurrentDomain.GetAllSubClasses(type).FirstOrDefault();
-                    basicTypes.Add(type, basicType);
-                }
-
-                type = basicType;
+                return default;
             }
 
-            return type;
+            UIBase uiBase = GetWindow(type);
+            if (uiBase is not null)
+            {
+                return uiBase;
+            }
+
+            ResHandle handle = ResourceManager.instance.LoadAsset(resPath);
+            if (handle.IsSuccess() is false)
+            {
+                return default;
+            }
+
+            Debug.Log("加载UI：" + type.Name);
+            uiBase = (UIBase)Activator.CreateInstance(type, new object[] { handle.Instantiate() });
+            UILayers.instance.TrySetup(uiBase.gameObject, 1, Vector3.zero, Vector3.zero, Vector3.one);
+            uiBase.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
+            _windows.Add(uiBase);
+            uiBase.Awake();
+            Active(type, args);
+            return uiBase;
         }
+
 
         /// <summary>
         /// 获取窗口
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T GetWindow<T>()
+        public T GetWindow<T>() where T : UIBase
         {
             return (T)GetWindow(typeof(T));
         }
@@ -107,7 +117,7 @@ namespace ZGame.Window
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public UIForm GetWindow(Type type)
+        public UIBase GetWindow(Type type)
         {
             if (type is null)
             {
@@ -121,25 +131,25 @@ namespace ZGame.Window
         /// 激活窗口
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void Active<T>()
+        public void Active<T>(params object[] args)
         {
-            Active(typeof(T));
+            Active(typeof(T), args);
         }
 
         /// <summary>
         /// 激活窗口
         /// </summary>
         /// <param name="type"></param>
-        public void Active(Type type)
+        public void Active(Type type, params object[] args)
         {
-            UIForm uiBase = GetWindow(type);
+            UIBase uiBase = GetWindow(type);
             if (uiBase is null || uiBase.gameObject.activeSelf)
             {
                 return;
             }
 
             uiBase.gameObject.SetActive(true);
-            uiBase.Enable();
+            uiBase.Enable(args);
         }
 
         /// <summary>
@@ -157,7 +167,7 @@ namespace ZGame.Window
         /// <param name="type"></param>
         public void Inactive(Type type)
         {
-            UIForm uiBase = GetWindow(type);
+            UIBase uiBase = GetWindow(type);
             if (uiBase is null || uiBase.gameObject.activeSelf is false)
             {
                 return;
@@ -183,7 +193,7 @@ namespace ZGame.Window
         /// <param name="type"></param>
         public void Close(Type type, bool dispose = true)
         {
-            UIForm uiBase = GetWindow(type);
+            UIBase uiBase = GetWindow(type);
             if (uiBase is null)
             {
                 return;

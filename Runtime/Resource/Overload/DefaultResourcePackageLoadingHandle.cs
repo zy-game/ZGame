@@ -19,15 +19,14 @@ namespace ZGame.Resource
 
         public async UniTask LoadingResourcePackageList(EntryConfig config)
         {
-            UILoading handler = (UILoading)UIManager.instance.Open(typeof(UILoading));
             //todo 这里还需要注意实在webgl平台上面加载资源包的情况
-            handler.SetTitle("正在加载资源信息...");
-            handler.Report(0);
+            UILoading.SetTitle("正在加载资源信息...");
+            UILoading.SetProgress(0);
             List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(config.module);
             int index = 0;
             while (index < manifests.Count)
             {
-                handler.Report(index / (float)manifests.Count);
+                UILoading.SetProgress(index / (float)manifests.Count);
                 if (ResourceManager.instance.GetResourcePackageHandle(manifests[index].name) == null)
                 {
                     AssetBundle assetBundle = default;
@@ -35,7 +34,7 @@ namespace ZGame.Resource
                     if (bytes is null || bytes.Length == 0)
                     {
                         Clear(manifests);
-                        handler.SetTitle("资源加载失败...");
+                        UILoading.SetTitle("资源加载失败...");
                         return;
                     }
 
@@ -45,8 +44,8 @@ namespace ZGame.Resource
                 }
             }
 
-            handler.SetTitle("资源加载完成...");
-            handler.Report(1);
+            UILoading.SetTitle("资源加载完成...");
+            UILoading.SetProgress(1);
         }
 
 

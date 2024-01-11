@@ -143,28 +143,19 @@ namespace ZGame.Editor
 
             config.unloadInterval = EditorGUILayout.Slider("包检查间隔时间", config.unloadInterval, 30, ushort.MaxValue);
             config.assembly = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Assembly", config.assembly, typeof(AssemblyDefinitionAsset), false);
-            if (config.assembly != null)
-            {
-                config.path = AssetDatabase.GetAssetPath(config.assembly);
-                config.entryName = config.assembly.name;
-                if (config.references is null || config.references.Count == 0)
-                {
-                    AssemlyInfo info = JsonConvert.DeserializeObject<AssemlyInfo>(config.assembly.text);
-                    config.references = info.references.Select(x => Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(x.Split(':')[1]))).ToList();
-                }
-            }
-
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Reference Assembly", EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.REFRESH_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
-                if (config.references is null || config.references.Count == 0)
-                {
-                    AssemlyInfo info = JsonConvert.DeserializeObject<AssemlyInfo>(config.assembly.text);
-                    config.references = info.references.Select(x => Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(x.Split(':')[1]))).ToList();
-                }
+                AssemlyInfo info = JsonConvert.DeserializeObject<AssemlyInfo>(config.assembly.text);
+                config.references = info.GetReferenceList();
+            }
+
+            if (config.assembly != null)
+            {
+                config.entryName = config.assembly.name;
             }
 
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
@@ -266,5 +257,15 @@ namespace ZGame.Editor
         /// 
         /// </summary>
         public string noEngineReferences { get; set; }
+
+        public List<string> GetReferenceList()
+        {
+            if (references is null)
+            {
+                return new List<string>();
+            }
+
+            return references.Select(x => Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(x.Split(':')[1]))).ToList();
+        }
     }
 }

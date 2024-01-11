@@ -7,7 +7,7 @@ namespace ZGame.Window
     /// <summary>
     /// UI界面
     /// </summary>
-    public class UIBase : UIForm
+    public class UIBase : IDisposable
     {
         public string name { get; }
         public GameObject gameObject { get; }
@@ -22,18 +22,17 @@ namespace ZGame.Window
             this.rect_transform = gameObject.GetComponent<RectTransform>();
         }
 
-
         /// <summary>
         /// 激活界面
         /// </summary>
-        public virtual void Awake(params object[] args)
+        public virtual void Awake()
         {
         }
 
         /// <summary>
         /// 显示界面
         /// </summary>
-        public virtual void Enable()
+        public virtual void Enable(params object[] args)
         {
         }
 

@@ -141,10 +141,9 @@ namespace ZGame.Resource
                 operation = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path), parameters);
             }
 
-            UILoading handler = (UILoading)UIManager.instance.Open<UILoading>();
-            await operation.ToUniTask(handler);
+            await operation.ToUniTask(UILoading.Show());
             scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
-            UIManager.instance.Close(typeof(UILoading));
+            UILoading.Hide();
             SceneManager.sceneUnloaded += UnloadScene;
             return scene;
         }

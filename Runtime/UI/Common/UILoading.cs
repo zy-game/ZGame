@@ -1,35 +1,95 @@
 using System;
+using System.Linq;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 using ZGame.Window;
 
 namespace ZGame.Window
 {
-    public interface UILoading : UIForm, IProgress<float>
+    public class UILoading : UIBase, IProgress<float>
     {
-        void SetTitle(string title);
+        private Slider slider;
+        private TMP_Text progres;
+        private TMP_Text title;
 
-        public static UILoading OnExecute(IExecute execute, params object[] args)
+        public UILoading(GameObject gameObject) : base(gameObject)
         {
-            return default;
         }
 
-        public static UILoading OnExecute(Type type, params object[] args)
+        public override void Awake()
         {
-            if (typeof(IExecute).IsAssignableFrom(type) is false)
+            slider = this.gameObject.GetComponentInChildren<Slider>();
+
+            TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
+            foreach (var VARIABLE in texts)
             {
-                return default;
+                if (VARIABLE.name.Equals("content"))
+                {
+                    title = VARIABLE;
+                }
+
+                if (slider == null && VARIABLE.name.Equals("progres"))
+                {
+                    progres = VARIABLE;
+                }
+            }
+        }
+
+        public void Report(float value)
+        {
+            progres?.SetText(Mathf.FloorToInt(value * 100).ToString() + "%");
+            slider?.SetValueWithoutNotify(value);
+        }
+
+        public void SetText(string title)
+        {
+            this.title?.SetText(title);
+        }
+
+
+        private static UILoading _instance;
+
+        public static void SetProgress(float progress)
+        {
+            if (_instance is null)
+            {
+                Show();
             }
 
-            IExecute execute = (IExecute)Activator.CreateInstance(type);
-            return OnExecute(execute, args);
+            _instance?.Report(progress);
         }
 
-        public static UILoading OnExecute<T>(params object[] args) where T : IExecute
+        public static void SetTitle(string title)
         {
-            return OnExecute(typeof(T), args);
-        }
-    }
+            if (_instance is null)
+            {
+                Show();
+            }
 
-    public interface IExecute : IDisposable
-    {
+            _instance?.SetText(title);
+        }
+
+        public static UILoading Show()
+        {
+            if (_instance is not null)
+            {
+                return _instance;
+            }
+
+            string resPath = $"Resources/{BasicConfig.instance.curEntry.entryName}/Loading";
+            return _instance = UIManager.instance.Open<UILoading>(resPath);
+        }
+
+        public static void Hide()
+        {
+            if (_instance is null)
+            {
+                return;
+            }
+
+            UIManager.instance.Close<UILoading>();
+            _instance = null;
+        }
     }
 }

@@ -1,39 +1,134 @@
 using System;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+using ZGame;
 using ZGame.Window;
 
 namespace UI
 {
-    public interface UIMsgBox : UIForm
+    public class UIMsgBox : UIBase
     {
-        void Setup(string title, string content, Action onYes, Action onNo);
+        private Action onYes;
+        private Action onNo;
 
-        public static UIMsgBox Show(string title, string content, Action onYes, Action onNo)
+        public UIMsgBox(GameObject gameObject) : base(gameObject)
         {
-            UIMsgBox uiMsgBox = UIManager.instance.Open<UIMsgBox>();
-            if (uiMsgBox is null)
+        }
+
+        public override void Awake()
+        {
+        }
+
+        public override void Enable(params object[] args)
+        {
+            this.onYes = (Action)(args[2]);
+            this.onNo = (Action)(args[3]);
+            TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
+            foreach (var VARIABLE in texts)
             {
-                Debug.Log("??");
-                return default;
+                if (VARIABLE.name.Equals("title"))
+                {
+                    VARIABLE.SetText(args[0].ToString());
+                }
+
+                if (VARIABLE.name.Equals("content"))
+                {
+                    VARIABLE.SetText(args[1].ToString());
+                }
             }
 
-            uiMsgBox.Setup(title, content, onYes, onNo);
-            return uiMsgBox;
+            Button[] buttons = this.gameObject.GetComponentsInChildren<Button>();
+            foreach (var VARIABLE in buttons)
+            {
+                if (VARIABLE.name.Equals("yes"))
+                {
+                    VARIABLE.onClick.AddListener(() =>
+                    {
+                        this.onYes();
+                        this.Dispose();
+                    });
+                }
+
+                if (VARIABLE.name.Equals("no"))
+                {
+                    VARIABLE.onClick.AddListener(() =>
+                    {
+                        this.onNo();
+                        this.Dispose();
+                    });
+                }
+            }
         }
 
-        public static UIMsgBox Show(string content, Action onYes, Action onNo)
+
+        class MsgData
         {
-            return Show("Tips", content, onYes, onNo);
+            public string title;
+            public string content;
+            public Action onYes;
+            public Action onNo;
         }
 
-        public static UIMsgBox Show(string content, Action onYes)
+        private static UIMsgBox _instance;
+        private static Queue<MsgData> _msgQueue = new Queue<MsgData>();
+
+        private static void OnShowMsgBox()
         {
-            return Show("Tips", content, onYes, null);
+            if (_msgQueue.Count == 0)
+            {
+                return;
+            }
+
+            MsgData data = _msgQueue.Dequeue();
+            string resPath = $"Resources/{BasicConfig.instance.curEntry.entryName}/MsgBox";
+            UIMsgBox _instance = UIManager.instance.Open<UIMsgBox>(resPath);
+            _instance.Enable(data.title, data.content, new Action(() =>
+            {
+                data.onYes();
+                _instance.Dispose();
+                _instance = null;
+                OnShowMsgBox();
+            }), new Action(() =>
+            {
+                data.onNo();
+                _instance.Dispose();
+                _instance = null;
+                OnShowMsgBox();
+            }));
         }
 
-        public static UIMsgBox Show(string content)
+        public static void Show(string title, string content, Action onYes, Action onNo)
         {
-            return Show("Tips", content, null, null);
+            _msgQueue.Enqueue(new MsgData()
+            {
+                title = title,
+                content = content,
+                onYes = onYes,
+                onNo = onNo,
+            });
+            if (_instance is not null)
+            {
+                return;
+            }
+
+            OnShowMsgBox();
+        }
+
+        public static void Show(string content, Action onYes, Action onNo)
+        {
+            Show("Tips", content, onYes, onNo);
+        }
+
+        public static void Show(string content, Action onYes)
+        {
+            Show("Tips", content, onYes, null);
+        }
+
+        public static void Show(string content)
+        {
+            Show("Tips", content, null, null);
         }
     }
 }

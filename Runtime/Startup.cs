@@ -17,16 +17,16 @@ public class Startup : MonoBehaviour
 {
     private async void Start()
     {
-        
         GameManager.instance.Initialized();
-        UILoading uiLoading = UIManager.instance.Open<UILoading>();
-        uiLoading.SetTitle("正在获取配置信息...");
+        UILoading.SetTitle("正在获取配置信息...");
+        UILoading.SetProgress(0);
         if (BasicConfig.instance.curEntry is null)
         {
             Debug.LogError(new EntryPointNotFoundException());
             return;
         }
 
+        Debug.Log(BasicConfig.instance.curEntry.entryName);
         await PackageManifestManager.instance.Setup(BasicConfig.instance.curEntry);
         await ResourceManager.instance.CheckUpdateResourcePackageList(BasicConfig.instance.curEntry);
         await ResourceManager.instance.LoadingResourcePackageList(BasicConfig.instance.curEntry);
