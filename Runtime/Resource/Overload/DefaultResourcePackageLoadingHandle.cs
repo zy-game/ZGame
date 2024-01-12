@@ -17,31 +17,113 @@ namespace ZGame.Resource
         {
         }
 
-        public async UniTask LoadingResourcePackageList(EntryConfig config)
+        public void LoadingPackageListSync(params ResourcePackageManifest[] manifests)
         {
-            //todo 这里还需要注意实在webgl平台上面加载资源包的情况
-            UILoading.SetTitle("正在加载资源信息...");
-            UILoading.SetProgress(0);
-            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(config.module);
-            int index = 0;
-            while (index < manifests.Count)
+            if (manifests is null || manifests.Length == 0)
             {
-                UILoading.SetProgress(index / (float)manifests.Count);
-                if (ResourceManager.instance.GetResourcePackageHandle(manifests[index].name) == null)
+                Debug.Log("没有需要加载的资源包");
+                return;
+            }
+
+            for (int i = 0; i < manifests.Length; i++)
+            {
+                if (PackageHandleCache.instance.TryGetValue(manifests[i].name, out _))
                 {
-                    AssetBundle assetBundle = default;
-                    byte[] bytes = await VFSManager.instance.ReadAsync(manifests[index].name);
-                    if (bytes is null || bytes.Length == 0)
+                    Debug.Log("已经加载了资源包：" + manifests[i].name);
+                    continue;
+                }
+
+                AssetBundle assetBundle = default;
+                byte[] bytes = VFSManager.instance.Read(manifests[i].name);
+                if (bytes is null || bytes.Length == 0)
+                {
+                    Clear(manifests);
+                    Debug.Log("读取资源包失败：" + manifests[i].name);
+                    return;
+                }
+
+                assetBundle = AssetBundle.LoadFromMemory(bytes);
+                PackageHandleCache.instance.Add(new PackageHandle(assetBundle));
+                Debug.Log("资源包加载完成：" + manifests[i].name);
+            }
+
+            for (int i = 0; i < manifests.Length; i++)
+            {
+                if (PackageHandleCache.instance.TryGetValue(manifests[i].name, out var target) is false)
+                {
+                    continue;
+                }
+
+                if (manifests[i].dependencies is null || manifests[i].dependencies.Length == 0)
+                {
+                    continue;
+                }
+
+                List<PackageHandle> dependencies = new List<PackageHandle>();
+                foreach (var dependency in manifests[i].dependencies)
+                {
+                    if (PackageHandleCache.instance.TryGetValue(dependency, out var packageHandle) is false)
                     {
-                        Clear(manifests);
-                        UILoading.SetTitle("资源加载失败...");
-                        return;
+                        continue;
                     }
 
-                    assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
-                    ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(assetBundle, false));
-                    index++;
+                    dependencies.Add(packageHandle);
                 }
+
+                target.SetDependencies(dependencies.ToArray());
+            }
+        }
+
+        public async UniTask LoadingPackageListAsync(params ResourcePackageManifest[] manifests)
+        {
+            for (int i = 0; i < manifests.Length; i++)
+            {
+                UILoading.SetProgress(i / (float)manifests.Length);
+                if (PackageHandleCache.instance.TryGetValue(manifests[i].name, out _))
+                {
+                    Debug.Log("资源包已加载：" + manifests[i].name);
+                    continue;
+                }
+
+                AssetBundle assetBundle = default;
+                byte[] bytes = await VFSManager.instance.ReadAsync(manifests[i].name);
+                if (bytes is null || bytes.Length == 0)
+                {
+                    Clear(manifests);
+                    UILoading.SetTitle("资源加载失败...");
+                    return;
+                }
+
+                assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
+                PackageHandleCache.instance.Add(new PackageHandle(assetBundle));
+                Debug.Log("资源包加载完成：" + manifests[i].name);
+            }
+
+            for (int i = 0; i < manifests.Length; i++)
+            {
+                if (PackageHandleCache.instance.TryGetValue(manifests[i].name, out var target) is false)
+                {
+                    continue;
+                }
+
+                if (manifests[i].dependencies is null || manifests[i].dependencies.Length == 0)
+                {
+                    continue;
+                }
+
+                List<PackageHandle> dependencies = new List<PackageHandle>();
+                foreach (var dependency in manifests[i].dependencies)
+                {
+                    if (PackageHandleCache.instance.TryGetValue(dependency, out var packageHandle) is false)
+                    {
+                        continue;
+                    }
+
+                    //
+                    dependencies.Add(packageHandle);
+                }
+
+                target.SetDependencies(dependencies.ToArray());
             }
 
             UILoading.SetTitle("资源加载完成...");
@@ -49,11 +131,11 @@ namespace ZGame.Resource
         }
 
 
-        private void Clear(List<ResourcePackageManifest> fileList)
+        private void Clear(params ResourcePackageManifest[] fileList)
         {
             foreach (var VARIABLE in fileList)
             {
-                ResourceManager.instance.RemoveResourcePackageHandle(VARIABLE.name);
+                PackageHandleCache.instance.Remove(VARIABLE.name);
             }
         }
     }

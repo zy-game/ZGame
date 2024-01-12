@@ -55,6 +55,7 @@ namespace ZGame
             {
                 return $"{address}{path}";
             }
+
             return $"{address}:{port}{path}";
         }
     }
@@ -92,20 +93,12 @@ namespace ZGame
         /// </summary>
         public string module;
 
-        /// <summary>
-        /// 卸载间隔时间
-        /// </summary>
-        public float unloadInterval = 60f;
 
         /// <summary>
         /// 引用DLL
         /// </summary>
         public List<string> references;
 
-        /// <summary>
-        /// 资源服务名称
-        /// </summary>
-        public string ossTitle;
 
 #if UNITY_EDITOR
         [NonSerialized] public UnityEditorInternal.AssemblyDefinitionAsset assembly;
@@ -153,6 +146,11 @@ namespace ZGame
         /// 资源模式
         /// </summary>
         public ResourceMode resMode;
+
+        /// <summary>
+        /// 卸载间隔时间
+        /// </summary>
+        public float resTimeout = 60f;
 
         /// <summary>
         /// 当前游戏入口配置

@@ -6,34 +6,26 @@ namespace ZGame.Resource.Config
     public class OSSConfig : SingletonScriptableObject<OSSConfig>
     {
         public List<OSSOptions> ossList;
+        public string seletion;
+
+        public OSSOptions current
+        {
+            get { return ossList.Find(x => x.title == seletion); }
+        }
 
         public override void OnAwake()
         {
         }
 
-        public string GetFilePath(string title, string fileName)
+        public string GetFilePath(string fileName)
         {
-            OSSOptions options = ossList.Find(x => x.title == title);
-            if (options is not null)
+            if (current is not null)
             {
-                return options.GetFilePath(fileName);
+                return current.GetFilePath(fileName);
             }
             else
             {
                 return "";
-            }
-        }
-
-        public OSSType GetOSSType(string title)
-        {
-            OSSOptions options = ossList.Find(x => x.title == title);
-            if (options is not null)
-            {
-                return options.type;
-            }
-            else
-            {
-                return OSSType.None;
             }
         }
     }

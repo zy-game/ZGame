@@ -13,22 +13,28 @@ namespace ZGame.Resource
 {
     public sealed class ResHandle : IDisposable
     {
-        private int count;
         private object obj;
-        private ResPackageHandle parent;
-        public int refCount => count;
+        private PackageHandle parent;
         public string path { get; private set; }
+        public int refCount { get; private set; }
 
-
-        public static ResHandle OnCreate(ResPackageHandle parent, object obj, string path)
+        public string packageName
         {
-            return new ResHandle()
+            get { return parent.name; }
+        }
+
+        public static ResHandle OnCreate(PackageHandle parent, object obj, string path)
+        {
+            ResHandle handle = new ResHandle()
             {
                 obj = obj,
                 path = path,
                 parent = parent
             };
+            ResHandleCache.instance.Add(handle);
+            return handle;
         }
+
 
         public bool Is<T>()
         {
@@ -45,11 +51,10 @@ namespace ZGame.Resource
             return false;
         }
 
-        public T Get<T>(GameObject gameObject)
+        public T Get<T>(GameObject gameObject = null)
         {
-            count++;
-            this.parent.AddRef();
             ListenerDestroyEvent(gameObject);
+            parent?.Reference();
             return obj == null ? default(T) : (T)obj;
         }
 
@@ -60,26 +65,25 @@ namespace ZGame.Resource
                 return;
             }
 
-            ZGame.BevaviourScriptable bevaviour = gameObject.GetComponent<ZGame.BevaviourScriptable>();
+            BevaviourScriptable bevaviour = gameObject.GetComponent<BevaviourScriptable>();
             if (bevaviour == null)
             {
-                bevaviour = gameObject.AddComponent<ZGame.BevaviourScriptable>();
+                bevaviour = gameObject.AddComponent<BevaviourScriptable>();
             }
 
-            bevaviour.onDestroy.AddListener(() => { ResourceManager.instance.ReleaseAsset(this); });
+            bevaviour.onDestroy.AddListener(() => { this.Release(); });
         }
 
         public void Release()
         {
-            count--;
-            this.parent.RemoveRef();
+            parent?.Unreference();
         }
 
         public void Dispose()
         {
+            refCount = 0;
             obj = null;
             parent = null;
-            count = 0;
             path = String.Empty;
         }
 
@@ -115,7 +119,6 @@ namespace ZGame.Resource
                 return;
             }
 
-            this.parent.RemoveRef();
             SceneManager.sceneUnloaded -= UnloadScene;
         }
 
@@ -191,29 +194,36 @@ namespace ZGame.Resource
                 return;
             }
 
+
             Component component = gameObject.GetComponent<T>();
             switch (component)
             {
                 case Image image:
                     image.sprite = Get<Sprite>(gameObject);
+                    ListenerDestroyEvent(gameObject);
                     break;
                 case RawImage rawImage:
                     rawImage.texture = Get<Texture2D>(gameObject);
+                    ListenerDestroyEvent(gameObject);
                     break;
                 case AudioSource audioSource:
                     audioSource.clip = Get<AudioClip>(gameObject);
+                    ListenerDestroyEvent(gameObject);
                     break;
                 case VideoPlayer videoPlayer:
                     videoPlayer.clip = Get<VideoClip>(gameObject);
+                    ListenerDestroyEvent(gameObject);
                     break;
                 case TMP_InputField inputField:
                     switch (obj)
                     {
                         case TextAsset textAsset:
                             inputField.text = textAsset.text;
+                            ListenerDestroyEvent(gameObject);
                             break;
                         case TMP_FontAsset fontAsset:
                             inputField.fontAsset = fontAsset;
+                            ListenerDestroyEvent(gameObject);
                             break;
                     }
 
@@ -223,9 +233,11 @@ namespace ZGame.Resource
                     {
                         case TextAsset textAsset:
                             tmpText.text = textAsset.text;
+                            ListenerDestroyEvent(gameObject);
                             break;
                         case TMP_FontAsset fontAsset:
                             tmpText.font = fontAsset;
+                            ListenerDestroyEvent(gameObject);
                             break;
                     }
 

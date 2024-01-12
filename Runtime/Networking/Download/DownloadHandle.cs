@@ -16,11 +16,13 @@ namespace ZGame.Networking
 
         public async UniTask OnStart()
         {
-            string etag = await NetworkManager.Head(data.url, "eTag");
+            string etag = await Request.GetHead(data.url, "eTag");
             data.crc = Crc32.GetCRC32Str(etag);
             UnityWebRequest request = UnityWebRequest.Get(data.url);
             request.timeout = 5;
             request.useHttpContinue = true;
+            request.disposeUploadHandlerOnDispose = true;
+            request.disposeDownloadHandlerOnDispose = true;
             await request.SendWebRequest().ToUniTask(this);
             progress = 1;
             data.isDone = request.isDone;

@@ -48,6 +48,19 @@ namespace ZGame.Editor
             }
 
             BasicConfig.instance.resMode = (ResourceMode)EditorGUILayout.EnumPopup("资源模式", BasicConfig.instance.resMode);
+
+            if (BasicConfig.instance.resMode == ResourceMode.Simulator)
+            {
+                BasicConfig.instance.resTimeout = EditorGUILayout.Slider("包检查间隔时间", BasicConfig.instance.resTimeout, 10, byte.MaxValue);
+                last = OSSConfig.instance.ossList.FindIndex(x => x.title == OSSConfig.instance.seletion);
+                curIndex = EditorGUILayout.Popup("资源服务器地址", last, OSSConfig.instance.ossList.Select(x => x.title).ToArray());
+
+                if (curIndex >= 0 && curIndex < OSSConfig.instance.ossList.Count && last != curIndex)
+                {
+                    OSSConfig.instance.seletion = OSSConfig.instance.ossList[curIndex].title;
+                }
+            }
+
             if (EditorGUI.EndChangeCheck())
             {
                 BasicConfig.OnSave();
@@ -132,16 +145,7 @@ namespace ZGame.Editor
                 config.module = resList[curIndex];
             }
 
-            last = OSSConfig.instance.ossList.FindIndex(x => x.title == config.ossTitle);
-            curIndex = EditorGUILayout.Popup("资源服务器地址", last, OSSConfig.instance.ossList.Select(x => x.title).ToArray());
 
-            if (curIndex >= 0 && curIndex < OSSConfig.instance.ossList.Count && last != curIndex)
-            {
-                OSSOptions ossOptions = OSSConfig.instance.ossList[curIndex];
-                config.ossTitle = ossOptions.title;
-            }
-
-            config.unloadInterval = EditorGUILayout.Slider("包检查间隔时间", config.unloadInterval, 30, ushort.MaxValue);
             config.assembly = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Assembly", config.assembly, typeof(AssemblyDefinitionAsset), false);
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();

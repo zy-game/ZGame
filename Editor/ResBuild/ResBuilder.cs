@@ -122,7 +122,8 @@ namespace ZGame.Editor.ResBuild
                         name = VARIABLE.builds[i].assetBundleName.ToLower(),
                         version = crc,
                         owner = packageListManifest.name,
-                        files = VARIABLE.builds[i].assetNames.Select(x => x.Replace("\\", "/")).ToArray()
+                        files = VARIABLE.builds[i].assetNames.Select(x => x.Replace("\\", "/")).ToArray(),
+                        dependencies = dependencies,
                     };
                 }
 
@@ -131,7 +132,7 @@ namespace ZGame.Editor.ResBuild
 
             foreach (var VARIABLE in packageListManifests)
             {
-                File.WriteAllText($"{output}/{VARIABLE.name}.ini", JsonConvert.SerializeObject(VARIABLE));
+                File.WriteAllText($"{output}/{VARIABLE.name.ToLower()}.ini", JsonConvert.SerializeObject(VARIABLE));
             }
 
             return packageListManifests;

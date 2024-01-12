@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -45,8 +46,8 @@ namespace ZGame.Config
             TextAsset asset = default;
             if (url.StartsWith("http"))
             {
-                string data = await NetworkManager.Get<string>(url);
-                asset = new TextAsset(data);
+                byte[] data = await Request.GetStreamingAsset(url);
+                asset = new TextAsset(UTF8Encoding.UTF8.GetString(data));
             }
             else
             {

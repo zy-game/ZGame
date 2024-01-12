@@ -73,8 +73,7 @@ namespace ZGame.Window
         /// <returns></returns>
         public UIBase Open(Type type, string resPath, params object[] args)
         {
-            Debug.Log(typeof(UIBase).IsAssignableFrom(type));
-            if (type is null || type.IsInterface || type.IsAbstract)
+            if (type is null || typeof(UIBase).IsAssignableFrom(type) is false || type.IsInterface || type.IsAbstract)
             {
                 return default;
             }
@@ -143,7 +142,7 @@ namespace ZGame.Window
         public void Active(Type type, params object[] args)
         {
             UIBase uiBase = GetWindow(type);
-            if (uiBase is null || uiBase.gameObject.activeSelf)
+            if (uiBase is null)
             {
                 return;
             }
@@ -168,7 +167,7 @@ namespace ZGame.Window
         public void Inactive(Type type)
         {
             UIBase uiBase = GetWindow(type);
-            if (uiBase is null || uiBase.gameObject.activeSelf is false)
+            if (uiBase is null)
             {
                 return;
             }

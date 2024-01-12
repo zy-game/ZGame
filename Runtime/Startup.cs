@@ -27,9 +27,8 @@ public class Startup : MonoBehaviour
         }
 
         Debug.Log(BasicConfig.instance.curEntry.entryName);
-        await PackageManifestManager.instance.Setup(BasicConfig.instance.curEntry);
-        await ResourceManager.instance.CheckUpdateResourcePackageList(BasicConfig.instance.curEntry);
-        await ResourceManager.instance.LoadingResourcePackageList(BasicConfig.instance.curEntry);
+        await PackageManifestManager.instance.Setup(BasicConfig.instance.curEntry.module);
+        await ResourceManager.instance.PerloadingResourcePackageList(BasicConfig.instance.curEntry.module);
         await GameManager.instance.EntryGame(BasicConfig.instance.curEntry);
     }
 }

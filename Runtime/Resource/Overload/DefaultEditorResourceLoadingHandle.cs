@@ -14,7 +14,7 @@ namespace ZGame.Resource
 
         public DefaultEditorResourceLoadingHandle()
         {
-            ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(handleName, true));
+            PackageHandleCache.instance.Add(new PackageHandle(handleName, true));
         }
 
         public bool Contains(string path)
@@ -27,29 +27,27 @@ namespace ZGame.Resource
 
         public void Dispose()
         {
-            ResourceManager.instance.RemoveResourcePackageHandle(handleName);
+            PackageHandleCache.instance.Remove(handleName);
             GC.SuppressFinalize(this);
         }
 
         public ResHandle LoadAsset(string path)
         {
 #if UNITY_EDITOR
-            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
-            if (_handle is null)
+            if (ResHandleCache.instance.TryGetValue(handleName, path, out ResHandle handle))
             {
-                return default;
+                return handle;
             }
 
-            if (_handle.TryGetValue(path, out ResHandle resHandle))
+            if (PackageHandleCache.instance.TryGetValue(handleName, out PackageHandle _handle) is false)
             {
-                return resHandle;
+                return default;
             }
 
             Debug.Log("Load Assets:" + path);
             if (path.EndsWith(".unity"))
             {
-                _handle.Setup(resHandle = ResHandle.OnCreate(_handle, null, path));
-                return resHandle;
+                return ResHandle.OnCreate(_handle, null, path);
             }
 
             var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
@@ -58,8 +56,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            _handle.Setup(resHandle = ResHandle.OnCreate(_handle, asset, path));
-            return resHandle;
+            return ResHandle.OnCreate(_handle, asset, path);
 #endif
             return default;
         }
@@ -67,21 +64,19 @@ namespace ZGame.Resource
         public async UniTask<ResHandle> LoadAssetAsync(string path)
         {
 #if UNITY_EDITOR
-            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
-            if (_handle is null)
+            if (ResHandleCache.instance.TryGetValue(handleName, path, out ResHandle handle))
+            {
+                return handle;
+            }
+
+            if (PackageHandleCache.instance.TryGetValue(handleName, out PackageHandle _handle) is false)
             {
                 return default;
             }
 
-            if (_handle.TryGetValue(path, out ResHandle resHandle))
-            {
-                return resHandle;
-            }
-
             if (path.EndsWith(".unity"))
             {
-                _handle.Setup(resHandle = ResHandle.OnCreate(_handle, null, path));
-                return resHandle;
+                return ResHandle.OnCreate(_handle, null, path);
             }
 
             UnityEngine.Object asset = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(UnityEngine.Object));
@@ -90,8 +85,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            _handle.Setup(resHandle = ResHandle.OnCreate(_handle, asset, path));
-            return resHandle;
+            return ResHandle.OnCreate(_handle, asset, path);
 #endif
             return default;
         }

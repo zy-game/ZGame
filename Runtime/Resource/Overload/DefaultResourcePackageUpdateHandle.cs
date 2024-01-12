@@ -21,25 +21,24 @@ namespace ZGame.Resource
         {
         }
 
-        public async UniTask UpdateResourcePackageList(EntryConfig config)
+        public async UniTask UpdateResourcePackageList(List<ResourcePackageManifest> manifests)
         {
-            UILoading.SetTitle(Localliztion.Get(100000));
-            UILoading.SetProgress(0);
             HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
             HashSet<string> failure = new HashSet<string>();
-            List<ResourcePackageManifest> result = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
-            foreach (var packageManifest in result)
+            foreach (var packageManifest in manifests)
             {
                 if (downloadList.Contains(packageManifest))
                 {
                     continue;
                 }
 
-                string url = OSSConfig.instance.GetFilePath(config.ossTitle, packageManifest.name);
+                string url = OSSConfig.instance.GetFilePath(packageManifest.name);
                 using (UnityWebRequest request = UnityWebRequest.Get(url))
                 {
                     request.timeout = 5;
                     request.useHttpContinue = true;
+                    request.disposeUploadHandlerOnDispose = true;
+                    request.disposeDownloadHandlerOnDispose = true;
                     UILoading.SetTitle(Path.GetFileName(url));
                     await request.SendWebRequest().ToUniTask(UILoading.Show());
                     UILoading.SetProgress(1);

@@ -22,6 +22,7 @@ namespace ZGame.Game
 
         public static T Create<T>(string name, string modelPath) where T : Actorable
         {
+            Debug.Log(modelPath);
             ResHandle handle = ResourceManager.instance.LoadAsset(modelPath);
             if (handle.IsSuccess() is false || handle.Is<GameObject>() is false)
             {

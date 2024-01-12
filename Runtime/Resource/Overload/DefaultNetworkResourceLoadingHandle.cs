@@ -13,7 +13,7 @@ namespace ZGame.Resource
 
         public DefaultNetworkResourceLoadingHandle()
         {
-            ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(handleName, true));
+            PackageHandleCache.instance.Add(new PackageHandle(handleName, true));
         }
 
         public bool Contains(string path)
@@ -28,7 +28,7 @@ namespace ZGame.Resource
 
         public void Dispose()
         {
-            ResourceManager.instance.RemoveResourcePackageHandle(handleName);
+            PackageHandleCache.instance.Remove(handleName);
             GC.SuppressFinalize(this);
         }
 
@@ -44,15 +44,14 @@ namespace ZGame.Resource
                 return default;
             }
 
-            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
-            if (_handle is null)
+            if (ResHandleCache.instance.TryGetValue(handleName, path, out ResHandle handle))
             {
-                return default;
+                return handle;
             }
 
-            if (_handle.TryGetValue(path, out ResHandle resHandle))
+            if (PackageHandleCache.instance.TryGetValue(handleName, out var _handle) is false)
             {
-                return resHandle;
+                return default;
             }
 
             UnityEngine.Object asset = default;
@@ -66,6 +65,9 @@ namespace ZGame.Resource
                 case ".bmp":
                 case ".tga":
                     request = UnityWebRequestTexture.GetTexture(path);
+                    request.useHttpContinue = true;
+                    request.disposeUploadHandlerOnDispose = true;
+                    request.disposeDownloadHandlerOnDispose = true;
                     await request.SendWebRequest().ToUniTask();
                     if (request.result is not UnityWebRequest.Result.Success)
                     {
@@ -83,6 +85,9 @@ namespace ZGame.Resource
                         ".wav" => AudioType.WAV,
                         ".ogg" => AudioType.OGGVORBIS,
                     });
+                    request.useHttpContinue = true;
+                    request.disposeUploadHandlerOnDispose = true;
+                    request.disposeDownloadHandlerOnDispose = true;
                     await request.SendWebRequest().ToUniTask();
                     if (request.result is not UnityWebRequest.Result.Success)
                     {
@@ -94,6 +99,9 @@ namespace ZGame.Resource
                 case ".txt":
                 case ".json":
                     request = UnityWebRequest.Get(path);
+                    request.useHttpContinue = true;
+                    request.disposeUploadHandlerOnDispose = true;
+                    request.disposeDownloadHandlerOnDispose = true;
                     await request.SendWebRequest().ToUniTask();
                     if (request.result is not UnityWebRequest.Result.Success)
                     {
@@ -104,8 +112,7 @@ namespace ZGame.Resource
                     break;
             }
 
-            _handle.Setup(resHandle = ResHandle.OnCreate(_handle, asset, path));
-            return resHandle;
+            return ResHandle.OnCreate(_handle, asset, path);
         }
 
         public void Release(string handle)

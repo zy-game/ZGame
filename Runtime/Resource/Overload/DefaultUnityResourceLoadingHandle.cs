@@ -11,7 +11,7 @@ namespace ZGame.Resource
 
         public DefaultUnityResourceLoadingHandle()
         {
-            ResourceManager.instance.AddResourcePackageHandle(new ResPackageHandle(handleName, true));
+            PackageHandleCache.instance.Add(new PackageHandle(handleName, true));
         }
 
         public bool Contains(string path)
@@ -21,7 +21,7 @@ namespace ZGame.Resource
 
         public void Dispose()
         {
-            ResourceManager.instance.RemoveResourcePackageHandle(handleName);
+            PackageHandleCache.instance.Remove(handleName);
             GC.SuppressFinalize(this);
         }
 
@@ -32,25 +32,24 @@ namespace ZGame.Resource
                 return default;
             }
 
-            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
-            if (_handle is null)
+            if (ResHandleCache.instance.TryGetValue(handleName, path, out ResHandle handle))
             {
-                return default;
+                return handle;
             }
 
-            if (_handle.TryGetValue(path, out ResHandle resHandle))
+            if (PackageHandleCache.instance.TryGetValue(handleName, out var _handle) is false)
             {
-                return resHandle;
+                return default;
             }
 
             var asset = Resources.Load(path.Substring(10));
             if (asset == null)
             {
+                Debug.Log("资源加载失败");
                 return default;
             }
 
-            _handle.Setup(resHandle = ResHandle.OnCreate(_handle, asset, path));
-            return resHandle;
+            return ResHandle.OnCreate(_handle, asset, path);
         }
 
         public async UniTask<ResHandle> LoadAssetAsync(string path)
@@ -60,26 +59,23 @@ namespace ZGame.Resource
                 return default;
             }
 
-            ResPackageHandle _handle = ResourceManager.instance.GetResourcePackageHandle(handleName);
-            if (_handle is null)
+            if (ResHandleCache.instance.TryGetValue(handleName, path, out ResHandle handle))
+            {
+                return handle;
+            }
+
+            if (PackageHandleCache.instance.TryGetValue(handleName, out var _handle) is false)
             {
                 return default;
             }
 
-            if (_handle.TryGetValue(path, out ResHandle resHandle))
-            {
-                return resHandle;
-            }
-
             UnityEngine.Object asset = await Resources.LoadAsync(path.Substring(10)).ToUniTask();
-
             if (asset == null)
             {
                 return default;
             }
 
-            _handle.Setup(resHandle = ResHandle.OnCreate(_handle, asset, path));
-            return resHandle;
+            return ResHandle.OnCreate(_handle, asset, path);
         }
 
         public void Release(string handle)

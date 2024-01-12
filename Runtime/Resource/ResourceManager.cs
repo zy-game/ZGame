@@ -11,12 +11,6 @@ using ZGame.Window;
 
 namespace ZGame.Resource
 {
-    class UnloadQueueTask
-    {
-        public float time;
-        public ResPackageHandle handle;
-    }
-
     /// <summary>
     /// 资源管理器
     /// </summary>
@@ -25,13 +19,9 @@ namespace ZGame.Resource
         private IResourcePackageUpdateHandle _resourcePackageUpdateHandle;
         private IResourcePackageLoadingHandle _resourceResourcePackageLoadingHandle;
         private List<IResourceLoadingHandle> _resourceLoadingHandles = new List<IResourceLoadingHandle>();
-        private List<ResPackageHandle> _handles = new List<ResPackageHandle>();
-        private List<UnloadQueueTask> unloadList = new List<UnloadQueueTask>();
-        private float checkTime = 0;
 
         protected override void OnAwake()
         {
-            MoveNextTime();
             SetResourceUpdateHandle<DefaultResourcePackageUpdateHandle>();
             SetupResourceBundleLoadingHandle<DefaultResourcePackageLoadingHandle>();
             SetupResourceLoadingHandle<DefaultUnityResourceLoadingHandle>();
@@ -48,103 +38,12 @@ namespace ZGame.Resource
 
         protected override void OnDestroy()
         {
-            _handles.ForEach(x => x.Dispose());
-            _handles.Clear();
             _resourceLoadingHandles.ForEach(x => x.Dispose());
             _resourceResourcePackageLoadingHandle.Dispose();
             _resourcePackageUpdateHandle.Dispose();
             _resourceLoadingHandles.Clear();
             _resourceResourcePackageLoadingHandle = null;
             _resourcePackageUpdateHandle = null;
-        }
-
-        private void MoveNextTime()
-        {
-            checkTime = Time.realtimeSinceStartup + BasicConfig.instance.curEntry.unloadInterval;
-        }
-
-        protected override void OnUpdate()
-        {
-            // if (Time.realtimeSinceStartup < checkTime)
-            // {
-            //     return;
-            // }
-            //
-            // MoveNextTime();
-            //
-            // //todo 检查是否需要卸载资源包
-            // for (int i = 0; i < _handles.Count; i++)
-            // {
-            //     if (_handles[i].refCount > 0 || _handles[i].DefaultPackage)
-            //     {
-            //         continue;
-            //     }
-            //
-            //     //todo 加入待卸载列表
-            //     unloadList.Add(new UnloadQueueTask()
-            //     {
-            //         handle = _handles[i],
-            //         time = Time.realtimeSinceStartup + BasicConfig.instance.curEntry.unloadInterval
-            //     });
-            //     _handles.Remove(_handles[i]);
-            // }
-            //
-            // //todo 卸载资源包
-            // for (int i = 0; i < unloadList.Count; i++)
-            // {
-            //     if (unloadList[i].time > Time.realtimeSinceStartup)
-            //     {
-            //         continue;
-            //     }
-            //
-            //     unloadList[i].handle.Dispose();
-            //     unloadList.RemoveAt(i);
-            //     i--;
-            // }
-        }
-
-        public void AddResourcePackageHandle(ResPackageHandle handle)
-        {
-            _handles.Add(handle);
-        }
-
-        public void RemoveResourcePackageHandle(string name)
-        {
-            ResPackageHandle handle = _handles.Find(x => x.name == name);
-            if (handle is null)
-            {
-                return;
-            }
-
-            _handles.Remove(handle);
-            handle.Dispose();
-        }
-
-        public ResPackageHandle GetResourcePackageHandle(string name)
-        {
-            ResPackageHandle handle = _handles.Find(x => x.name == name);
-            if (handle is null)
-            {
-                UnloadQueueTask task = unloadList.Find(x => x.handle.name == name);
-                if (task != null)
-                {
-                    _handles.Add(task.handle);
-                    unloadList.Remove(task);
-                }
-            }
-
-            return handle;
-        }
-
-        public ResPackageHandle GetResourcePackageHandleWithAssetPath(string path)
-        {
-            ResourcePackageManifest manifest = PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path);
-            if (manifest is null)
-            {
-                return default;
-            }
-
-            return GetResourcePackageHandle(manifest.name);
         }
 
         /// <summary>
@@ -354,25 +253,72 @@ namespace ZGame.Resource
         }
 
         /// <summary>
+        /// 预加载资源包列表
+        /// </summary>
+        /// <param name="progressCallback"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public async UniTask PerloadingResourcePackageList(string configName)
+        {
+            if (configName.IsNullOrEmpty())
+            {
+                throw new ArgumentNullException("configName");
+            }
+
+            await UpdateResourcePackageList(configName);
+            await LoadingResourcePackageList(configName);
+        }
+
+        /// <summary>
         /// 加载资源包列表
         /// </summary>
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async UniTask LoadingResourcePackageList(EntryConfig config)
+        public async UniTask LoadingResourcePackageList(string configName)
         {
-            if (config is null)
+            if (configName.IsNullOrEmpty())
             {
-                throw new ArgumentNullException("config");
+                throw new ArgumentNullException("configName");
             }
-#if UNITY_EDITOR
-            if (BasicConfig.instance.resMode == ResourceMode.Editor)
-            {
-                return;
-            }
-#endif
 
-            await _resourceResourcePackageLoadingHandle.LoadingResourcePackageList(config);
+            UILoading.SetTitle("正在加载资源信息...");
+            UILoading.SetProgress(0);
+            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(configName);
+            if (manifests is null || manifests.Count == 0)
+            {
+                UILoading.SetTitle("资源加载完成...");
+                UILoading.SetProgress(1);
+            }
+
+            await _resourceResourcePackageLoadingHandle.LoadingPackageListAsync(manifests.ToArray());
+        }
+
+        public void LoadingResourcePackageListSync(string configName)
+        {
+            if (configName.IsNullOrEmpty())
+            {
+                throw new ArgumentNullException("configName");
+            }
+
+            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(configName);
+            if (manifests is null || manifests.Count == 0)
+            {
+                UILoading.SetTitle("资源加载完成...");
+                UILoading.SetProgress(1);
+            }
+
+            _resourceResourcePackageLoadingHandle.LoadingPackageListSync(manifests.ToArray());
+        }
+
+        public void LoadingPackageListSync(params ResourcePackageManifest[] manifest)
+        {
+            _resourceResourcePackageLoadingHandle.LoadingPackageListSync(manifest);
+        }
+
+        public async UniTask LoadingPackageListAsync(params ResourcePackageManifest[] manifest)
+        {
+            await _resourceResourcePackageLoadingHandle.LoadingPackageListAsync(manifest);
         }
 
         /// <summary>
@@ -381,40 +327,32 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <exception cref="NullReferenceException"></exception>
-        public async UniTask CheckUpdateResourcePackageList(EntryConfig config)
+        public async UniTask UpdateResourcePackageList(string configName)
         {
-            if (config is null)
+            if (configName.IsNullOrEmpty())
             {
-                throw new ArgumentNullException("args");
+                throw new ArgumentNullException("configName");
             }
-#if UNITY_EDITOR
-            if (BasicConfig.instance.resMode == ResourceMode.Editor)
+
+            UILoading.SetTitle("检查资源配置...");
+            UILoading.SetProgress(0);
+            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.CheckNeedUpdatePackageList(configName);
+            if (manifests is null || manifests.Count == 0)
             {
-                return;
+                UILoading.SetTitle("资源更新完成...");
+                UILoading.SetProgress(1);
             }
-#endif
-            await _resourcePackageUpdateHandle.UpdateResourcePackageList(config);
+
+            await _resourcePackageUpdateHandle.UpdateResourcePackageList(manifests);
         }
 
         /// <summary>
-        /// 回收资源
+        /// 卸载资源包列表
         /// </summary>
-        /// <param name="obj"></param>
-        public void ReleaseAsset(ResHandle obj)
+        /// <param name="packageName"></param>
+        /// <param name="isUnloadDependenecis"></param>
+        public void UnloadPackageList(string packageName, bool isUnloadDependenecis = true)
         {
-            ReleaseAsset(obj.path);
-        }
-
-        public void ReleaseAsset(string path)
-        {
-            ResPackageHandle packageHandle = GetResourcePackageHandleWithAssetPath(path);
-            if (packageHandle is null)
-            {
-                _resourceLoadingHandles.ForEach(x => x.Release(path));
-                return;
-            }
-
-            packageHandle.Release(path);
         }
     }
 }

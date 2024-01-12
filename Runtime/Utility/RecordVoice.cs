@@ -1,8 +1,6 @@
 using System;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using Google.Protobuf;
-using Inworld;
 using UnityEngine;
 
 namespace ZGame
@@ -107,6 +105,11 @@ namespace ZGame
 
         public AudioClip GetVoiceAudioClip()
         {
+            if (m_resultClip == null)
+            {
+                return default;
+            }
+
             float[] simples = new float[m_resultClip.samples];
             byte[] chunk = new byte[position * sizeof(short)];
             m_resultClip.GetData(simples, 0);

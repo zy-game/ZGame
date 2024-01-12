@@ -1,30 +1,33 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ZGame.Resource
 {
     public class ResourcePackageListManifest
     {
+        /// <summary>
+        /// 资源列表名
+        /// </summary>
         public string name;
+
+        /// <summary>
+        /// 资源列表版本
+        /// </summary>
         public uint version;
+
+        /// <summary>
+        /// 引用的资源模块
+        /// </summary>
         public List<string> dependencies;
+
+        /// <summary>
+        /// 资源包列表
+        /// </summary>
         public ResourcePackageManifest[] packages;
 
         public bool Contains(string name)
         {
-            return GetPackageManifest(name) is not null;
-        }
-
-        public ResourcePackageManifest GetPackageManifest(string name)
-        {
-            for (int i = 0; i < packages.Length; i++)
-            {
-                if (packages[i].name == name)
-                {
-                    return packages[i];
-                }
-            }
-
-            return default;
+            return packages.FirstOrDefault(x => x.name == name) is not null;
         }
     }
 }

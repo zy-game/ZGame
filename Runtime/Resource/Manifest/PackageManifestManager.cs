@@ -13,13 +13,13 @@ namespace ZGame.Resource
 {
     public class PackageManifestManager : Singleton<PackageManifestManager>
     {
-        private List<ResourcePackageListManifest> _manifests = new List<ResourcePackageListManifest>();
+        private List<ResourcePackageListManifest> _packageListManifests = new List<ResourcePackageListManifest>();
 
         /// <summary>
         /// 设置资源包模块
         /// </summary>
-        /// <param name="config"></param>
-        public async UniTask Setup(EntryConfig config)
+        /// <param name="packageName"></param>
+        public async UniTask Setup(string packageName)
         {
 #if UNITY_EDITOR
             if (BasicConfig.instance.resMode == ResourceMode.Editor)
@@ -27,58 +27,50 @@ namespace ZGame.Resource
                 return;
             }
 #endif
-
-
-            await Setup(config, config.module);
-        }
-
-        private async UniTask Setup(EntryConfig config, string packageName)
-        {
-            ResourcePackageListManifest resourcePackageListManifest = _manifests.Find(x => x.name == config.module);
+            ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is not null)
             {
                 return;
             }
 
-            string iniFilePath = OSSConfig.instance.GetFilePath(config.ossTitle, packageName + ".ini");
-            if (OSSConfig.instance.GetOSSType(config.ossTitle) == OSSType.Streaming && Application.isEditor)
+            string iniFilePath = OSSConfig.instance.GetFilePath(packageName + ".ini");
+            if (OSSConfig.instance.current.type == OSSType.Streaming && Application.isEditor)
             {
                 resourcePackageListManifest = JsonConvert.DeserializeObject<ResourcePackageListManifest>(File.ReadAllText(iniFilePath));
             }
             else
             {
-                resourcePackageListManifest = await NetworkManager.GetStreamingAsset<ResourcePackageListManifest>(iniFilePath);
+                resourcePackageListManifest = await Request.GetStreamingAsset<ResourcePackageListManifest>(iniFilePath);
             }
 
             if (resourcePackageListManifest is null)
             {
+                Debug.LogError("没有找到资源包列表配置文件：" + iniFilePath);
                 return;
             }
 
-            _manifests.Add(resourcePackageListManifest);
-            if (resourcePackageListManifest.dependencies is null || resourcePackageListManifest.dependencies.Count == 0)
+            _packageListManifests.Add(resourcePackageListManifest);
+            if (resourcePackageListManifest.dependencies is not null && resourcePackageListManifest.dependencies.Count > 0)
             {
-                return;
-            }
-
-            foreach (var VARIABLE in resourcePackageListManifest.dependencies)
-            {
-                await Setup(config, VARIABLE);
+                foreach (var VARIABLE in resourcePackageListManifest.dependencies)
+                {
+                    await Setup(VARIABLE);
+                }
             }
         }
 
-        public uint GetResourcePackageVersion(string packageName)
+        public ResourcePackageManifest GetResourcePackageManifest(string packageName)
         {
-            foreach (var VARIABLE in _manifests)
+            ResourcePackageManifest manifest = default;
+            foreach (var VARIABLE in _packageListManifests)
             {
-                ResourcePackageManifest resourcePackageManifest = VARIABLE.GetPackageManifest(packageName);
-                if (resourcePackageManifest is not null)
+                if ((manifest = VARIABLE.packages.FirstOrDefault(x => x.name == packageName)) != null)
                 {
-                    return resourcePackageManifest.version;
+                    break;
                 }
             }
 
-            return 0;
+            return manifest;
         }
 
         /// <summary>
@@ -88,9 +80,9 @@ namespace ZGame.Resource
         /// <returns></returns>
         public ResourcePackageManifest GetResourcePackageManifestWithAssetName(string assetName)
         {
-            foreach (var VARIABLE in _manifests)
+            foreach (var VARIABLE in _packageListManifests)
             {
-                var m = VARIABLE.packages.FirstOrDefault(x => x.files.Contains(assetName));
+                var m = VARIABLE.packages.FirstOrDefault(x => x.Contains(assetName));
                 if (m is not null)
                 {
                     return m;
@@ -108,7 +100,14 @@ namespace ZGame.Resource
         public List<ResourcePackageManifest> CheckNeedUpdatePackageList(string packageName)
         {
             List<ResourcePackageManifest> needUpdatePackages = new List<ResourcePackageManifest>();
-            ResourcePackageListManifest resourcePackageListManifest = _manifests.Find(x => x.name == packageName);
+#if UNITY_EDITOR
+            if (BasicConfig.instance.resMode == ResourceMode.Editor)
+            {
+                return needUpdatePackages;
+            }
+#endif
+
+            ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is null)
             {
                 return needUpdatePackages;
@@ -143,7 +142,14 @@ namespace ZGame.Resource
         public List<ResourcePackageManifest> GetResourcePackageAndDependencyList(string packageName)
         {
             List<ResourcePackageManifest> result = new List<ResourcePackageManifest>();
-            ResourcePackageListManifest resourcePackageListManifest = _manifests.Find(x => x.name == packageName);
+#if UNITY_EDITOR
+            if (BasicConfig.instance.resMode == ResourceMode.Editor)
+            {
+                return result;
+            }
+#endif
+
+            ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is null)
             {
                 return result;

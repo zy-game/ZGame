@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using Cysharp.Threading.Tasks;
-using Inworld;
 using Newtonsoft.Json;
 using ProtoBuf;
 using ProtoBuf.Meta;
@@ -182,89 +181,6 @@ namespace ZGame.Networking
             dispatcher.ReceiveHandle(channel, opcode, memoryStream);
         }
 
-        public static async UniTask<T> Get<T>(string url)
-        {
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
-            {
-                Debug.Log($"{url}");
-                request.useHttpContinue = true;
-                request.SetRequestHeader("Content-Type", "application/json");
-                await request.SendWebRequest().ToUniTask();
-                Debug.Log($"GET:{url} result:{request.downloadHandler.text}");
-                T result = request.GetData<T>();
-                request.Dispose();
-                return result;
-            }
-        }
-
-        public static async UniTask<T> Post<T>(string url, object data, Dictionary<string, object> headers = null)
-        {
-            string str = data is string ? data as string : JsonConvert.SerializeObject(data);
-            using (UnityWebRequest request = UnityWebRequest.Post(url, str))
-            {
-                request.useHttpContinue = true;
-                request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str));
-                request.SetRequestHeader("Content-Type", "application/json");
-                if (headers is not null)
-                {
-                    foreach (var VARIABLE in headers)
-                    {
-                        request.SetRequestHeader(VARIABLE.Key, VARIABLE.Value.ToString());
-                    }
-                }
-
-                await request.SendWebRequest().ToUniTask();
-                // Debug.Log($"POST:{url} result:{request.downloadHandler.text}");
-                T result = request.GetData<T>();
-                request.Dispose();
-                return result;
-            }
-        }
-
-        public static async UniTask<string> Head(string url, string headName)
-        {
-            using (UnityWebRequest request = UnityWebRequest.Head(url))
-            {
-                request.useHttpContinue = true;
-                await request.SendWebRequest().ToUniTask();
-                Debug.Log($"HEAD:{url} result:{request.downloadHandler.text}");
-                string result = request.GetResponseHeader(headName);
-                request.Dispose();
-                return result;
-            }
-        }
-
-        public static async UniTask<AudioClip> GetAudioClip(string url)
-        {
-            using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.MPEG))
-            {
-                request.useHttpContinue = true;
-                AudioClip result = default;
-                
-                await request.SendWebRequest().ToUniTask();
-                if (request.result is not UnityWebRequest.Result.Success)
-                {
-                    return default;
-                }
-
-
-                result = DownloadHandlerAudioClip.GetContent(request);
-                result.name = url;
-                return result;
-            }
-        }
-
-        public static async UniTask<T> GetStreamingAsset<T>(string url)
-        {
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
-            {
-                Debug.Log(url);
-                request.useHttpContinue = true;
-                await request.SendWebRequest().ToUniTask();
-                Debug.Log($"GET:{url} result:{request.downloadHandler.text}");
-                T result = JsonConvert.DeserializeObject<T>(DownloadHandlerBuffer.GetContent(request));
-                return result;
-            }
-        }
+        
     }
 }
