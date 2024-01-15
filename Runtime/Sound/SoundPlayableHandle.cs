@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using ZGame.Resource;
 
@@ -11,7 +12,7 @@ namespace ZGame.Sound
         private AudioPlayable current;
         private Queue<AudioPlayable> waiting;
         public string name => _source.name;
-        
+
         public bool isPlaying
         {
             get
@@ -100,6 +101,34 @@ namespace ZGame.Sound
             }
 
             Player(playable);
+        }
+
+        public UniTask Play(string clipName)
+        {
+            UniTaskCompletionSource playCallback = new UniTaskCompletionSource();
+            AudioPlayable playable = new AudioPlayable(clipName, playCallback);
+            if (current is not null)
+            {
+                waiting.Enqueue(playable);
+                return playCallback.Task;
+            }
+
+            Player(playable);
+            return playCallback.Task;
+        }
+
+        public UniTask Play(AudioClip clip)
+        {
+            UniTaskCompletionSource playCallback = new UniTaskCompletionSource();
+            AudioPlayable playable = new AudioPlayable(clip, playCallback);
+            if (current is not null)
+            {
+                waiting.Enqueue(playable);
+                return playCallback.Task;
+            }
+
+            Player(playable);
+            return playCallback.Task;
         }
 
         private void Player(AudioPlayable playable)

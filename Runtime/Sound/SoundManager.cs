@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using ZGame;
 using ZGame.Resource;
@@ -112,6 +113,28 @@ namespace ZGame.Sound
             }
 
             handle.Play(clip, playCallback);
+        }
+
+        public UniTask PlayEffectSoundAsync(string clipName)
+        {
+            SoundPlayableHandle handle = GetPlayer(EFFECT_SOUND);
+            if (handle is null)
+            {
+                return default;
+            }
+
+            return handle.Play(clipName);
+        }
+
+        public UniTask PlayEffectSoundAsync(AudioClip clip)
+        {
+            SoundPlayableHandle handle = GetPlayer(EFFECT_SOUND);
+            if (handle is null)
+            {
+                return default;
+            }
+
+            return handle.Play(clip);
         }
 
         public void PauseSound(string clipName)

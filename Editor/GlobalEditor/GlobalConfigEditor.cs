@@ -58,11 +58,13 @@ namespace ZGame.Editor
                 if (curIndex >= 0 && curIndex < OSSConfig.instance.ossList.Count && last != curIndex)
                 {
                     OSSConfig.instance.seletion = OSSConfig.instance.ossList[curIndex].title;
+                    OSSConfig.OnSave();
                 }
             }
 
             if (EditorGUI.EndChangeCheck())
             {
+                OSSConfig.OnSave();
                 BasicConfig.OnSave();
             }
 

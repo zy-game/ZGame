@@ -21,7 +21,7 @@ namespace ZGame.Game
         private Gradient sunshineGradient;
         private List<Tuple<int, Camera>> subCameras = new();
         private UniversalAdditionalCameraData universalAdditionalCameraData;
-        private List<Actorable> _actors = new();
+        private List<ActorEntity> _actors = new();
 
         /// <summary>
         /// 世界名
@@ -267,24 +267,24 @@ namespace ZGame.Game
         }
 
         
-        public void SetActor(Actorable actor)
+        public void SetActor(ActorEntity actor)
         {
             _actors.Add(actor);
         }
 
-        public void RemoveActor(Actorable actor)
+        public void RemoveActor(ActorEntity actor)
         {
             _actors.Remove(actor);
         }
 
-        public Actorable GetActor(string name)
+        public ActorEntity GetActor(string name)
         {
             return _actors.Find(x => x.name == name);
         }
 
-        public Actorable CreateActor(string name, string modelPath)
+        public ActorEntity CreateActor(string name, string modelPath)
         {
-            Actorable actor = Actorable.Create<Actorable>(name, modelPath);
+            ActorEntity actor = ActorEntity.Create<ActorEntity>(name, modelPath);
             SetActor(actor);
             return actor;
         }

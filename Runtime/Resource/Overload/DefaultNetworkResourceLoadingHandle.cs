@@ -69,12 +69,11 @@ namespace ZGame.Resource
                     request.disposeUploadHandlerOnDispose = true;
                     request.disposeDownloadHandlerOnDispose = true;
                     await request.SendWebRequest().ToUniTask();
-                    if (request.result is not UnityWebRequest.Result.Success)
+                    if (request.result is UnityWebRequest.Result.Success)
                     {
-                        return default;
+                        asset = DownloadHandlerTexture.GetContent(request);
                     }
 
-                    asset = DownloadHandlerTexture.GetContent(request);
                     break;
                 case ".mp3":
                 case ".wav":
@@ -89,12 +88,11 @@ namespace ZGame.Resource
                     request.disposeUploadHandlerOnDispose = true;
                     request.disposeDownloadHandlerOnDispose = true;
                     await request.SendWebRequest().ToUniTask();
-                    if (request.result is not UnityWebRequest.Result.Success)
+                    if (request.result is UnityWebRequest.Result.Success)
                     {
-                        return default;
+                        asset = DownloadHandlerAudioClip.GetContent(request);
                     }
 
-                    asset = DownloadHandlerAudioClip.GetContent(request);
                     break;
                 case ".txt":
                 case ".json":
@@ -103,15 +101,15 @@ namespace ZGame.Resource
                     request.disposeUploadHandlerOnDispose = true;
                     request.disposeDownloadHandlerOnDispose = true;
                     await request.SendWebRequest().ToUniTask();
-                    if (request.result is not UnityWebRequest.Result.Success)
+                    if (request.result is UnityWebRequest.Result.Success)
                     {
-                        return default;
+                        asset = new TextAsset(request.downloadHandler.text);
                     }
 
-                    asset = new TextAsset(request.downloadHandler.text);
                     break;
             }
 
+            request.Dispose();
             return ResHandle.OnCreate(_handle, asset, path);
         }
 

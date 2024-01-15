@@ -88,7 +88,7 @@ namespace ZGame.IM
         /// 关闭会话
         /// </summary>
         /// <param name="id"></param>
-        public void CloseSession(string id)
+        public void Close(string id)
         {
             if (id.IsNullOrEmpty())
             {

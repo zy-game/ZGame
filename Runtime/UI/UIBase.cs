@@ -1,9 +1,70 @@
 using System;
+using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ZGame.Window
 {
+    public class CountDownHelper : IDisposable
+    {
+        private TMP_Text _text;
+        private int _count;
+        private int _interval;
+        private string _format;
+        private Action _onFinish;
+        private Coroutine _coroutine;
+
+        public CountDownHelper(TMP_Text tmpText, int count, int interval, string format, Action onFinish)
+        {
+            this._text = tmpText;
+            this._count = count;
+            this._interval = interval;
+            this._format = format;
+            this._onFinish = onFinish;
+        }
+
+        public void OnStart()
+        {
+            this._coroutine = UIManager.instance.StartCoroutine(this.StartCountDown());
+        }
+
+        private IEnumerator StartCountDown()
+        {
+            while (this._count > 0)
+            {
+                this._count--;
+                this._text.text = string.Format(_format, this._count);
+                yield return new WaitForSeconds(this._interval);
+            }
+
+            if (this._onFinish != null)
+            {
+                this._onFinish();
+            }
+
+            this._text.text = "";
+        }
+
+        public void Dispose()
+        {
+            if (this._coroutine == null)
+            {
+                return;
+            }
+
+            UIManager.instance.StopCoroutine(this._coroutine);
+            this._coroutine = null;
+            this._onFinish = null;
+            this._text = null;
+            this._count = 0;
+            this._interval = 0;
+            this._format = null;
+            GC.SuppressFinalize(this);
+        }
+    }
+
+
     /// <summary>
     /// UI界面
     /// </summary>
@@ -13,6 +74,9 @@ namespace ZGame.Window
         public GameObject gameObject { get; }
         public Transform transform { get; }
         public RectTransform rect_transform { get; }
+
+        private CountDownHelper countDownHelper;
+
 
         public UIBase(GameObject gameObject)
         {
@@ -48,15 +112,32 @@ namespace ZGame.Window
         /// </summary>
         public virtual void Dispose()
         {
+            this.StopCountDown();
         }
 
-
-        public void StartCountDown(int count, float interval)
+        public void StartCountDown(TMP_Text tmp_text, int count, int interval, string format, Action onFinish)
         {
+            this.countDownHelper = new CountDownHelper(tmp_text, count, interval, format, onFinish);
+            this.countDownHelper.OnStart();
         }
 
         public void StopCountDown()
         {
+            if (this.countDownHelper != null)
+            {
+                this.countDownHelper.Dispose();
+                this.countDownHelper = null;
+            }
+        }
+
+        public Coroutine StartCoroutine(IEnumerator enumerator)
+        {
+            return UIManager.instance.StartCoroutine(enumerator);
+        }
+
+        public void StopCoroutine(Coroutine coroutine)
+        {
+            UIManager.instance.StopCoroutine(coroutine);
         }
     }
 }

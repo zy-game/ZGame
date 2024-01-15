@@ -43,6 +43,8 @@ namespace ZGame
         {
             get { return items.Count; }
         }
+        
+    
 
         public override string ToString()
         {

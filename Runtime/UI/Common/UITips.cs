@@ -35,6 +35,7 @@ namespace UI
             yield return new WaitForSeconds(time);
             UIManager.instance.Close<UITips>();
         }
+        
 
         public static void Show(string content, float timeout = 5)
         {

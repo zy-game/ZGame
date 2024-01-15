@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using ZGame.Resource;
 
@@ -25,6 +26,7 @@ namespace ZGame.Sound
         private PlayState _state;
         private ResHandle _resHandle;
         private Action<PlayState> callback;
+        private UniTaskCompletionSource taskCompletionSource;
 
         public AudioPlayable(string clipName, Action<PlayState> callback) : base(clipName)
         {
@@ -34,6 +36,17 @@ namespace ZGame.Sound
         public AudioPlayable(AudioClip clip, Action<PlayState> callback) : this(clip.name, callback)
         {
             this._clip = clip;
+        }
+
+        public AudioPlayable(AudioClip clip, UniTaskCompletionSource callback) : base(clip.name)
+        {
+            this._clip = clip;
+            taskCompletionSource = callback;
+        }
+
+        public AudioPlayable(string clip, UniTaskCompletionSource callback) : base(clip)
+        {
+            taskCompletionSource = callback;
         }
 
         private void Load()
@@ -51,6 +64,10 @@ namespace ZGame.Sound
         {
             _state = state;
             callback?.Invoke(state);
+            if (state == PlayState.Complete)
+            {
+                taskCompletionSource?.TrySetResult();
+            }
         }
 
         public override void Dispose()

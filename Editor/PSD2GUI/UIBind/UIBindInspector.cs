@@ -126,15 +126,27 @@ namespace ZGame.Editor.PSD2GUI
                     }
                 }
 
-                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.BeginVertical(ZStyle.ITEM_BACKGROUND_STYLE);
 
                 EditorGUILayout.BeginHorizontal();
-                GUILayout.Space(10);
+                GUILayout.Space(15);
                 options.isOn = EditorGUILayout.Foldout(options.isOn, "");
                 GUILayout.Space(-50);
-                options.target = EditorGUILayout.ObjectField(options.target, typeof(Object), true) as GameObject;
+                Object selection = EditorGUILayout.ObjectField(options.target, typeof(Object), true);
+                if (selection != null)
+                {
+                    GameObject target = selection as GameObject;
+                    if (options.target == null)
+                    {
+                        options.target = target;
+                        Debug.Log("初始化");
+                        OnDrawingBindItemData(options);
+                        EditorUtility.SetDirty(setting);
+                    }
+                }
+
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("", ZStyle.GUI_STYLE_MINUS))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     setting.options.Remove(options);
                     EditorUtility.SetDirty(setting);
@@ -148,6 +160,7 @@ namespace ZGame.Editor.PSD2GUI
                 }
 
                 options.name = options.name?.Replace(" ", "(", ")");
+
                 if (options.isOn)
                 {
                     OnDrawingBindItemData(setting.options[i]);
@@ -230,17 +243,12 @@ namespace ZGame.Editor.PSD2GUI
             }
 
             GUILayout.Space(10);
-            GetPath(options.target.transform, out string path);
-            options.path = path;
+            GetPath(options.target.transform, out options.path);
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Path", GUILayout.Width(110));
             GUILayout.Label(options.path);
             GUILayout.EndHorizontal();
-
-            List<Component> opComs = options.target.GetComponents<Component>().ToList();
-
-            options.selector.Add(opComs.Select(x => x.GetType().FullName).ToArray());
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Bind Components", GUILayout.Width(110));
@@ -250,12 +258,16 @@ namespace ZGame.Editor.PSD2GUI
             }
 
             GUILayout.EndHorizontal();
+            List<Component> opComs = options.target.GetComponents<Component>().ToList();
+            if (options.selector is null)
+            {
+                options.selector = new Selector();
+            }
 
 
-            if (opComs.Exists(x => x is Image) is false
-                && opComs.Exists(x => x is Text) is false
-                && opComs.Exists(x => x is TMP_Text) is false
-                && opComs.Exists(x => x is RawImage) is false)
+            options.selector.Add(opComs.Select(x => x.GetType().FullName).ToArray());
+
+            if (options.isText is false)
             {
                 return;
             }
