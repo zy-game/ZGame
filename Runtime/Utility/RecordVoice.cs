@@ -89,6 +89,7 @@ namespace ZGame
             m_isTiming = true;
             m_resultClip = Microphone.Start(_divName, false, _limit_time, _rate);
             m_startTime = Time.realtimeSinceStartup;
+            Debug.Log("Start Recording:" + _divName + " :" + Microphone.IsRecording(_divName));
         }
 
         public void End()
@@ -96,6 +97,7 @@ namespace ZGame
             _position = Microphone.GetPosition(_divName);
             Microphone.End(_divName);
             m_isTiming = false;
+            Debug.Log("End Recording:" + _divName + " :" + Microphone.IsRecording(_divName));
         }
 
         public void Clear()

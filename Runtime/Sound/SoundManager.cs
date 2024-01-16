@@ -16,7 +16,7 @@ namespace ZGame.Sound
 
         protected override void OnAwake()
         {
-            this.gameObject.AddComponent<AudioListener>();
+            BehaviourScriptable.instance.gameObject.AddComponent<AudioListener>();
             AddPlayer(BACK_MUSIC, true);
             AddPlayer(EFFECT_SOUND, false);
         }

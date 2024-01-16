@@ -46,8 +46,9 @@ namespace UI
                 {
                     VARIABLE.onClick.AddListener(() =>
                     {
-                        this.onYes();
-                        this.Dispose();
+                        this.onYes?.Invoke();
+                        this.Disable();
+                        OnShowMsgBox();
                     });
                 }
 
@@ -55,8 +56,9 @@ namespace UI
                 {
                     VARIABLE.onClick.AddListener(() =>
                     {
-                        this.onNo();
-                        this.Dispose();
+                        this.onNo?.Invoke();
+                        this.Disable();
+                        OnShowMsgBox();
                     });
                 }
             }
@@ -78,25 +80,25 @@ namespace UI
         {
             if (_msgQueue.Count == 0)
             {
+                if (_instance is not null)
+                {
+                    UIManager.instance.Close<UIMsgBox>();
+                    _instance = null;
+                }
+
                 return;
             }
 
             MsgData data = _msgQueue.Dequeue();
             string resPath = $"Resources/{BasicConfig.instance.curEntry.entryName}/MsgBox";
-            UIMsgBox _instance = UIManager.instance.Open<UIMsgBox>(resPath);
-            _instance.Enable(data.title, data.content, new Action(() =>
+            if (_instance is null)
             {
-                data.onYes();
-                _instance.Dispose();
-                _instance = null;
-                OnShowMsgBox();
-            }), new Action(() =>
+                _instance = UIManager.instance.Open<UIMsgBox>(resPath, data.title, data.content, data.onYes, data.onNo);
+            }
+            else
             {
-                data.onNo();
-                _instance.Dispose();
-                _instance = null;
-                OnShowMsgBox();
-            }));
+                _instance.Enable(data.title, data.content, data.onYes, data.onNo);
+            }
         }
 
         public static void Show(string title, string content, Action onYes, Action onNo)
@@ -118,17 +120,17 @@ namespace UI
 
         public static void Show(string content, Action onYes, Action onNo)
         {
-            Show("Tips", content, onYes, onNo);
+            Show("提示", content, onYes, onNo);
         }
 
         public static void Show(string content, Action onYes)
         {
-            Show("Tips", content, onYes, null);
+            Show("提示", content, onYes, null);
         }
 
         public static void Show(string content)
         {
-            Show("Tips", content, null, null);
+            Show("提示", content, null, null);
         }
     }
 }

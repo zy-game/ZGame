@@ -35,12 +35,12 @@ namespace UI
             yield return new WaitForSeconds(time);
             UIManager.instance.Close<UITips>();
         }
-        
+
 
         public static void Show(string content, float timeout = 5)
         {
             string resPath = $"Resources/{BasicConfig.instance.curEntry.entryName}/Tips";
-            UIManager.instance.Open<UITips>(resPath, content);
+            UIManager.instance.Open<UITips>(resPath, content, timeout);
         }
     }
 }

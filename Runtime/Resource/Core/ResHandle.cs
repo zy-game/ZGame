@@ -65,13 +65,13 @@ namespace ZGame.Resource
                 return;
             }
 
-            BevaviourScriptable bevaviour = gameObject.GetComponent<BevaviourScriptable>();
+            BehaviourScriptable bevaviour = gameObject.GetComponent<BehaviourScriptable>();
             if (bevaviour == null)
             {
-                bevaviour = gameObject.AddComponent<BevaviourScriptable>();
+                bevaviour = gameObject.AddComponent<BehaviourScriptable>();
             }
 
-            bevaviour.onDestroy.AddListener(() => { this.Release(); });
+            bevaviour.SetupOnDestroy(this.Release);
         }
 
         public void Release()

@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b29e98153ec2fbd44b8f7da1b41194e8, type: 3}
+  m_Script: {fileID: 11500000, guid: da047c8c0cb5c1f4fae039c1213f1a32, type: 3}
   m_Name: SpineSettings
   m_EditorClassIdentifier: 
   defaultScale: 0.01
@@ -18,20 +18,16 @@ MonoBehaviour:
   defaultZSpacing: 0
   defaultInstantiateLoop: 1
   showHierarchyIcons: 1
-  reloadAfterPlayMode: 1
   setTextureImporterSettings: 1
   textureSettingsReference: 
   fixPrefabOverrideViaMeshFilter: 0
-  removePrefabPreviewMeshes: 0
   blendModeMaterialMultiply: {fileID: 0}
   blendModeMaterialScreen: {fileID: 0}
   blendModeMaterialAdditive: {fileID: 0}
   atlasTxtImportWarning: 1
   textureImporterWarning: 1
   componentMaterialWarning: 1
-  skeletonDataAssetNoFileError: 1
   autoReloadSceneSkeletons: 1
   handleScale: 1
   mecanimEventIncludeFolderName: 1
-  timelineDefaultMixDuration: 0
   timelineUseBlendDuration: 1

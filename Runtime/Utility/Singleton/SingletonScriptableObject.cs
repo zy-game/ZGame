@@ -16,8 +16,17 @@ namespace ZGame
             {
                 if (_instance == null)
                 {
-                    OnLoad();
-                    _instance.OnAwake();
+                    ResourceReference reference = typeof(T).GetCustomAttribute<ResourceReference>();
+                    if (reference == null)
+                    {
+                        _instance = CreateInstance<T>();
+                    }
+                    else
+                    {
+                        OnLoad(reference.path);
+                    }
+
+                    _instance?.OnAwake();
                 }
 
                 return _instance;
@@ -45,59 +54,48 @@ namespace ZGame
             _instance.OnSaved();
         }
 
-        private static void OnLoad()
+        public static void OnLoad(string path)
         {
-            ResourceReference reference = typeof(T).GetCustomAttribute<ResourceReference>();
-            if (reference == null)
+            if (path.StartsWith("Resources"))
             {
-                _instance = CreateInstance<T>();
-                return;
-            }
-
-            if (reference.path.StartsWith("Resources"))
-            {
-                string path = reference.path.Substring(reference.path.IndexOf("/") + 1);
+                path = path.Substring(path.IndexOf("/") + 1);
                 path = path.Substring(0, path.LastIndexOf("."));
                 _instance = Resources.Load<T>(path);
-            }
-            else
-            {
-#if UNITY_EDITOR
-                _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(reference.path);
-#endif
-                if (_instance == null && Application.isPlaying)
-                {
-                    ResHandle handle = ResourceManager.instance.LoadAsset(reference.path);
-                    if (handle is not null || handle.IsSuccess())
-                    {
-                        _instance = handle.Get<T>(null);
-                    }
-                }
-            }
-
-            if (_instance != null)
-            {
                 return;
             }
-
-            if (reference.path.StartsWith("Assets") is false)
-            {
-                reference.path = "Assets/" + reference.path;
-            }
-
-            string folder = Path.GetDirectoryName(reference.path);
-            if (Directory.Exists(folder) is false)
-            {
-                Directory.CreateDirectory(folder);
-            }
-
-            _instance = CreateInstance<T>();
 #if UNITY_EDITOR
-            UnityEditor.AssetDatabase.CreateAsset(_instance, reference.path);
-            UnityEditor.EditorUtility.SetDirty(_instance);
-            UnityEditor.AssetDatabase.SaveAssets();
-            UnityEditor.AssetDatabase.Refresh();
+            if (BasicConfig.instance.resMode == ResourceMode.Editor || Application.isPlaying is false)
+            {
+                _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
+                if (_instance != null || Application.isPlaying)
+                {
+                    return;
+                }
+
+                if (path.StartsWith("Assets") is false)
+                {
+                    path = "Assets/" + path;
+                }
+
+                string folder = Path.GetDirectoryName(path);
+                if (Directory.Exists(folder) is false)
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
+                _instance = CreateInstance<T>();
+                UnityEditor.AssetDatabase.CreateAsset(_instance, path);
+                UnityEditor.EditorUtility.SetDirty(_instance);
+                UnityEditor.AssetDatabase.SaveAssets();
+                UnityEditor.AssetDatabase.Refresh();
+                return;
+            }
 #endif
+            ResHandle handle = ResourceManager.instance.LoadAsset(path);
+            if (handle is not null || handle.IsSuccess())
+            {
+                _instance = handle.Get<T>(null);
+            }
         }
     }
 }

@@ -9,9 +9,6 @@ namespace ZGame
     {
         public static T instance => GetInstance();
         private static T _instance;
-        private static BevaviourScriptable singleton;
-        private static GameObject manager;
-        public GameObject gameObject { get; private set; }
 
         private static T GetInstance()
         {
@@ -20,42 +17,49 @@ namespace ZGame
                 return _instance;
             }
 
-            if (manager == null)
-            {
-                manager = GameObject.Find("Manager") ?? new GameObject("Manager");
-                GameObject.DontDestroyOnLoad(manager);
-            }
-
             _instance = Activator.CreateInstance<T>();
-            _instance.gameObject = new GameObject(typeof(T).Name);
-            _instance.gameObject.transform.SetParent(manager.transform);
-            singleton = _instance.gameObject.AddComponent<BevaviourScriptable>();
-            GameObject.DontDestroyOnLoad(_instance.gameObject);
-            singleton.update.AddListener(_instance.OnUpdate);
-            singleton.fixedUpdate.AddListener(_instance.OnFixedUpdate);
-            singleton.lateUpdate.AddListener(_instance.OnLateUpdate);
-            singleton.onGUI.AddListener(_instance.OnGUI);
-            singleton.onApplicationQuit.AddListener(_instance.OnApplicationQuit);
-            singleton.onApplicationPause.AddListener(_instance.OnApplicationPause);
-            singleton.onApplicationFocus.AddListener(_instance.OnApplicationFocus);
-            singleton.onDestroy.AddListener(_instance.OnDestroy);
-            _instance.OnAwake();
+            _instance.Initialize();
             return _instance;
+        }
+
+        private void Initialize()
+        {
+            BehaviourScriptable.instance.SetupOnGUI(OnGUI);
+            BehaviourScriptable.instance.SetupUpdate(OnUpdate);
+            BehaviourScriptable.instance.SetupOnDestroy(Uninitialize);
+            BehaviourScriptable.instance.SetupLateUpdate(OnLateUpdate);
+            BehaviourScriptable.instance.SetupFixedUpdate(OnFixedUpdate);
+            BehaviourScriptable.instance.SetupOnApplicationQuit(OnApplicationQuit);
+            BehaviourScriptable.instance.SetupOnApplicationPause(OnApplicationPause);
+            BehaviourScriptable.instance.SetupOnApplicationFocus(OnApplicationFocus);
+            OnAwake();
+        }
+
+        private void Uninitialize()
+        {
+            BehaviourScriptable.instance.UnsetupOnGUI(OnGUI);
+            BehaviourScriptable.instance.UnsetupUpdate(OnUpdate);
+            BehaviourScriptable.instance.SetupOnDestroy(Uninitialize);
+            BehaviourScriptable.instance.UnsetupFixedUpdate(OnFixedUpdate);
+            BehaviourScriptable.instance.UnsetupLateUpdate(OnLateUpdate);
+            BehaviourScriptable.instance.SetupOnApplicationQuit(OnApplicationQuit);
+            BehaviourScriptable.instance.SetupOnApplicationPause(OnApplicationPause);
+            BehaviourScriptable.instance.SetupOnApplicationFocus(OnApplicationFocus);
         }
 
         public Coroutine StartCoroutine(IEnumerator enumerator)
         {
-            return singleton?.StartCoroutine(enumerator);
+            return BehaviourScriptable.instance.StartCoroutine(enumerator);
         }
 
         public void StopCoroutine(Coroutine coroutine)
         {
-            singleton?.StopCoroutine(coroutine);
+            BehaviourScriptable.instance.StopCoroutine(coroutine);
         }
 
         public void StopAllCoroutine()
         {
-            singleton?.StopAllCoroutines();
+            BehaviourScriptable.instance.StopAllCoroutines();
         }
 
         protected virtual void OnAwake()

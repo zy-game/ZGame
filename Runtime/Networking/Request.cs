@@ -16,6 +16,7 @@ namespace ZGame.Networking
 
         public static async UniTask<T> PostData<T>(string url, object data, Dictionary<string, object> headers)
         {
+            Debug.Log(url);
             string str = data is string ? data as string : JsonConvert.SerializeObject(data);
             using (UnityWebRequest request = UnityWebRequest.Post(url, str))
             {

@@ -90,7 +90,6 @@ namespace ZGame.Window
                 return default;
             }
 
-            Debug.Log("加载UI：" + type.Name);
             uiBase = (UIBase)Activator.CreateInstance(type, new object[] { handle.Instantiate() });
             UILayers.instance.TrySetup(uiBase.gameObject, 1, Vector3.zero, Vector3.zero, Vector3.one);
             uiBase.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;

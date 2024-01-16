@@ -14,6 +14,21 @@ namespace ZGame
 {
     public static partial class Extension
     {
+        public static int GetLoopCount(int value, int min, int max)
+        {
+            if (value > max)
+            {
+                return min;
+            }
+
+            if (value < min)
+            {
+                return max;
+            }
+
+            return value;
+        }
+
         public static void CopyTextToClipboard(this string textToCopy)
         {
             TextEditor editor = new TextEditor();

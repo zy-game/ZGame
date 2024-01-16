@@ -56,7 +56,7 @@ namespace ZGame.Sound
         {
             waiting = new Queue<AudioPlayable>();
             _source = new GameObject(name).AddComponent<AudioSource>();
-            _source.transform.parent = SoundManager.instance.gameObject.transform;
+            _source.transform.parent = BehaviourScriptable.instance.transform;
             _source.transform.localPosition = Vector3.zero;
             _source.loop = isLoop;
         }

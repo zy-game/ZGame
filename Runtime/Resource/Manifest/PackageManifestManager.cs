@@ -33,7 +33,7 @@ namespace ZGame.Resource
                 return;
             }
 
-            string iniFilePath = OSSConfig.instance.GetFilePath(packageName + ".ini");
+            string iniFilePath = OSSConfig.instance.GetFilePath(packageName.ToLower() + ".ini");
             if (OSSConfig.instance.current.type == OSSType.Streaming && Application.isEditor)
             {
                 resourcePackageListManifest = JsonConvert.DeserializeObject<ResourcePackageListManifest>(File.ReadAllText(iniFilePath));
