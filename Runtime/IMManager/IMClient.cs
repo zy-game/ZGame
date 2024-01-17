@@ -13,7 +13,6 @@ namespace ZGame.IM
     public interface IMClient : IDisposable
     {
         string id { get; }
-        bool isOpened { get; }
         UniTask<bool> Open();
         void OnRecvieMessage();
         void SendChat(string text);

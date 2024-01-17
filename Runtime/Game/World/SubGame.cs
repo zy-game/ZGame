@@ -56,33 +56,35 @@ namespace ZGame.Game
                 return AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             }
 
-            ResHandle textAsset = default;
-            HomologousImageMode mode = HomologousImageMode.SuperSet;
+            ResObject AssemblyTextAsset = default;
             foreach (var item in config.references)
             {
-                textAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(item) + ".bytes");
-                if (textAsset == null)
+                using (AssemblyTextAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(item) + ".bytes"))
                 {
-                    throw new Exception("加载AOT补元数据资源失败:" + item);
-                }
+                    if (AssemblyTextAsset == null || AssemblyTextAsset.IsSuccess() is false)
+                    {
+                        throw new Exception("加载AOT补元数据资源失败:" + item);
+                    }
 
-                LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(textAsset.Get<TextAsset>(default).bytes, mode);
-                if (err != LoadImageErrorCode.OK)
-                {
-                    Debug.LogError("加载AOT补元数据资源失败:" + item);
-                    continue;
-                }
+                    if (RuntimeApi.LoadMetadataForAOTAssembly(AssemblyTextAsset.GetAsset<TextAsset>().bytes, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
+                    {
+                        Debug.LogError("加载AOT补元数据资源失败:" + item);
+                        continue;
+                    }
 
-                Debug.Log("加载补充元数据成功：" + item);
+                    Debug.Log("加载补充元数据成功：" + item);
+                }
             }
 
-            textAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(config.entryName) + ".bytes");
-            if (textAsset == null)
+            using (AssemblyTextAsset = await ResourceManager.instance.LoadAssetAsync(Path.GetFileNameWithoutExtension(config.entryName) + ".bytes"))
             {
-                throw new NullReferenceException(config.entryName);
-            }
+                if (AssemblyTextAsset == null)
+                {
+                    throw new NullReferenceException(config.entryName);
+                }
 
-            return Assembly.Load(textAsset.Get<TextAsset>(default).bytes);
+                return Assembly.Load(AssemblyTextAsset.GetAsset<TextAsset>().bytes);
+            }
         }
     }
 }

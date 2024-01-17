@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using TMPro;
@@ -8,10 +9,11 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using ZGame.Window;
+using Object = UnityEngine.Object;
 
 namespace ZGame.Resource
 {
-    public sealed class ResHandle : IDisposable
+    public sealed class ResObject : IDisposable
     {
         private object obj;
         private PackageHandle parent;
@@ -23,23 +25,18 @@ namespace ZGame.Resource
             get { return parent.name; }
         }
 
-        public static ResHandle OnCreate(PackageHandle parent, object obj, string path)
+        public static ResObject OnCreate([NotNull] PackageHandle parent, [NotNull] object obj, [NotNull] string path)
         {
-            ResHandle handle = new ResHandle()
+            ResObject resObject = new ResObject()
             {
                 obj = obj,
                 path = path,
                 parent = parent
             };
-            ResHandleCache.instance.Add(handle);
-            return handle;
+            ResObjectCache.instance.Add(resObject);
+            return resObject;
         }
 
-
-        public bool Is<T>()
-        {
-            return obj is T;
-        }
 
         public bool IsSuccess()
         {
@@ -51,45 +48,57 @@ namespace ZGame.Resource
             return false;
         }
 
-        public T Get<T>(GameObject gameObject = null)
+        // public T Get<T>(GameObject gameObject = null)
+        // {
+        //     gameObject?.OnListenDestroyEvent(Release);
+        //     parent.AddRef();
+        //     return obj == null ? default(T) : (T)obj;
+        // }
+
+        public T GetAsset<T>()
         {
-            ListenerDestroyEvent(gameObject);
-            parent?.Reference();
-            return obj == null ? default(T) : (T)obj;
+            if (obj == null)
+            {
+                return default;
+            }
+
+            parent.AddRef();
+            return (T)obj;
         }
 
-        private void ListenerDestroyEvent(GameObject gameObject)
+        public T GetAsset<T>(GameObject gameObject)
         {
-            if (gameObject == null)
-            {
-                return;
-            }
-
-            BehaviourScriptable bevaviour = gameObject.GetComponent<BehaviourScriptable>();
-            if (bevaviour == null)
-            {
-                bevaviour = gameObject.AddComponent<BehaviourScriptable>();
-            }
-
-            bevaviour.SetupOnDestroy(this.Release);
+            gameObject?.OnListenDestroyEvent(Release);
+            return GetAsset<T>();
         }
 
         public void Release()
         {
-            parent?.Unreference();
+            refCount--;
+            parent.MinusRef();
         }
 
-        public void Dispose()
+        public void Dispose(bool isClear)
         {
+            if (refCount > 0)
+            {
+                return;
+            }
+
             refCount = 0;
             obj = null;
             parent = null;
             path = String.Empty;
         }
 
+        public void Dispose()
+        {
+            Release();
+        }
+
         public Scene OpenScene()
         {
-            Scene scene = Get<Scene>(default);
+            Scene scene = GetAsset<Scene>();
 
             if (obj != null && scene.isLoaded)
             {
@@ -124,7 +133,7 @@ namespace ZGame.Resource
 
         public async UniTask<Scene> OpenSceneAsync()
         {
-            Scene scene = Get<Scene>(default);
+            Scene scene = GetAsset<Scene>();
 
             if (obj != null && scene.isLoaded)
             {
@@ -159,8 +168,9 @@ namespace ZGame.Resource
                 return default;
             }
 
-            GameObject gameObject = (GameObject)GameObject.Instantiate(Get<GameObject>(default));
-            ListenerDestroyEvent(gameObject);
+            GameObject templete = GetAsset<GameObject>();
+            GameObject gameObject = (GameObject)GameObject.Instantiate(templete);
+            gameObject.OnListenDestroyEvent(Release);
             return gameObject;
         }
 
@@ -187,62 +197,54 @@ namespace ZGame.Resource
             return gameObject;
         }
 
-        public void Setup<T>(GameObject gameObject) where T : Component
+        public void SetSprite(Image image)
         {
-            if (obj is null)
+            if (image == null)
             {
                 return;
             }
 
+            image.sprite = GetAsset<Sprite>(image.gameObject);
+        }
 
-            Component component = gameObject.GetComponent<T>();
-            switch (component)
+        public void SetTexture2D(RawImage image)
+        {
+            if (image == null)
             {
-                case Image image:
-                    image.sprite = Get<Sprite>(gameObject);
-                    ListenerDestroyEvent(gameObject);
-                    break;
-                case RawImage rawImage:
-                    rawImage.texture = Get<Texture2D>(gameObject);
-                    ListenerDestroyEvent(gameObject);
-                    break;
-                case AudioSource audioSource:
-                    audioSource.clip = Get<AudioClip>(gameObject);
-                    ListenerDestroyEvent(gameObject);
-                    break;
-                case VideoPlayer videoPlayer:
-                    videoPlayer.clip = Get<VideoClip>(gameObject);
-                    ListenerDestroyEvent(gameObject);
-                    break;
-                case TMP_InputField inputField:
-                    switch (obj)
-                    {
-                        case TextAsset textAsset:
-                            inputField.text = textAsset.text;
-                            ListenerDestroyEvent(gameObject);
-                            break;
-                        case TMP_FontAsset fontAsset:
-                            inputField.fontAsset = fontAsset;
-                            ListenerDestroyEvent(gameObject);
-                            break;
-                    }
-
-                    break;
-                case TMP_Text tmpText:
-                    switch (obj)
-                    {
-                        case TextAsset textAsset:
-                            tmpText.text = textAsset.text;
-                            ListenerDestroyEvent(gameObject);
-                            break;
-                        case TMP_FontAsset fontAsset:
-                            tmpText.font = fontAsset;
-                            ListenerDestroyEvent(gameObject);
-                            break;
-                    }
-
-                    break;
+                return;
             }
+
+            image.texture = GetAsset<Texture2D>(image.gameObject);
+        }
+
+        public void SetMaterialTexture2D(Material material, string propertyName, GameObject gameObject)
+        {
+            if (material == null)
+            {
+                return;
+            }
+
+            material.SetTexture(propertyName, GetAsset<Texture2D>(gameObject));
+        }
+
+        public void SetRenderMaterial(Renderer renderer)
+        {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            renderer.sharedMaterial = GetAsset<Material>(renderer.gameObject);
+        }
+
+        public void SetGraphicMaterial(MaskableGraphic graphic)
+        {
+            if (graphic == null)
+            {
+                return;
+            }
+
+            graphic.material = GetAsset<Material>(graphic.gameObject);
         }
     }
 }

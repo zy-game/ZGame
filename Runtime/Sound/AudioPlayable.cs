@@ -24,7 +24,7 @@ namespace ZGame.Sound
         }
 
         private PlayState _state;
-        private ResHandle _resHandle;
+        private ResObject resObject;
         private Action<PlayState> callback;
         private UniTaskCompletionSource taskCompletionSource;
 
@@ -51,13 +51,13 @@ namespace ZGame.Sound
 
         private void Load()
         {
-            _resHandle = ResourceManager.instance.LoadAsset(name);
-            if (_resHandle.IsSuccess() is false)
+            resObject = ResourceManager.instance.LoadAsset(name);
+            if (resObject.IsSuccess() is false)
             {
                 return;
             }
 
-            _clip = _resHandle.Get<AudioClip>(null);
+            _clip = resObject.GetAsset<AudioClip>();
         }
 
         public void SetState(PlayState state)
@@ -74,8 +74,8 @@ namespace ZGame.Sound
         {
             base.Dispose();
             _clip = null;
-            _resHandle?.Release();
-            _resHandle = null;
+            resObject?.Release();
+            resObject = null;
         }
     }
 }

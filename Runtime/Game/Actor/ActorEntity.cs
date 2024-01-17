@@ -23,8 +23,8 @@ namespace ZGame.Game
         public static T Create<T>(string name, string modelPath) where T : ActorEntity
         {
             Debug.Log(modelPath);
-            ResHandle handle = ResourceManager.instance.LoadAsset(modelPath);
-            if (handle.IsSuccess() is false || handle.Is<GameObject>() is false)
+            ResObject resObject = ResourceManager.instance.LoadAsset(modelPath);
+            if (resObject.IsSuccess() is false)
             {
                 return default;
             }
@@ -32,7 +32,7 @@ namespace ZGame.Game
             T actor = Activator.CreateInstance<T>();
             actor._id = ID.GetString();
             actor._name = name;
-            actor._gameObject = handle.Instantiate();
+            actor._gameObject = resObject.Instantiate();
             Animator animator = actor._gameObject.GetComponentInChildren<Animator>();
             if (animator != null)
             {

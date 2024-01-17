@@ -41,31 +41,38 @@ namespace ZGame.Config
         {
         }
 
-        public static async UniTask Setup(string url)
+        public static async UniTask SetupUrl(string url)
         {
-            TextAsset asset = default;
+            string asset = default;
             if (url.StartsWith("http"))
             {
                 byte[] data = await Request.GetStreamingAsset(url);
-                asset = new TextAsset(UTF8Encoding.UTF8.GetString(data));
+                asset = UTF8Encoding.UTF8.GetString(data);
             }
             else
             {
-                ResHandle languageHandle = ResourceManager.instance.LoadAsset(url);
-                asset = languageHandle.Get<TextAsset>(GameManager.DefaultWorld.main.gameObject);
+                using (ResObject languageAsset = ResourceManager.instance.LoadAsset(url))
+                {
+                    if (languageAsset is null || languageAsset.IsSuccess() is false)
+                    {
+                        return;
+                    }
+
+                    asset = languageAsset.GetAsset<TextAsset>().text;
+                }
             }
 
-            Setup(asset);
+            SetupText(asset);
         }
 
-        public static void Setup(TextAsset asset)
+        public static void SetupText(string assetString)
         {
-            if (asset == null)
+            if (assetString.IsNullOrEmpty())
             {
                 return;
             }
 
-            List<JObject> list = JsonConvert.DeserializeObject<List<JObject>>(asset.text);
+            List<JObject> list = JsonConvert.DeserializeObject<List<JObject>>(assetString);
             if (list is null || list.Count == 0)
             {
                 return;

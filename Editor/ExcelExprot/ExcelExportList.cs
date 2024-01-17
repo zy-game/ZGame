@@ -111,61 +111,62 @@ namespace ZGame.Editor.ExcelExprot
                     options.dataTable = exporter.GetTable(options.name);
                 }
 
-                if (options.type == ExportType.Json)
+                switch (options.type)
                 {
-                    ExportJson(options);
-                    ExportList.Remove(options);
-                }
-                else
-                {
-                    ExportCSharpCode(options);
+                    case ExportType.Json:
+                        ExportJson(options);
+                        ExportList.Remove(options);
+                        break;
+                    case ExportType.Csharp:
+                        ExportCSharpCode(options);
+                        ExportList.Remove(options);
+                        break;
+                    case ExportType.Assets:
+                        ExportCSharpCode(options);
+                        break;
                 }
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            if (EditorApplication.isCompiling is false)
-            {
-                BuildCompletion();
-            }
         }
 
 
-        [UnityEditor.Callbacks.DidReloadScripts]
-        static void BuildCompletion()
-        {
-            if (ExcelExportList.instance.ExportList is null || ExcelExportList.instance.ExportList.Count == 0)
-            {
-                return;
-            }
-
-            for (int i = ExcelExportList.instance.ExportList.Count - 1; i >= 0; i--)
-            {
-                ExportOptions options = ExcelExportList.instance.ExportList[i];
-                if (options.type == ExportType.Csharp)
-                {
-                    if (options.dataTable is null)
-                    {
-                        ExcelExporter exporter = ExcelExportList.instance.GetExporter(options.parent);
-                        if (exporter is null)
-                        {
-                            return;
-                        }
-
-                        options.dataTable = exporter.GetTable(options.name);
-                    }
-
-                    EditorUtility.DisplayProgressBar("正在导出数据", options.name, (float)i / ExcelExportList.instance.ExportList.Count);
-                    ExcelExportList.instance.ExportCsharpData(options);
-                    ExcelExportList.instance.ExportList.Remove(options);
-                }
-            }
-
-            ExcelExportList.OnSave();
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            EditorUtility.ClearProgressBar();
-        }
+        // [UnityEditor.Callbacks.DidReloadScripts]
+        // static void BuildCompletion()
+        // {
+        //     if (ExcelExportList.instance.ExportList is null || ExcelExportList.instance.ExportList.Count == 0)
+        //     {
+        //         return;
+        //     }
+        //
+        //     for (int i = ExcelExportList.instance.ExportList.Count - 1; i >= 0; i--)
+        //     {
+        //         ExportOptions options = ExcelExportList.instance.ExportList[i];
+        //         if (options.type == ExportType.Assets)
+        //         {
+        //             if (options.dataTable is null)
+        //             {
+        //                 ExcelExporter exporter = ExcelExportList.instance.GetExporter(options.parent);
+        //                 if (exporter is null)
+        //                 {
+        //                     return;
+        //                 }
+        //
+        //                 options.dataTable = exporter.GetTable(options.name);
+        //             }
+        //
+        //             EditorUtility.DisplayProgressBar("正在导出数据", options.name, (float)i / ExcelExportList.instance.ExportList.Count);
+        //             ExcelExportList.instance.ExportCsharpData(options);
+        //             ExcelExportList.instance.ExportList.Remove(options);
+        //         }
+        //     }
+        //
+        //     ExcelExportList.OnSave();
+        //     AssetDatabase.SaveAssets();
+        //     AssetDatabase.Refresh();
+        //     EditorUtility.ClearProgressBar();
+        // }
 
 
         private void ExportCSharpCode(ExportOptions exportSet)
@@ -229,16 +230,20 @@ namespace ZGame.Editor.ExcelExprot
             }
 
             sb.AppendLine("\t}");
-            string temp = AssetDatabase.GetAssetPath(exportSet.output);
-            if (temp.IsNullOrEmpty() is false)
-            {
-                if (temp.Contains("Resources"))
-                {
-                    temp = temp.Substring(0, temp.LastIndexOf("."));
-                    temp = temp.Substring(temp.IndexOf("Resources"));
-                }
 
-                sb.AppendLine($"\t[ResourceReference(\"{temp}/{assetTypeName}.asset\")]");
+            if (exportSet.type == ExportType.Assets)
+            {
+                string temp = AssetDatabase.GetAssetPath(exportSet.output);
+                if (temp.IsNullOrEmpty() is false)
+                {
+                    if (temp.Contains("Resources"))
+                    {
+                        temp = temp.Substring(0, temp.LastIndexOf("."));
+                        temp = temp.Substring(temp.IndexOf("Resources"));
+                    }
+
+                    sb.AppendLine($"\t[ResourceReference(\"{temp}/{assetTypeName}.asset\")]");
+                }
             }
 
             sb.AppendLine($"\tpublic sealed class {assetTypeName} : SingletonScriptableObject<{assetTypeName}>");
@@ -250,6 +255,43 @@ namespace ZGame.Editor.ExcelExprot
             sb.AppendLine("\t\t\t{");
             sb.AppendLine($"\t\t\t\tcfgList = new List<{itemTypeName}>();");
             sb.AppendLine("\t\t\t}");
+            if (exportSet.type == ExportType.Csharp)
+            {
+                for (int rowIndex = exportSet.dataRow; rowIndex < exportSet.dataTable.Rows.Count; rowIndex++)
+                {
+                    var row = exportSet.dataTable.Rows[rowIndex];
+                    string templete = "\t\t\tcfgList.Add(new (){";
+                    for (int columnIndex = 0; columnIndex < row.ItemArray.Length; columnIndex++)
+                    {
+                        string data = row.ItemArray[columnIndex].ToString();
+                        string name = header.ItemArray[columnIndex].ToString();
+                        if (name.Equals("#") || name.Equals(String.Empty))
+                        {
+                            continue;
+                        }
+
+                        string t = typeRow[columnIndex].ToString();
+                        switch (t)
+                        {
+                            case "int":
+                            case "float":
+                                templete += $"{name} = {data}, ";
+                                break;
+                            case "bool":
+                                templete += $"{name} = {(data == "0")}, ";
+                                break;
+                            default:
+                                templete += $"{name} = @\"{data}\",";
+                                break;
+                        }
+                    }
+
+                    templete.Replace("\n", "[s]");
+                    templete += "});";
+                    sb.AppendLine(templete);
+                }
+            }
+
             sb.AppendLine("\t\t}");
 
             sb.AppendLine($"\t\tpublic {itemTypeName} GetByFieldName(string fieldName, object value)");

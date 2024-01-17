@@ -36,7 +36,7 @@ namespace ZGame.Editor.PSD2GUI
                 setting.language = (TextAsset)EditorGUILayout.ObjectField("Language", setting.language, typeof(TextAsset), false);
                 if (setting.language != null && isSetLanguage is false)
                 {
-                    Localliztion.Setup(setting.language);
+                    Localliztion.SetupText(setting.language.text);
                     isSetLanguage = true;
                     Localliztion.Switch(BasicConfig.instance.curEntry.language);
                 }

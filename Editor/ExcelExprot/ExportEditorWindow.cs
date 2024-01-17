@@ -63,7 +63,11 @@ namespace ZGame.Editor.ExcelExprot
                 options.code = (UnityEngine.Object)EditorGUILayout.ObjectField("代码保存路径", options.code, typeof(UnityEngine.Object), false);
             }
 
-            options.output = (UnityEngine.Object)EditorGUILayout.ObjectField("配置输出路径", options.output, typeof(UnityEngine.Object), false);
+            if (options.type == ExportType.Assets)
+            {
+                options.output = (UnityEngine.Object)EditorGUILayout.ObjectField("配置输出路径", options.output, typeof(UnityEngine.Object), false);
+            }
+
             if (EditorGUI.EndChangeCheck())
             {
                 ExcelExportList.OnSave();

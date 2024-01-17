@@ -17,15 +17,12 @@ namespace UI
         {
         }
 
-        public override void Awake()
-        {
-        }
-
         public override void Enable(params object[] args)
         {
             this.onYes = (Action)(args[2]);
             this.onNo = (Action)(args[3]);
-            TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
+            BehaviourScriptable.instance.SetupKeyDown(KeyCode.Escape, OnBackup);
+            TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>(true);
             foreach (var VARIABLE in texts)
             {
                 if (VARIABLE.name.Equals("title"))
@@ -39,29 +36,42 @@ namespace UI
                 }
             }
 
-            Button[] buttons = this.gameObject.GetComponentsInChildren<Button>();
+            Button[] buttons = this.gameObject.GetComponentsInChildren<Button>(true);
             foreach (var VARIABLE in buttons)
             {
                 if (VARIABLE.name.Equals("yes"))
                 {
-                    VARIABLE.onClick.AddListener(() =>
-                    {
-                        this.onYes?.Invoke();
-                        this.Disable();
-                        OnShowMsgBox();
-                    });
+                    VARIABLE.onClick.AddListener(() => Switch(true));
                 }
 
                 if (VARIABLE.name.Equals("no"))
                 {
-                    VARIABLE.onClick.AddListener(() =>
-                    {
-                        this.onNo?.Invoke();
-                        this.Disable();
-                        OnShowMsgBox();
-                    });
+                    VARIABLE.onClick.AddListener(() => Switch(false));
                 }
             }
+        }
+
+        private void OnBackup(KeyEvent e)
+        {
+            e.Use();
+            Switch(false);
+        }
+
+        private void Switch(bool state)
+        {
+            switch (state)
+            {
+                case true:
+                    this.onYes?.Invoke();
+                    break;
+                case false:
+                    this.onNo?.Invoke();
+                    break;
+            }
+
+            BehaviourScriptable.instance.UnsetupKeyDown(KeyCode.Escape, OnBackup);
+            this.Disable();
+            OnShowMsgBox();
         }
 
 

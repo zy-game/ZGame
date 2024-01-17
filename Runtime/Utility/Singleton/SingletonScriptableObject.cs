@@ -91,10 +91,14 @@ namespace ZGame
                 return;
             }
 #endif
-            ResHandle handle = ResourceManager.instance.LoadAsset(path);
-            if (handle is not null || handle.IsSuccess())
+            using (ResObject resObject = ResourceManager.instance.LoadAsset(path))
             {
-                _instance = handle.Get<T>(null);
+                if (resObject is null || resObject.IsSuccess() is false)
+                {
+                    return;
+                }
+
+                _instance = resObject.GetAsset<T>();
             }
         }
     }

@@ -32,20 +32,21 @@ namespace ZGame.Resource
             GC.SuppressFinalize(this);
         }
 
-        public ResHandle LoadAsset(string path)
+        public ResObject LoadAsset(string path)
         {
             throw new NotImplementedException();
         }
 
-        public async UniTask<ResHandle> LoadAssetAsync(string path)
+        public async UniTask<ResObject> LoadAssetAsync(string path)
         {
             if (path.StartsWith("http") is false)
             {
                 return default;
             }
 
-            if (ResHandleCache.instance.TryGetValue(handleName, path, out ResHandle handle))
+            if (ResObjectCache.instance.TryGetValue(handleName, path, out ResObject handle))
             {
+                Debug.Log("缓存资源");
                 return handle;
             }
 
@@ -110,7 +111,7 @@ namespace ZGame.Resource
             }
 
             request.Dispose();
-            return ResHandle.OnCreate(_handle, asset, path);
+            return ResObject.OnCreate(_handle, asset, path);
         }
 
         public void Release(string handle)

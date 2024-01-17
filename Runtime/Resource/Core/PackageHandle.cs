@@ -30,18 +30,13 @@ namespace ZGame.Resource
             this.bundle = bundle;
         }
 
-        private void RefreshCheckTime()
-        {
-            nextCheckTime = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
-        }
-
         internal void SetDependencies(params PackageHandle[] dependencies)
         {
             this.dependencies = dependencies;
             Debug.Log("设置引用资源包：" + string.Join(",", dependencies.Select(x => x.name).ToArray()));
         }
 
-        internal void Reference()
+        internal void AddRef()
         {
             refCount++;
             RefreshCheckTime();
@@ -52,11 +47,11 @@ namespace ZGame.Resource
 
             foreach (var VARIABLE in dependencies)
             {
-                VARIABLE.Reference();
+                VARIABLE.AddRef();
             }
         }
 
-        internal void Unreference()
+        internal void MinusRef()
         {
             refCount--;
             RefreshCheckTime();
@@ -67,7 +62,7 @@ namespace ZGame.Resource
 
             foreach (var VARIABLE in dependencies)
             {
-                VARIABLE.Unreference();
+                VARIABLE.MinusRef();
             }
         }
 
@@ -82,10 +77,15 @@ namespace ZGame.Resource
             return true;
         }
 
+        private void RefreshCheckTime()
+        {
+            nextCheckTime = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
+        }
+
         public void Dispose()
         {
             Debug.Log("释放资源包:" + name);
-            ResHandleCache.instance.RemovePackage(this.name);
+            ResObjectCache.instance.RemovePackage(this.name);
             bundle?.Unload(true);
             Resources.UnloadUnusedAssets();
         }

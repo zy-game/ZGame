@@ -6,6 +6,7 @@ using System.Reflection;
 using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using ZGame.Editor.ResBuild.Config;
 using Object = UnityEngine.Object;
@@ -19,6 +20,12 @@ namespace ZGame.Editor
         private static UnityEngine.Object openScriptableObject;
         private EditorCoroutine waiting;
         private bool isWaiting;
+
+        [MenuItem("ZGame/Home %h")]
+        static void BackupHome()
+        {
+            EditorSceneManager.OpenScene("Assets/Startup.unity");
+        }
 
 
         [UnityEditor.Callbacks.DidReloadScripts]

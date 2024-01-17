@@ -35,15 +35,6 @@ public class Startup : MonoBehaviour
 
     private void Update()
     {
-        // 返回键
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            UIMsgBox.Show("是否退出应用？", GameManager.instance.QuitGame);
-        }
-
-        // Home键
-        if (Input.GetKeyDown(KeyCode.Home))
-        {
-        }
+       
     }
 }

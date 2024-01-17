@@ -223,10 +223,10 @@ namespace ZGame.Resource
         /// </summary>
         /// <param name="path">资源路径</param>
         /// <returns>资源加载结果</returns>
-        public ResHandle LoadAsset(string path)
+        public ResObject LoadAsset(string path)
         {
             Debug.Log("加载资源：" + path);
-            ResHandle result = default;
+            ResObject result = default;
             IResourceLoadingHandle resourceLoadingHandle = _resourceLoadingHandles.Find(x => x.Contains(path));
             if (resourceLoadingHandle is not null)
             {
@@ -241,10 +241,10 @@ namespace ZGame.Resource
         /// </summary>
         /// <param name="path">资源路径</param>
         /// <returns>资源加载任务</returns>
-        public async UniTask<ResHandle> LoadAssetAsync(string path)
+        public async UniTask<ResObject> LoadAssetAsync(string path)
         {
             Debug.Log("加载资源：" + path);
-            ResHandle result = default;
+            ResObject result = default;
             IResourceLoadingHandle resourceLoadingHandle = _resourceLoadingHandles.Find(x => x.Contains(path));
             if (resourceLoadingHandle is not null)
             {

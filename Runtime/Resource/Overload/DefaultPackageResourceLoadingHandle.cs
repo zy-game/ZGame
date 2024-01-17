@@ -17,35 +17,36 @@ namespace ZGame.Resource
             return PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path) is not null;
         }
 
-        public ResHandle LoadAsset(string path)
+        public ResObject LoadAsset(string path)
         {
             if (path.StartsWith("Resources") || path.StartsWith("http"))
             {
                 return default;
             }
 
-            if (PackageHandleCache.instance.TryGetValueWithAssetPath(path, out var _handle) is false)
+            if (ResObjectCache.instance.TryGetValue(path, out ResObject handle))
             {
-                ResourcePackageManifest manifest = PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path);
-                if (manifest is null)
-                {
-                    Debug.Log("没有找到资源信息配置");
-                    return default;
-                }
+                Debug.Log("缓存资源");
+                return handle;
+            }
 
+            ResourcePackageManifest manifest = PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path);
+            if (manifest is null)
+            {
+                Debug.Log("没有找到资源信息配置:" + path);
+                return default;
+            }
+
+            if (PackageHandleCache.instance.TryGetValue(manifest.name, out var _handle) is false)
+            {
                 Debug.Log("重新加载资源包：" + manifest.name);
                 ResourceManager.instance.LoadingPackageListSync(manifest);
                 return LoadAsset(path);
             }
 
-            if (ResHandleCache.instance.TryGetValue(_handle.name, path, out ResHandle handle))
-            {
-                return handle;
-            }
-
             if (path.EndsWith(".unity"))
             {
-                return ResHandle.OnCreate(_handle, null, path);
+                return ResObject.OnCreate(_handle, null, path);
             }
 
             var asset = _handle.bundle.LoadAsset(path);
@@ -55,38 +56,38 @@ namespace ZGame.Resource
                 return default;
             }
 
-            return ResHandle.OnCreate(_handle, asset, path);
+            return ResObject.OnCreate(_handle, asset, path);
         }
 
 
-        public async UniTask<ResHandle> LoadAssetAsync(string path)
+        public async UniTask<ResObject> LoadAssetAsync(string path)
         {
             if (path.StartsWith("Resources") || path.StartsWith("http"))
             {
                 return default;
             }
 
-            if (PackageHandleCache.instance.TryGetValueWithAssetPath(path, out var _handle) is false)
-            {
-                ResourcePackageManifest manifest = PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path);
-                if (manifest is null)
-                {
-                    Debug.Log("没有找到资源信息配置");
-                    return default;
-                }
-
-                await ResourceManager.instance.LoadingPackageListAsync(manifest);
-                return await LoadAssetAsync(path);
-            }
-
-            if (ResHandleCache.instance.TryGetValue(_handle.name, path, out ResHandle handle))
+            if (ResObjectCache.instance.TryGetValue(path, out ResObject handle))
             {
                 return handle;
             }
 
+            ResourcePackageManifest manifest = PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path);
+            if (manifest is null)
+            {
+                Debug.Log("没有找到资源信息配置:" + path);
+                return default;
+            }
+
+            if (PackageHandleCache.instance.TryGetValue(manifest.name, out var _handle) is false)
+            {
+                await ResourceManager.instance.LoadingPackageListAsync(manifest);
+                return await LoadAssetAsync(path);
+            }
+
             if (path.EndsWith(".unity"))
             {
-                return ResHandle.OnCreate(_handle, null, path);
+                return ResObject.OnCreate(_handle, null, path);
             }
 
             var asset = await _handle.bundle.LoadAssetAsync(path).ToUniTask();
@@ -95,7 +96,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            return ResHandle.OnCreate(_handle, asset, path);
+            return ResObject.OnCreate(_handle, asset, path);
         }
 
         public void Release(string obj)

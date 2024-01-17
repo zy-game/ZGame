@@ -382,6 +382,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup("");
             AddSetup($"\t\t\t{fieldName}.SetTextWithoutNotify(value);");
             AddSetup("\t\t}");
+            AddSetup("");
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(TMP_FontAsset fontAsset)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
@@ -457,10 +458,10 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup("");
-            AddSetup($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(path);");
-            AddSetup($"\t\t\tif (handle.IsSuccess() == false)");
+            AddSetup($"\t\t\tResObject handle = ResourceManager.instance.LoadAsset(path);");
+            AddSetup($"\t\t\tif (handle is null || handle.IsSuccess() == false)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup($"\t\t\t{fieldName}.sprite = handle.Get<Sprite>({fieldName}.gameObject);");
+            AddSetup($"\t\t\thandle.SetSprite({fieldName});");
             AddSetup("\t\t}");
             AddSetup("");
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(Sprite sprite)");
@@ -492,10 +493,10 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup("");
-            AddSetup($"\t\t\tResHandle handle = ResourceManager.instance.LoadAsset(path);");
-            AddSetup($"\t\t\tif (handle.IsSuccess() == false)");
+            AddSetup($"\t\t\tResObject handle = ResourceManager.instance.LoadAsset(path);");
+            AddSetup($"\t\t\tif (handle is null || handle.IsSuccess() == false)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup($"\t\t\t{fieldName}.texture = handle.Get<Texture2D>({fieldName}.gameObject);");
+            AddSetup($"\t\t\thandle.SetTexture2D({fieldName});");
             AddSetup("\t\t}");
             AddSetup("");
 

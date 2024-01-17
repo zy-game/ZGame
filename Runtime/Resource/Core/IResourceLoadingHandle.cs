@@ -7,8 +7,8 @@ namespace ZGame.Resource
     public interface IResourceLoadingHandle : IDisposable
     {
         bool Contains(string path);
-        ResHandle LoadAsset(string path);
-        UniTask<ResHandle> LoadAssetAsync(string path);
+        ResObject LoadAsset(string path);
+        UniTask<ResObject> LoadAssetAsync(string path);
         void Release(string path);
     }
 }

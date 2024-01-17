@@ -1,10 +1,16 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace ZGame
 {
     public static partial class Extension
     {
+        public static void OnListenDestroyEvent(this GameObject gameObject, UnityAction action)
+        {
+            BehaviourScriptable.instance.ListenerDestroy(gameObject, action);
+        }
+
         public static void SetParent(this GameObject gameObject, Transform parent)
         {
             gameObject.transform.SetParent(parent);

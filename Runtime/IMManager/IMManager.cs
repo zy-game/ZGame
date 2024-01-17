@@ -150,12 +150,6 @@ namespace ZGame.IM
                 return;
             }
 
-            if (handler.isOpened is false)
-            {
-                Debug.Log("Session is not opened:" + id);
-                return;
-            }
-
             handler.SendChat(content);
         }
 
@@ -175,12 +169,6 @@ namespace ZGame.IM
             if (handler is null)
             {
                 Debug.Log("Not Find:" + id);
-                return;
-            }
-
-            if (handler.isOpened is false)
-            {
-                Debug.Log("Session is not opened:" + id);
                 return;
             }
 

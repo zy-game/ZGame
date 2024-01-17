@@ -1,18 +1,75 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Events;
 
 namespace ZGame
 {
+    public class KeyEvent : IDisposable
+    {
+        public KeyCode keyCode { get; }
+        private bool isUsed { get; set; }
+        private List<UnityAction<KeyEvent>> action { get; }
+
+        public KeyEvent(KeyCode key)
+        {
+            this.keyCode = key;
+            this.action = new List<UnityAction<KeyEvent>>();
+        }
+
+        public void Invoke()
+        {
+            if (this.action is null || this.action.Count == 0)
+            {
+                return;
+            }
+
+            isUsed = false;
+            for (int i = this.action.Count - 1; i >= 0; i--)
+            {
+                if (isUsed)
+                {
+                    return;
+                }
+
+                this.action[i].Invoke(this);
+            }
+        }
+
+        public void AddListener(UnityAction<KeyEvent> action)
+        {
+            this.action.Add(action);
+        }
+
+        public void RemoveListener(UnityAction<KeyEvent> action)
+        {
+            this.action.Remove(action);
+        }
+
+        public void Use()
+        {
+            this.isUsed = true;
+        }
+
+        public void Dispose()
+        {
+            this.action.Clear();
+        }
+    }
+
     class BehaviourScriptable : MonoBehaviour
     {
-        UnityEvent update = new UnityEvent();
-        UnityEvent fixedUpdate = new UnityEvent();
-        UnityEvent lateUpdate = new UnityEvent();
         UnityEvent onGUI = new UnityEvent();
+        UnityEvent update = new UnityEvent();
+        UnityEvent onDestroy = new UnityEvent();
+        UnityEvent lateUpdate = new UnityEvent();
+        UnityEvent fixedUpdate = new UnityEvent();
         UnityEvent onApplicationQuit = new UnityEvent();
+        List<KeyEvent> keyUpEvent = new List<KeyEvent>();
+        List<KeyEvent> keyDownEvent = new List<KeyEvent>();
         UnityEvent<bool> onApplicationPause = new UnityEvent<bool>();
         UnityEvent<bool> onApplicationFocus = new UnityEvent<bool>();
-        UnityEvent onDestroy = new UnityEvent();
+
 
         private static BehaviourScriptable _instance;
 
@@ -28,6 +85,92 @@ namespace ZGame
 
                 return _instance;
             }
+        }
+
+        public void SetupKeyDown(KeyCode keyCode, UnityAction<KeyEvent> action)
+        {
+            if (action is null)
+            {
+                return;
+            }
+
+            KeyEvent keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
+            if (keyEvent is null)
+            {
+                keyDownEvent.Add(keyEvent = new KeyEvent(keyCode));
+            }
+
+            keyEvent.AddListener(action);
+        }
+
+        public void UnsetupKeyDown(KeyCode keyCode, UnityAction<KeyEvent> action)
+        {
+            if (action is null)
+            {
+                return;
+            }
+
+            KeyEvent keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
+            if (keyEvent is null)
+            {
+                return;
+            }
+
+            keyEvent.RemoveListener(action);
+        }
+
+        public void SetupKeyUp(KeyCode keyCode, UnityAction<KeyEvent> action)
+        {
+            if (action is null)
+            {
+                return;
+            }
+
+            KeyEvent keyEvent = keyUpEvent.Find(x => x.keyCode == keyCode);
+            if (keyEvent is null)
+            {
+                keyUpEvent.Add(keyEvent = new KeyEvent(keyCode));
+            }
+
+            keyEvent.AddListener(action);
+        }
+
+        public void UnsetupKeyUp(KeyCode keyCode, UnityAction<KeyEvent> action)
+        {
+            if (action is null)
+            {
+                return;
+            }
+
+            KeyEvent keyEvent = keyUpEvent.Find(x => x.keyCode == keyCode);
+            if (keyEvent is null)
+            {
+                return;
+            }
+
+            keyEvent.RemoveListener(action);
+        }
+
+        public void ClearKeyDownEvent(KeyCode keyCode)
+        {
+            KeyEvent keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
+            if (keyEvent is null)
+            {
+                return;
+            }
+
+            keyDownEvent.Remove(keyEvent);
+        }
+
+        public void ClearKeyUpEvent(KeyCode keyCode)
+        {
+            KeyEvent keyEvent = keyUpEvent.Find(x => x.keyCode == keyCode);
+            if (keyEvent is null)
+            {
+                return;
+            }
+
+            keyUpEvent.Remove(keyEvent);
         }
 
         public void SetupUpdate(UnityAction action)
@@ -110,8 +253,44 @@ namespace ZGame
             onDestroy.RemoveListener(action);
         }
 
+        public void ListenerDestroy(GameObject gameObject, UnityAction callback)
+        {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            BehaviourScriptable bevaviour = gameObject.GetComponent<BehaviourScriptable>();
+            if (bevaviour == null)
+            {
+                bevaviour = gameObject.AddComponent<BehaviourScriptable>();
+            }
+
+            bevaviour.SetupOnDestroy(callback);
+        }
+
         private void Update()
         {
+            for (int i = 0; i < keyDownEvent.Count; i++)
+            {
+                if (Input.GetKeyDown(keyDownEvent[i].keyCode) is false)
+                {
+                    continue;
+                }
+
+                keyDownEvent[i].Invoke();
+            }
+
+            for (int i = 0; i < keyUpEvent.Count; i++)
+            {
+                if (Input.GetKeyUp(keyUpEvent[i].keyCode) is false)
+                {
+                    continue;
+                }
+
+                keyUpEvent[i].Invoke();
+            }
+
             update.Invoke();
         }
 

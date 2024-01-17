@@ -47,8 +47,7 @@ namespace ZGame.Resource
                     continue;
                 }
 
-                cacheList[i].Dispose();
-                cacheList.Remove(cacheList[i]);
+                Remove(cacheList[i].name);
             }
         }
 
@@ -60,12 +59,19 @@ namespace ZGame.Resource
         public void Remove(string packageName)
         {
             PackageHandle handle = _packageList.Find(x => x.name == packageName);
+            if (handle is not null)
+            {
+                _packageList.Remove(handle);
+                handle.Dispose();
+            }
+
+            handle = cacheList.Find(x => x.name == packageName);
             if (handle is null)
             {
                 return;
             }
 
-            _packageList.Remove(handle);
+            cacheList.Remove(handle);
             handle.Dispose();
         }
 
@@ -85,18 +91,6 @@ namespace ZGame.Resource
             }
 
             return false;
-        }
-
-        public bool TryGetValueWithAssetPath(string path, out PackageHandle handle)
-        {
-            ResourcePackageManifest manifest = PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path);
-            if (manifest is null)
-            {
-                handle = default;
-                return false;
-            }
-
-            return TryGetValue(manifest.name, out handle);
         }
     }
 }

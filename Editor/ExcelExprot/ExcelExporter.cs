@@ -14,7 +14,8 @@ namespace ZGame.Editor.ExcelExprot
     public enum ExportType
     {
         Json,
-        Csharp
+        Csharp,
+        Assets
     }
 
     [Serializable]

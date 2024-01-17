@@ -84,13 +84,13 @@ namespace ZGame.Window
                 return uiBase;
             }
 
-            ResHandle handle = ResourceManager.instance.LoadAsset(resPath);
-            if (handle.IsSuccess() is false)
+            ResObject resObject = ResourceManager.instance.LoadAsset(resPath);
+            if (resObject.IsSuccess() is false)
             {
                 return default;
             }
 
-            uiBase = (UIBase)Activator.CreateInstance(type, new object[] { handle.Instantiate() });
+            uiBase = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
             UILayers.instance.TrySetup(uiBase.gameObject, 1, Vector3.zero, Vector3.zero, Vector3.one);
             uiBase.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
             _windows.Add(uiBase);

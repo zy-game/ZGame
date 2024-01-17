@@ -6,6 +6,7 @@ using System.Reflection;
 using Cysharp.Threading.Tasks;
 using Cysharp.Threading.Tasks.Triggers;
 using HybridCLR;
+using UI;
 using UnityEngine;
 using ZGame.Resource;
 
@@ -22,6 +23,7 @@ namespace ZGame.Game
         {
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             DefaultWorld = CreateWorld("DEFAULT_WORLD");
+            BehaviourScriptable.instance.SetupKeyDown(KeyCode.Escape, keyEvent => { UIMsgBox.Show("是否退出应用？", QuitGame); });
         }
 
         protected override void OnFixedUpdate()

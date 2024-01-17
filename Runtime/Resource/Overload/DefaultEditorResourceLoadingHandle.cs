@@ -31,11 +31,12 @@ namespace ZGame.Resource
             GC.SuppressFinalize(this);
         }
 
-        public ResHandle LoadAsset(string path)
+        public ResObject LoadAsset(string path)
         {
 #if UNITY_EDITOR
-            if (ResHandleCache.instance.TryGetValue(handleName, path, out ResHandle handle))
+            if (ResObjectCache.instance.TryGetValue(handleName, path, out ResObject handle))
             {
+                Debug.Log("缓存资源");
                 return handle;
             }
 
@@ -47,7 +48,7 @@ namespace ZGame.Resource
             Debug.Log("Load Assets:" + path);
             if (path.EndsWith(".unity"))
             {
-                return ResHandle.OnCreate(_handle, null, path);
+                return ResObject.OnCreate(_handle, null, path);
             }
 
             var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
@@ -56,15 +57,15 @@ namespace ZGame.Resource
                 return default;
             }
 
-            return ResHandle.OnCreate(_handle, asset, path);
+            return ResObject.OnCreate(_handle, asset, path);
 #endif
             return default;
         }
 
-        public async UniTask<ResHandle> LoadAssetAsync(string path)
+        public async UniTask<ResObject> LoadAssetAsync(string path)
         {
 #if UNITY_EDITOR
-            if (ResHandleCache.instance.TryGetValue(handleName, path, out ResHandle handle))
+            if (ResObjectCache.instance.TryGetValue(handleName, path, out ResObject handle))
             {
                 return handle;
             }
@@ -76,7 +77,7 @@ namespace ZGame.Resource
 
             if (path.EndsWith(".unity"))
             {
-                return ResHandle.OnCreate(_handle, null, path);
+                return ResObject.OnCreate(_handle, null, path);
             }
 
             UnityEngine.Object asset = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(UnityEngine.Object));
@@ -85,7 +86,7 @@ namespace ZGame.Resource
                 return default;
             }
 
-            return ResHandle.OnCreate(_handle, asset, path);
+            return ResObject.OnCreate(_handle, asset, path);
 #endif
             return default;
         }
