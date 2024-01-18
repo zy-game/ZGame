@@ -27,7 +27,7 @@ namespace ZGame.Editor.ResBuild
 
         public override void OnGUI()
         {
-            GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
+            GUILayout.BeginHorizontal(ZStyle.BOX_BACKGROUND);
             GUILayout.FlexibleSpace();
             OSSType _type = (OSSType)EditorGUILayout.EnumPopup(type, EditorStyles.toolbarDropDown);
             if (_type.Equals(type) is false)

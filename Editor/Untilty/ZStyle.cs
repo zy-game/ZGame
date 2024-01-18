@@ -36,10 +36,8 @@ namespace ZGame.Editor
         public static readonly GUIContent weight = EditorGUIUtility.TrTextContent("权重");
 
         public const string GUI_STYLE_TITLE_LABLE = "LargeBoldLabel"; // new GUIStyle("LargeBoldLabel");
-        public const string GUI_STYLE_BOX_BACKGROUND = "OL box NoExpand"; // new GUIStyle("OL box NoExpand");
+        public const string BOX_BACKGROUND = "OL box NoExpand"; // new GUIStyle("OL box NoExpand");
         public const string GUI_STYLE_LINE = "WhiteBackground";
-        public const string GUI_STYLE_ADD_BUTTON = "OL Plus";
-        public const string GUI_STYLE_MINUS = "OL Minus";
 
         public const string GUI_STYLE_FRAME_LINE = "OverrideMargin"; // new GUIStyle("OverrideMargin");
         public const string GUI_STYLE_LAYER_BACKGROUND = "MeTransitionSelect"; // new GUIStyle("MeTransitionSelect");
@@ -49,14 +47,16 @@ namespace ZGame.Editor
         public static Color inColor = new Color(1f, 0.92f, 0.01f, .8f);
         public static Color outColor = new Color(0, 0, 0, 0.2f);
 
+        public static Color splitColor = Color.black;
+
+        public static string MORE_BUTTON_ICON = "d_more";
         public static string PLAY_BUTTON_ICON = "d_forward@2x";
-        public static string DELETE_BUTTON_ICON = "d_TreeEditor.Trash";
-        public static string SETTING_BUTTON_ICON = "SettingsIcon";
         public static string ADD_BUTTON_ICON = "d_CreateAddNew";
+        public static string SETTING_BUTTON_ICON = "SettingsIcon";
         public static string HEADER_BUTTON_STYLE = "StatusBarIcon";
         public static string REFRESH_BUTTON_ICON = "RotateTool On";
         public static string ITEM_BACKGROUND_STYLE = "DD Background";
-        public static string MORE_BUTTON_ICON = "d_more";
+        public static string DELETE_BUTTON_ICON = "d_TreeEditor.Trash";
     }
 
 #if UNITY_EDITOR

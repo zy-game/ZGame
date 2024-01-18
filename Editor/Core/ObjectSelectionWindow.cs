@@ -91,7 +91,7 @@ namespace ZGame.Editor
                 return;
             }
 
-            GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
+            GUILayout.BeginHorizontal(ZStyle.BOX_BACKGROUND);
             EditorGUILayout.LabelField("Selection", EditorStyles.boldLabel, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
             this.BeginColor(ZStyle.inColor);

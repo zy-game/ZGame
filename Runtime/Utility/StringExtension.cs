@@ -1,11 +1,20 @@
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace ZGame
 {
     public static partial class Extension
     {
+        public const string SPLIT = "%s";
+
+        public static string[] SplitToArrary(this string str, string split)
+        {
+            return str.Split(split).Where(x => x.IsNullOrEmpty() is false).ToArray();
+        }
+
         public static bool EndsWith(this string str, params string[] suffix)
         {
             foreach (var VARIABLE in suffix)

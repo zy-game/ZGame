@@ -10,6 +10,14 @@ namespace ZGame.Editor.PSD2GUI
     [SubPageSetting("PSD转UI")]
     public class PSD2GUIWindow : SubPage
     {
+        public override void SearchRightDrawing()
+        {
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                PSDConfig.instance.imports.Add(new PSDImport());
+            }
+        }
+
         public override void OnGUI()
         {
             if (EditorApplication.isPlaying)
@@ -17,29 +25,20 @@ namespace ZGame.Editor.PSD2GUI
                 return;
             }
 
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("PSD List", EditorStyles.boldLabel);
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
-            {
-                PSDConfig.instance.imports.Add(new PSDImport());
-            }
-
-            EditorGUILayout.EndHorizontal();
+            GUILayout.BeginVertical();
             EditorGUILayout.Space(5);
             for (int i = 0; i < PSDConfig.instance.imports.Count; i++)
             {
                 var import = PSDConfig.instance.imports[i];
-                GUILayout.BeginHorizontal(EditorStyles.helpBox);
+                GUILayout.BeginHorizontal(ZStyle.BOX_BACKGROUND);
                 import.psd = EditorGUILayout.ObjectField(import.psd, typeof(Object), false);
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Edit"))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
                 {
                     EditorManager.SwitchScene<ImportEditorPage>(import);
                 }
 
-                if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     PSDConfig.instance.imports.Remove(import);
                     EditorManager.Refresh();

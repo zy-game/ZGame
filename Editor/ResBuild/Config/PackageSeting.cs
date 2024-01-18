@@ -41,6 +41,7 @@ namespace ZGame.Editor.ResBuild.Config
         public Selector dependcies;
 
         [NonSerialized] public bool selection;
+        [NonSerialized] public bool isOn;
 
         public static PackageSeting Create(string name, string describe = "")
         {

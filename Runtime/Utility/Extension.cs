@@ -14,6 +14,8 @@ namespace ZGame
 {
     public static partial class Extension
     {
+        
+        
         public static int GetLoopCount(int value, int min, int max)
         {
             if (value > max)

@@ -286,7 +286,7 @@ namespace ZGame.Editor.ExcelExprot
                         }
                     }
 
-                    templete.Replace("\n", "[s]");
+                    templete.Replace("\n", String.Empty);
                     templete += "});";
                     sb.AppendLine(templete);
                 }

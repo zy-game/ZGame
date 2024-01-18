@@ -52,58 +52,68 @@ namespace ZGame.Editor.ResBuild
             }
         }
 
+        public override void SearchRightDrawing()
+        {
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                BuilderConfig.instance.packages.Add(PackageSeting.Create("New Package"));
+            }
+        }
+
+        public override void DrawingFoldoutHeaderRight(object userData)
+        {
+            if (userData is List<RulerData> list)
+            {
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+                {
+                    list.Add(new RulerData()
+                    {
+                        use = true,
+                        selector = new Selector(),
+                        buildType = BuildType.Once
+                    });
+                }
+
+                return;
+            }
+
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                BuilderConfig.instance.packages.Remove((PackageSeting)userData);
+                EditorManager.Refresh();
+            }
+        }
+
         public override void OnGUI()
         {
-            EditorGUI.BeginChangeCheck();
+            for (int i = BuilderConfig.instance.packages.Count - 1; i >= 0; i--)
             {
-                GUILayout.BeginHorizontal();
+                if (search.IsNullOrEmpty() is false && BuilderConfig.instance.packages[i].name.Contains(search) is false)
                 {
-                    GUILayout.Label("Ruler List", EditorStyles.boldLabel);
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
-                    {
-                        BuilderConfig.instance.packages.Add(PackageSeting.Create("New Package"));
-                    }
-
-                    GUILayout.EndHorizontal();
+                    continue;
                 }
 
-                for (int i = BuilderConfig.instance.packages.Count - 1; i >= 0; i--)
+                PackageSeting package = BuilderConfig.instance.packages[i];
+                package.isOn = OnShowFoldoutHeader(package.name, package.isOn, package);
+                if (package.isOn is false)
                 {
-                    if (search.IsNullOrEmpty() is false && BuilderConfig.instance.packages[i].name.Contains(search) is false)
-                    {
-                        continue;
-                    }
-
-                    GUILayout.BeginVertical(EditorStyles.helpBox);
-                    {
-                        DrawingRuleInfo(BuilderConfig.instance.packages[i]);
-                        GUILayout.EndVertical();
-                    }
-
-                    GUILayout.Space(10);
+                    continue;
                 }
 
+                GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
+                EditorGUI.BeginChangeCheck();
+                DrawingRuleInfo(BuilderConfig.instance.packages[i]);
                 if (EditorGUI.EndChangeCheck())
                 {
                     BuilderConfig.OnSave();
                 }
+
+                GUILayout.EndVertical();
             }
         }
 
         private void DrawingRuleInfo(PackageSeting package)
         {
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
-                {
-                    BuilderConfig.instance.packages.Remove(package);
-                    EditorManager.Refresh();
-                }
-
-                GUILayout.EndHorizontal();
-            }
             package.name = EditorGUILayout.TextField("规则名称", package.name);
             package.describe = EditorGUILayout.TextField("描述", package.describe);
             if (package.service == null || package.service.items == null || package.service.Count == 0)
@@ -137,48 +147,32 @@ namespace ZGame.Editor.ResBuild
             }
 
             GUILayout.EndHorizontal();
-            EditorGUI.BeginChangeCheck();
+
+
+            if (package.items == null)
             {
-                if (package.items == null)
-                {
-                    package.items = new List<RulerData>();
-                }
+                package.items = new List<RulerData>();
+            }
 
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-                {
-                    GUILayout.BeginHorizontal();
-                    {
-                        GUILayout.FlexibleSpace();
-                        if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
-                        {
-                            package.items.Add(new RulerData()
-                            {
-                                use = true,
-                                selector = new Selector(),
-                                buildType = BuildType.Once
-                            });
-                        }
-
-                        GUILayout.EndHorizontal();
-                    }
-                    for (int i = 0; i < package.items.Count; i++)
-                    {
-                        OnDrawingRuleItem(package.items[i], package);
-                    }
-
-                    GUILayout.EndVertical();
-                }
-
+            OnShowFoldoutHeader("Packages", true, package.items);
+            GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
+            for (int i = 0; i < package.items.Count; i++)
+            {
+                EditorGUI.BeginChangeCheck();
+                OnDrawingRuleItem(package.items[i], package);
                 if (EditorGUI.EndChangeCheck())
                 {
                     OnEnable();
+                    BuilderConfig.OnSave();
                 }
             }
+
+            GUILayout.EndVertical();
         }
 
         private void OnDrawingRuleItem(RulerData rulerData, PackageSeting package)
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(ZStyle.BOX_BACKGROUND);
             {
                 rulerData.use = EditorGUILayout.Toggle(rulerData.use, GUILayout.Width(20));
                 rulerData.folder = EditorGUILayout.ObjectField(rulerData.folder, typeof(DefaultAsset), false);
@@ -204,7 +198,7 @@ namespace ZGame.Editor.ResBuild
                     GUILayout.EndHorizontal();
                 }
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     package.items.Remove(rulerData);
                     EditorManager.Refresh();

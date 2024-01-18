@@ -104,21 +104,29 @@ namespace ZGame.Editor
             coroutines.Clear();
         }
 
-        public bool OnShowFoldoutHeader(string name, bool isOn, Action added = null)
+        public virtual void DrawingFoldoutHeaderRight(object userData)
         {
-            Rect rect = EditorGUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
+        }
+
+        Color temp = Color.white;
+
+        public void OnDrawingSplitLine(float width, Color color)
+        {
+            GUILayout.Space(2);
+            temp = GUI.color;
+            GUI.color = color;
+            GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.Height(1), GUILayout.Width(width));
+            GUI.color = temp;
+        }
+
+        public bool OnShowFoldoutHeader(string name, bool isOn, object userData = null)
+        {
+            Rect rect = EditorGUILayout.BeginHorizontal(ZStyle.BOX_BACKGROUND);
             isOn = EditorGUILayout.Foldout(isOn, "");
             GUILayout.Space(-40);
             EditorGUILayout.LabelField(name, EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
-            if (added is not null)
-            {
-                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
-                {
-                    added();
-                }
-            }
-
+            DrawingFoldoutHeaderRight(userData);
             if (Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
             {
                 isOn = !isOn;
@@ -129,6 +137,9 @@ namespace ZGame.Editor
             return isOn;
         }
 
+        public virtual void SearchRightDrawing()
+        {
+        }
 
         public virtual void OnEnable(params object[] args)
         {

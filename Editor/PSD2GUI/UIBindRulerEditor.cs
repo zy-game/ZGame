@@ -19,14 +19,32 @@ namespace ZGame.Editor.PSD2GUI
         //     UIBindRulerConfig.instance.nameSpaces.Sort((a, b) => a.isDefault ? -1 : 1);
         // }
 
+        public override void DrawingFoldoutHeaderRight(object userData)
+        {
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                int type = (int)userData;
+                switch (type)
+                {
+                    case 1:
+                        UIBindRulerConfig.instance.rules.Add(new UIBindRulerItem());
+                        EditorManager.Refresh();
+                        break;
+                    case 2:
+                        UIBindRulerConfig.instance.nameSpaces.Add(new ReferenceNameSpace());
+                        EditorManager.Refresh();
+                        break;
+                }
+
+                UIBindRulerConfig.instance.AddNameSpace(string.Empty);
+                EditorManager.Refresh();
+            }
+        }
+
         public override void OnGUI()
         {
             EditorGUI.BeginChangeCheck();
-            nameSpaceFoldout = OnShowFoldoutHeader("Refrence NameSpace", nameSpaceFoldout, () =>
-            {
-                UIBindRulerConfig.instance.AddNameSpace(string.Empty);
-                EditorManager.Refresh();
-            });
+            nameSpaceFoldout = OnShowFoldoutHeader("Refrence NameSpace", nameSpaceFoldout, 2);
             if (nameSpaceFoldout)
             {
                 for (int i = UIBindRulerConfig.instance.nameSpaces.Count - 1; i >= 0; i--)
@@ -44,17 +62,13 @@ namespace ZGame.Editor.PSD2GUI
 
                     GUILayout.EndHorizontal();
                     EditorGUI.EndDisabledGroup();
+                    OnDrawingSplitLine(position.width, new Color(0, 0, 0, 0.5f));
                 }
 
                 GUILayout.Space(3);
             }
 
-            typeFoldout = OnShowFoldoutHeader("Rulers", typeFoldout, () =>
-            {
-                UIBindRulerConfig.instance.rules.Add(new UIBindRulerItem());
-                EditorManager.Refresh();
-            });
-
+            typeFoldout = OnShowFoldoutHeader("Rulers", typeFoldout, 1);
             if (typeFoldout)
             {
                 for (int i = UIBindRulerConfig.instance.rules.Count - 1; i >= 0; i--)
@@ -76,6 +90,7 @@ namespace ZGame.Editor.PSD2GUI
 
                     GUILayout.EndHorizontal();
                     EditorGUI.EndDisabledGroup();
+                    OnDrawingSplitLine(position.width, new Color(0, 0, 0, 0.5f));
                 }
             }
 

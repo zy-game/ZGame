@@ -48,7 +48,7 @@ namespace ZGame.Editor
 
         private void DrawingPageScene()
         {
-            GUILayout.BeginVertical(ZStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.Width(position.width - 305), GUILayout.Height(position.height));
+            GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND, GUILayout.Width(position.width - 305), GUILayout.Height(position.height));
             GUILayout.BeginHorizontal();
             int size = EditorStyles.boldLabel.fontSize;
             EditorStyles.boldLabel.fontSize = 20;
@@ -69,6 +69,7 @@ namespace ZGame.Editor
                 Event.current.Use();
             }
 
+            current?.SearchRightDrawing();
             GUILayout.EndHorizontal();
 
             this.BeginColor(ZStyle.inColor);
@@ -86,9 +87,11 @@ namespace ZGame.Editor
             GUILayout.EndVertical();
         }
 
+    
+
         private void DrawingMenuList()
         {
-            GUILayout.BeginVertical(ZStyle.GUI_STYLE_BOX_BACKGROUND, GUILayout.MaxWidth(300), GUILayout.Height(position.height));
+            GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND, GUILayout.MaxWidth(300), GUILayout.Height(position.height));
             menuRoll = GUILayout.BeginScrollView(menuRoll);
             foreach (var VARIABLE in sceneMaps)
             {

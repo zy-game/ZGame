@@ -17,6 +17,8 @@ namespace ZGame.Resource.Config
 
         public string BucketFullName => $"{bucket}-{appid}";
 
+        [NonSerialized] public bool isOn;
+
 
         public void Upload(string filePath)
         {

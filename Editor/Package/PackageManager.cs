@@ -59,7 +59,7 @@ namespace ZGame.Editor.Package
 
         private void OnShowPackageInstallHeader()
         {
-            GUILayout.BeginHorizontal(ZStyle.GUI_STYLE_BOX_BACKGROUND);
+            GUILayout.BeginHorizontal(ZStyle.BOX_BACKGROUND);
             GUILayout.Label("Package Name");
             url = EditorGUILayout.TextField(url, GUILayout.Width(400));
             if (Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.Return && url.IsNullOrEmpty() is false)
@@ -139,7 +139,7 @@ namespace ZGame.Editor.Package
                 }
                 else
                 {
-                    if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_ADD_BUTTON))
+                    if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                     {
                         string version = package.recommended.IsNullOrEmpty() ? package.versions.Last() : package.recommended;
                         PackageDataList.instance.Install(package.name, version);
@@ -205,7 +205,7 @@ namespace ZGame.Editor.Package
                         GUILayout.Space(10);
                     }
 
-                    if (GUILayout.Button(String.Empty, ZStyle.GUI_STYLE_MINUS))
+                    if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                     {
                         PackageDataList.instance.Remove(package);
                         EditorManager.Refresh();
