@@ -87,7 +87,6 @@ namespace ZGame.Editor
             GUILayout.EndVertical();
         }
 
-    
 
         private void DrawingMenuList()
         {
@@ -95,70 +94,11 @@ namespace ZGame.Editor
             menuRoll = GUILayout.BeginScrollView(menuRoll);
             foreach (var VARIABLE in sceneMaps)
             {
-                if (OnDrwaingMeunItem(this.current.Equals(VARIABLE), VARIABLE.name, 0, VARIABLE.childs.Count > 0, ref VARIABLE.show))
-                {
-                    SwitchScene(VARIABLE);
-                }
-
-                if (VARIABLE.childs.Count == 0 || VARIABLE.show is false)
-                {
-                    continue;
-                }
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(20);
-                GUILayout.BeginVertical();
-                foreach (var subScene in VARIABLE.childs)
-                {
-                    if (OnDrwaingMeunItem(this.current.Equals(subScene), subScene.name, 20, false, ref VARIABLE.show))
-                    {
-                        SwitchScene(subScene);
-                    }
-                }
-
-                GUILayout.EndVertical();
-                GUILayout.EndHorizontal();
+                VARIABLE.OnDrawingMeunItem(current, 0);
             }
 
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
-        }
-
-        public bool OnDrwaingMeunItem(bool isSelection, string name, float offset, bool isFoldout, ref bool show)
-        {
-            Rect contains = EditorGUILayout.BeginVertical();
-            this.BeginColor(isSelection ? Color.cyan : GUI.color);
-            GUILayout.BeginHorizontal();
-            if (isFoldout)
-            {
-                GUILayout.BeginVertical(GUILayout.Width(20));
-                GUILayout.Space(3);
-                show = EditorGUILayout.Foldout(show, "");
-                GUILayout.EndVertical();
-                GUILayout.Space(-40);
-            }
-
-            GUILayout.Label(name, ZStyle.GUI_STYLE_TITLE_LABLE);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            this.EndColor();
-            GUILayout.Space(5);
-            this.BeginColor(current.Equals(this) ? ZStyle.inColor : ZStyle.outColor);
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(-offset);
-            GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.MaxWidth(leftWidth), GUILayout.Height(1));
-            GUILayout.EndHorizontal();
-            this.EndColor();
-            bool result = false;
-            if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
-            {
-                result = true;
-            }
-
-            GUILayout.Space(5);
-            GUILayout.EndVertical();
-            return result;
         }
 
         public void Waiting()

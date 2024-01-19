@@ -1,4 +1,5 @@
 using System.Linq;
+using HybridCLR.Editor.Settings;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditorInternal;
@@ -32,7 +33,7 @@ namespace ZGame.Editor
             for (int i = 0; i < BasicConfig.instance.entries.Count; i++)
             {
                 EntryConfig config = BasicConfig.instance.entries[i];
-                config.isOn = OnShowFoldoutHeader(config.title, config.isOn, config);
+                config.isOn = OnBeginHeader(config.title, config.isOn, config);
                 if (config.isOn)
                 {
                     EditorGUI.BeginChangeCheck();
@@ -61,7 +62,15 @@ namespace ZGame.Editor
                 config.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(config.path);
             }
 
-            config.mode = (CodeMode)EditorGUILayout.EnumPopup("模式", config.mode);
+            CodeMode mode = (CodeMode)EditorGUILayout.EnumPopup("模式", config.mode);
+            if (config.mode != mode)
+            {
+                config.mode = mode;
+                var hotList = BasicConfig.instance.entries.Where(x => x.mode == CodeMode.Hotfix).Select(x => x.assembly).ToArray();
+                HybridCLRSettings.Instance.hotUpdateAssemblyDefinitions = hotList;
+                HybridCLRSettings.Instance.enable = hotList.Length > 0;
+                HybridCLRSettings.Save();
+            }
 
             var resList = BuilderConfig.instance.packages.Select(x => x.name).ToList();
             int last = resList.FindIndex(x => x == config.module);
@@ -94,6 +103,7 @@ namespace ZGame.Editor
             }
 
             GUILayout.EndHorizontal();
+            GUILayout.Space(5);
             for (int j = config.references.Count - 1; j >= 0; j--)
             {
                 GUILayout.BeginHorizontal(ZStyle.ITEM_BACKGROUND_STYLE);
@@ -102,15 +112,12 @@ namespace ZGame.Editor
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     config.references.RemoveAt(j);
-                    j--;
                 }
 
                 GUILayout.EndHorizontal();
             }
 
             GUILayout.EndVertical();
-
-
             GUILayout.EndVertical();
         }
     }

@@ -27,7 +27,7 @@ namespace ZGame.Editor
             for (int i = 0; i < BasicConfig.instance.address.Count; i++)
             {
                 IPConfig config = BasicConfig.instance.address[i];
-                config.isOn = OnShowFoldoutHeader(config.title, config.isOn, config);
+                config.isOn = OnBeginHeader(config.title, config.isOn, config);
                 if (config.isOn)
                 {
                     EditorGUI.BeginChangeCheck();

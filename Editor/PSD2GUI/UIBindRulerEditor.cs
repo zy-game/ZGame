@@ -44,7 +44,7 @@ namespace ZGame.Editor.PSD2GUI
         public override void OnGUI()
         {
             EditorGUI.BeginChangeCheck();
-            nameSpaceFoldout = OnShowFoldoutHeader("Refrence NameSpace", nameSpaceFoldout, 2);
+            nameSpaceFoldout = OnBeginHeader("Refrence NameSpace", nameSpaceFoldout, 2);
             if (nameSpaceFoldout)
             {
                 for (int i = UIBindRulerConfig.instance.nameSpaces.Count - 1; i >= 0; i--)
@@ -63,12 +63,13 @@ namespace ZGame.Editor.PSD2GUI
                     GUILayout.EndHorizontal();
                     EditorGUI.EndDisabledGroup();
                     OnDrawingSplitLine(position.width, new Color(0, 0, 0, 0.5f));
+                    GUILayout.Space(2);
                 }
 
                 GUILayout.Space(3);
             }
 
-            typeFoldout = OnShowFoldoutHeader("Rulers", typeFoldout, 1);
+            typeFoldout = OnBeginHeader("Rulers", typeFoldout, 1);
             if (typeFoldout)
             {
                 for (int i = UIBindRulerConfig.instance.rules.Count - 1; i >= 0; i--)
@@ -91,6 +92,7 @@ namespace ZGame.Editor.PSD2GUI
                     GUILayout.EndHorizontal();
                     EditorGUI.EndDisabledGroup();
                     OnDrawingSplitLine(position.width, new Color(0, 0, 0, 0.5f));
+                    GUILayout.Space(2);
                 }
             }
 

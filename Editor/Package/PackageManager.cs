@@ -43,13 +43,13 @@ namespace ZGame.Editor.Package
 
             OnShowPackageInstallHeader();
 
-            showUnityPackageList = OnShowFoldoutHeader("Unity Package List", showUnityPackageList);
+            showUnityPackageList = OnBeginHeader("Unity Package List", showUnityPackageList);
             if (showUnityPackageList)
             {
                 OnShowNotInstallPackageList();
             }
 
-            showInstalledPackageList = OnShowFoldoutHeader("Install Package List", showInstalledPackageList);
+            showInstalledPackageList = OnBeginHeader("Install Package List", showInstalledPackageList);
             if (showInstalledPackageList)
             {
                 OnShowPackageList();

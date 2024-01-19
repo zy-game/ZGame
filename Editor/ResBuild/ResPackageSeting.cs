@@ -68,7 +68,7 @@ namespace ZGame.Editor.ResBuild
                 {
                     list.Add(new RulerData()
                     {
-                        use = true,
+                        // use = true,
                         selector = new Selector(),
                         buildType = BuildType.Once
                     });
@@ -94,26 +94,21 @@ namespace ZGame.Editor.ResBuild
                 }
 
                 PackageSeting package = BuilderConfig.instance.packages[i];
-                package.isOn = OnShowFoldoutHeader(package.name, package.isOn, package);
-                if (package.isOn is false)
+                package.isOn = OnBeginHeader(package.name, package.isOn, package);
+                if (package.isOn)
                 {
-                    continue;
-                }
+                    GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
+                    DrawingRuleInfo(BuilderConfig.instance.packages[i]);
 
-                GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
-                EditorGUI.BeginChangeCheck();
-                DrawingRuleInfo(BuilderConfig.instance.packages[i]);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    BuilderConfig.OnSave();
-                }
 
-                GUILayout.EndVertical();
+                    GUILayout.EndVertical();
+                }
             }
         }
 
         private void DrawingRuleInfo(PackageSeting package)
         {
+            EditorGUI.BeginChangeCheck();
             package.name = EditorGUILayout.TextField("规则名称", package.name);
             package.describe = EditorGUILayout.TextField("描述", package.describe);
             if (package.service == null || package.service.items == null || package.service.Count == 0)
@@ -147,14 +142,17 @@ namespace ZGame.Editor.ResBuild
             }
 
             GUILayout.EndHorizontal();
-
+            if (EditorGUI.EndChangeCheck())
+            {
+                BuilderConfig.OnSave();
+            }
 
             if (package.items == null)
             {
                 package.items = new List<RulerData>();
             }
 
-            OnShowFoldoutHeader("Packages", true, package.items);
+            OnBeginHeader("Packages", true, package.items, false);
             GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
             for (int i = 0; i < package.items.Count; i++)
             {
@@ -174,7 +172,7 @@ namespace ZGame.Editor.ResBuild
         {
             GUILayout.BeginHorizontal(ZStyle.BOX_BACKGROUND);
             {
-                rulerData.use = EditorGUILayout.Toggle(rulerData.use, GUILayout.Width(20));
+                // rulerData.use = EditorGUILayout.Toggle(rulerData.use, GUILayout.Width(20));
                 rulerData.folder = EditorGUILayout.ObjectField(rulerData.folder, typeof(DefaultAsset), false);
                 GUILayout.BeginHorizontal();
                 {

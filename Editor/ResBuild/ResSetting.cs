@@ -45,9 +45,9 @@ namespace ZGame.Editor.ResBuild
 
         public override void OnGUI()
         {
-            if (outputIsOn = OnShowFoldoutHeader("输出设置", outputIsOn, null))
+            if (outputIsOn = OnBeginHeader("输出设置", outputIsOn, null))
             {
-                GUILayout.BeginVertical("", ZStyle.BOX_BACKGROUND);
+                GUILayout.BeginVertical("", EditorStyles.helpBox);
                 GUILayout.Space(20);
                 EditorGUI.BeginChangeCheck();
                 BuilderConfig.instance.comperss = (BuildAssetBundleOptions)EditorGUILayout.EnumPopup("压缩方式", BuilderConfig.instance.comperss);
@@ -64,7 +64,7 @@ namespace ZGame.Editor.ResBuild
                 }
             }
 
-            if (resIsOn = OnShowFoldoutHeader("资源服配置", resIsOn, OSSConfig.instance.ossList))
+            if (resIsOn = OnBeginHeader("资源服配置", resIsOn, OSSConfig.instance.ossList))
             {
                 GUILayout.BeginVertical("", ZStyle.BOX_BACKGROUND);
                 GUILayout.BeginHorizontal();
@@ -74,15 +74,13 @@ namespace ZGame.Editor.ResBuild
                 for (int i = 0; i < OSSConfig.instance.ossList.Count; i++)
                 {
                     OSSOptions options = OSSConfig.instance.ossList[i];
-                    options.isOn = OnShowFoldoutHeader(options.title, options.isOn, options);
-                    if (options.isOn is false)
+                    options.isOn = OnBeginHeader(options.title, options.isOn, options);
+                    if (options.isOn)
                     {
-                        continue;
+                        GUILayout.BeginVertical(EditorStyles.helpBox);
+                        DrawingOptionsItem(options);
+                        GUILayout.EndVertical();
                     }
-
-                    GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
-                    DrawingOptionsItem(options);
-                    GUILayout.EndVertical();
                 }
 
                 GUILayout.EndVertical();
@@ -103,6 +101,17 @@ namespace ZGame.Editor.ResBuild
             EditorGUI.BeginChangeCheck();
             options.title = EditorGUILayout.TextField("名称", options.title);
             options.type = (OSSType)EditorGUILayout.EnumPopup("类型", options.type);
+            if (options.type == OSSType.Streaming)
+            {
+                if (EditorGUI.EndChangeCheck())
+                {
+                    BuilderConfig.OnSave();
+                    OSSConfig.OnSave();
+                }
+
+                return;
+            }
+
             if (options.type == OSSType.Tencent)
             {
                 options.appid = EditorGUILayout.TextField("AppId", options.appid);

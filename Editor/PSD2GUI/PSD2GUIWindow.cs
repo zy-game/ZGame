@@ -102,7 +102,7 @@ namespace ZGame.Editor.PSD2GUI
                 return;
             }
 
-            layer.isOn = OnShowFoldoutHeader(layer.name, layer.isOn);
+            layer.isOn = OnBeginHeader(layer.name, layer.isOn);
             if (layer.isOn)
             {
                 for (int i = 0; i < layer.children.Count; i++)

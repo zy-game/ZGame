@@ -57,7 +57,7 @@ namespace ZGame.Editor.ResBuild.Config
     [Serializable]
     public class RulerData
     {
-        public bool use;
+        // public bool use;
         public Object folder;
         public BuildType buildType;
         public Selector selector;

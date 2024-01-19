@@ -29,7 +29,7 @@ namespace ZGame.Editor
         {
             GUI.color = _color;
         }
-        
+
         public static void BeginColor(this UnityEditor.PopupWindowContent window, Color color)
         {
             _color = GUI.color;
@@ -37,6 +37,17 @@ namespace ZGame.Editor
         }
 
         public static void EndColor(this UnityEditor.PopupWindowContent window)
+        {
+            GUI.color = _color;
+        }
+
+        public static void BeginColor(this SubPage window, Color color)
+        {
+            _color = GUI.color;
+            GUI.color = color;
+        }
+
+        public static void EndColor(this SubPage window)
         {
             GUI.color = _color;
         }
@@ -52,6 +63,26 @@ namespace ZGame.Editor
             {
                 action?.Invoke();
             }
+        }
+
+        public static bool OnMouseLeftButtonDown(this SubPage window, Rect contains)
+        {
+            if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool OnMouseRightButtomDown(this SubPage window, Rect contains)
+        {
+            if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 1)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public static void OnMouseRightButtomDown(this EditorWindow window, Rect contains, Action action)
@@ -110,7 +141,7 @@ namespace ZGame.Editor
             return result;
         }
 
-        public static bool MenuFoldout(this EditorWindow window,bool value, string name, bool showFoldout)
+        public static bool MenuFoldout(this EditorWindow window, bool value, string name, bool showFoldout)
         {
             GUILayout.BeginHorizontal();
             if (showFoldout)
