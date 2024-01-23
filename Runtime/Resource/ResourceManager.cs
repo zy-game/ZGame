@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using ZGame.FileSystem;
 using ZGame.Networking;
-using ZGame.Window;
+using ZGame.UI;
 
 namespace ZGame.Resource
 {

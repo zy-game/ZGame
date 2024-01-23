@@ -1,11 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using HybridCLR.Editor;
+using HybridCLR.Editor.Commands;
 using HybridCLR.Editor.Settings;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using ZGame.Config;
+using ZGame.Editor.ResBuild;
 using ZGame.Editor.ResBuild.Config;
+using ZGame.Resource.Config;
 
 namespace ZGame.Editor
 {
@@ -20,12 +28,75 @@ namespace ZGame.Editor
             }
         }
 
-        public override void DrawingFoldoutHeaderRight(object userData)
+        public override void OnDrawingHeaderRight(object userData)
         {
+            if (userData is not EntryConfig config)
+            {
+                return;
+            }
+
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
-                BasicConfig.instance.entries.Remove((EntryConfig)userData);
+                BasicConfig.instance.entries.Remove(config);
             }
+
+
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                OnBuildGameConfig(config, true);
+            }
+        }
+
+
+        public static void OnBuildGameConfig(EntryConfig config, bool genericAll)
+        {
+            //todo 编译资源
+            PackageSeting seting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
+            string outPath = ResBuilder.OnBuildBundle(new[] { new BuilderOptions(seting) });
+            if (config.mode is not CodeMode.Hotfix)
+            {
+                return;
+            }
+
+            //todo 编译DLL资源
+            if (genericAll)
+            {
+                PrebuildCommand.GenerateAll();
+            }
+            else
+            {
+                
+                CompileDllCommand.CompileDllActiveBuildTarget();
+            }
+
+            string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
+            IReadOnlyList<string> aotList = AppDomain.CurrentDomain.GetStaticFieldValue<IReadOnlyList<string>>("AOTGenericReferences", "PatchedAOTAssemblyList");
+            byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
+            File.WriteAllBytes($"{outPath}/aot.bytes", bytes);
+            string hotfixDir = SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget);
+            bytes = Zip.Compress("*.dll", hotfixDir);
+            File.WriteAllBytes($"{outPath}/hotfix.bytes", bytes);
+
+            PackageSeting hotfixSeting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
+            if (hotfixSeting is null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < hotfixSeting.service.Count; i++)
+            {
+                OSSOptions options = OSSConfig.instance.ossList.Find(x => x.title == hotfixSeting.service[i]);
+                if (options is null)
+                {
+                    continue;
+                }
+
+                options.Upload($"{outPath}/aot.bytes");
+                options.Upload($"{outPath}/hotfix.bytes");
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
 
         public override void OnGUI()
@@ -62,15 +133,8 @@ namespace ZGame.Editor
                 config.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(config.path);
             }
 
-            CodeMode mode = (CodeMode)EditorGUILayout.EnumPopup("模式", config.mode);
-            if (config.mode != mode)
-            {
-                config.mode = mode;
-                var hotList = BasicConfig.instance.entries.Where(x => x.mode == CodeMode.Hotfix).Select(x => x.assembly).ToArray();
-                HybridCLRSettings.Instance.hotUpdateAssemblyDefinitions = hotList;
-                HybridCLRSettings.Instance.enable = hotList.Length > 0;
-                HybridCLRSettings.Save();
-            }
+            config.mode = (CodeMode)EditorGUILayout.EnumPopup("模式", config.mode);
+        
 
             var resList = BuilderConfig.instance.packages.Select(x => x.name).ToList();
             int last = resList.FindIndex(x => x == config.module);
@@ -79,7 +143,6 @@ namespace ZGame.Editor
             {
                 config.module = resList[curIndex];
             }
-
 
             config.assembly = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Assembly", config.assembly, typeof(AssemblyDefinitionAsset), false);
             GUILayout.BeginVertical(EditorStyles.helpBox);

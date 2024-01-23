@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
-using ZGame.Window;
+using ZGame.UI;
 using SystemInfo = UnityEngine.Device.SystemInfo;
 
 namespace ZGame.Editor.PSD2GUI

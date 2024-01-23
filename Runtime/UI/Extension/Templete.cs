@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     public class Templete<T> : UIBase where T : Templete<T>
     {

@@ -20,7 +20,7 @@ namespace ZGame.Resource.Config
         [NonSerialized] public bool isOn;
 
 
-        public void Upload(string filePath)
+        public void Upload(string filePath, bool isEncrypt = false)
         {
             if (File.Exists(filePath) is false)
             {
@@ -30,7 +30,7 @@ namespace ZGame.Resource.Config
             switch (type)
             {
                 case OSSType.Streaming:
-                    string path = Path.Combine(Application.streamingAssetsPath, Path.GetFileName(filePath).ToLower());
+                    string path = GetFilePath(Path.GetFileName(filePath));
                     if (Directory.Exists(Application.streamingAssetsPath) is false)
                     {
                         Directory.CreateDirectory(Application.streamingAssetsPath);
@@ -50,6 +50,8 @@ namespace ZGame.Resource.Config
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            Debug.Log("upload:" + filePath);
         }
 
         public string GetFilePath(string fileName)
@@ -57,11 +59,11 @@ namespace ZGame.Resource.Config
             switch (type)
             {
                 case OSSType.Streaming:
-                    return Path.Combine(Application.streamingAssetsPath, fileName);
+                    return Path.Combine(Application.streamingAssetsPath, fileName.ToLower());
                 case OSSType.Aliyun:
-                    return $"https://{bucket}.oss-{region}.aliyuncs.com/{BasicConfig.GetPlatformName()}/{fileName}";
+                    return $"https://{bucket}.oss-{region}.aliyuncs.com/{BasicConfig.GetPlatformName()}/{fileName.ToLower()}";
                 case OSSType.Tencent:
-                    return $"https://{bucket}.cos.{region}.myqcloud.com/{BasicConfig.GetPlatformName()}/{fileName}";
+                    return $"https://{bucket}.cos.{region}.myqcloud.com/{BasicConfig.GetPlatformName()}/{fileName.ToLower()}";
                 default:
                     throw new ArgumentOutOfRangeException();
             }

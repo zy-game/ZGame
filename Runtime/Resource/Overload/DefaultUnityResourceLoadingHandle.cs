@@ -1,7 +1,6 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using ZGame.Window;
 
 namespace ZGame.Resource
 {

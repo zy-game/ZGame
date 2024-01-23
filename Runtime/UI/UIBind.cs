@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     public class UIBind : MonoBehaviour
     {

@@ -3,9 +3,8 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using ZGame.Window;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     public class UILoading : UIBase, IProgress<float>
     {

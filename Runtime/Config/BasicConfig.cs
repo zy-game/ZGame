@@ -101,7 +101,6 @@ namespace ZGame
         /// </summary>
         public List<string> references;
 
-
 #if UNITY_EDITOR
         [NonSerialized] public bool isOn;
         [NonSerialized] public UnityEditorInternal.AssemblyDefinitionAsset assembly;

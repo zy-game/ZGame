@@ -6,7 +6,6 @@ using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.ResBuild.Config;
 using ZGame.Resource.Config;
-using ZGame.Window;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
@@ -60,7 +59,7 @@ namespace ZGame.Editor.ResBuild
             }
         }
 
-        public override void DrawingFoldoutHeaderRight(object userData)
+        public override void OnDrawingHeaderRight(object userData)
         {
             if (userData is List<RulerData> list)
             {

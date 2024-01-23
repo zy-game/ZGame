@@ -81,9 +81,10 @@ namespace ZGame.Editor.ResBuild
             }
 
             OnBuildBundle(builds.ToArray());
+            EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
         }
 
-        private void OnBuildBundle(params BuilderOptions[] builds)
+        public static string OnBuildBundle(params BuilderOptions[] builds)
         {
             List<AssetBundleBuild> list = new List<AssetBundleBuild>();
             foreach (var VARIABLE in builds)
@@ -100,10 +101,10 @@ namespace ZGame.Editor.ResBuild
 
             var manifest = BuildPipeline.BuildAssetBundles(output, list.ToArray(), BuildAssetBundleOptions.None, target);
             OnUploadResourcePackageList(output, CreatePackageManifest(output, manifest, builds), builds);
-            EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
+            return output;
         }
 
-        private List<ResourcePackageListManifest> CreatePackageManifest(string output, AssetBundleManifest manifest, params BuilderOptions[] builds)
+        private static List<ResourcePackageListManifest> CreatePackageManifest(string output, AssetBundleManifest manifest, params BuilderOptions[] builds)
         {
             BuildPipeline.GetCRCForAssetBundle(new DirectoryInfo(output).Name, out uint crc);
             List<ResourcePackageListManifest> packageListManifests = new List<ResourcePackageListManifest>();
@@ -138,7 +139,7 @@ namespace ZGame.Editor.ResBuild
             return packageListManifests;
         }
 
-        private void OnUploadResourcePackageList(string output, List<ResourcePackageListManifest> manifests, params BuilderOptions[] builds)
+        private static void OnUploadResourcePackageList(string output, List<ResourcePackageListManifest> manifests, params BuilderOptions[] builds)
         {
             int allCount = builds.Sum(x => x.builds.Length * x.seting.service.Selected.Length);
             int successCount = 0;

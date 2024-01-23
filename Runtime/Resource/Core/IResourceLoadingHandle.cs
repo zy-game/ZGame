@@ -1,6 +1,5 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
-using ZGame.Window;
 
 namespace ZGame.Resource
 {

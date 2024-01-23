@@ -29,6 +29,11 @@ namespace ZGame.Editor
                 BasicConfig.instance.curEntryName = BasicConfig.instance.entries[curIndex].title;
             }
 
+            if (curIndex >= 0 && curIndex < BasicConfig.instance.entries.Count)
+            {
+                startup.args = EditorGUILayout.TextField("参数", startup.args);
+            }
+
             GUILayout.BeginHorizontal();
             last = BasicConfig.instance.address.FindIndex(x => x.title == BasicConfig.instance.curAddressName);
             curIndex = EditorGUILayout.Popup("服务器地址", last, BasicConfig.instance.address.Select(x => x.title).ToArray());

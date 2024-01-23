@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using HybridCLR.Editor.Settings;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditorInternal;
@@ -38,6 +39,20 @@ namespace ZGame.Editor
             if (curIndex >= 0 && curIndex < BasicConfig.instance.entries.Count && last != curIndex)
             {
                 BasicConfig.instance.curEntryName = BasicConfig.instance.entries[curIndex].title;
+                List<AssemblyDefinitionAsset> hotfixAssemblies = new List<AssemblyDefinitionAsset>();
+                if (BasicConfig.instance.curEntry.mode == CodeMode.Hotfix)
+                {
+                    if (BasicConfig.instance.curEntry.path.IsNullOrEmpty() is false && BasicConfig.instance.curEntry.assembly == null)
+                    {
+                        BasicConfig.instance.curEntry.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(BasicConfig.instance.curEntry.path);
+                    }
+
+                    hotfixAssemblies.Add(BasicConfig.instance.curEntry.assembly);
+                }
+
+                HybridCLRSettings.Instance.hotUpdateAssemblyDefinitions = hotfixAssemblies.ToArray();
+                HybridCLRSettings.Instance.enable = hotfixAssemblies.Count > 0;
+                HybridCLRSettings.Save();
             }
 
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
@@ -45,8 +60,19 @@ namespace ZGame.Editor
                 EditorManager.SwitchScene<GameWindow>();
             }
 
-            GUILayout.EndHorizontal();
+            if (BasicConfig.instance.curEntry is not null && BasicConfig.instance.curEntry.mode == CodeMode.Hotfix)
+            {
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
+                {
+                    GenericMenu menu = new GenericMenu();
+                    menu.AddItem(new GUIContent("Generic Porject"), false, () => GameWindow.OnBuildGameConfig(BasicConfig.instance.curEntry, true));
+                    menu.AddItem(new GUIContent("Generic Dll"), false, () => GameWindow.OnBuildGameConfig(BasicConfig.instance.curEntry, false));
+                    menu.ShowAsContext();
+                }
+            }
 
+
+            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             last = BasicConfig.instance.address.FindIndex(x => x.title == BasicConfig.instance.curAddressName);
             curIndex = EditorGUILayout.Popup("服务器地址", last, BasicConfig.instance.address.Select(x => x.title).ToArray());

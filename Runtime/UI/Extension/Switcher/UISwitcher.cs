@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
 
 

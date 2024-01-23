@@ -6,9 +6,9 @@ using System.Reflection;
 using Cysharp.Threading.Tasks;
 using Cysharp.Threading.Tasks.Triggers;
 using HybridCLR;
-using UI;
 using UnityEngine;
 using ZGame.Resource;
+using ZGame.UI;
 
 namespace ZGame.Game
 {
@@ -90,9 +90,9 @@ namespace ZGame.Game
             gameHandle = null;
         }
 
-        public async UniTask<bool> EntryGame(EntryConfig config, params object[] args)
+        public async UniTask<bool> EntryGame(EntryConfig config, params string[] args)
         {
-            SubGame gameEntry = await SubGame.LoadGame(config);
+            SubGame gameEntry = await SubGame.LoadGame(config, args);
             if (gameEntry is null)
             {
                 return false;

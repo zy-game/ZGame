@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace ZGame.Game
+namespace ZGame.UI
 {
     public sealed class UILayers : Singleton<UILayers>
     {

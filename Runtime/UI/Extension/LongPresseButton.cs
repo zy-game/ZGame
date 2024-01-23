@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     public class LongPresseButton : Button
     {
@@ -19,6 +19,7 @@ namespace ZGame.Window
         private bool isUp;
         private bool isCancel;
         private bool callDown;
+        private Vector2 touchPos;
 
         public void SetLimitTime(float time)
         {
@@ -39,6 +40,12 @@ namespace ZGame.Window
                 onDown.Invoke();
             }
 
+            if (Vector2.Distance(Input.mousePosition, touchPos) > 150)
+            {
+                isDown = false;
+                onCancel.Invoke();
+            }
+
             if (Time.realtimeSinceStartup - startTime < limitTime)
             {
                 return;
@@ -56,6 +63,7 @@ namespace ZGame.Window
             base.OnPointerDown(eventData);
             isDown = true;
             callDown = false;
+            touchPos = eventData.position;
             startTime = Time.realtimeSinceStartup;
         }
 
@@ -76,18 +84,6 @@ namespace ZGame.Window
             {
                 onUp.Invoke();
             }
-        }
-
-        public override void OnPointerExit(PointerEventData eventData)
-        {
-            base.OnPointerExit(eventData);
-            if (isDown is false)
-            {
-                return;
-            }
-
-            isDown = false;
-            onCancel.Invoke();
         }
     }
 }

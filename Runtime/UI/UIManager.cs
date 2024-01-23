@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UI;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Game;
 using ZGame.Resource;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     /// <summary>
     /// 界面管理器

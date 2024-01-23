@@ -6,7 +6,7 @@ using ZGame.Editor.ResBuild.Config;
 
 namespace ZGame.Editor.ResBuild
 {
-    class BuilderOptions
+    public class BuilderOptions
     {
         public PackageSeting seting { get; }
         public AssetBundleBuild[] builds => GetRuleBuildBundles();

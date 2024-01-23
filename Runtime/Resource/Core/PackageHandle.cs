@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using ZGame.Window;
 
 namespace ZGame.Resource
 {

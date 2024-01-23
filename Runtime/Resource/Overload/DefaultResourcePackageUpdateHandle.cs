@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using UI;
 using UnityEngine;
 using UnityEngine.Networking;
 using ZGame.Config;
@@ -11,7 +10,7 @@ using ZGame.FileSystem;
 using ZGame.Game;
 using ZGame.Networking;
 using ZGame.Resource.Config;
-using ZGame.Window;
+using ZGame.UI;
 
 namespace ZGame.Resource
 {

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     public enum ParamType
     {

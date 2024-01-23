@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Config;
 using ZGame.Editor.ResBuild.Config;
-using ZGame.Window;
+using ZGame.UI;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.PSD2GUI

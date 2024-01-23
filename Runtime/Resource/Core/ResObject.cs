@@ -3,12 +3,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using TMPro;
-using UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
-using ZGame.Window;
+using ZGame.UI;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Resource

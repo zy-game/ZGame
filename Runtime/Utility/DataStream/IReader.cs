@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Runtime.Core
+namespace ZGame.DataStream
 {
     public interface IReader : IDisposable
     {

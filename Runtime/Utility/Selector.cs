@@ -16,6 +16,19 @@ namespace ZGame
     {
         public List<SelectorData> items = new List<SelectorData>();
 
+        public string this[int index]
+        {
+            get
+            {
+                if (index < 0 || index >= items.Count)
+                {
+                    throw new IndexOutOfRangeException();
+                }
+
+                return items[index].name;
+            }
+        }
+
         public bool isAll
         {
             get
@@ -43,8 +56,7 @@ namespace ZGame
         {
             get { return items.Count; }
         }
-        
-    
+
 
         public override string ToString()
         {

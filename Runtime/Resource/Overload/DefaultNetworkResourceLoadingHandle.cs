@@ -3,7 +3,6 @@ using System.IO;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
-using ZGame.Window;
 
 namespace ZGame.Resource
 {

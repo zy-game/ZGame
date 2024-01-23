@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     [Serializable]
     public class AutoContentOptions

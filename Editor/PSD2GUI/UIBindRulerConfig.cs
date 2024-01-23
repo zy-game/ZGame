@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Config;
 using ZGame.Resource;
-using ZGame.Window;
+using ZGame.UI;
 
 namespace ZGame.Editor.PSD2GUI
 {

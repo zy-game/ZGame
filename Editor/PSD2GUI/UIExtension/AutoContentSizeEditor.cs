@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-using ZGame.Window;
+using ZGame.UI;
 
 namespace ZGame.Editor.PSD2GUI
 {

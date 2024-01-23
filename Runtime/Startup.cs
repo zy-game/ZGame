@@ -5,17 +5,18 @@ using System.Linq;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
 using HybridCLR;
-using UI;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 using ZGame;
 using ZGame.Game;
 using ZGame.Resource;
-using ZGame.Window;
+using ZGame.UI;
 
 public class Startup : MonoBehaviour
 {
+    public string args;
+
     private async void Start()
     {
         GameManager.instance.Initialized();
@@ -27,14 +28,8 @@ public class Startup : MonoBehaviour
             return;
         }
 
-        Debug.Log(BasicConfig.instance.curEntry.entryName);
         await PackageManifestManager.instance.Setup(BasicConfig.instance.curEntry.module);
         await ResourceManager.instance.PerloadingResourcePackageList(BasicConfig.instance.curEntry.module);
-        await GameManager.instance.EntryGame(BasicConfig.instance.curEntry);
-    }
-
-    private void Update()
-    {
-       
+        await GameManager.instance.EntryGame(BasicConfig.instance.curEntry, args.Split(';'));
     }
 }

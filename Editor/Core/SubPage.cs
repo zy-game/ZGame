@@ -149,7 +149,7 @@ namespace ZGame.Editor
             coroutines.Clear();
         }
 
-        public virtual void DrawingFoldoutHeaderRight(object userData)
+        public virtual void OnDrawingHeaderRight(object userData)
         {
         }
 
@@ -178,7 +178,7 @@ namespace ZGame.Editor
 
             EditorGUILayout.LabelField(name, EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
-            DrawingFoldoutHeaderRight(userData);
+            OnDrawingHeaderRight(userData);
             if (this.OnMouseLeftButtonDown(rect))
             {
                 isOn = !isOn;

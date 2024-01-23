@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using ZGame.Sound;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     public class UIPopMsg : MonoBehaviour
     {

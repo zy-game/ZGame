@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -10,6 +11,11 @@ namespace ZGame
     {
         public const string SPLIT = "%s";
 
+        public static byte[] ToBytes(this string str)
+        {
+            return Encoding.UTF8.GetBytes(str);
+        }
+        
         public static string[] SplitToArrary(this string str, string split)
         {
             return str.Split(split).Where(x => x.IsNullOrEmpty() is false).ToArray();

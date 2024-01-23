@@ -2,9 +2,8 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using ZGame;
-using ZGame.Window;
 
-namespace UI
+namespace ZGame.UI
 {
     public sealed class UIWait : UIBase
     {

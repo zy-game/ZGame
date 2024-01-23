@@ -4,9 +4,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame;
-using ZGame.Window;
 
-namespace UI
+namespace ZGame.UI
 {
     public class UIMsgBox : UIBase
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace Runtime.Core
+namespace ZGame.DataStream
 {
     public interface ISerialize : IDisposable
     {

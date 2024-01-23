@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEditor;
-using ZGame.Window;
+using ZGame.UI;
 
 namespace ZGame.Editor.PSD2GUI
 {

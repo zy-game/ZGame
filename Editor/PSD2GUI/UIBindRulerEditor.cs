@@ -19,7 +19,7 @@ namespace ZGame.Editor.PSD2GUI
         //     UIBindRulerConfig.instance.nameSpaces.Sort((a, b) => a.isDefault ? -1 : 1);
         // }
 
-        public override void DrawingFoldoutHeaderRight(object userData)
+        public override void OnDrawingHeaderRight(object userData)
         {
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {

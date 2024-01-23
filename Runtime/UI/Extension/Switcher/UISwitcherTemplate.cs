@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     public class UISwitcherTemplate : MonoBehaviour
     {

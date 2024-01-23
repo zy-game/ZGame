@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ZGame.Window
+namespace ZGame.UI
 {
     public class SubSceneTemplete : MonoBehaviour
     {

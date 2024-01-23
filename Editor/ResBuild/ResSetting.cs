@@ -13,7 +13,7 @@ namespace ZGame.Editor.ResBuild
         private bool outputIsOn = false;
         private bool resIsOn = false;
 
-        public override void DrawingFoldoutHeaderRight(object userData)
+        public override void OnDrawingHeaderRight(object userData)
         {
             if (userData is null)
             {

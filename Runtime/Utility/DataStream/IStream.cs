@@ -1,4 +1,4 @@
-namespace ZGame.Stream
+namespace ZGame.DataStream
 {
     public interface IStream
     {

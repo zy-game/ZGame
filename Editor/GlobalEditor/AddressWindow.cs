@@ -14,7 +14,7 @@ namespace ZGame.Editor
             }
         }
 
-        public override void DrawingFoldoutHeaderRight(object userData)
+        public override void OnDrawingHeaderRight(object userData)
         {
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {

@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
@@ -14,8 +14,10 @@ namespace ZGame
 {
     public static partial class Extension
     {
-        
-        
+        public static T CheckNotNull<T>(T value, string name) where T : class => (object)value != null ? value : throw new ArgumentNullException(name);
+
+        internal static T CheckNotNullUnconstrained<T>(T value, string name) => (object)value != null ? value : throw new ArgumentNullException(name);
+
         public static int GetLoopCount(int value, int min, int max)
         {
             if (value > max)
@@ -53,6 +55,10 @@ namespace ZGame
             else if (typeof(T) == typeof(byte[]))
             {
                 _data = request.downloadHandler.data;
+            }
+            else if (typeof(T) is JObject)
+            {
+                _data = JObject.Parse(request.downloadHandler.text);
             }
             else
             {
@@ -173,6 +179,24 @@ namespace ZGame
             }
 
             return result;
+        }
+
+        public static T GetStaticFieldValue<T>(this AppDomain domain, string typeName, string fieldName)
+        {
+            Type type = AppDomain.CurrentDomain.GetType(typeName);
+            if (type is null)
+            {
+                return default;
+            }
+
+            object target = Activator.CreateInstance(type);
+            FieldInfo fieldInfo = type.GetField(fieldName);
+            if (fieldInfo is null)
+            {
+                return default;
+            }
+
+            return (T)fieldInfo.GetValue(target);
         }
     }
 }

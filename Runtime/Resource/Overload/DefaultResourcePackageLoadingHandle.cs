@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
-using UI;
 using UnityEngine;
 using UnityEngine.Networking;
 using ZGame.FileSystem;
 using ZGame.Resource.Config;
-using ZGame.Window;
+using ZGame.UI;
 
 namespace ZGame.Resource
 {
