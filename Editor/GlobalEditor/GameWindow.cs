@@ -65,17 +65,16 @@ namespace ZGame.Editor
             }
             else
             {
-                
                 CompileDllCommand.CompileDllActiveBuildTarget();
             }
 
             string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
             IReadOnlyList<string> aotList = AppDomain.CurrentDomain.GetStaticFieldValue<IReadOnlyList<string>>("AOTGenericReferences", "PatchedAOTAssemblyList");
             byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
-            File.WriteAllBytes($"{outPath}/aot.bytes", bytes);
+            File.WriteAllBytes($"{outPath}/{config.entryName.ToLower()}_aot.bytes", bytes);
             string hotfixDir = SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget);
             bytes = Zip.Compress("*.dll", hotfixDir);
-            File.WriteAllBytes($"{outPath}/hotfix.bytes", bytes);
+            File.WriteAllBytes($"{outPath}/{config.entryName.ToLower()}_hotfix.bytes", bytes);
 
             PackageSeting hotfixSeting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
             if (hotfixSeting is null)
@@ -91,8 +90,8 @@ namespace ZGame.Editor
                     continue;
                 }
 
-                options.Upload($"{outPath}/aot.bytes");
-                options.Upload($"{outPath}/hotfix.bytes");
+                options.Upload($"{outPath}/{config.entryName.ToLower()}_aot.bytes");
+                options.Upload($"{outPath}/{config.entryName.ToLower()}_hotfix.bytes");
             }
 
             AssetDatabase.SaveAssets();
@@ -134,7 +133,7 @@ namespace ZGame.Editor
             }
 
             config.mode = (CodeMode)EditorGUILayout.EnumPopup("模式", config.mode);
-        
+
 
             var resList = BuilderConfig.instance.packages.Select(x => x.name).ToList();
             int last = resList.FindIndex(x => x == config.module);

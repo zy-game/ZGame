@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -80,6 +81,11 @@ namespace ZGame.UI
             return _instance = UIManager.instance.Open<UILoading>(resPath);
         }
 
+        public static async void Show(IUIRunning running, params object[] args)
+        {
+            await running.Run(Show(), args);
+        }
+
         public static void Hide()
         {
             if (_instance is null)
@@ -90,5 +96,16 @@ namespace ZGame.UI
             UIManager.instance.Close<UILoading>();
             _instance = null;
         }
+    }
+
+
+    public interface IUIRunning : IDisposable
+    {
+        UniTask Run(UILoading loading, params object[] args);
+    }
+
+    public interface IUIRunning<T> : IUIRunning
+    {
+        UniTask<T> Run(UILoading loading, params object[] args);
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using HybridCLR.Editor.Settings;
 using Newtonsoft.Json;
+using Unity.Collections;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -71,8 +72,8 @@ namespace ZGame.Editor
                 }
             }
 
-
             GUILayout.EndHorizontal();
+            NativeLeakDetection.Mode = (NativeLeakDetectionMode)EditorGUILayout.EnumPopup("Enable Stack Trace", NativeLeakDetection.Mode);
             GUILayout.BeginHorizontal();
             last = BasicConfig.instance.address.FindIndex(x => x.title == BasicConfig.instance.curAddressName);
             curIndex = EditorGUILayout.Popup("服务器地址", last, BasicConfig.instance.address.Select(x => x.title).ToArray());

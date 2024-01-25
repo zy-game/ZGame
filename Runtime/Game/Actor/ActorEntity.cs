@@ -30,8 +30,8 @@ namespace ZGame.Game
             }
 
             T actor = Activator.CreateInstance<T>();
-            actor._id = ID.GetString();
             actor._name = name;
+            actor._id = actor.GetHashCode().ToString();
             actor._gameObject = resObject.Instantiate();
             Animator animator = actor._gameObject.GetComponentInChildren<Animator>();
             if (animator != null)

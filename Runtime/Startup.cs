@@ -29,7 +29,7 @@ public class Startup : MonoBehaviour
         }
 
         await PackageManifestManager.instance.Setup(BasicConfig.instance.curEntry.module);
-        await ResourceManager.instance.PerloadingResourcePackageList(BasicConfig.instance.curEntry.module);
+        await ResourceManager.instance.PerloadingResourcePackageList(BasicConfig.instance.curEntry);
         await GameManager.instance.EntryGame(BasicConfig.instance.curEntry, args.Split(';'));
     }
 }

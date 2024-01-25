@@ -4,6 +4,7 @@ using System.IO;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -12,30 +13,39 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Resource
 {
-    public sealed class ResObject : IDisposable
+    public sealed partial class ResObject : IDisposable
     {
         private object obj;
-        private PackageHandle parent;
-        public string path { get; private set; }
-        public int refCount { get; private set; }
+        private string _path;
+        private int _refCount;
+        private ResPackage parent;
 
-        public string packageName
+        public string path
         {
-            get { return parent.name; }
+            get { return _path; }
         }
 
-        public static ResObject OnCreate([NotNull] PackageHandle parent, [NotNull] object obj, [NotNull] string path)
+        public int refCount
         {
-            ResObject resObject = new ResObject()
+            get { return _refCount; }
+        }
+
+        internal ResObject(ResPackage parent, object obj, string path)
+        {
+            this.obj = obj;
+            this._path = path;
+            this.parent = parent;
+        }
+
+        public bool IsSubAsset(ResPackage handle)
+        {
+            if (parent is null)
             {
-                obj = obj,
-                path = path,
-                parent = parent
-            };
-            ResObjectCache.instance.Add(resObject);
-            return resObject;
-        }
+                return false;
+            }
 
+            return handle.Equals(parent);
+        }
 
         public bool IsSuccess()
         {
@@ -47,13 +57,6 @@ namespace ZGame.Resource
             return false;
         }
 
-        // public T Get<T>(GameObject gameObject = null)
-        // {
-        //     gameObject?.OnListenDestroyEvent(Release);
-        //     parent.AddRef();
-        //     return obj == null ? default(T) : (T)obj;
-        // }
-
         public T GetAsset<T>()
         {
             if (obj == null)
@@ -61,40 +64,63 @@ namespace ZGame.Resource
                 return default;
             }
 
-            parent.AddRef();
-            return (T)obj;
+            object result = obj;
+            if (obj is TextAsset textAsset)
+            {
+                if (typeof(T) == typeof(AudioClip))
+                {
+                    result = WavUtility.ToAudioClip(textAsset.bytes);
+                }
+
+                if (typeof(T) == typeof(Texture2D) || typeof(T) == typeof(Sprite))
+                {
+                    Texture2D texture2D = new Texture2D(0, 0, TextureFormat.RGBA32, false);
+                    texture2D.LoadRawTextureData(textAsset.bytes);
+                    texture2D.Apply();
+                    if (typeof(T) == typeof(Sprite))
+                    {
+                        result = Sprite.Create(texture2D, new Rect(0, 0, texture2D.width, texture2D.height), Vector2.one / 2);
+                    }
+                    else
+                    {
+                        result = texture2D;
+                    }
+                }
+            }
+
+            parent?.AddRef();
+            return (T)result;
         }
 
         public T GetAsset<T>(GameObject gameObject)
         {
-            gameObject?.OnListenDestroyEvent(Release);
+            gameObject?.OnListenDestroyEvent(() => { Release(); });
             return GetAsset<T>();
         }
 
-        public void Release()
+        public void Release(bool isClear = false)
         {
-            refCount--;
-            parent.MinusRef();
-        }
-
-        public void Dispose(bool isClear)
-        {
-            if (refCount > 0)
+            if (isClear is false)
             {
+                _refCount--;
+                parent?.MinusRef();
                 return;
             }
 
-            refCount = 0;
             obj = null;
+            _refCount = 0;
             parent = null;
-            path = String.Empty;
+            _path = String.Empty;
         }
 
         public void Dispose()
         {
-            Release();
+            Release(true);
         }
+    }
 
+    public sealed partial class ResObject
+    {
         public Scene OpenScene()
         {
             Scene scene = GetAsset<Scene>();
@@ -169,7 +195,7 @@ namespace ZGame.Resource
 
             GameObject templete = GetAsset<GameObject>();
             GameObject gameObject = (GameObject)GameObject.Instantiate(templete);
-            gameObject.OnListenDestroyEvent(Release);
+            gameObject.OnListenDestroyEvent(() => { Release(); });
             return gameObject;
         }
 

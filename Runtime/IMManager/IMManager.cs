@@ -12,30 +12,11 @@ namespace ZGame.IM
     public class IMManager : Singleton<IMManager>
     {
         private List<IMClient> clients = new();
-
-        private int m_AudioRate = 16000;
-        private int m_BufferSeconds = 1;
-        private string m_CurrentDevice = null;
-        private AudioClip m_Recording;
-        public bool isRecording = false;
-        private const int k_SizeofInt16 = sizeof(short);
-
-        private int m_BufferSize;
-        private float m_CDCounter;
-        private int m_LastPosition;
-        private float[] clipData;
-        private byte[] chunk;
         private UniTaskCompletionSource<bool> _completionSource;
-
         public IMClient current { get; private set; }
-
 
         protected override void OnAwake()
         {
-            m_BufferSize = m_BufferSeconds * m_AudioRate;
-            chunk = new byte[m_BufferSize * k_SizeofInt16];
-            clipData = new float[m_BufferSize];
-            m_CurrentDevice = Microphone.devices.FirstOrDefault();
         }
 
         protected override void OnDestroy()

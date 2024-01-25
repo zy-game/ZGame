@@ -40,34 +40,7 @@ namespace ZGame
             editor.Copy();
         }
 
-        public static T GetData<T>(this UnityWebRequest request)
-        {
-            if (request.result is not UnityWebRequest.Result.Success)
-            {
-                return default;
-            }
-
-            object _data = default;
-            if (typeof(T) == typeof(string))
-            {
-                _data = request.downloadHandler.text;
-            }
-            else if (typeof(T) == typeof(byte[]))
-            {
-                _data = request.downloadHandler.data;
-            }
-            else if (typeof(T) is JObject)
-            {
-                _data = JObject.Parse(request.downloadHandler.text);
-            }
-            else
-            {
-                _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
-            }
-
-            return (T)_data;
-        }
-
+       
 
         public static Type GetType(this AppDomain domain, string name)
         {

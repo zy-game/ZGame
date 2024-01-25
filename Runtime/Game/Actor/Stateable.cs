@@ -1,9 +1,14 @@
+using System;
+
 namespace ZGame.Game
 {
-    public abstract class Stateable : Playable
+    public abstract class Stateable : IDisposable
     {
-        public Stateable(string name) : base(name)
+        public string name { get; }
+
+        public Stateable(string name)
         {
+            this.name = name;
         }
 
         public virtual void OnUpdate()

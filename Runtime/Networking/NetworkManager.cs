@@ -20,7 +20,7 @@ namespace ZGame.Networking
     /// </summary>
     public class NetworkManager : Singleton<NetworkManager>
     {
-        private Dictionary<uint, IMessageHandler> _dispatchers = new();
+        private Dictionary<uint, IRPCHandle> _dispatchers = new();
         private Dictionary<string, IChannel> channels = new();
 
         protected override void OnDestroy()
@@ -53,7 +53,7 @@ namespace ZGame.Networking
 
             if (address.StartsWith("ws"))
             {
-                // channel = new WebChannel();
+                channel = new WebChannel();
             }
             else
             {
@@ -96,12 +96,12 @@ namespace ZGame.Networking
         {
             UniTaskCompletionSource<T> taskCompletionSource = new UniTaskCompletionSource<T>();
             uint crc = Crc32.GetCRC32Str(typeof(T).FullName);
-            if (_dispatchers.TryGetValue(crc, out IMessageHandler dispatcher) is false)
+            if (_dispatchers.TryGetValue(crc, out IRPCHandle dispatcher) is false)
             {
-                _dispatchers.Add(crc, dispatcher = new MessageReceiverHandle<T>());
+                _dispatchers.Add(crc, dispatcher = new CommonHandle<T>());
             }
 
-            MessageReceiverHandle<T> messageReceiverHandle = (MessageReceiverHandle<T>)dispatcher;
+            CommonHandle<T> messageReceiverHandle = (CommonHandle<T>)dispatcher;
 
             void OnCompletion(T message)
             {
@@ -138,12 +138,12 @@ namespace ZGame.Networking
         public void RegisterMessageHandle<T>(Action<T> callback) where T : IMessage
         {
             uint crc = Crc32.GetCRC32Str(typeof(T).FullName);
-            if (_dispatchers.TryGetValue(crc, out IMessageHandler dispatcher) is false)
+            if (_dispatchers.TryGetValue(crc, out IRPCHandle dispatcher) is false)
             {
-                _dispatchers.Add(crc, dispatcher = new MessageReceiverHandle<T>());
+                _dispatchers.Add(crc, dispatcher = new CommonHandle<T>());
             }
 
-            ((MessageReceiverHandle<T>)dispatcher).Add(callback);
+            ((CommonHandle<T>)dispatcher).Add(callback);
         }
 
         /// <summary>
@@ -154,12 +154,12 @@ namespace ZGame.Networking
         public void UnregisterMessageHandle<T>(Action<T> callback) where T : IMessage
         {
             uint crc = Crc32.GetCRC32Str(typeof(T).FullName);
-            if (_dispatchers.TryGetValue(crc, out IMessageHandler dispatcher) is false)
+            if (_dispatchers.TryGetValue(crc, out IRPCHandle dispatcher) is false)
             {
                 return;
             }
 
-            ((MessageReceiverHandle<T>)dispatcher).Remove(callback);
+            ((CommonHandle<T>)dispatcher).Remove(callback);
         }
 
         internal void Receiver(IChannel channel, byte[] bytes)
@@ -172,7 +172,7 @@ namespace ZGame.Networking
             MemoryStream memoryStream = new MemoryStream(bytes);
             BinaryReader reader = new BinaryReader(new MemoryStream(bytes));
             uint opcode = reader.ReadUInt32();
-            if (_dispatchers.TryGetValue(opcode, out IMessageHandler dispatcher) is false)
+            if (_dispatchers.TryGetValue(opcode, out IRPCHandle dispatcher) is false)
             {
                 Debug.LogError("未知消息类型：" + opcode);
                 return;
@@ -180,7 +180,5 @@ namespace ZGame.Networking
 
             dispatcher.ReceiveHandle(channel, opcode, memoryStream);
         }
-
-        
     }
 }

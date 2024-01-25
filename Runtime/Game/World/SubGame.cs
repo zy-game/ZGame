@@ -6,6 +6,7 @@ using System.Reflection;
 using Cysharp.Threading.Tasks;
 using HybridCLR;
 using UnityEngine;
+using ZGame.FileSystem;
 using ZGame.Networking;
 using ZGame.Resource;
 
@@ -47,8 +48,13 @@ namespace ZGame.Game
 
         private static async UniTask<Assembly> LoadGameAssembly(EntryConfig config)
         {
-            if (config.mode is CodeMode.Native || BasicConfig.instance.resMode == ResourceMode.Editor)
+            if (config.mode is CodeMode.Native
+#if UNITY_EDITOR
+                || BasicConfig.instance.resMode == ResourceMode.Editor
+#endif
+               )
             {
+                Debug.Log("走原生代码：" + config.entryName);
                 if (config.entryName.IsNullOrEmpty())
                 {
                     throw new NullReferenceException(nameof(config.entryName));
@@ -58,12 +64,12 @@ namespace ZGame.Game
                 return AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             }
 
-
+            Debug.Log("走热更代码：" + config.entryName);
             byte[] zipBytes =
 #if UNITY_EDITOR
-                await File.ReadAllBytesAsync(Path.Combine(Application.streamingAssetsPath, "aot.bytes"));
+                await File.ReadAllBytesAsync(Path.Combine(Application.streamingAssetsPath, $"{config.entryName.ToLower()}_aot.bytes"));
 #else
-                await Request.GetStreamingAsset(Path.Combine(Application.streamingAssetsPath, "aot.bytes"));
+                await VFSManager.instance.ReadAsync($"{config.entryName.ToLower()}_aot.bytes");
 #endif
             Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(zipBytes);
             foreach (var VARIABLE in aotZipDict)
@@ -79,9 +85,9 @@ namespace ZGame.Game
 
             zipBytes =
 #if UNITY_EDITOR
-                await File.ReadAllBytesAsync(Path.Combine(Application.streamingAssetsPath, "hotfix.bytes"));
+                await File.ReadAllBytesAsync(Path.Combine(Application.streamingAssetsPath, $"{config.entryName.ToLower()}_hotfix.bytes"));
 #else
-                await Request.GetStreamingAsset(Path.Combine(Application.streamingAssetsPath, "hotfix.bytes"));
+                await VFSManager.instance.ReadAsync($"{config.entryName.ToLower()}_hotfix.bytes");
 #endif
             Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(zipBytes);
             if (dllZipDict.TryGetValue(config.entryName + ".dll", out byte[] dllBytes) is false)
