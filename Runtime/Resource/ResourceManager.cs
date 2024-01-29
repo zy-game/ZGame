@@ -52,8 +52,8 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("config");
             }
 
-            await UpdateResPackageAsync(config.module);
-            await LoadPackageAsync(config.module);
+            await UpdateResPackageAsync(config);
+            await LoadPackageListAsync(config);
         }
 
         /// <summary>
@@ -62,16 +62,16 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async UniTask LoadPackageAsync(string configName)
+        public async UniTask LoadPackageListAsync(EntryConfig config)
         {
-            if (configName.IsNullOrEmpty())
+            if (config is null)
             {
-                throw new ArgumentNullException("configName");
+                throw new ArgumentNullException("config");
             }
 
             UILoading.SetTitle("正在加载资源信息...");
             UILoading.SetProgress(0);
-            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(configName);
+            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(config.module);
             if (manifests is null || manifests.Count == 0)
             {
                 UILoading.SetTitle("资源加载完成...");
@@ -109,16 +109,17 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <exception cref="NullReferenceException"></exception>
-        public async UniTask UpdateResPackageAsync(string configName)
+        public async UniTask UpdateResPackageAsync(EntryConfig config)
         {
-            if (configName.IsNullOrEmpty())
+            if (config is null)
             {
-                throw new ArgumentNullException("configName");
+                throw new ArgumentNullException("config");
             }
 
             UILoading.SetTitle("检查资源配置...");
             UILoading.SetProgress(0);
-            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.CheckNeedUpdatePackageList(configName);
+            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
+            
             if (manifests is null || manifests.Count == 0)
             {
                 UILoading.SetTitle("资源更新完成...");

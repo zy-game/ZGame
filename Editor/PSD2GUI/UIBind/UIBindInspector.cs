@@ -139,7 +139,6 @@ namespace ZGame.Editor.PSD2GUI
                     if (options.target == null)
                     {
                         options.target = target;
-                        Debug.Log("初始化");
                         OnDrawingBindItemData(options);
                         EditorUtility.SetDirty(setting);
                     }

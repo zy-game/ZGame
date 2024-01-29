@@ -38,7 +38,7 @@ namespace ZGame.Resource
             Debug.Log("设置引用资源包：" + string.Join(",", dependencies.Select(x => x.name).ToArray()));
         }
 
-        internal void AddRef()
+        internal void Required()
         {
             refCount++;
             RefreshCheckTime();
@@ -49,11 +49,11 @@ namespace ZGame.Resource
 
             foreach (var VARIABLE in dependencies)
             {
-                VARIABLE.AddRef();
+                VARIABLE.Required();
             }
         }
 
-        internal void MinusRef()
+        internal void Unrequire()
         {
             refCount--;
             RefreshCheckTime();
@@ -64,7 +64,7 @@ namespace ZGame.Resource
 
             foreach (var VARIABLE in dependencies)
             {
-                VARIABLE.MinusRef();
+                VARIABLE.Unrequire();
             }
         }
 

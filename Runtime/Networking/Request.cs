@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -36,52 +37,60 @@ namespace ZGame.Networking
         public static async UniTask<T> PostData<T>(string url, object data, Dictionary<string, object> headers)
         {
             Debug.Log("POST:" + url);
+            object _data = default;
             string str = data is string ? data as string : JsonConvert.SerializeObject(data);
             using (UnityWebRequest request = UnityWebRequest.Post(url, str))
             {
-                request.timeout = 5;
                 request.useHttpContinue = true;
-                request.disposeUploadHandlerOnDispose = true;
-                request.disposeDownloadHandlerOnDispose = true;
-                using (UploadHandlerRaw handler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str)))
+                request.SetRequestHeader("Content-Type", "application/json");
+                if (headers is not null)
                 {
-                    request.uploadHandler = handler;
-                    request.SetRequestHeader("Content-Type", "application/json");
-                    if (headers is not null)
+                    foreach (var VARIABLE in headers)
                     {
-                        foreach (var VARIABLE in headers)
-                        {
-                            request.SetRequestHeader(VARIABLE.Key, VARIABLE.Value.ToString());
-                        }
+                        request.SetRequestHeader(VARIABLE.Key, VARIABLE.Value.ToString());
                     }
+                }
 
+                request.uploadHandler.Dispose();
+                request.uploadHandler = null;
+                using (request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str)))
+                {
                     await request.SendWebRequest().ToUniTask();
-                    if (request.result is not UnityWebRequest.Result.Success)
+                    Debug.Log(request.downloadHandler.text);
+                    if (request.result is UnityWebRequest.Result.Success)
                     {
-                        return default;
+                        _data = GetResultData<T>(request);
                     }
 
-                    object _data = default;
-                    if (typeof(T) == typeof(string))
-                    {
-                        _data = request.downloadHandler.text;
-                    }
-                    else if (typeof(T) == typeof(byte[]))
-                    {
-                        _data = request.downloadHandler.data;
-                    }
-                    else if (typeof(T) is JObject)
-                    {
-                        _data = JObject.Parse(request.downloadHandler.text);
-                    }
-                    else
-                    {
-                        _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
-                    }
-
-                    return (T)_data;
+                    request.downloadHandler?.Dispose();
+                    request.uploadHandler?.Dispose();
                 }
             }
+
+            return (T)_data;
+        }
+
+        private static T GetResultData<T>(UnityWebRequest request)
+        {
+            object _data = default;
+            if (typeof(T) == typeof(string))
+            {
+                _data = request.downloadHandler.text;
+            }
+            else if (typeof(T) == typeof(byte[]))
+            {
+                _data = request.downloadHandler.data;
+            }
+            else if (typeof(T) is JObject)
+            {
+                _data = JObject.Parse(request.downloadHandler.text);
+            }
+            else
+            {
+                _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
+            }
+
+            return (T)_data;
         }
 
         /// <summary>
@@ -92,39 +101,78 @@ namespace ZGame.Networking
         /// <param name="headers">标头</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public static async UniTask<T> PostDataForm<T>(string url, Dictionary<string, string> map, Dictionary<string, object> headers)
+        public static async UniTask<T> PostDataForm<T>(string url, Dictionary<string, object> map, Dictionary<string, object> headers)
         {
             Debug.Log("POST FORM:" + url);
-            var client = new HttpClient();
-            MultipartFormDataContent multipartFormDataContent = new MultipartFormDataContent();
-            var request = new HttpRequestMessage
+            object _data = default;
+
+            WWWForm form = await CreateWWWForm(map);
+            using (UnityWebRequest request = UnityWebRequest.Post(url, form))
             {
-                Method = HttpMethod.Post,
-                RequestUri = new Uri(url),
-                Content = multipartFormDataContent,
-            };
-            foreach (var (key, value) in map)
-            {
-                multipartFormDataContent.Add(new StringContent(value)
+                request.useHttpContinue = true;
+                if (headers is not null)
                 {
-                    Headers =
+                    foreach (var VARIABLE in headers)
                     {
-                        ContentDisposition = new ContentDispositionHeaderValue("form-data")
-                        {
-                            Name = key,
-                        }
+                        request.SetRequestHeader(VARIABLE.Key, VARIABLE.Value.ToString());
                     }
-                });
+                }
+
+                request.uploadHandler.Dispose();
+                request.uploadHandler = null;
+                using (request.uploadHandler = new UploadHandlerRaw(form.data))
+                {
+                    await request.SendWebRequest().ToUniTask();
+                    Debug.Log(request.downloadHandler.text);
+                    if (request.result is UnityWebRequest.Result.Success)
+                    {
+                        _data = GetResultData<T>(request);
+                    }
+
+                    request.downloadHandler?.Dispose();
+                    request.uploadHandler?.Dispose();
+                }
             }
 
-            using (var response = await client.SendAsync(request))
+            return (T)_data;
+        }
+
+        private static async UniTask<WWWForm> CreateWWWForm(Dictionary<string, object> map)
+        {
+            var form = new WWWForm();
+            if (map is null || map.Count == 0)
             {
-                response.EnsureSuccessStatusCode();
-                var body = await response.Content.ReadAsStringAsync();
-                Debug.Log(body);
+                return form;
             }
 
-            return default;
+            foreach (var VARIABLE in map)
+            {
+                switch (VARIABLE.Value)
+                {
+                    case byte[] bytes:
+                        form.AddBinaryData(VARIABLE.Key, VARIABLE.Value as byte[]);
+                        break;
+                    case string str:
+                        if (str.Contains("http"))
+                        {
+                            form.AddBinaryData(VARIABLE.Key, await GetStreamingAsset(str), "icon.png");
+                        }
+                        else
+                        {
+                            form.AddField(VARIABLE.Key, VARIABLE.Value.ToString());
+                        }
+
+                        break;
+                    case AudioClip audioClip:
+                        form.AddBinaryData(VARIABLE.Key, WavUtility.FromAudioClip(audioClip), VARIABLE.Key + ".wav");
+                        break;
+                    default:
+                        form.AddField(VARIABLE.Key, VARIABLE.Value.ToString());
+                        break;
+                }
+            }
+
+            return form;
         }
 
         /// <summary>
@@ -136,39 +184,22 @@ namespace ZGame.Networking
         public static async UniTask<T> GetData<T>(string url)
         {
             Debug.Log($"GET:{url}");
+            object _data = default;
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                request.timeout = 5;
-                request.useHttpContinue = true;
-                request.disposeUploadHandlerOnDispose = true;
-                request.disposeDownloadHandlerOnDispose = true;
                 request.SetRequestHeader("Content-Type", "application/json");
                 await request.SendWebRequest().ToUniTask();
-                if (request.result is not UnityWebRequest.Result.Success)
+                Debug.Log(request.downloadHandler.text);
+                if (request.result is UnityWebRequest.Result.Success)
                 {
-                    return default;
+                    _data = GetResultData<T>(request);
                 }
 
-                object _data = default;
-                if (typeof(T) == typeof(string))
-                {
-                    _data = request.downloadHandler.text;
-                }
-                else if (typeof(T) == typeof(byte[]))
-                {
-                    _data = request.downloadHandler.data;
-                }
-                else if (typeof(T) is JObject)
-                {
-                    _data = JObject.Parse(request.downloadHandler.text);
-                }
-                else
-                {
-                    _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
-                }
-
-                return (T)_data;
+                request.downloadHandler?.Dispose();
+                request.uploadHandler?.Dispose();
             }
+
+            return (T)_data;
         }
 
         /// <summary>
@@ -180,63 +211,38 @@ namespace ZGame.Networking
         public static async UniTask<string> GetHead(string url, string headName)
         {
             Debug.Log($"HEAD:{url}");
+            string result = "";
             using (UnityWebRequest request = UnityWebRequest.Head(url))
             {
-                request.timeout = 5;
-                request.useHttpContinue = true;
-                request.disposeUploadHandlerOnDispose = true;
-                request.disposeDownloadHandlerOnDispose = true;
                 await request.SendWebRequest().ToUniTask();
-                if (request.result is not UnityWebRequest.Result.Success)
+                Debug.Log(request.downloadHandler.text);
+                if (request.result is UnityWebRequest.Result.Success)
                 {
-                    return default;
+                    result = request.GetResponseHeader(headName);
                 }
 
-                return request.GetResponseHeader(headName);
+                request.downloadHandler?.Dispose();
+                request.uploadHandler?.Dispose();
             }
-        }
 
-        // public static async UniTask<AudioClip> GetAudioClip(string url)
-        // {
-        //     Debug.Log($"GET AUDIO:{url}");
-        //     using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.MPEG))
-        //     {
-        //         request.timeout = 5;
-        //         request.useHttpContinue = true;
-        //         request.disposeUploadHandlerOnDispose = true;
-        //         request.disposeDownloadHandlerOnDispose = true;
-        //         AudioClip result = default;
-        //
-        //         await request.SendWebRequest().ToUniTask();
-        //         if (request.result is not UnityWebRequest.Result.Success)
-        //         {
-        //             return default;
-        //         }
-        //
-        //         result = DownloadHandlerAudioClip.GetContent(request);
-        //         result.name = url;
-        //         return result;
-        //     }
-        // }
+            return result;
+        }
 
         public static async UniTask<byte[]> GetStreamingAsset(string url, IProgress<float> callback = null)
         {
             Debug.Log($"GET STRWAMING ASSETS:{url}");
+            byte[] result = Array.Empty<byte>();
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
-                Debug.Log(url);
-                request.timeout = 5;
-                request.useHttpContinue = true;
-                request.disposeUploadHandlerOnDispose = true;
-                request.disposeDownloadHandlerOnDispose = true;
                 await request.SendWebRequest().ToUniTask(callback);
-                if (request.result is not UnityWebRequest.Result.Success)
+                if (request.result is UnityWebRequest.Result.Success)
                 {
-                    return default;
+                    result = new byte[request.downloadHandler.data.Length];
+                    System.Array.Copy(request.downloadHandler.data, result, result.Length);
                 }
 
-                byte[] result = new byte[request.downloadHandler.data.Length];
-                System.Array.Copy(request.downloadHandler.data, result, result.Length);
+                request.downloadHandler?.Dispose();
+                request.uploadHandler?.Dispose();
                 return result;
             }
         }

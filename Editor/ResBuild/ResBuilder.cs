@@ -167,8 +167,9 @@ namespace ZGame.Editor.ResBuild
                 }
             }
 
-
             EditorUtility.ClearProgressBar();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
     }
 }

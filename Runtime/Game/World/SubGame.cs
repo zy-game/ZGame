@@ -48,13 +48,9 @@ namespace ZGame.Game
 
         private static async UniTask<Assembly> LoadGameAssembly(EntryConfig config)
         {
-            if (config.mode is CodeMode.Native
-#if UNITY_EDITOR
-                || BasicConfig.instance.resMode == ResourceMode.Editor
-#endif
-               )
+            if (config.mode is CodeMode.Native || (BasicConfig.instance.resMode == ResourceMode.Editor && Application.isEditor))
             {
-                Debug.Log("走原生代码：" + config.entryName);
+                Debug.Log("原生代码：" + config.entryName);
                 if (config.entryName.IsNullOrEmpty())
                 {
                     throw new NullReferenceException(nameof(config.entryName));
@@ -64,39 +60,46 @@ namespace ZGame.Game
                 return AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             }
 
-            Debug.Log("走热更代码：" + config.entryName);
-            byte[] zipBytes =
-#if UNITY_EDITOR
-                await File.ReadAllBytesAsync(Path.Combine(Application.streamingAssetsPath, $"{config.entryName.ToLower()}_aot.bytes"));
-#else
-                await VFSManager.instance.ReadAsync($"{config.entryName.ToLower()}_aot.bytes");
-#endif
-            Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(zipBytes);
-            foreach (var VARIABLE in aotZipDict)
+            string aotZipPath = PackageManifestManager.instance.GetAssetFullPath(config.module, $"{config.entryName.ToLower()}_aot.bytes");
+            string hotfixZipPath = PackageManifestManager.instance.GetAssetFullPath(config.module, $"{config.entryName.ToLower()}_hotfix.bytes");
+            Debug.Log("补元数据：" + aotZipPath);
+            using (ResObject resObject = await ResourceManager.instance.LoadAssetAsync(aotZipPath))
             {
-                if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
+                if (resObject == null || resObject.IsSuccess() is false)
                 {
-                    Debug.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
-                    continue;
+                    return null;
                 }
 
-                Debug.Log("加载补充元数据成功：" + VARIABLE.Key);
+                Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(resObject.GetAsset<TextAsset>().bytes);
+                foreach (var VARIABLE in aotZipDict)
+                {
+                    if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
+                    {
+                        Debug.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
+                        continue;
+                    }
+
+                    Debug.Log("加载补充元数据成功：" + VARIABLE.Key);
+                }
             }
 
-            zipBytes =
-#if UNITY_EDITOR
-                await File.ReadAllBytesAsync(Path.Combine(Application.streamingAssetsPath, $"{config.entryName.ToLower()}_hotfix.bytes"));
-#else
-                await VFSManager.instance.ReadAsync($"{config.entryName.ToLower()}_hotfix.bytes");
-#endif
-            Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(zipBytes);
-            if (dllZipDict.TryGetValue(config.entryName + ".dll", out byte[] dllBytes) is false)
+            Debug.Log("热更代码：" + hotfixZipPath);
+            using (ResObject resObject = await ResourceManager.instance.LoadAssetAsync(hotfixZipPath))
             {
-                throw new NullReferenceException(config.entryName);
-            }
+                if (resObject == null || resObject.IsSuccess() is false)
+                {
+                    return null;
+                }
 
-            Debug.Log("Load Game Dll:" + config.entryName + ".dll Lenght:" + dllBytes.Length);
-            return Assembly.Load(dllBytes);
+                Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(resObject.GetAsset<TextAsset>().bytes);
+                if (dllZipDict.TryGetValue(config.entryName + ".dll", out byte[] dllBytes) is false)
+                {
+                    throw new NullReferenceException(config.entryName);
+                }
+
+                Debug.Log("Load Game Dll:" + config.entryName + ".dll Lenght:" + dllBytes.Length);
+                return Assembly.Load(dllBytes);
+            }
         }
     }
 }

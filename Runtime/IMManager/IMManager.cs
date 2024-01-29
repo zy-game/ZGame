@@ -134,17 +134,17 @@ namespace ZGame.IM
             handler.SendChat(content);
         }
 
-        public void SendAudio(AudioClip clip, int lenght)
+        public void SendAudio(AudioClip clip)
         {
             if (current is null)
             {
                 return;
             }
 
-            SendAudio(current.id, clip, lenght);
+            SendAudio(current.id, clip);
         }
 
-        public void SendAudio(string id, AudioClip clip, int lenght)
+        public void SendAudio(string id, AudioClip clip)
         {
             IMClient handler = GetSession(id);
             if (handler is null)
@@ -153,7 +153,7 @@ namespace ZGame.IM
                 return;
             }
 
-            handler.SendAudio(clip, lenght);
+            handler.SendAudio(clip);
         }
     }
 }

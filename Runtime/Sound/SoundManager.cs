@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -26,21 +27,21 @@ namespace ZGame.Sound
         private int _position;
         private int _limit_time;
         private string _divName;
-        private int sensitivity;
-        private int _talkPosition;
-        private int _BufferSize;
         private float _recordStartTime;
-        private float[] _recordSamples;
-        private float _talkingSplitTime;
         private bool _isRecording = false;
-        private bool _isRealTalking = false;
         private AudioClip _recordClip = null;
-        private Action<AudioClip> _talkingCallback;
         private const string BACK_MUSIC = "BackMusic";
-        private Action<AudioClip, int> _recordingCallback;
+        private Action<AudioClip> _recordingCallback;
+        private Action<byte[]> _recordingCallback2;
         private const string EFFECT_SOUND = "EffectSound";
         private List<SoundPlayer> _handles = new List<SoundPlayer>();
-
+        const int k_SizeofInt16 = sizeof(short);
+        private float m_CDCounter;
+        private int m_BufferSeconds = 1;
+        private bool isHeader = false;
+        int m_BufferSize;
+        byte[] m_ByteBuffer;
+        private float[] m_FloatBuffer;
 
         /// <summary>
         /// 录音设备名
@@ -81,13 +82,20 @@ namespace ZGame.Sound
         {
             get { return _volume; }
         }
+        
+        public bool Recording
+        {
+            get { return _isRecording; }
+        }
 
         protected override void OnAwake()
         {
             _divName = Microphone.devices.FirstOrDefault();
             _limit_time = 60;
             _rate = 16000;
-            _recordSamples = new float[128];
+            m_BufferSize = m_BufferSeconds * _rate;
+            m_ByteBuffer = new byte[m_BufferSize * 1 * k_SizeofInt16];
+            m_FloatBuffer = new float[m_BufferSize * 1];
             BehaviourScriptable.instance.gameObject.AddComponent<AudioListener>();
             AddSoundPlayer(BACK_MUSIC, true);
             AddSoundPlayer(EFFECT_SOUND, false);
@@ -97,7 +105,7 @@ namespace ZGame.Sound
         {
             CheckSoundPlayer();
             HasRecordTimeout();
-            OnUpdateTalking();
+            OnSplitAudioClip();
         }
 
         private void CheckSoundPlayer()
@@ -115,7 +123,7 @@ namespace ZGame.Sound
                 return;
             }
 
-            if (Microphone.IsRecording(_divName) is false || _limit_time <= 0)
+            if (_limit_time <= 0 || Microphone.IsRecording(_divName) is false)
             {
                 return;
             }
@@ -128,17 +136,140 @@ namespace ZGame.Sound
             StopRecordingSound(false);
         }
 
+        private void OnSplitAudioClip()
+        {
+            if (_isRecording is false || _limit_time > 0)
+            {
+                return;
+            }
+
+            if (m_CDCounter <= 0)
+            {
+                m_CDCounter = 0.2f;
+                Collect();
+            }
+
+            m_CDCounter -= Time.deltaTime;
+        }
+
+        protected int GetAudioData()
+        {
+            int nSize = 0;
+#if !UNITY_WEBGL
+            int nPosition = Microphone.GetPosition(_divName);
+            if (nPosition < _position)
+                nPosition = m_BufferSize;
+            if (nPosition <= _position)
+                return -1;
+            nSize = nPosition - _position;
+            if (!_recordClip.GetData(m_FloatBuffer, _position))
+                return -1;
+            _position = nPosition % m_BufferSize;
+#endif
+            return nSize;
+        }
+
+        protected virtual void Collect()
+        {
+            int nSize = GetAudioData(); // YAN: Out to m_FloatBuffer.
+            if (nSize < 0)
+                return;
+            int lenghtSamples = _recordClip.channels * position;
+            byte[] bytes = default;
+            if (isHeader)
+            {
+                isHeader = false;
+                float[] temp = new float[_recordClip.channels * position];
+                Array.Copy(m_FloatBuffer, 0, temp, 0, lenghtSamples);
+                AudioClip clip = AudioClip.Create("mySound", lenghtSamples, _recordClip.channels, _rate, false, false);
+                clip.SetData(temp, 0);
+                bytes = WavUtility.FromAudioClip(clip);
+            }
+            else
+            {
+                bytes = new byte[nSize * _recordClip.channels * k_SizeofInt16];
+                WavUtility.ConvertAudioClipDataToInt16ByteArray(m_FloatBuffer, nSize * _recordClip.channels, bytes);
+            }
+
+            int lenght = 6400;
+            if (bytes.Length > lenght)
+            {
+                using (MemoryStream bf = new MemoryStream(bytes))
+                {
+                    var buffer = new byte[lenght];
+                    while (true)
+                    {
+                        int len = bf.Read(buffer, 0, buffer.Length);
+                        if (len > 0)
+                        {
+                            _recordingCallback2?.Invoke(buffer);
+                            if (len < lenght)
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                _recordingCallback2?.Invoke(bytes);
+            }
+        }
+
+        /// <summary>
+        /// 获取录音数据
+        /// </summary>
+        /// <returns></returns>
+        AudioClip GetRecordingSound()
+        {
+            if (_recordClip == null)
+            {
+                return default;
+            }
+
+            int lenghtSamples = _recordClip.channels * position;
+            float[] _recordSamples = new float[_recordClip.samples];
+            _recordClip.GetData(_recordSamples, 0);
+            AudioClip clip = AudioClip.Create("mySound", lenghtSamples, _recordClip.channels, _rate, false, false);
+            float[] temp = new float[lenghtSamples];
+            Array.Copy(_recordSamples, 0, temp, 0, lenghtSamples);
+            clip.SetData(temp, 0);
+            Debug.Log("clip lenght:" + lenghtSamples + " samples:" + clip.samples + " position:" + position);
+            return clip;
+        }
+
 
         /// <summary>
         /// 开始录音
         /// </summary>
-        public void StartRecordingSound(int timeout, Action<AudioClip, int> callback)
+        public void StartRecordingSound(int timeout, Action<AudioClip> callback)
         {
             _isRecording = true;
             this._limit_time = timeout;
             this._recordingCallback = callback;
             _recordStartTime = Time.realtimeSinceStartup;
-            _recordClip = Microphone.Start(_divName, false, _limit_time, _rate);
+            _recordClip = Microphone.Start(_divName, timeout <= 0, Math.Max(1, _limit_time), _rate);
+            _position = Microphone.GetPosition(_divName);
+            Debug.Log("Start Recording:" + _divName + " :" + Microphone.IsRecording(_divName));
+        }
+
+        /// <summary>
+        /// 开始录音
+        /// </summary>
+        public void StartRecordingSound(int timeout, Action<byte[]> callback)
+        {
+            _isRecording = true;
+            this._limit_time = timeout;
+            this._recordingCallback2 = callback;
+            this.isHeader = true;
+            this._recordStartTime = Time.realtimeSinceStartup;
+            this._recordClip = Microphone.Start(_divName, timeout <= 0, Math.Max(1, _limit_time), _rate);
+            this._position = Microphone.GetPosition(_divName);
             Debug.Log("Start Recording:" + _divName + " :" + Microphone.IsRecording(_divName));
         }
 
@@ -147,113 +278,22 @@ namespace ZGame.Sound
         /// </summary>
         public void StopRecordingSound(bool isCancel)
         {
-            _position = Microphone.GetPosition(_divName);
-            Microphone.End(_divName);
             _isRecording = false;
             if (isCancel is false)
             {
-                _recordingCallback?.Invoke(GetRealTimeRecordingSound(), _position);
+                _position = Microphone.GetPosition(_divName);
+                AudioClip clip = GetRecordingSound();
+                if (clip != null)
+                {
+                    _recordingCallback?.Invoke(clip);
+                }
             }
 
+            Microphone.End(_divName);
             _recordClip = null;
             Debug.Log("End Recording:" + _divName + " :" + Microphone.IsRecording(_divName));
         }
 
-        /// <summary>
-        /// 获取录音数据
-        /// </summary>
-        /// <returns></returns>
-        AudioClip GetRealTimeRecordingSound()
-        {
-            if (_recordClip == null)
-            {
-                return default;
-            }
-
-            _recordSamples = new float[_recordClip.samples];
-            byte[] chunk = new byte[position * sizeof(short)];
-            _recordClip.GetData(_recordSamples, 0);
-            AudioClip clip = AudioClip.Create("mySound", _recordClip.channels * position, _recordClip.channels, _rate, false, false);
-            float[] temp = new float[_recordClip.channels * position];
-            Array.Copy(_recordSamples, 0, temp, 0, _recordClip.channels * position);
-            clip.SetData(temp, 0);
-            return clip;
-        }
-
-        /// <summary>
-        /// 开始实时语音
-        /// </summary>
-        /// <param name="milliseconds"></param>
-        /// <param name="callback"></param>
-        public void OpenRealTimeTalking(int milliseconds, Action<AudioClip> callback)
-        {
-            if (Microphone.IsRecording(_divName))
-            {
-                StopRecordingSound(true);
-            }
-
-            _isRealTalking = true;
-            _BufferSize = 1 * _rate;
-            _talkingCallback = callback;
-            _recordSamples = new float[_BufferSize];
-            _talkingSplitTime = milliseconds / 1000f;
-            _recordStartTime = Time.realtimeSinceStartup;
-            _recordClip = Microphone.Start(_divName, true, 1, _rate);
-            _position = Microphone.GetPosition(_divName);
-            Debug.Log("Start Talking");
-        }
-
-        public void CloseRealTimeTalking()
-        {
-            OnUpdateTalking();
-            _isRealTalking = false;
-            _recordClip = null;
-            Debug.Log("Stop Talking");
-        }
-
-        private void OnUpdateTalking()
-        {
-            if (_isRealTalking is false)
-            {
-                return;
-            }
-
-            if (Microphone.IsRecording(_divName) is false)
-            {
-                return;
-            }
-
-            if (Time.realtimeSinceStartup - _recordStartTime < _talkingSplitTime)
-            {
-                return;
-            }
-
-            _recordStartTime = Time.realtimeSinceStartup;
-            int nSize = GetAudioData();
-            if (nSize < 0)
-            {
-                return;
-            }
-
-            AudioClip clip = AudioClip.Create("mySound", nSize * _recordClip.channels, _recordClip.channels, _rate, false, false);
-            clip.SetData(_recordSamples, 0);
-            _talkingCallback?.Invoke(clip);
-        }
-
-        protected int GetAudioData()
-        {
-            int nSize = 0;
-            int nPosition = Microphone.GetPosition(_divName);
-            if (nPosition < _position)
-                nPosition = _BufferSize;
-            if (nPosition <= _position)
-                return -1;
-            nSize = nPosition - _position;
-            if (!_recordClip.GetData(_recordSamples, _position))
-                return -1;
-            _position = nPosition % _BufferSize;
-            return nSize;
-        }
 
         /// <summary>
         /// 添加播放器

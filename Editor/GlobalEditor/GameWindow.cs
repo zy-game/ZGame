@@ -11,9 +11,11 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using ZGame.Config;
+using ZGame.Editor.LinkerEditor;
 using ZGame.Editor.ResBuild;
 using ZGame.Editor.ResBuild.Config;
 using ZGame.Resource.Config;
+using Object = UnityEngine.Object;
 
 namespace ZGame.Editor
 {
@@ -52,50 +54,73 @@ namespace ZGame.Editor
         {
             //todo 编译资源
             PackageSeting seting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
-            string outPath = ResBuilder.OnBuildBundle(new[] { new BuilderOptions(seting) });
-            if (config.mode is not CodeMode.Hotfix)
+            LinkerConfig.instance.Generic();
+            if (config.mode is CodeMode.Hotfix)
             {
-                return;
+                //todo 编译DLL资源
+                if (genericAll)
+                {
+                    PrebuildCommand.GenerateAll();
+                }
+
+                string hotfixPacageDir = GetHotfixPackagePath(seting);
+                string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
+                IReadOnlyList<string> aotList = AppDomain.CurrentDomain.GetStaticFieldValue<IReadOnlyList<string>>("AOTGenericReferences", "PatchedAOTAssemblyList");
+                if (aotList is null || aotList.Count == 0)
+                {
+                    EditorUtility.DisplayDialog("提示", "AOT 资源编译失败！", "OK");
+                }
+
+                byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
+                File.WriteAllBytes($"{hotfixPacageDir}/{config.entryName.ToLower()}_aot.bytes", bytes);
+
+                string hotfixDir = SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget);
+                bytes = Zip.Compress("*.dll", hotfixDir);
+                File.WriteAllBytes($"{hotfixPacageDir}/{config.entryName.ToLower()}_hotfix.bytes", bytes);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
 
-            //todo 编译DLL资源
-            if (genericAll)
+
+            string outPath = ResBuilder.OnBuildBundle(new[] { new BuilderOptions(seting) });
+        }
+
+        private static string GetHotfixPackagePath(PackageSeting seting)
+        {
+            string hotfixPacageDir = string.Empty;
+            RulerData rulerData = seting.items.Find(x => x.folder.name == "Hotfix");
+            if (rulerData is not null)
             {
-                PrebuildCommand.GenerateAll();
+                return AssetDatabase.GetAssetPath(rulerData.folder);
+            }
+
+            rulerData = seting.items.Where(x => x.folder != null).FirstOrDefault();
+            if (rulerData is null || rulerData.folder == null)
+            {
+                hotfixPacageDir = EditorUtility.OpenFolderPanel("选择文件夹", Application.dataPath, "Hotfix");
             }
             else
             {
-                CompileDllCommand.CompileDllActiveBuildTarget();
+                string pacagePath = AssetDatabase.GetAssetPath(rulerData.folder);
+                string parent = pacagePath.Substring(0, pacagePath.LastIndexOf("/") + 1);
+                hotfixPacageDir = Path.Combine(parent, "Hotfix");
             }
 
-            string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
-            IReadOnlyList<string> aotList = AppDomain.CurrentDomain.GetStaticFieldValue<IReadOnlyList<string>>("AOTGenericReferences", "PatchedAOTAssemblyList");
-            byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
-            File.WriteAllBytes($"{outPath}/{config.entryName.ToLower()}_aot.bytes", bytes);
-            string hotfixDir = SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget);
-            bytes = Zip.Compress("*.dll", hotfixDir);
-            File.WriteAllBytes($"{outPath}/{config.entryName.ToLower()}_hotfix.bytes", bytes);
-
-            PackageSeting hotfixSeting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
-            if (hotfixSeting is null)
+            if (Directory.Exists(hotfixPacageDir) is false)
             {
-                return;
+                Directory.CreateDirectory(hotfixPacageDir);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
 
-            for (var i = 0; i < hotfixSeting.service.Count; i++)
+            seting.items.Add(new RulerData()
             {
-                OSSOptions options = OSSConfig.instance.ossList.Find(x => x.title == hotfixSeting.service[i]);
-                if (options is null)
-                {
-                    continue;
-                }
-
-                options.Upload($"{outPath}/{config.entryName.ToLower()}_aot.bytes");
-                options.Upload($"{outPath}/{config.entryName.ToLower()}_hotfix.bytes");
-            }
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+                folder = AssetDatabase.LoadAssetAtPath<Object>(hotfixPacageDir),
+                buildType = BuildType.Once,
+                selector = new Selector(".bytes")
+            });
+            BuilderConfig.OnSave();
+            return hotfixPacageDir;
         }
 
         public override void OnGUI()

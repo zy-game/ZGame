@@ -16,6 +16,6 @@ namespace ZGame.IM
         UniTask<bool> Open();
         void OnRecvieMessage();
         void SendChat(string text);
-        void SendAudio(AudioClip clip, int lenght);
+        void SendAudio(AudioClip clip);
     }
 }

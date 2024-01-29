@@ -38,6 +38,7 @@ namespace ZGame
         protected virtual void OnSaved()
         {
 #if UNITY_EDITOR
+            Debug.Log($"Save {typeof(T)}");
             UnityEditor.EditorUtility.SetDirty(_instance);
             UnityEditor.AssetDatabase.SaveAssets();
             UnityEditor.AssetDatabase.Refresh();

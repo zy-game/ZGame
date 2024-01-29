@@ -21,12 +21,12 @@ namespace ZGame.Resource
         /// <param name="packageName"></param>
         public async UniTask Setup(string packageName)
         {
-#if UNITY_EDITOR
-            if (BasicConfig.instance.resMode == ResourceMode.Editor)
-            {
-                return;
-            }
-#endif
+// #if UNITY_EDITOR
+//             if (BasicConfig.instance.resMode == ResourceMode.Editor)
+//             {
+//                 return;
+//             }
+// #endif
             ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is not null)
             {
@@ -90,6 +90,17 @@ namespace ZGame.Resource
             }
 
             return default;
+        }
+
+        public string GetAssetFullPath(string moduleName, string assetName)
+        {
+            ResourcePackageListManifest resourcePackageManifest = _packageListManifests.Find(x => x.name == moduleName);
+            if (resourcePackageManifest is null)
+            {
+                return null;
+            }
+
+            return resourcePackageManifest.GetAssetFullPath(assetName);
         }
 
         /// <summary>

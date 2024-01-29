@@ -19,6 +19,7 @@ namespace ZGame.Editor.LinkerEditor
             {
                 //生成UNITY的link文件
                 LinkerConfig.instance.Generic();
+                EditorUtility.DisplayDialog("Linker 生成", "Link 文件已生成", "OK");
             }
         }
 

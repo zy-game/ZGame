@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace ZGame
 {
@@ -21,7 +22,7 @@ namespace ZGame
                 {
                     foreach (string s in args)
                     {
-                        AddZip(archive, s, ext);
+                        AddFileToZip(archive, s, ext);
                     }
                 }
 
@@ -29,14 +30,14 @@ namespace ZGame
             }
         }
 
-        private static void AddZip(ZipArchive archive, string s, string ext)
+        private static void AddFileToZip(ZipArchive archive, string s, string ext)
         {
             if (Path.GetExtension(s).IsNullOrEmpty())
             {
                 string[] files = Directory.GetFiles(s, ext, SearchOption.AllDirectories);
                 foreach (string file in files)
                 {
-                    AddZip(archive, file, ext);
+                    AddFileToZip(archive, file, ext);
                 }
 
                 return;
@@ -53,6 +54,7 @@ namespace ZGame
                 using (Stream stream = entry.Open())
                 {
                     fs.CopyTo(stream);
+                    Debug.Log("zip file:" + s);
                 }
             }
         }

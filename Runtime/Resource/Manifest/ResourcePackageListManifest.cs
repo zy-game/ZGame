@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -28,6 +29,21 @@ namespace ZGame.Resource
         public bool Contains(string name)
         {
             return packages.FirstOrDefault(x => x.name == name) is not null;
+        }
+
+        public string GetAssetFullPath(string assetName)
+        {
+            string fullPath = String.Empty;
+            foreach (var VARIABLE in packages)
+            {
+                fullPath = VARIABLE.GetAssetFullPath(assetName);
+                if (fullPath.IsNullOrEmpty() is false)
+                {
+                    break;
+                }
+            }
+
+            return fullPath;
         }
     }
 }

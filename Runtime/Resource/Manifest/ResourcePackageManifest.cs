@@ -36,5 +36,23 @@ namespace ZGame.Resource
         {
             return files.Contains(name);
         }
+
+        public string GetAssetFullPath(string name)
+        {
+            if (files is null || files.Length == 0)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                if (files[i].ToLower().EndsWith(name))
+                {
+                    return files[i];
+                }
+            }
+
+            return String.Empty;
+        }
     }
 }

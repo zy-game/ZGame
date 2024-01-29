@@ -134,7 +134,7 @@ namespace ZGame.Editor.LinkerEditor
         private Dictionary<string, List<string>> GetLinkerInfo()
         {
             EditorUtility.DisplayProgressBar("Generic Linker File", "Complie DLL", 0);
-            CompileDllCommand.CompileDll(EditorUserBuildSettings.activeBuildTarget);
+            CompileDllCommand.CompileDllActiveBuildTarget();
             EditorUtility.DisplayProgressBar("Generic Linker File", "Complie DLL", 1);
             List<string> hotfixAssemblies = SettingsUtil.HotUpdateAssemblyNamesExcludePreserved;
             Debug.Log(string.Join(",", hotfixAssemblies));
@@ -154,17 +154,6 @@ namespace ZGame.Editor.LinkerEditor
 
                 groups.AddRange(x.Select(y => y.FullName));
             });
-            // for (int i = 0; i < typesByAssembly.Count; i++)
-            // {
-            //     string assemblyName = typesByAssembly[i].Key;
-            //     List<string> assTypeNames = typesByAssembly[i].Select(t => t.FullName).ToList();
-            //     assTypeNames.Sort(string.CompareOrdinal);
-            //     List<string> types = new List<string>();
-            //     for (int j = 0; j < assTypeNames.Count; j++)
-            //     {
-            //         types.Add(assTypeNames[j]);
-            //     }
-            // }
 
             foreach (var VARIABLE in assemblies)
             {
@@ -192,8 +181,9 @@ namespace ZGame.Editor.LinkerEditor
 
         public void Generic()
         {
+            string path = $"{Application.dataPath}/link.xml";
             var map = GetLinkerInfo();
-            var writer = System.Xml.XmlWriter.Create($"{Application.dataPath}/link.xml", new System.Xml.XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true });
+            var writer = System.Xml.XmlWriter.Create(path, new System.Xml.XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true });
             writer.WriteStartDocument();
             writer.WriteStartElement("linker");
             foreach (var assembly in map)
@@ -223,7 +213,7 @@ namespace ZGame.Editor.LinkerEditor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             EditorUtility.ClearProgressBar();
-            EditorUtility.DisplayDialog("Linker 生成", "Link 文件已生成", "OK");
+            Debug.Log("link xml file generic completion. path:" + path);
         }
     }
 

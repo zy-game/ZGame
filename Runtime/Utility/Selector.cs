@@ -54,9 +54,22 @@ namespace ZGame
 
         public int Count
         {
-            get { return items.Count; }
+            get
+            {
+                if (items is null)
+                {
+                    return 0;
+                }
+
+                return items.Count;
+            }
         }
 
+
+        public Selector(params string[] args)
+        {
+            Add(args);
+        }
 
         public override string ToString()
         {
@@ -86,6 +99,11 @@ namespace ZGame
 
         public void Add(params string[] args)
         {
+            if (items is null)
+            {
+                items = new List<SelectorData>();
+            }
+
             List<string> temp = args.ToList();
             for (int i = 0; i < items.Count; i++)
             {
@@ -110,6 +128,11 @@ namespace ZGame
 
         public void Remove(string name)
         {
+            if (items is null)
+            {
+                items = new List<SelectorData>();
+            }
+
             SelectorData selected = items.Find(x => x.name == name);
             if (selected is null)
             {
@@ -121,6 +144,11 @@ namespace ZGame
 
         public void Select(string name)
         {
+            if (items is null)
+            {
+                items = new List<SelectorData>();
+            }
+
             SelectorData selected = items.Find(x => x.name == name);
             if (selected is null)
             {
@@ -132,6 +160,11 @@ namespace ZGame
 
         public void UnSelect(string name)
         {
+            if (items is null)
+            {
+                items = new List<SelectorData>();
+            }
+
             SelectorData selected = items.Find(x => x.name == name);
             if (selected is null)
             {
@@ -143,6 +176,11 @@ namespace ZGame
 
         public void SelectAll()
         {
+            if (items is null)
+            {
+                items = new List<SelectorData>();
+            }
+
             foreach (var item in items)
             {
                 item.isOn = true;
@@ -151,11 +189,21 @@ namespace ZGame
 
         public void UnSelectAll()
         {
+            if (items is null)
+            {
+                items = new List<SelectorData>();
+            }
+
             items.ForEach(x => x.isOn = false);
         }
 
         public bool IsSelected(string name)
         {
+            if (items is null)
+            {
+                items = new List<SelectorData>();
+            }
+
             SelectorData selected = items.Find(x => x.name == name);
             if (selected is null)
             {

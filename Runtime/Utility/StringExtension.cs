@@ -11,11 +11,18 @@ namespace ZGame
     {
         public const string SPLIT = "%s";
 
+        public static string RemoveNonEnglishCharacters(this string input)
+        {
+            // 正则表达式，匹配任何非英文字符并将其替换为空字符串  
+            string pattern = @"[^a-zA-Z0-9\s]";
+            return Regex.Replace(input, pattern, " ");
+        }
+
         public static byte[] ToBytes(this string str)
         {
             return Encoding.UTF8.GetBytes(str);
         }
-        
+
         public static string[] SplitToArrary(this string str, string split)
         {
             return str.Split(split).Where(x => x.IsNullOrEmpty() is false).ToArray();

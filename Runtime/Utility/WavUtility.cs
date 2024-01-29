@@ -68,10 +68,7 @@ namespace ZGame
             return audioClip;
         }
 
-        public static void ConvertAudioClipDataToInt16ByteArray(
-            IReadOnlyList<float> input,
-            int size,
-            byte[] output)
+        public static void ConvertAudioClipDataToInt16ByteArray(IReadOnlyList<float> input, int size, byte[] output)
         {
             MemoryStream memoryStream = new MemoryStream(output);
             for (int index = 0; index < size; ++index)
@@ -79,10 +76,7 @@ namespace ZGame
             memoryStream.Dispose();
         }
 
-        private static float[] Convert8BitByteArrayToAudioClipData(
-            byte[] source,
-            int headerOffset,
-            int dataSize)
+        private static float[] Convert8BitByteArrayToAudioClipData(byte[] source, int headerOffset, int dataSize)
         {
             int int32 = BitConverter.ToInt32(source, headerOffset);
             headerOffset += 4;
@@ -94,10 +88,7 @@ namespace ZGame
             return audioClipData;
         }
 
-        private static float[] Convert16BitByteArrayToAudioClipData(
-            byte[] source,
-            int headerOffset,
-            int dataSize)
+        private static float[] Convert16BitByteArrayToAudioClipData(byte[] source, int headerOffset, int dataSize)
         {
             int int32 = BitConverter.ToInt32(source, headerOffset);
             headerOffset += 4;
@@ -116,10 +107,7 @@ namespace ZGame
             return audioClipData;
         }
 
-        private static float[] Convert24BitByteArrayToAudioClipData(
-            byte[] source,
-            int headerOffset,
-            int dataSize)
+        private static float[] Convert24BitByteArrayToAudioClipData(byte[] source, int headerOffset, int dataSize)
         {
             int int32 = BitConverter.ToInt32(source, headerOffset);
             headerOffset += 4;
@@ -140,10 +128,7 @@ namespace ZGame
             return audioClipData;
         }
 
-        private static float[] Convert32BitByteArrayToAudioClipData(
-            byte[] source,
-            int headerOffset,
-            int dataSize)
+        private static float[] Convert32BitByteArrayToAudioClipData(byte[] source, int headerOffset, int dataSize)
         {
             int int32 = BitConverter.ToInt32(source, headerOffset);
             headerOffset += 4;
@@ -164,11 +149,7 @@ namespace ZGame
 
         public static byte[] FromAudioClip(AudioClip audioClip) => WavUtility.FromAudioClip(audioClip, out string _, false);
 
-        public static byte[] FromAudioClip(
-            AudioClip audioClip,
-            out string filepath,
-            bool saveAsFile = true,
-            string dirname = "recordings")
+        public static byte[] FromAudioClip(AudioClip audioClip, out string filepath, bool saveAsFile = true, string dirname = "recordings")
         {
             MemoryStream stream = new MemoryStream();
             ushort bitDepth = 16;
@@ -205,11 +186,7 @@ namespace ZGame
             return num6;
         }
 
-        private static int WriteFileFormat(
-            ref MemoryStream stream,
-            int channels,
-            int sampleRate,
-            ushort bitDepth)
+        private static int WriteFileFormat(ref MemoryStream stream, int channels, int sampleRate, ushort bitDepth)
         {
             int num1 = 0;
             int num2 = 24;

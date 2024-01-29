@@ -88,7 +88,7 @@ namespace ZGame.Resource
                 }
             }
 
-            parent?.AddRef();
+            parent?.Required();
             return (T)result;
         }
 
@@ -100,11 +100,16 @@ namespace ZGame.Resource
 
         public void Release(bool isClear = false)
         {
+            _refCount--;
+            parent?.Unrequire();
             if (isClear is false)
             {
-                _refCount--;
-                parent?.MinusRef();
                 return;
+            }
+
+            for (int i = 0; i < _refCount; i++)
+            {
+                parent?.Unrequire();
             }
 
             obj = null;
@@ -115,7 +120,9 @@ namespace ZGame.Resource
 
         public void Dispose()
         {
+            Debug.Log("Dispose ResObject:" + path);
             Release(true);
+            GC.SuppressFinalize(this);
         }
     }
 
