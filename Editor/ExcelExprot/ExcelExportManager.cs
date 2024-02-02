@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace ZGame.Editor.ExcelExprot
 {
-    [SubPageSetting("Excel导出")]
+    [SubPageSetting("Excel导出", null, false, typeof(ExcelExportList))]
     public class ExcelExportManager : SubPage
     {
         public override void OnGUI()

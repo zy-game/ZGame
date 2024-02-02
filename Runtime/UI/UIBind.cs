@@ -11,7 +11,6 @@ namespace ZGame.UI
     public class UIBind : MonoBehaviour
     {
 #if UNITY_EDITOR
-        [SerializeField] public TextAsset language;
         [SerializeField] public string NameSpace;
         [SerializeField] public bool templetee;
         [SerializeField] public UnityEngine.Object output;
@@ -25,8 +24,6 @@ namespace ZGame.UI
     {
         public string name;
         public string path;
-        public int language;
-        public bool bindLanguage;
         public Selector selector;
         [NonSerialized] public GameObject target;
         [NonSerialized] public bool isOn;

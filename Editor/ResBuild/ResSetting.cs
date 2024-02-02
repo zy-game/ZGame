@@ -7,7 +7,7 @@ using ZGame.Resource.Config;
 
 namespace ZGame.Editor.ResBuild
 {
-    [SubPageSetting("设置", typeof(ResBuilder))]
+    [SubPageSetting("设置", typeof(ResBuilder), false, typeof(OSSConfig))]
     public class ResSetting : SubPage
     {
         private bool outputIsOn = false;

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Unity.EditorCoroutines.Editor;
 using UnityEditor;
@@ -14,26 +15,19 @@ namespace ZGame.Editor
     public class SubPage : IDisposable
     {
         private bool isOn;
-        private Type referenceType;
         private Color temp = Color.white;
         private Dictionary<IEnumerator, EditorCoroutine> coroutines = new();
-        private static event Func<Type, bool> OnOpenAssetCallback;
 
 
-        public string name { get; private set; }
-        public List<SubPage> childs { get; private set; }
+        public SubPage parent { get; set; }
+        public virtual string name { get; }
+        public List<SubPage> childs { get; set; }
         public Rect position { get; set; }
         public string search { get; set; }
+        public bool isPopup { get; set; }
 
         public SubPage()
         {
-            ReferenceScriptableObject reference = this.GetType().GetCustomAttribute<ReferenceScriptableObject>();
-            if (reference is not null)
-            {
-                referenceType = reference.type;
-                OnOpenAssetCallback += OnOpenAsset;
-            }
-
             childs = new List<SubPage>();
             SubPageSetting attribute = this.GetType().GetCustomAttribute<SubPageSetting>();
             if (attribute is null)
@@ -51,12 +45,17 @@ namespace ZGame.Editor
 
         public void OnDrawingMeunItem(SubPage current, float offset)
         {
+            if (isPopup)
+            {
+                return;
+            }
+
             Rect contains = EditorGUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
             {
                 GUILayout.Space(offset);
                 this.BeginColor(IsSelection(current) ? Color.cyan : GUI.color);
-                if (childs.Count > 0)
+                if (childs.Where(x => x.isPopup is false).Count() > 0)
                 {
                     GUILayout.BeginVertical(GUILayout.Width(20));
                     GUILayout.Space(3);
@@ -64,6 +63,15 @@ namespace ZGame.Editor
                     GUILayout.EndVertical();
                     GUILayout.Space(-40);
                 }
+                else
+                {
+                    if (childs.Count > 0)
+                    {
+                    }
+
+                    GUILayout.Space(15);
+                }
+
 
                 GUILayout.Label(name, ZStyle.GUI_STYLE_TITLE_LABLE);
                 this.EndColor();
@@ -88,34 +96,6 @@ namespace ZGame.Editor
             }
         }
 
-        private bool OnOpenAsset(Type type)
-        {
-            if (type.Equals(referenceType) is false)
-            {
-                return false;
-            }
-
-            EditorManager.SwitchScene(this);
-            return true;
-        }
-
-
-        [OnOpenAsset()]
-        static bool OnOpened(int id, int line)
-        {
-            UnityEngine.Object target = UnityEditor.EditorUtility.InstanceIDToObject(id);
-            if (target == null)
-            {
-                return false;
-            }
-
-            if (OnOpenAssetCallback is null)
-            {
-                return false;
-            }
-
-            return OnOpenAssetCallback(target.GetType());
-        }
 
         public EditorCoroutine StartCoroutine(IEnumerator enumerator)
         {

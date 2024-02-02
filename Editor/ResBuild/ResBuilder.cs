@@ -12,8 +12,7 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    [SubPageSetting("资源")]
-    [ReferenceScriptableObject(typeof(BuilderConfig))]
+    [SubPageSetting("资源", null, false, typeof(BuilderConfig))]
     public class ResBuilder : SubPage
     {
         private const string key = "__build config__";

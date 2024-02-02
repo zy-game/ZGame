@@ -85,7 +85,7 @@ namespace ZGame.UI
             {
                 bool isCompletion = false;
                 this.clip = clip;
-                SoundManager.instance.PlayEffectSound(clip, true, state => isCompletion = state == PlayState.Complete);
+                SoundManager.instance.PlayEffectSound(clip, state => isCompletion = state == PlayState.Complete);
                 yield return new WaitUntil(() => isCompletion);
             }
             else

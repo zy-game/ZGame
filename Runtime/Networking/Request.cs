@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -9,65 +10,18 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
+using Debug = UnityEngine.Debug;
 
 namespace ZGame.Networking
 {
     public class Request
     {
-        /// <summary>
-        /// 发起一个POST请求
-        /// </summary>
-        /// <param name="url">请求地址</param>
-        /// <param name="data">消息数据</param>
-        /// <typeparam name="T">返回数据类型</typeparam>
-        /// <returns></returns>
-        public static UniTask<T> PostData<T>(string url, object data)
+        public class CertificateController : CertificateHandler
         {
-            return PostData<T>(url, data, null);
-        }
-
-        /// <summary>
-        /// 发起一个POST请求
-        /// </summary>
-        /// <param name="url">请求地址</param>
-        /// <param name="data">消息数据</param>
-        /// <param name="headers">标头</param>
-        /// <typeparam name="T">返回数据类型</typeparam>
-        /// <returns></returns>
-        public static async UniTask<T> PostData<T>(string url, object data, Dictionary<string, object> headers)
-        {
-            Debug.Log("POST:" + url);
-            object _data = default;
-            string str = data is string ? data as string : JsonConvert.SerializeObject(data);
-            using (UnityWebRequest request = UnityWebRequest.Post(url, str))
+            protected override bool ValidateCertificate(byte[] certificateData)
             {
-                request.useHttpContinue = true;
-                request.SetRequestHeader("Content-Type", "application/json");
-                if (headers is not null)
-                {
-                    foreach (var VARIABLE in headers)
-                    {
-                        request.SetRequestHeader(VARIABLE.Key, VARIABLE.Value.ToString());
-                    }
-                }
-
-                request.uploadHandler.Dispose();
-                request.uploadHandler = null;
-                using (request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str)))
-                {
-                    await request.SendWebRequest().ToUniTask();
-                    Debug.Log(request.downloadHandler.text);
-                    if (request.result is UnityWebRequest.Result.Success)
-                    {
-                        _data = GetResultData<T>(request);
-                    }
-
-                    request.downloadHandler?.Dispose();
-                    request.uploadHandler?.Dispose();
-                }
+                return true;
             }
-
-            return (T)_data;
         }
 
         private static T GetResultData<T>(UnityWebRequest request)
@@ -88,50 +42,6 @@ namespace ZGame.Networking
             else
             {
                 _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
-            }
-
-            return (T)_data;
-        }
-
-        /// <summary>
-        /// 提交一个表单数据
-        /// </summary>
-        /// <param name="url">请求地址</param>
-        /// <param name="map">消息数据</param>
-        /// <param name="headers">标头</param>
-        /// <typeparam name="T">返回数据类型</typeparam>
-        /// <returns></returns>
-        public static async UniTask<T> PostDataForm<T>(string url, Dictionary<string, object> map, Dictionary<string, object> headers)
-        {
-            Debug.Log("POST FORM:" + url);
-            object _data = default;
-
-            WWWForm form = await CreateWWWForm(map);
-            using (UnityWebRequest request = UnityWebRequest.Post(url, form))
-            {
-                request.useHttpContinue = true;
-                if (headers is not null)
-                {
-                    foreach (var VARIABLE in headers)
-                    {
-                        request.SetRequestHeader(VARIABLE.Key, VARIABLE.Value.ToString());
-                    }
-                }
-
-                request.uploadHandler.Dispose();
-                request.uploadHandler = null;
-                using (request.uploadHandler = new UploadHandlerRaw(form.data))
-                {
-                    await request.SendWebRequest().ToUniTask();
-                    Debug.Log(request.downloadHandler.text);
-                    if (request.result is UnityWebRequest.Result.Success)
-                    {
-                        _data = GetResultData<T>(request);
-                    }
-
-                    request.downloadHandler?.Dispose();
-                    request.uploadHandler?.Dispose();
-                }
             }
 
             return (T)_data;
@@ -176,6 +86,107 @@ namespace ZGame.Networking
         }
 
         /// <summary>
+        /// 发起一个POST请求
+        /// </summary>
+        /// <param name="url">请求地址</param>
+        /// <param name="data">消息数据</param>
+        /// <typeparam name="T">返回数据类型</typeparam>
+        /// <returns></returns>
+        public static UniTask<T> PostData<T>(string url, object data)
+        {
+            return PostData<T>(url, data, null);
+        }
+
+        /// <summary>
+        /// 发起一个POST请求
+        /// </summary>
+        /// <param name="url">请求地址</param>
+        /// <param name="data">消息数据</param>
+        /// <param name="headers">标头</param>
+        /// <typeparam name="T">返回数据类型</typeparam>
+        /// <returns></returns>
+        public static async UniTask<T> PostData<T>(string url, object data, Dictionary<string, object> headers)
+        {
+            Extension.StartSample();
+            object _data = default;
+            string str = data is string ? data as string : JsonConvert.SerializeObject(data);
+            using (UnityWebRequest request = UnityWebRequest.Post(url, str))
+            {
+                request.useHttpContinue = true;
+                request.certificateHandler = new CertificateController();
+                request.SetRequestHeader("Content-Type", "application/json");
+                if (headers is not null)
+                {
+                    foreach (var VARIABLE in headers)
+                    {
+                        request.SetRequestHeader(VARIABLE.Key, VARIABLE.Value.ToString());
+                    }
+                }
+
+                request.uploadHandler.Dispose();
+                request.uploadHandler = null;
+                using (request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str)))
+                {
+                    await request.SendWebRequest().ToUniTask();
+                    Extension.StopSample($"POST DATA:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                    if (request.result is UnityWebRequest.Result.Success)
+                    {
+                        _data = GetResultData<T>(request);
+                    }
+
+                    request.downloadHandler?.Dispose();
+                    request.uploadHandler?.Dispose();
+                }
+            }
+
+            return (T)_data;
+        }
+
+        /// <summary>
+        /// 提交一个表单数据
+        /// </summary>
+        /// <param name="url">请求地址</param>
+        /// <param name="map">消息数据</param>
+        /// <param name="headers">标头</param>
+        /// <typeparam name="T">返回数据类型</typeparam>
+        /// <returns></returns>
+        public static async UniTask<T> PostDataForm<T>(string url, Dictionary<string, object> map, Dictionary<string, object> headers)
+        {
+            object _data = default;
+            Extension.StartSample();
+            WWWForm form = await CreateWWWForm(map);
+            using (UnityWebRequest request = UnityWebRequest.Post(url, form))
+            {
+                request.useHttpContinue = true;
+                request.certificateHandler = new CertificateController();
+                if (headers is not null)
+                {
+                    foreach (var VARIABLE in headers)
+                    {
+                        request.SetRequestHeader(VARIABLE.Key, VARIABLE.Value.ToString());
+                    }
+                }
+
+                request.uploadHandler.Dispose();
+                request.uploadHandler = null;
+                using (request.uploadHandler = new UploadHandlerRaw(form.data))
+                {
+                    await request.SendWebRequest().ToUniTask();
+                    Extension.StopSample($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                    if (request.result is UnityWebRequest.Result.Success)
+                    {
+                        _data = GetResultData<T>(request);
+                    }
+
+                    request.downloadHandler?.Dispose();
+                    request.uploadHandler?.Dispose();
+                }
+            }
+
+            return (T)_data;
+        }
+
+        /// <summary>
         /// 发起一个GET请求
         /// </summary>
         /// <param name="url">请求地址</param>
@@ -183,13 +194,14 @@ namespace ZGame.Networking
         /// <returns></returns>
         public static async UniTask<T> GetData<T>(string url)
         {
-            Debug.Log($"GET:{url}");
+            Extension.StartSample();
             object _data = default;
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
+                request.certificateHandler = new CertificateController();
                 request.SetRequestHeader("Content-Type", "application/json");
                 await request.SendWebRequest().ToUniTask();
-                Debug.Log(request.downloadHandler.text);
+                Extension.StopSample($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 if (request.result is UnityWebRequest.Result.Success)
                 {
                     _data = GetResultData<T>(request);
@@ -210,12 +222,13 @@ namespace ZGame.Networking
         /// <returns></returns>
         public static async UniTask<string> GetHead(string url, string headName)
         {
-            Debug.Log($"HEAD:{url}");
+            Extension.StartSample();
             string result = "";
             using (UnityWebRequest request = UnityWebRequest.Head(url))
             {
+                request.certificateHandler = new CertificateController();
                 await request.SendWebRequest().ToUniTask();
-                Debug.Log(request.downloadHandler.text);
+                Extension.StopSample($"HEAD:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 if (request.result is UnityWebRequest.Result.Success)
                 {
                     result = request.GetResponseHeader(headName);
@@ -228,13 +241,21 @@ namespace ZGame.Networking
             return result;
         }
 
+        /// <summary>
+        /// 获取网络资源数据
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
         public static async UniTask<byte[]> GetStreamingAsset(string url, IProgress<float> callback = null)
         {
-            Debug.Log($"GET STRWAMING ASSETS:{url}");
+            Extension.StartSample();
             byte[] result = Array.Empty<byte>();
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
+                request.certificateHandler = new CertificateController();
                 await request.SendWebRequest().ToUniTask(callback);
+                Extension.StopSample($"GET STRWAMING ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 if (request.result is UnityWebRequest.Result.Success)
                 {
                     result = new byte[request.downloadHandler.data.Length];
@@ -247,6 +268,13 @@ namespace ZGame.Networking
             }
         }
 
+        /// <summary>
+        /// 获取网络资源数据，这个接口主要用于下载json数据或者TextAsset
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="callback"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static async UniTask<T> GetStreamingAsset<T>(string url, IProgress<float> callback = null)
         {
             byte[] result = await GetStreamingAsset(url);
@@ -254,7 +282,6 @@ namespace ZGame.Networking
             {
                 return default;
             }
-
 
             return JsonUtility.FromJson<T>(Encoding.UTF8.GetString(result));
         }

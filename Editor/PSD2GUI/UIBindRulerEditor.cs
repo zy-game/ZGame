@@ -5,8 +5,7 @@ using ZGame.Editor.PSD2GUI;
 
 namespace ZGame.Editor.PSD2GUI
 {
-    [ReferenceScriptableObject(typeof(UIBindRulerConfig))]
-    [SubPageSetting("UIBind Rule", typeof(PSD2GUIWindow))]
+    [SubPageSetting("UIBind Rule", typeof(PSD2GUIWindow), false, typeof(UIBindRulerConfig))]
     public class UIBindRulerEditor : SubPage
     {
         private bool nameSpaceFoldout = true;

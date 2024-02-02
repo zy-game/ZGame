@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ZGame.Editor.LinkerEditor
 {
-    [SubPageSetting("Linker Editor", typeof(GlobalWindow))]
+    [SubPageSetting("Linker Editor", typeof(GlobalWindow), false, ".xml")]
     public class LinkerWindow : SubPage
     {
         public override void SearchRightDrawing()

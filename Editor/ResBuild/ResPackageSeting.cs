@@ -10,8 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    [ReferenceScriptableObject(typeof(PackageSeting))]
-    [SubPageSetting("资源包管理", typeof(ResBuilder))]
+    [SubPageSetting("资源包管理", typeof(ResBuilder), false, typeof(PackageSeting))]
     public class ResPackageSetting : SubPage
     {
         public override void OnEnable(params object[] args)
@@ -79,6 +78,12 @@ namespace ZGame.Editor.ResBuild
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
                 BuilderConfig.instance.packages.Remove((PackageSeting)userData);
+                EditorManager.Refresh();
+            }
+
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                ResBuilder.OnBuildBundle(new BuilderOptions((PackageSeting)userData));
                 EditorManager.Refresh();
             }
         }

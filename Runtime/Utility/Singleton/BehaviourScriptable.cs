@@ -57,7 +57,7 @@ namespace ZGame
         }
     }
 
-    class BehaviourScriptable : MonoBehaviour
+    public class BehaviourScriptable : MonoBehaviour
     {
         UnityEvent onGUI = new UnityEvent();
         UnityEvent update = new UnityEvent();

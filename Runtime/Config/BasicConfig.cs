@@ -81,11 +81,6 @@ namespace ZGame
         public string path;
 
         /// <summary>
-        /// 默认语言
-        /// </summary>
-        public LanguageDefine language = LanguageDefine.English;
-
-        /// <summary>
         /// 运行模式
         /// </summary>
         public CodeMode mode;
@@ -99,6 +94,11 @@ namespace ZGame
         /// 引用DLL
         /// </summary>
         public List<string> references;
+
+        /// <summary>
+        /// 启动参数
+        /// </summary>
+        public string args;
 
 #if UNITY_EDITOR
         [NonSerialized] public bool isOn;
@@ -152,6 +152,11 @@ namespace ZGame
         /// 卸载间隔时间
         /// </summary>
         public float resTimeout = 60f;
+
+        /// <summary>
+        /// 默认语言
+        /// </summary>
+        public LanguageDefine language = LanguageDefine.English;
 
         /// <summary>
         /// 当前游戏入口配置

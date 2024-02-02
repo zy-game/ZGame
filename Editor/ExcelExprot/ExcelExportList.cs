@@ -121,9 +121,6 @@ namespace ZGame.Editor.ExcelExprot
                         ExportCSharpCode(options);
                         ExportList.Remove(options);
                         break;
-                    case ExportType.Assets:
-                        ExportCSharpCode(options);
-                        break;
                 }
             }
 
@@ -197,10 +194,9 @@ namespace ZGame.Editor.ExcelExprot
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using UnityEngine;");
             sb.AppendLine("using ZGame;");
-
+            sb.AppendLine("using ZGame.Config;");
             sb.AppendLine($"namespace {exportSet.nameSpace}");
             sb.AppendLine("{");
-            sb.AppendLine("\t[Serializable]");
             sb.AppendLine($"\tpublic class {itemTypeName}");
             sb.AppendLine("\t{");
             for (int i = 0; i < header.ItemArray.Length; i++)
@@ -231,129 +227,90 @@ namespace ZGame.Editor.ExcelExprot
 
             sb.AppendLine("\t}");
 
-            if (exportSet.type == ExportType.Assets)
-            {
-                string temp = AssetDatabase.GetAssetPath(exportSet.output);
-                if (temp.IsNullOrEmpty() is false)
-                {
-                    if (temp.Contains("Resources"))
-                    {
-                        temp = temp.Substring(0, temp.LastIndexOf("."));
-                        temp = temp.Substring(temp.IndexOf("Resources"));
-                    }
 
-                    sb.AppendLine($"\t[ResourceReference(\"{temp}/{assetTypeName}.asset\")]");
-                }
-            }
-
-            sb.AppendLine($"\tpublic sealed class {assetTypeName} : SingletonScriptableObject<{assetTypeName}>");
+            sb.AppendLine($"\tpublic sealed class {assetTypeName} : Singleton<{assetTypeName}>, IQuery<{itemTypeName}>");
             sb.AppendLine("\t{");
-            sb.AppendLine($"\t\tpublic List<{itemTypeName}> cfgList;");
-            sb.AppendLine("\t\tpublic override void OnAwake()");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tif (cfgList is null)");
-            sb.AppendLine("\t\t\t{");
-            sb.AppendLine($"\t\t\t\tcfgList = new List<{itemTypeName}>();");
-            sb.AppendLine("\t\t\t}");
-            if (exportSet.type == ExportType.Csharp)
+            sb.AppendLine($"\t\tpublic List<{itemTypeName}> cfgList = new ()\n\t\t{{");
+            for (int rowIndex = exportSet.dataRow; rowIndex < exportSet.dataTable.Rows.Count; rowIndex++)
             {
-                for (int rowIndex = exportSet.dataRow; rowIndex < exportSet.dataTable.Rows.Count; rowIndex++)
+                var row = exportSet.dataTable.Rows[rowIndex];
+                string templete = "\t\t\tnew () {";
+                for (int columnIndex = 0; columnIndex < row.ItemArray.Length; columnIndex++)
                 {
-                    var row = exportSet.dataTable.Rows[rowIndex];
-                    string templete = "\t\t\tcfgList.Add(new (){";
-                    for (int columnIndex = 0; columnIndex < row.ItemArray.Length; columnIndex++)
+                    string data = row.ItemArray[columnIndex].ToString();
+                    string name = header.ItemArray[columnIndex].ToString();
+                    if (name.Equals("#") || name.Equals(String.Empty))
                     {
-                        string data = row.ItemArray[columnIndex].ToString();
-                        string name = header.ItemArray[columnIndex].ToString();
-                        if (name.Equals("#") || name.Equals(String.Empty))
-                        {
-                            continue;
-                        }
-
-                        string t = typeRow[columnIndex].ToString();
-                        switch (t)
-                        {
-                            case "int":
-                            case "float":
-                                templete += $"{name} = {data}, ";
-                                break;
-                            case "bool":
-                                templete += $"{name} = {(data == "0")}, ";
-                                break;
-                            default:
-                                templete += $"{name} = @\"{data}\",";
-                                break;
-                        }
+                        continue;
                     }
 
-                    templete.Replace("\n", String.Empty);
-                    templete += "});";
-                    sb.AppendLine(templete);
-                }
-            }
-
-            sb.AppendLine("\t\t}");
-
-            sb.AppendLine($"\t\tpublic {itemTypeName} GetByFieldName(string fieldName, object value)");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tif (cfgList is null)");
-            sb.AppendLine("\t\t\t{");
-            sb.AppendLine("\t\t\t\treturn default;");
-            sb.AppendLine("\t\t\t}");
-
-            sb.AppendLine("\t\t\tswitch (fieldName)");
-            sb.AppendLine("\t\t\t{");
-            for (int i = 0; i < header.ItemArray.Length; i++)
-            {
-                string name = header.ItemArray[i].ToString();
-                if (name.Equals("#") || name.Equals(String.Empty))
-                {
-                    continue;
+                    string t = typeRow[columnIndex].ToString();
+                    switch (t)
+                    {
+                        case "int":
+                        case "float":
+                            templete += $"{name} = {data}, ";
+                            break;
+                        case "bool":
+                            templete += $"{name} = {(data == "0")}, ";
+                            break;
+                        default:
+                            templete += $"{name} = @\"{data}\",";
+                            break;
+                    }
                 }
 
-                sb.AppendLine($"\t\t\t\tcase \"{name}\":");
-                sb.AppendLine($"\t\t\t\t\treturn cfgList.Find(x => x.{name}.ToString().Equals(value.ToString()));");
+                templete.Replace("\n", String.Empty);
+                templete += "},";
+                sb.AppendLine(templete);
             }
 
-            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("\t\t};");
 
-            sb.AppendLine("\t\t\treturn default;");
-            sb.AppendLine("\t\t}");
-
-            sb.AppendLine($"\t\tpublic List<T> GetValues<T>(string fieldName)");
+            sb.AppendLine("");
+            sb.AppendLine("\t\tpublic void Dispose()");
             sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tif (cfgList is null)");
-            sb.AppendLine("\t\t\t{");
-            sb.AppendLine("\t\t\t\treturn default;");
-            sb.AppendLine("\t\t\t}");
-
-            sb.AppendLine("\t\t\tswitch (fieldName)");
-            sb.AppendLine("\t\t\t{");
-            for (int i = 0; i < header.ItemArray.Length; i++)
-            {
-                string name = header.ItemArray[i].ToString();
-                if (name.Equals("#") || name.Equals(String.Empty))
-                {
-                    continue;
-                }
-
-                sb.AppendLine($"\t\t\t\tcase \"{name}\":");
-                sb.AppendLine($"\t\t\t\t\treturn cfgList.Select(x => x.{name}).Cast<T>().ToList();");
-            }
-
-            sb.AppendLine("\t\t\t}");
-            sb.AppendLine("\t\t\treturn default;");
+            sb.AppendLine("\t\t\tcfgList.Clear();");
             sb.AppendLine("\t\t}");
-
-            sb.AppendLine($"\t\tpublic {itemTypeName} GetByKey({typeRow[0].ToString()} key)");
+            sb.AppendLine("");
+            sb.AppendLine("\t\tobject IQuery.Query(int key)");
             sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tif (cfgList is null)");
-            sb.AppendLine("\t\t\t{");
-            sb.AppendLine("\t\t\t\treturn default;");
-            sb.AppendLine("\t\t\t}");
-            sb.AppendLine($"\t\t\treturn cfgList.Find(x => x.{header.ItemArray[0].ToString()} == key);");
+            sb.AppendLine("\t\t\treturn Query(key);");
             sb.AppendLine("\t\t}");
-
+            sb.AppendLine("");
+            sb.AppendLine($"\t\tpublic {itemTypeName} Query(int key)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\treturn cfgList.Find(x => x.id_num == key);");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("");
+            sb.AppendLine($"\t\tpublic {itemTypeName} Query(Func<{itemTypeName}, bool> func)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\treturn cfgList.Find(x => func(x));");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("");
+            sb.AppendLine("\t\tpublic object Query(Func<object, bool> whereFunc)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\treturn cfgList.Find(x => whereFunc(x));");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("");
+            sb.AppendLine($"\t\tpublic List<{itemTypeName}> Wheres(Func<{itemTypeName}, bool> func)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\treturn cfgList.Where(x => func(x)).ToList();");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("");
+            sb.AppendLine("\t\tpublic List<object> Wheres(Func<object, bool> whereFunc)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\tList<object> result = new List<object>();");
+            sb.AppendLine("\t\t\tforeach (var item in cfgList)");
+            sb.AppendLine("\t\t\t{");
+            sb.AppendLine("\t\t\t\tif (whereFunc(item))");
+            sb.AppendLine("\t\t\t\t{");
+            sb.AppendLine("\t\t\t\t\tresult.Add(item);");
+            sb.AppendLine("\t\t\t\t}");
+            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("");
+            sb.AppendLine("\t\t\treturn result;");
+            sb.AppendLine("\t\t}");
             sb.AppendLine("\t}");
             sb.AppendLine("}");
             string path = Path.Combine(AssetDatabase.GetAssetPath(exportSet.code), assetTypeName + ".cs");

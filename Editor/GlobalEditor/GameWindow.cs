@@ -151,15 +151,14 @@ namespace ZGame.Editor
             GUILayout.BeginVertical(EditorStyles.helpBox);
 
             config.title = EditorGUILayout.TextField("游戏名", config.title);
-            config.language = (LanguageDefine)EditorGUILayout.EnumPopup("语言", config.language);
+            
             if (config.path.IsNullOrEmpty() is false && config.assembly == null)
             {
                 config.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(config.path);
             }
 
             config.mode = (CodeMode)EditorGUILayout.EnumPopup("模式", config.mode);
-
-
+            config.args = EditorGUILayout.TextField("参数", config.args);
             var resList = BuilderConfig.instance.packages.Select(x => x.name).ToList();
             int last = resList.FindIndex(x => x == config.module);
             int curIndex = EditorGUILayout.Popup("资源包", last, resList.ToArray());

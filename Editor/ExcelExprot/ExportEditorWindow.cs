@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace ZGame.Editor.ExcelExprot
 {
-    [SubPageSetting("Excel Editor", typeof(ExcelExportManager))]
+    [SubPageSetting("Excel Editor", typeof(ExcelExportManager), true)]
     public class ExportEditorWindow : SubPage
     {
         private ExcelExporter exporter;
@@ -61,11 +61,6 @@ namespace ZGame.Editor.ExcelExprot
             if (options.type == ExportType.Csharp)
             {
                 options.code = (UnityEngine.Object)EditorGUILayout.ObjectField("代码保存路径", options.code, typeof(UnityEngine.Object), false);
-            }
-
-            if (options.type == ExportType.Assets)
-            {
-                options.output = (UnityEngine.Object)EditorGUILayout.ObjectField("配置输出路径", options.output, typeof(UnityEngine.Object), false);
             }
 
             if (EditorGUI.EndChangeCheck())

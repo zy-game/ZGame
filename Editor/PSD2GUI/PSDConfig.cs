@@ -37,30 +37,29 @@ namespace ZGame.Editor.PSD2GUI
 
             layers.Clear();
             PsdFile psdFile = new PsdFile(AssetDatabase.GetAssetPath(psd));
-            psdFile.SortLayer();
+            // psdFile.SortLayer();
             foreach (var VARIABLE in psdFile.Layers)
             {
-                layers.Add(GenericLayerData(VARIABLE));
+                GenericLayerData(VARIABLE);
             }
         }
 
         private PSDLayer GenericLayerData(Layer l)
         {
-            
             PSDLayer layer = new PSDLayer()
             {
                 children = new List<PSDLayer>(),
                 name = l.Name,
                 rect = l.Rect,
-              
+                active = true
             };
-            layer.texture = ImageDecoder.DecodeImage(l);
+            layer.texture = ImageDecoder.CreateTexture(l, (int)l.Rect.width, (int)l.Rect.height);
             layers.Add(layer);
             if (l.Children.Count > 0)
             {
                 foreach (var VARIABLE in l.Children)
                 {
-                    layer.children.Add(GenericLayerData(VARIABLE));
+                    layers.Add(GenericLayerData(VARIABLE));
                 }
             }
 
@@ -76,6 +75,7 @@ namespace ZGame.Editor.PSD2GUI
         public List<PSDLayer> children;
         public Sprite sprite;
         public Texture2D texture;
+        public bool active;
         [NonSerialized] public bool isOn;
     }
 }

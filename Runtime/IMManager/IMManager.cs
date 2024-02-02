@@ -11,9 +11,9 @@ namespace ZGame.IM
 {
     public class IMManager : Singleton<IMManager>
     {
+        private IMClient current;
         private List<IMClient> clients = new();
         private UniTaskCompletionSource<bool> _completionSource;
-        public IMClient current { get; private set; }
 
         protected override void OnAwake()
         {
@@ -29,16 +29,26 @@ namespace ZGame.IM
             clients.Clear();
         }
 
-        protected override void OnUpdate()
+        public async UniTask<bool> Create<T>(params object[] args) where T : IMClient
         {
-            for (int i = 0; i < clients.Count; i++)
+            IMClient client = Activator.CreateInstance<T>();
+            if (client is null)
             {
-                clients[i].OnRecvieMessage();
+                return false;
             }
+
+            bool state = await client.Open(args);
+            if (state)
+            {
+                clients.Add(client);
+                current = client;
+            }
+
+            return state;
         }
 
         /// <summary>
-        /// 切换会话
+        /// 切换聊天会话
         /// </summary>
         /// <param name="id"></param>
         public void Switch(string id)
@@ -47,7 +57,7 @@ namespace ZGame.IM
         }
 
         /// <summary>
-        /// 切换会话
+        /// 切换聊天会话
         /// </summary>
         /// <param name="client"></param>
         public void Switch(IMClient client)
@@ -110,6 +120,7 @@ namespace ZGame.IM
         {
             if (current is null)
             {
+                Debug.Log("当前对话为空");
                 return;
             }
 
@@ -127,33 +138,106 @@ namespace ZGame.IM
             IMClient handler = GetSession(id);
             if (handler is null)
             {
-                Debug.Log("Not Find:" + id);
+                Debug.Log("没有找到对话：" + id);
                 return;
             }
 
             handler.SendChat(content);
         }
 
-        public void SendAudio(AudioClip clip)
+        /// <summary>
+        /// 开始语音消息
+        /// </summary>
+        /// <param name="id"></param>
+        public void OnStartAudioVoice()
         {
             if (current is null)
             {
+                Debug.Log("当前对话为空");
                 return;
             }
 
-            SendAudio(current.id, clip);
+            current.StartAudio();
         }
 
-        public void SendAudio(string id, AudioClip clip)
+        /// <summary>
+        /// 开始语音消息
+        /// </summary>
+        /// <param name="id"></param>
+        public void OnStartAudioVoice(string id)
         {
-            IMClient handler = GetSession(id);
-            if (handler is null)
+            IMClient client = GetSession(id);
+            if (client is null)
             {
-                Debug.Log("Not Find:" + id);
+                Debug.Log("没有找到对话：" + id);
                 return;
             }
 
-            handler.SendAudio(clip);
+            client.StartAudio();
+        }
+
+        /// <summary>
+        /// 停止语音消息
+        /// </summary>
+        /// <param name="id"></param>
+        public void OnStopAudioVoice(string id)
+        {
+            IMClient client = GetSession(id);
+            if (client is null)
+            {
+                Debug.Log("没有找到对话：" + id);
+                return;
+            }
+
+            client.EndAudio();
+        }
+
+        /// <summary>
+        /// 停止语音消息
+        /// </summary>
+        /// <param name="id"></param>
+        public void OnStopAudioVoice()
+        {
+            if (current is null)
+            {
+                Debug.Log("当前对话为空");
+                return;
+            }
+
+            current.EndAudio();
+        }
+
+        /// <summary>
+        /// 发送语音数据
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="clip"></param>
+        public void OnAudioVoiceClip(string id, byte[] clip)
+        {
+            IMClient client = GetSession(id);
+            if (client is null)
+            {
+                Debug.Log("没有找到对话：" + id);
+                return;
+            }
+
+            client.SendAudio(clip);
+        }
+
+        /// <summary>
+        /// 发送语音数据
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="clip"></param>
+        public void OnAudioVoiceClip(byte[] clip)
+        {
+            if (current is null)
+            {
+                Debug.Log("当前对话为空");
+                return;
+            }
+
+            current.SendAudio(clip);
         }
     }
 }

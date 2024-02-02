@@ -50,6 +50,13 @@ namespace ZGame.IM
             this.spaffCode = gesture;
         }
 
+        public IMChatItem(string nick, AudioClip clip, string text, SpaffCode gesture = SpaffCode.Neutral) : this(nick)
+        {
+            this.clip = clip;
+            this.text = text;
+            this.spaffCode = gesture;
+        }
+
         public void Dispose()
         {
             clip = null;

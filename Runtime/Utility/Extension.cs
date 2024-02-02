@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -9,11 +10,59 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
+using Debug = UnityEngine.Debug;
 
 namespace ZGame
 {
     public static partial class Extension
     {
+        private static Stopwatch sw = new Stopwatch();
+
+        public static void StartSample()
+        {
+            sw.Restart();
+        }
+
+        public static long GetSampleTime()
+        {
+            sw.Stop();
+            return sw.ElapsedMilliseconds;
+        }
+
+        public static void StopSample(string format)
+        {
+            sw.Stop();
+            Debug.Log(string.Format(format, sw.ElapsedMilliseconds));
+        }
+
+        private const int CopyThreshold = 12;
+
+        public static void Copy(byte[] src, int srcOffset, byte[] dst, int dstOffset, int count)
+        {
+            if (count > 12)
+            {
+                Buffer.BlockCopy((Array)src, srcOffset, (Array)dst, dstOffset, count);
+            }
+            else
+            {
+                int num = srcOffset + count;
+                for (int index = srcOffset; index < num; ++index)
+                    dst[dstOffset++] = src[index];
+            }
+        }
+
+        public static void Reverse(byte[] bytes)
+        {
+            int index1 = 0;
+            for (int index2 = bytes.Length - 1; index1 < index2; --index2)
+            {
+                byte num = bytes[index1];
+                bytes[index1] = bytes[index2];
+                bytes[index2] = num;
+                ++index1;
+            }
+        }
+
         public static T CheckNotNull<T>(T value, string name) where T : class => (object)value != null ? value : throw new ArgumentNullException(name);
 
         internal static T CheckNotNullUnconstrained<T>(T value, string name) => (object)value != null ? value : throw new ArgumentNullException(name);
@@ -40,7 +89,6 @@ namespace ZGame
             editor.Copy();
         }
 
-       
 
         public static Type GetType(this AppDomain domain, string name)
         {

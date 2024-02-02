@@ -13,9 +13,11 @@ namespace ZGame.IM
     public interface IMClient : IDisposable
     {
         string id { get; }
-        UniTask<bool> Open();
-        void OnRecvieMessage();
+        bool isOpen { get; }
+        UniTask<bool> Open(params object[] args);
         void SendChat(string text);
-        void SendAudio(AudioClip clip);
+        void StartAudio();
+        void SendAudio(byte[] clip);
+        void EndAudio();
     }
 }

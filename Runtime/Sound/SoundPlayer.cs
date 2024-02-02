@@ -83,10 +83,10 @@ namespace ZGame.Sound
             OnStartPlay(waiting.Dequeue());
         }
 
-        public void Play(string clipName, bool isNow, Action<PlayState> callback)
+        public void Play(string clipName, Action<PlayState> callback)
         {
             SoundState soundState = new SoundState(clipName, callback);
-            if (current is null || isNow)
+            if (current is null)
             {
                 OnStartPlay(soundState);
                 return;
@@ -95,10 +95,10 @@ namespace ZGame.Sound
             waiting.Enqueue(soundState);
         }
 
-        public void Play(AudioClip clip, bool isNow, Action<PlayState> callback)
+        public void Play(AudioClip clip, Action<PlayState> callback)
         {
             SoundState soundState = new SoundState(clip, callback);
-            if (current is null || isNow)
+            if (current is null)
             {
                 OnStartPlay(soundState);
                 return;

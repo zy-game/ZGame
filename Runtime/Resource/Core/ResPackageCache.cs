@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using ZGame.Config;
 using ZGame.FileSystem;
 using ZGame.UI;
 
@@ -175,7 +176,7 @@ namespace ZGame.Resource
                 if (bytes is null || bytes.Length == 0)
                 {
                     Clear(manifests);
-                    UILoading.SetTitle("资源加载失败...");
+                    UILoading.SetTitle(Localliztion.instance.Query("资源加载失败..."));
                     return;
                 }
 
@@ -211,7 +212,7 @@ namespace ZGame.Resource
                 target.SetDependencies(dependencies.ToArray());
             }
 
-            UILoading.SetTitle("资源加载完成...");
+            UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
             UILoading.SetProgress(1);
         }
 

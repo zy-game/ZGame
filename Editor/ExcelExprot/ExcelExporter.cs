@@ -15,7 +15,6 @@ namespace ZGame.Editor.ExcelExprot
     {
         Json,
         Csharp,
-        Assets
     }
 
     [Serializable]

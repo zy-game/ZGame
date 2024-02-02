@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame;
+using ZGame.Config;
 
 namespace ZGame.UI
 {
@@ -20,6 +21,7 @@ namespace ZGame.UI
         {
             this.onYes = (Action)(args[2]);
             this.onNo = (Action)(args[3]);
+
             BehaviourScriptable.instance.SetupKeyDown(KeyCode.Escape, OnBackup);
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>(true);
             foreach (var VARIABLE in texts)
@@ -32,6 +34,11 @@ namespace ZGame.UI
                 if (VARIABLE.name.Equals("content"))
                 {
                     VARIABLE.SetText(args[1].ToString());
+                }
+
+                if (VARIABLE.name.Equals("text_btn_confirm_text"))
+                {
+                    VARIABLE.SetText(Localliztion.instance.Query("确定"));
                 }
             }
 
@@ -129,17 +136,17 @@ namespace ZGame.UI
 
         public static void Show(string content, Action onYes, Action onNo)
         {
-            Show("提示", content, onYes, onNo);
+            Show(Localliztion.instance.Query("提示"), content, onYes, onNo);
         }
 
         public static void Show(string content, Action onYes)
         {
-            Show("提示", content, onYes, null);
+            Show(Localliztion.instance.Query("提示"), content, onYes, null);
         }
 
         public static void Show(string content)
         {
-            Show("提示", content, null, null);
+            Show(Localliztion.instance.Query("提示"), content, null, null);
         }
     }
 }

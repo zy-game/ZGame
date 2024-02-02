@@ -17,7 +17,7 @@ namespace ZGame.Game
         public Assembly assembly { get; private set; }
         public EntryConfig config { get; private set; }
 
-        public virtual void OnEntry(params string[] args)
+        public virtual void OnEntry()
         {
         }
 
@@ -25,7 +25,7 @@ namespace ZGame.Game
         {
         }
 
-        public static async UniTask<SubGame> LoadGame(EntryConfig config, params string[] args)
+        public static async UniTask<SubGame> LoadGame(EntryConfig config)
         {
             Assembly assembly = await LoadGameAssembly(config);
             if (assembly is null)
@@ -42,7 +42,7 @@ namespace ZGame.Game
             SubGame subGameEntry = Activator.CreateInstance(entryType) as SubGame;
             subGameEntry.assembly = assembly;
             subGameEntry.config = config;
-            subGameEntry.OnEntry(args);
+
             return subGameEntry;
         }
 

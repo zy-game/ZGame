@@ -91,7 +91,7 @@ namespace UIMarkdownRenderer
         {
             if (s_DefaultStylesheet == null)
             {
-                s_DefaultStylesheet =  AssetDatabase.LoadAssetAtPath("Assets/Editor/MarkdownRenderer/Styles/MarkdownRenderer.uss", typeof(StyleSheet)) as StyleSheet;
+                s_DefaultStylesheet =  AssetDatabase.LoadAssetAtPath("Packages/com.zh.zgame/Editor/MarkdownRenderer/Styles/MarkdownRenderer.uss", typeof(StyleSheet)) as StyleSheet;
             
                 if(s_DefaultStylesheet == null)
                     Debug.LogError("Couldn't load the MarkdownRenderer.uss stylesheet");

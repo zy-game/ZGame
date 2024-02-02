@@ -480,10 +480,6 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);");
             AddSetup("\t\t}");
             AddSetup("");
-            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
-            {
-                AddLanguage($"\t\t\t on_Setup_{VARIABLE.name}(Localliztion.Get({VARIABLE.language}));");
-            }
         }
 
         private void GenericRawImageComponent(UIBindData VARIABLE, string fieldName)
@@ -525,11 +521,6 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.texture = texture;");
             AddSetup("\t\t}");
             AddSetup("");
-
-            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
-            {
-                AddLanguage($"\t\t\t on_Setup_{VARIABLE.name}(Localliztion.Get({VARIABLE.language}));");
-            }
         }
 
         private void GenericTextComponent(UIBindData VARIABLE, string fieldName)
@@ -542,11 +533,6 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.text = info == null ? \"\" : info.ToString();");
             AddSetup("\t\t}");
             AddSetup("");
-
-            if (VARIABLE.bindLanguage && VARIABLE.language != 0)
-            {
-                AddLanguage($"\t\t\t on_Setup_{VARIABLE.name}(Localliztion.Get({VARIABLE.language}));");
-            }
         }
 
         private void AddInit(string str)

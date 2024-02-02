@@ -33,14 +33,6 @@ namespace ZGame.Editor.PSD2GUI
             setting.NameSpace = EditorGUILayout.TextField(this.setting.templetee ? "Template Name" : "NameSpace", setting.NameSpace);
             if (this.setting.templetee is false)
             {
-                setting.language = (TextAsset)EditorGUILayout.ObjectField("Language", setting.language, typeof(TextAsset), false);
-                if (setting.language != null && isSetLanguage is false)
-                {
-                    Localliztion.SetupText(setting.language.text);
-                    isSetLanguage = true;
-                    Localliztion.Switch(BasicConfig.instance.curEntry.language);
-                }
-
                 EditorGUILayout.BeginHorizontal();
                 setting.output = EditorGUILayout.ObjectField("Output", setting.output, typeof(DefaultAsset), false);
                 if (EditorGUILayout.DropdownButton(new GUIContent("Generic"), FocusType.Passive, GUILayout.Width(70)))
@@ -248,15 +240,6 @@ namespace ZGame.Editor.PSD2GUI
             GUILayout.Label("Path", GUILayout.Width(110));
             GUILayout.Label(options.path);
             GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Bind Components", GUILayout.Width(110));
-            if (EditorGUILayout.DropdownButton(new GUIContent(options.selector.ToString()), FocusType.Passive))
-            {
-                options.selector.ShowContext(() => { EditorUtility.SetDirty(setting); });
-            }
-
-            GUILayout.EndHorizontal();
             List<Component> opComs = options.target.GetComponents<Component>().ToList();
             if (options.selector is null)
             {
@@ -265,95 +248,103 @@ namespace ZGame.Editor.PSD2GUI
 
 
             options.selector.Add(opComs.Select(x => x.GetType().FullName).ToArray());
-
-            if (options.isText is false)
-            {
-                return;
-            }
-
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Language", GUILayout.Width(110));
-            options.bindLanguage = GUILayout.Toggle(options.bindLanguage, "");
-            GUILayout.EndHorizontal();
-
-            if (options.bindLanguage is false)
+            GUILayout.Label("Bind Components", GUILayout.Width(110));
+            if (EditorGUILayout.DropdownButton(new GUIContent(options.selector.ToString()), FocusType.Passive))
             {
-                return;
-            }
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Bind", GUILayout.Width(110));
-            List<string> languageData = Localliztion.GetValues();
-            if (languageData is null || languageData.Count == 0)
-            {
-                GUILayout.EndHorizontal();
-                return;
-            }
-
-            SetLanguage(options);
-            if (EditorGUILayout.DropdownButton(new GUIContent(Localliztion.Get(options.language)), FocusType.Passive))
-            {
-                ObjectSelectionWindow<string>.ShowSingle(new Vector2(200, 300), languageData, (args) =>
-                {
-                    options.language = Localliztion.GetKey(args);
-                    SetLanguage(options);
-                });
+                options.selector.ShowContext(() => { EditorUtility.SetDirty(setting); });
             }
 
             GUILayout.EndHorizontal();
+
+            // if (options.isText is false)
+            // {
+            //     return;
+            // }
+            //
+            // GUILayout.BeginHorizontal();
+            // GUILayout.Label("Language", GUILayout.Width(110));
+            // options.bindLanguage = GUILayout.Toggle(options.bindLanguage, "");
+            // GUILayout.EndHorizontal();
+            //
+            // if (options.bindLanguage is false)
+            // {
+            //     return;
+            // }
+            //
+            // GUILayout.BeginHorizontal();
+            // GUILayout.Label("Bind", GUILayout.Width(110));
+            // List<string> languageData = Localliztion.GetValues();
+            // if (languageData is null || languageData.Count == 0)
+            // {
+            //     GUILayout.EndHorizontal();
+            //     return;
+            // }
+            //
+            // SetLanguage(options);
+            // if (EditorGUILayout.DropdownButton(new GUIContent(Localliztion.Get(options.language)), FocusType.Passive))
+            // {
+            //     ObjectSelectionWindow<string>.ShowSingle(new Vector2(200, 300), languageData, (args) =>
+            //     {
+            //         options.language = Localliztion.GetKey(args);
+            //         SetLanguage(options);
+            //     });
+            // }
+            //
+            // GUILayout.EndHorizontal();
         }
 
-        private void SetLanguage(UIBindData options)
-        {
-            string text = Localliztion.Get(options.language);
-            if (text.EndsWith(".png") is false)
-            {
-                Text t = options.target.GetComponent<Text>();
-                if (t != null)
-                {
-                    t.text = text;
-                    return;
-                }
-
-                TMP_Text t2 = options.target.GetComponent<TMP_Text>();
-                if (t2 != null)
-                {
-                    t2.text = text;
-                    return;
-                }
-
-                return;
-            }
-
-            Image i = options.target.GetComponent<Image>();
-            if (i != null)
-            {
-                if (text.StartsWith("Resources"))
-                {
-                    i.sprite = Resources.Load<Sprite>(text);
-                }
-                else
-                {
-                    i.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(text);
-                }
-
-                return;
-            }
-
-            RawImage i2 = options.target.GetComponent<RawImage>();
-            if (i2 != null)
-            {
-                if (text.StartsWith("Resources"))
-                {
-                    i2.texture = Resources.Load<Texture>(text);
-                }
-                else
-                {
-                    i2.texture = AssetDatabase.LoadAssetAtPath<Texture>(text);
-                }
-
-                return;
-            }
-        }
+        // private void SetLanguage(UIBindData options)
+        // {
+        //     string text = Localliztion.Get(options.language);
+        //     if (text.EndsWith(".png") is false)
+        //     {
+        //         Text t = options.target.GetComponent<Text>();
+        //         if (t != null)
+        //         {
+        //             t.text = text;
+        //             return;
+        //         }
+        //
+        //         TMP_Text t2 = options.target.GetComponent<TMP_Text>();
+        //         if (t2 != null)
+        //         {
+        //             t2.text = text;
+        //             return;
+        //         }
+        //
+        //         return;
+        //     }
+        //
+        //     Image i = options.target.GetComponent<Image>();
+        //     if (i != null)
+        //     {
+        //         if (text.StartsWith("Resources"))
+        //         {
+        //             i.sprite = Resources.Load<Sprite>(text);
+        //         }
+        //         else
+        //         {
+        //             i.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(text);
+        //         }
+        //
+        //         return;
+        //     }
+        //
+        //     RawImage i2 = options.target.GetComponent<RawImage>();
+        //     if (i2 != null)
+        //     {
+        //         if (text.StartsWith("Resources"))
+        //         {
+        //             i2.texture = Resources.Load<Texture>(text);
+        //         }
+        //         else
+        //         {
+        //             i2.texture = AssetDatabase.LoadAssetAtPath<Texture>(text);
+        //         }
+        //
+        //         return;
+        //     }
+        // }
     }
 }

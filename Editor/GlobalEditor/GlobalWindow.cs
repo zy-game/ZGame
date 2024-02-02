@@ -16,8 +16,7 @@ using ZGame.Resource.Config;
 
 namespace ZGame.Editor
 {
-    [SubPageSetting("全局配置")]
-    [ReferenceScriptableObject(typeof(BasicConfig))]
+    [SubPageSetting("全局配置", null, false, typeof(BasicConfig))]
     public class GlobalWindow : SubPage
     {
         private bool show1, show2, show3;
@@ -73,6 +72,7 @@ namespace ZGame.Editor
             }
 
             GUILayout.EndHorizontal();
+            BasicConfig.instance.language = (LanguageDefine)EditorGUILayout.EnumPopup("默认语言", BasicConfig.instance.language);
             NativeLeakDetection.Mode = (NativeLeakDetectionMode)EditorGUILayout.EnumPopup("Enable Stack Trace", NativeLeakDetection.Mode);
             GUILayout.BeginHorizontal();
             last = BasicConfig.instance.address.FindIndex(x => x.title == BasicConfig.instance.curAddressName);

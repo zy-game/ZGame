@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using ZGame.Config;
 using ZGame.Resource.Config;
 
 namespace ZGame.Editor
@@ -29,11 +30,8 @@ namespace ZGame.Editor
                 BasicConfig.instance.curEntryName = BasicConfig.instance.entries[curIndex].title;
             }
 
-            if (curIndex >= 0 && curIndex < BasicConfig.instance.entries.Count)
-            {
-                startup.args = EditorGUILayout.TextField("参数", startup.args);
-            }
 
+            BasicConfig.instance.language = (LanguageDefine)EditorGUILayout.EnumPopup("默认语言", BasicConfig.instance.language);
             GUILayout.BeginHorizontal();
             last = BasicConfig.instance.address.FindIndex(x => x.title == BasicConfig.instance.curAddressName);
             curIndex = EditorGUILayout.Popup("服务器地址", last, BasicConfig.instance.address.Select(x => x.title).ToArray());

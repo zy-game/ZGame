@@ -5,6 +5,7 @@ using ZGame.Resource;
 
 namespace ZGame
 {
+    
     public abstract class SingletonScriptableObject<T> : ScriptableObject where T : SingletonScriptableObject<T>
     {
         //懒汉单例模式

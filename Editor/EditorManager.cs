@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Unity.EditorCoroutines.Editor;
@@ -20,6 +21,7 @@ namespace ZGame.Editor
         private static UnityEngine.Object openScriptableObject;
         private EditorCoroutine waiting;
         private bool isWaiting;
+        private static event Func<Type, string, bool> OnOpenAssetCallback;
 
         [MenuItem("ZGame/Home %h")]
         static void BackupHome()
@@ -59,7 +61,24 @@ namespace ZGame.Editor
                 {
                     if (VARIABLE2.GetType().Equals(setting.parent))
                     {
-                        VARIABLE2.childs.Add((SubPage)Activator.CreateInstance(VARIABLE));
+                        SubPage subPage = (SubPage)Activator.CreateInstance(VARIABLE);
+                        VARIABLE2.childs.Add(subPage);
+                        subPage.parent = VARIABLE2;
+                        subPage.isPopup = setting.isPopup;
+                        if (setting.configType is not null || setting.extension.IsNullOrEmpty() is false)
+                        {
+                            OnOpenAssetCallback += (assetType, extension) =>
+                            {
+                                if (assetType.Equals(setting.configType) || extension.Equals(setting.extension))
+                                {
+                                    SwitchScene(subPage);
+                                    return true;
+                                }
+
+                                return false;
+                            };
+                        }
+
                         break;
                     }
                 }
@@ -71,6 +90,24 @@ namespace ZGame.Editor
             }
 
             OpenScene();
+        }
+
+        [OnOpenAsset()]
+        static bool OnOpened(int id, int line)
+        {
+            UnityEngine.Object target = UnityEditor.EditorUtility.InstanceIDToObject(id);
+            if (target == null)
+            {
+                return false;
+            }
+
+            if (OnOpenAssetCallback is null)
+            {
+                return false;
+            }
+
+            string fullPath = AssetDatabase.GetAssetPath(target);
+            return OnOpenAssetCallback(target.GetType(), Path.GetExtension(fullPath));
         }
 
         private static EditorManager TryOpenManager()

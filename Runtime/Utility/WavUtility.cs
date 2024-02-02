@@ -11,6 +11,27 @@ namespace ZGame
         private const int BlockSize_16Bit = 2;
         private const int k_SizeofInt16 = 2;
 
+        /// <summary>
+        /// 获取录音数据
+        /// </summary>
+        /// <returns></returns>
+        public static AudioClip SplitAudioClip(AudioClip _recordClip, int position, int _rate)
+        {
+            if (_recordClip == null)
+            {
+                return default;
+            }
+
+            int lenghtSamples = _recordClip.channels * position;
+            float[] _recordSamples = new float[_recordClip.samples];
+            _recordClip.GetData(_recordSamples, 0);
+            AudioClip clip = AudioClip.Create("mySound", lenghtSamples, _recordClip.channels, _rate, false, false);
+            float[] temp = new float[lenghtSamples];
+            Array.Copy(_recordSamples, 0, temp, 0, lenghtSamples);
+            clip.SetData(temp, 0);
+            return clip;
+        }
+
         public static AudioClip ToAudioClip(string filePath)
         {
             if (filePath.StartsWith(Application.persistentDataPath) || filePath.StartsWith(Application.dataPath))
@@ -68,12 +89,13 @@ namespace ZGame
             return audioClip;
         }
 
-        public static void ConvertAudioClipDataToInt16ByteArray(IReadOnlyList<float> input, int size, byte[] output)
+        public static byte[] ConvertAudioClipDataToInt16ByteArray(IReadOnlyList<float> input, int size)
         {
-            MemoryStream memoryStream = new MemoryStream(output);
+            MemoryStream memoryStream = new MemoryStream();
             for (int index = 0; index < size; ++index)
                 memoryStream.Write(BitConverter.GetBytes(Convert.ToInt16(input[index] * (float)short.MaxValue)), 0, 2);
             memoryStream.Dispose();
+            return memoryStream.ToArray();
         }
 
         private static float[] Convert8BitByteArrayToAudioClipData(byte[] source, int headerOffset, int dataSize)
@@ -147,16 +169,15 @@ namespace ZGame
             return audioClipData;
         }
 
-        public static byte[] FromAudioClip(AudioClip audioClip) => WavUtility.FromAudioClip(audioClip, out string _, false);
-
-        public static byte[] FromAudioClip(AudioClip audioClip, out string filepath, bool saveAsFile = true, string dirname = "recordings")
+        public static byte[] FromAudioClip(AudioClip audioClip) => WavUtility.FromAudioClip(audioClip, audioClip.samples, out string _, false);
+        public static byte[] FromAudioClip(AudioClip audioClip, int position, out string filepath, bool saveAsFile = true, string dirname = "recordings")
         {
             MemoryStream stream = new MemoryStream();
             ushort bitDepth = 16;
             int fileSize = audioClip.samples * 2 + 44;
             WavUtility.WriteFileHeader(ref stream, fileSize);
             WavUtility.WriteFileFormat(ref stream, audioClip.channels, audioClip.frequency, bitDepth);
-            WavUtility.WriteFileData(ref stream, audioClip, bitDepth);
+            WavUtility.WriteFileData(ref stream, audioClip, bitDepth, position);
             byte[] array = stream.ToArray();
             Debug.AssertFormat((array.Length == fileSize || 0U > 0U ? 1 : 0) != 0, "Unexpected AudioClip to wav format byte count: {0} == {1}", (object)array.Length, (object)fileSize);
             if (saveAsFile)
@@ -206,11 +227,11 @@ namespace ZGame
             return num11;
         }
 
-        private static int WriteFileData(ref MemoryStream stream, AudioClip audioClip, ushort bitDepth)
+        private static int WriteFileData(ref MemoryStream stream, AudioClip audioClip, ushort bitDepth, int position)
         {
             int num1 = 0;
             int num2 = 8;
-            float[] data = new float[audioClip.samples * audioClip.channels];
+            float[] data = new float[position * audioClip.channels];
             audioClip.GetData(data, 0);
             byte[] int16ByteArray = WavUtility.ConvertAudioClipDataToInt16ByteArray(data);
             byte[] bytes = Encoding.ASCII.GetBytes("data");

@@ -9,18 +9,17 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 using ZGame;
+using ZGame.Config;
 using ZGame.Game;
 using ZGame.Resource;
 using ZGame.UI;
 
 public class Startup : MonoBehaviour
 {
-    public string args;
-
     private async void Start()
     {
         GameManager.instance.Initialized();
-        UILoading.SetTitle("正在获取配置信息...");
+        UILoading.SetTitle(Localliztion.instance.Query("正在获取配置信息..."));
         UILoading.SetProgress(0);
         if (BasicConfig.instance.curEntry is null)
         {
@@ -30,6 +29,6 @@ public class Startup : MonoBehaviour
 
         await PackageManifestManager.instance.Setup(BasicConfig.instance.curEntry.module);
         await ResourceManager.instance.PerloadingResourcePackageList(BasicConfig.instance.curEntry);
-        await GameManager.instance.EntryGame(BasicConfig.instance.curEntry, args.Split(';'));
+        await GameManager.instance.EntryGame(BasicConfig.instance.curEntry);
     }
 }

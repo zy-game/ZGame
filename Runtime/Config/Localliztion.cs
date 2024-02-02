@@ -20,153 +20,101 @@ namespace ZGame.Config
         Chinese,
     }
 
-    public sealed class Localliztion : SingletonScriptableObject<Localliztion>
+    public interface ILanguage
     {
-        class LanguageTemplate
+        int id_num { get; }
+        string language_ch { get; }
+        string language_en { get; }
+    }
+
+    public sealed class Localliztion : Singleton<Localliztion>
+    {
+        private Action onSwitch;
+        private IQuery queryable;
+        private LanguageDefine cureent;
+
+        private List<(string, string)> defaultMap = new()
         {
-            public string suffix;
-            public LanguageDefine define;
-            public Dictionary<int, string> map;
+            new("是否退出？", "Are you sure to quit?"),
+            new("提示", "Tips"),
+            new("正在获取配置信息...", "Getting configuration information..."),
+            new("资源加载失败...", "Resource loading failed..."),
+            new("资源加载完成...", "Resources loaded successfully..."),
+            new("正在加载资源信息...", "Loading resource information..."),
+            new("资源更新完成...", "Resource update completed..."),
+            new("确定", "Confirm")
+        };
+
+        /// <summary>
+        /// 当前语言
+        /// </summary>
+        public LanguageDefine curLanguage => cureent;
+
+        public void Setup(IQuery queryable)
+        {
+            this.queryable = queryable;
         }
 
-        private LanguageTemplate current;
-        private List<LanguageTemplate> languages;
-
-        public override void OnAwake()
+        /// <summary>
+        /// 设置多语言切换回调
+        /// </summary>
+        /// <param name="action"></param>
+        public void SetupLanguageChangeCallback(Action action)
         {
-            languages = new List<LanguageTemplate>();
+            this.onSwitch += action;
         }
 
-        protected override void OnSaved()
+        /// <summary>
+        /// 取消多语言切换回调
+        /// </summary>
+        /// <param name="action"></param>
+        public void UnsetLanguageChangeCallback(Action action)
         {
+            this.onSwitch -= action;
         }
 
-        public static async UniTask SetupUrl(string url)
+        public void Switch(LanguageDefine language)
         {
-            string asset = default;
-            if (url.StartsWith("http"))
+            if (cureent == language)
             {
-                byte[] data = await Request.GetStreamingAsset(url);
-                asset = UTF8Encoding.UTF8.GetString(data);
+                return;
             }
-            else
-            {
-                using (ResObject languageAsset = ResourceManager.instance.LoadAsset(url))
-                {
-                    if (languageAsset is null || languageAsset.IsSuccess() is false)
-                    {
-                        return;
-                    }
 
-                    asset = languageAsset.GetAsset<TextAsset>().text;
+            cureent = language;
+        }
+
+        /// <summary>
+        /// 查找多语言
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public string Query(int key)
+        {
+            ILanguage language = (ILanguage)queryable.Query(key);
+            if (language is null)
+            {
+                return Query(key.ToString());
+            }
+
+            return cureent == LanguageDefine.English ? language.language_en : language.language_ch;
+        }
+
+        /// <summary>
+        /// 查找多语言
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public string Query(string key)
+        {
+            for (int i = 0; i < defaultMap.Count; i++)
+            {
+                if (defaultMap[i].Item1.Contains(key) || defaultMap[i].Item2.Contains(key))
+                {
+                    return cureent == LanguageDefine.English ? defaultMap[i].Item2 : defaultMap[i].Item1;
                 }
             }
 
-            SetupText(asset);
-        }
-
-        public static void SetupText(string assetString)
-        {
-            if (assetString.IsNullOrEmpty())
-            {
-                return;
-            }
-
-            List<JObject> list = JsonConvert.DeserializeObject<List<JObject>>(assetString);
-            if (list is null || list.Count == 0)
-            {
-                return;
-            }
-
-            int id_num;
-            string language_ch;
-            string language_en;
-            List<LanguageTemplate> languages = new List<LanguageTemplate>()
-            {
-                new LanguageTemplate() { define = LanguageDefine.Chinese, map = new Dictionary<int, string>(), suffix = "ch" },
-                new LanguageTemplate() { define = LanguageDefine.English, map = new Dictionary<int, string>(), suffix = "en" },
-            };
-            foreach (var VARIABLE in list)
-            {
-                id_num = VARIABLE.Value<int>("id_num");
-                language_ch = VARIABLE.Value<string>("language_ch");
-                language_en = VARIABLE.Value<string>("language_en");
-                languages[0].map.Add(id_num, language_ch);
-                languages[1].map.Add(id_num, language_en);
-            }
-
-            instance.languages = languages;
-        }
-
-        public static void Switch(LanguageDefine define)
-        {
-            if (instance is null)
-            {
-                return;
-            }
-
-            if (instance.languages is null)
-            {
-                return;
-            }
-
-            instance.current = instance.languages.Find(x => x.define == define);
-            //todo 这里还要处理界面上绑定的多语言
-        }
-
-        public static List<string> GetValues()
-        {
-            if (instance is null)
-            {
-                return default;
-            }
-
-            if (instance.current is null || instance.current.map == null)
-            {
-                return default;
-            }
-
-            return instance.current.map.Values.ToList();
-        }
-
-        public static string Get(int key)
-        {
-            if (instance is null)
-            {
-                return default;
-            }
-
-            if (instance.current is null || instance.current.map == null)
-            {
-                return default;
-            }
-
-            if (instance.current.map.TryGetValue(key, out string value))
-            {
-                return value;
-            }
-
-            return "Not Find";
-        }
-
-        public static int GetKey(string s)
-        {
-            if (instance is null)
-            {
-                return default;
-            }
-
-            if (instance.current is null || instance.current.map == null)
-            {
-                return default;
-            }
-
-            if (instance.current.map.ContainsValue(s))
-            {
-                return instance.current.map.First(x => x.Value == s).Key;
-            }
-
-            return -1;
+            return String.Empty;
         }
     }
 }

@@ -50,6 +50,16 @@ namespace ZGame.Editor
         {
             GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND, GUILayout.Width(position.width - 305), GUILayout.Height(position.height));
             GUILayout.BeginHorizontal();
+            if (current is not null && current.parent is not null)
+            {
+                GUILayout.Space(5);
+                if (GUILayout.Button(EditorGUIUtility.IconContent("d_tab_prev"), ZStyle.HEADER_BUTTON_STYLE))
+                {
+                    EditorManager.SwitchScene(current.parent);
+                }
+            }
+
+
             int size = EditorStyles.boldLabel.fontSize;
             EditorStyles.boldLabel.fontSize = 20;
             GUILayout.Label(current.name, EditorStyles.boldLabel);

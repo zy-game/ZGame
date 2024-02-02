@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using ZGame.Config;
 using ZGame.FileSystem;
 using ZGame.Game;
 using ZGame.Networking;
@@ -69,12 +70,12 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("config");
             }
 
-            UILoading.SetTitle("正在加载资源信息...");
+            UILoading.SetTitle(Localliztion.instance.Query("正在加载资源信息..."));
             UILoading.SetProgress(0);
             List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(config.module);
             if (manifests is null || manifests.Count == 0)
             {
-                UILoading.SetTitle("资源加载完成...");
+                UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
                 UILoading.SetProgress(1);
             }
 
@@ -96,7 +97,7 @@ namespace ZGame.Resource
             List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(configName);
             if (manifests is null || manifests.Count == 0)
             {
-                UILoading.SetTitle("资源加载完成...");
+                UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
                 UILoading.SetProgress(1);
             }
 
@@ -116,13 +117,13 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("config");
             }
 
-            UILoading.SetTitle("检查资源配置...");
+            UILoading.SetTitle(Localliztion.instance.Query("正在加载资源信息..."));
             UILoading.SetProgress(0);
             List<ResourcePackageManifest> manifests = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
-            
+
             if (manifests is null || manifests.Count == 0)
             {
-                UILoading.SetTitle("资源更新完成...");
+                UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
                 UILoading.SetProgress(1);
             }
 
@@ -157,7 +158,7 @@ namespace ZGame.Resource
 
             if (failure.Count == 0)
             {
-                UILoading.SetTitle("资源更新完成...");
+                UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
                 UILoading.SetProgress(1);
                 return;
             }
