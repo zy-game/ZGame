@@ -97,17 +97,14 @@ namespace ZGame.Editor
             }
 
             GUILayout.EndHorizontal();
-            if (BasicConfig.instance.resMode == ResourceMode.Simulator)
-            {
-                BasicConfig.instance.resTimeout = EditorGUILayout.Slider("包检查间隔时间", BasicConfig.instance.resTimeout, 10, byte.MaxValue);
-                last = OSSConfig.instance.ossList.FindIndex(x => x.title == OSSConfig.instance.seletion);
-                curIndex = EditorGUILayout.Popup("资源服务器地址", last, OSSConfig.instance.ossList.Select(x => x.title).ToArray());
+            BasicConfig.instance.resTimeout = EditorGUILayout.Slider("包检查间隔时间", BasicConfig.instance.resTimeout, 10, byte.MaxValue);
+            last = OSSConfig.instance.ossList.FindIndex(x => x.title == OSSConfig.instance.seletion);
+            curIndex = EditorGUILayout.Popup("资源服务器地址", last, OSSConfig.instance.ossList.Select(x => x.title).ToArray());
 
-                if (curIndex >= 0 && curIndex < OSSConfig.instance.ossList.Count && last != curIndex)
-                {
-                    OSSConfig.instance.seletion = OSSConfig.instance.ossList[curIndex].title;
-                    OSSConfig.OnSave();
-                }
+            if (curIndex >= 0 && curIndex < OSSConfig.instance.ossList.Count && last != curIndex)
+            {
+                OSSConfig.instance.seletion = OSSConfig.instance.ossList[curIndex].title;
+                OSSConfig.OnSave();
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -115,79 +112,6 @@ namespace ZGame.Editor
                 OSSConfig.OnSave();
                 BasicConfig.OnSave();
             }
-        }
-    }
-
-    public class AssemlyInfo
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        public string name { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string rootNamespace { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<string> references { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<string> includePlatforms { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<string> excludePlatforms { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string allowUnsafeCode { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string overrideReferences { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<string> precompiledReferences { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string autoReferenced { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<string> defineConstraints { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<string> versionDefines { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string noEngineReferences { get; set; }
-
-        public List<string> GetReferenceList()
-        {
-            if (references is null)
-            {
-                return new List<string>();
-            }
-
-            return references.Select(x => Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(x.Split(':')[1]))).ToList();
         }
     }
 }

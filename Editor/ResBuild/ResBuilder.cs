@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -154,14 +156,14 @@ namespace ZGame.Editor.ResBuild
 
                     foreach (var bundle in options.builds)
                     {
-                        oss.Upload(output + "/" + bundle.assetBundleName);
+                        Upload(oss, output + "/" + bundle.assetBundleName);
                         successCount++;
                         EditorUtility.DisplayProgressBar("上传进度", successCount + "/" + allCount, successCount / (float)allCount);
                     }
 
                     foreach (ResourcePackageListManifest manifest in manifests)
                     {
-                        oss.Upload(output + "/" + manifest.name + ".ini");
+                        Upload(oss, output + "/" + manifest.name + ".ini");
                     }
                 }
             }
@@ -169,6 +171,124 @@ namespace ZGame.Editor.ResBuild
             EditorUtility.ClearProgressBar();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        private static Aliyun.OSS.OssClient client;
+        private static COSXML.CosXmlServer server;
+
+        public static void Upload(OSSOptions options, string filePath, bool isEncrypt = false)
+        {
+            if (File.Exists(filePath) is false)
+            {
+                throw new FileNotFoundException(filePath);
+            }
+
+            switch (options.type)
+            {
+                case OSSType.Streaming:
+                    StreamingUpload(options, filePath);
+                    break;
+                case OSSType.Aliyun:
+                    OSSUpload(options, filePath);
+                    break;
+                case OSSType.Tencent:
+                    COSUpload(options, filePath);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            Debug.Log("upload:" + filePath);
+        }
+
+        private static void StreamingUpload(OSSOptions options, string filePath)
+        {
+            string path = options.GetFilePath(Path.GetFileName(filePath));
+            if (Directory.Exists(Application.streamingAssetsPath) is false)
+            {
+                Directory.CreateDirectory(Application.streamingAssetsPath);
+            }
+
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
+            File.Copy(filePath, path, true);
+        }
+
+        private static void OSSUpload(OSSOptions options, string filePath)
+        {
+            string putName = $"{BasicConfig.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
+            if (client is null)
+            {
+                var _configuration = new Aliyun.OSS.Common.ClientConfiguration();
+                _configuration.ConnectionTimeout = 10000;
+                string endpoint = $"oss-cn-hangzhou.aliyuncs.com";
+                client = new Aliyun.OSS.OssClient(endpoint, options.key, options.password, _configuration);
+            }
+
+            if (client.DoesBucketExist(options.bucket) is false)
+            {
+                var request = new Aliyun.OSS.CreateBucketRequest(options.bucket);
+                request.ACL = Aliyun.OSS.CannedAccessControlList.PublicRead;
+                request.DataRedundancyType = Aliyun.OSS.DataRedundancyType.ZRS;
+                client.CreateBucket(request);
+            }
+
+            try
+            {
+                Aliyun.OSS.PutObjectResult putObjectResult = client.PutObject(options.bucket, putName, filePath);
+                if (putObjectResult.HttpStatusCode != HttpStatusCode.OK)
+                {
+                    Debug.Log("上传文件错误：" + filePath);
+                }
+                else
+                {
+                    Debug.Log(putObjectResult.ResponseMetadata);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e);
+            }
+        }
+
+        public static async void COSUpload(OSSOptions options, string filePath)
+        {
+            try
+            {
+                string putName = $"{BasicConfig.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
+                if (server is null)
+                {
+                    COSXML.CosXmlConfig config = new COSXML.CosXmlConfig.Builder().SetRegion(options.region).Build();
+                    string secretId = options.key;
+                    string secretKey = options.password;
+                    long durationSecond = 600;
+                    COSXML.Auth.QCloudCredentialProvider qCloudCredentialProvider = new COSXML.Auth.DefaultQCloudCredentialProvider(secretId, secretKey, durationSecond);
+                    server = new COSXML.CosXmlServer(config, qCloudCredentialProvider);
+                }
+
+                if (server.DoesBucketExist(new COSXML.Model.Bucket.DoesBucketExistRequest(options.bucket)) is false)
+                {
+                    server.PutBucket(new COSXML.Model.Bucket.PutBucketRequest(options.bucket));
+                }
+
+                COSXML.Transfer.TransferConfig transferConfig = new COSXML.Transfer.TransferConfig();
+                transferConfig.DivisionForUpload = 10 * 1024 * 1024;
+                transferConfig.SliceSizeForUpload = 2 * 1024 * 1024;
+                COSXML.Transfer.TransferManager transferManager = new COSXML.Transfer.TransferManager(server, transferConfig);
+                COSXML.Transfer.COSXMLUploadTask uploadTask = new COSXML.Transfer.COSXMLUploadTask(options.bucket, putName);
+                uploadTask.SetSrcPath(filePath);
+                uploadTask.progressCallback = delegate(long completed, long total) { Console.WriteLine(String.Format("progress = {0:##.##}%", completed * 100.0 / total)); };
+                COSXML.Transfer.COSXMLUploadTask.UploadTaskResult result = await transferManager.UploadAsync(uploadTask);
+                Debug.Log(result.GetResultInfo());
+                string eTag = result.eTag;
+            }
+            catch (Exception e)
+            {
+                Debug.Log("CosException: " + e);
+            }
         }
     }
 }

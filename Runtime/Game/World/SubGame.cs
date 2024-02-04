@@ -92,7 +92,19 @@ namespace ZGame.Game
                 }
 
                 Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(resObject.GetAsset<TextAsset>().bytes);
-                if (dllZipDict.TryGetValue(config.entryName + ".dll", out byte[] dllBytes) is false)
+                byte[] dllBytes = default;
+                foreach (var VARIABLE in config.references)
+                {
+                    if (dllZipDict.TryGetValue(VARIABLE + ".dll", out dllBytes) is false)
+                    {
+                        throw new NullReferenceException(config.entryName);
+                    }
+
+                    Assembly.Load(dllBytes);
+                    Debug.Log("Load Reference DLL:" + VARIABLE);
+                }
+
+                if (dllZipDict.TryGetValue(config.entryName + ".dll", out dllBytes) is false)
                 {
                     throw new NullReferenceException(config.entryName);
                 }

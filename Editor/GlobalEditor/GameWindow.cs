@@ -54,6 +54,7 @@ namespace ZGame.Editor
         {
             //todo 编译资源
             PackageSeting seting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
+            CompileDllCommand.CompileDllActiveBuildTarget();
             LinkerConfig.instance.Generic();
             if (config.mode is CodeMode.Hotfix)
             {
@@ -151,7 +152,7 @@ namespace ZGame.Editor
             GUILayout.BeginVertical(EditorStyles.helpBox);
 
             config.title = EditorGUILayout.TextField("游戏名", config.title);
-            
+
             if (config.path.IsNullOrEmpty() is false && config.assembly == null)
             {
                 config.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(config.path);
@@ -172,15 +173,14 @@ namespace ZGame.Editor
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Reference Assembly", EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.REFRESH_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
-            {
-                AssemlyInfo info = JsonConvert.DeserializeObject<AssemlyInfo>(config.assembly.text);
-                config.references = info.GetReferenceList();
-            }
-
             if (config.assembly != null)
             {
                 config.entryName = config.assembly.name;
+            }
+
+            if (config.references is null)
+            {
+                config.references = new List<string>();
             }
 
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
@@ -193,7 +193,9 @@ namespace ZGame.Editor
             for (int j = config.references.Count - 1; j >= 0; j--)
             {
                 GUILayout.BeginHorizontal(ZStyle.ITEM_BACKGROUND_STYLE);
-                GUILayout.Label(config.references[j]);
+
+
+                config.references[j] = EditorGUILayout.TextField("Element " + j, config.references[j], GUILayout.Width(500));
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {

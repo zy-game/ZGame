@@ -29,14 +29,8 @@ namespace ZGame.IM
             clients.Clear();
         }
 
-        public async UniTask<bool> Create<T>(params object[] args) where T : IMClient
+        public async UniTask<bool> Create(IMClient client, params object[] args)
         {
-            IMClient client = Activator.CreateInstance<T>();
-            if (client is null)
-            {
-                return false;
-            }
-
             bool state = await client.Open(args);
             if (state)
             {

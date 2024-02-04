@@ -112,15 +112,8 @@ namespace ZGame.Editor.ResBuild
                 return;
             }
 
-            if (options.type == OSSType.Tencent)
-            {
-                options.appid = EditorGUILayout.TextField("AppId", options.appid);
-            }
-
             options.region = EditorGUILayout.TextField("Region", options.region);
-
             options.bucket = EditorGUILayout.TextField("Bucket", options.bucket);
-            // options.address = EditorGUILayout.TextField("Address", options.address);
             options.key = EditorGUILayout.TextField("SecretId", options.key);
             options.password = EditorGUILayout.TextField("SecretKey", options.password);
             if (EditorGUI.EndChangeCheck())

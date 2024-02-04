@@ -109,7 +109,8 @@ namespace ZGame.Networking
         {
             Extension.StartSample();
             object _data = default;
-            string str = data is string ? data as string : JsonConvert.SerializeObject(data);
+            string str = data is string ? (string)data : JsonConvert.SerializeObject(data);
+            Debug.Log($"POST DATA:{url} parmas:{(str).ToString()}");
             using (UnityWebRequest request = UnityWebRequest.Post(url, str))
             {
                 request.useHttpContinue = true;
@@ -128,7 +129,7 @@ namespace ZGame.Networking
                 using (request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str)))
                 {
                     await request.SendWebRequest().ToUniTask();
-                    Extension.StopSample($"POST DATA:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                    UnityEngine.Debug.Log($"POST DATA:{url} parmas:{(str).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
                     if (request.result is UnityWebRequest.Result.Success)
                     {
                         _data = GetResultData<T>(request);
@@ -155,6 +156,7 @@ namespace ZGame.Networking
             object _data = default;
             Extension.StartSample();
             WWWForm form = await CreateWWWForm(map);
+            Debug.Log($"POST DATA:{url}");
             using (UnityWebRequest request = UnityWebRequest.Post(url, form))
             {
                 request.useHttpContinue = true;
@@ -172,7 +174,7 @@ namespace ZGame.Networking
                 using (request.uploadHandler = new UploadHandlerRaw(form.data))
                 {
                     await request.SendWebRequest().ToUniTask();
-                    Extension.StopSample($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                    Debug.Log($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                     if (request.result is UnityWebRequest.Result.Success)
                     {
                         _data = GetResultData<T>(request);
@@ -195,13 +197,14 @@ namespace ZGame.Networking
         public static async UniTask<T> GetData<T>(string url)
         {
             Extension.StartSample();
+            Debug.Log($"GET:{url}");
             object _data = default;
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
                 request.certificateHandler = new CertificateController();
                 request.SetRequestHeader("Content-Type", "application/json");
                 await request.SendWebRequest().ToUniTask();
-                Extension.StopSample($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                Debug.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 if (request.result is UnityWebRequest.Result.Success)
                 {
                     _data = GetResultData<T>(request);
@@ -223,12 +226,13 @@ namespace ZGame.Networking
         public static async UniTask<string> GetHead(string url, string headName)
         {
             Extension.StartSample();
+            Debug.Log($"GET:{url}");
             string result = "";
             using (UnityWebRequest request = UnityWebRequest.Head(url))
             {
                 request.certificateHandler = new CertificateController();
                 await request.SendWebRequest().ToUniTask();
-                Extension.StopSample($"HEAD:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                Debug.Log($"HEAD:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 if (request.result is UnityWebRequest.Result.Success)
                 {
                     result = request.GetResponseHeader(headName);
@@ -250,17 +254,19 @@ namespace ZGame.Networking
         public static async UniTask<byte[]> GetStreamingAsset(string url, IProgress<float> callback = null)
         {
             Extension.StartSample();
+            Debug.Log($"GET:{url}");
             byte[] result = Array.Empty<byte>();
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
                 request.certificateHandler = new CertificateController();
                 await request.SendWebRequest().ToUniTask(callback);
-                Extension.StopSample($"GET STRWAMING ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                Debug.Log($"GET STRWAMING ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 if (request.result is UnityWebRequest.Result.Success)
                 {
                     result = new byte[request.downloadHandler.data.Length];
                     System.Array.Copy(request.downloadHandler.data, result, result.Length);
                 }
+
 
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
