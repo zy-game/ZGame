@@ -127,6 +127,7 @@ namespace ZGame.Resource
                 UILoading.SetProgress(1);
             }
 
+            Debug.Log("需要更新资源：" + string.Join(",", manifests.Select(x => x.name)));
             HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
             HashSet<string> failure = new HashSet<string>();
             foreach (var packageManifest in manifests)
@@ -156,15 +157,16 @@ namespace ZGame.Resource
                 }
             }
 
-            if (failure.Count == 0)
+            if (failure.Count > 0)
             {
-                UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
-                UILoading.SetProgress(1);
+                Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
+                UIMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
                 return;
             }
 
-            Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
-            UIMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
+            Debug.Log("资源更新完成");
+            UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
+            UILoading.SetProgress(1);
         }
 
         /// <summary>

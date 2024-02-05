@@ -19,16 +19,16 @@ namespace ZGame
         public static void SetParent(this GameObject gameObject, Transform parent, Vector3 position, Vector3 rotation, Vector3 scale)
         {
             gameObject.transform.SetParent(parent);
-            gameObject.transform.position = position;
-            gameObject.transform.rotation = Quaternion.Euler(rotation);
+            gameObject.transform.localPosition = position;
+            gameObject.transform.localRotation = Quaternion.Euler(rotation);
             gameObject.transform.localScale = scale;
-            RectTransform rectTransform = default;
-            if ((rectTransform = gameObject.GetComponent<RectTransform>()) == null)
-            {
-                return;
-            }
-
-            rectTransform.anchoredPosition = position;
+            // RectTransform rectTransform = default;
+            // if ((rectTransform = gameObject.GetComponent<RectTransform>()) == null)
+            // {
+            //     return;
+            // }
+            //
+            // rectTransform.anchoredPosition = position;
         }
 
         public static string ToBase64String(this AudioClip clip)

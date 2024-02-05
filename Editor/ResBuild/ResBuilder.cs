@@ -156,9 +156,10 @@ namespace ZGame.Editor.ResBuild
 
                     foreach (var bundle in options.builds)
                     {
-                        Upload(oss, output + "/" + bundle.assetBundleName);
                         successCount++;
-                        EditorUtility.DisplayProgressBar("上传进度", successCount + "/" + allCount, successCount / (float)allCount);
+                        string dest = output + "/" + bundle.assetBundleName;
+                        Upload(oss, output + "/" + bundle.assetBundleName);
+                        EditorUtility.DisplayProgressBar("上传进度", dest, successCount / (float)allCount);
                     }
 
                     foreach (ResourcePackageListManifest manifest in manifests)
