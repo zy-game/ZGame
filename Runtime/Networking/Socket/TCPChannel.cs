@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -9,14 +10,14 @@ using UnityEngine;
 
 namespace ZGame.Networking
 {
-    public class TcpChannel : IChannel
+    public class TcpChannel<T> : IChannel where T : ISerialize
     {
-        public string address { get; set; }
-        public bool connected => _socket == null ? false : _socket.Connected;
-
         private Socket _socket;
         private bool isSendWork = false;
         private byte[] _recBytes = new byte[1024 * 1024];
+        public string address { get; set; }
+        public bool connected => _socket == null ? false : _socket.Connected;
+        public ISerialize serialize { get; set; }
 
         public async UniTask Connect(string address)
         {
@@ -31,6 +32,7 @@ namespace ZGame.Networking
                 return;
             }
 
+            serialize = Activator.CreateInstance<T>();
             Task.Factory.StartNew(OnStartReceiver);
         }
 
@@ -44,14 +46,20 @@ namespace ZGame.Networking
             return UniTask.CompletedTask;
         }
 
-        public async void WriteAndFlush(byte[] bytes)
+        public async void WriteAndFlush(IMessage message)
         {
+            byte[] bytes = serialize.Serialize(message);
             int result = await _socket.SendAsync(new Memory<byte>(bytes), SocketFlags.None);
             if (result < bytes.Length)
             {
                 Debug.LogError("发送数据错误");
                 return;
             }
+        }
+
+        public async UniTask<T> WriteAndFlushAsync<T>(IMessage message) where T : IMessage
+        {
+            return default;
         }
 
         void OnStartReceiver()
@@ -68,7 +76,14 @@ namespace ZGame.Networking
 
                 byte[] bytes = new byte[lenght];
                 Array.Copy(_recBytes, 0, bytes, 0, lenght);
-                NetworkManager.instance.Receiver(this, bytes);
+                IMessage message = serialize.Deserialize(bytes, out uint opcode);
+                if (message is null)
+                {
+                    Debug.LogError("消息解析失败");
+                    return;
+                }
+
+                CommandManager.OnExecuteCommand(opcode.ToString(), message);
             }
         }
 

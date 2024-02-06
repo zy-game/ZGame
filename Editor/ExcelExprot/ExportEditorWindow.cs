@@ -9,8 +9,8 @@ using UnityEngine;
 
 namespace ZGame.Editor.ExcelExprot
 {
-    [SubPageSetting("Excel Editor", typeof(ExcelExportManager), true)]
-    public class ExportEditorWindow : SubPage
+    [PageConfig("Excel Editor", typeof(ExcelExportManager), true)]
+    public class ExportEditorWindow : ToolbarScene
     {
         private ExcelExporter exporter;
         private ExportOptions options;

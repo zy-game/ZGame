@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace ZGame.Editor.Helpme
 {
-    [SubPageSetting("编辑", typeof(ThinktanksWindow))]
-    public class PublisherWindow : SubPage
+    [PageConfig("编辑", typeof(ThinktanksWindow))]
+    public class PublisherWindow : ToolbarScene
     {
         private HelpData helpmeData;
 

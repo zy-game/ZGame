@@ -13,7 +13,6 @@ namespace ZGame.UI
         {
         }
 
-
         public override void Enable(params object[] args)
         {
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
@@ -33,12 +32,13 @@ namespace ZGame.UI
                 return;
             }
 
-            _coroutine = UIManager.instance.StartCoroutine(CheckTimeout(time));
+            _coroutine = BehaviourScriptable.instance.StartCoroutine(CheckTimeout(time));
         }
 
         private IEnumerator CheckTimeout(float time)
         {
             yield return new WaitForSeconds(time);
+            _coroutine = null;
             UIManager.instance.Close<UIWait>();
         }
 
@@ -49,7 +49,7 @@ namespace ZGame.UI
                 return;
             }
 
-            UIManager.instance.StopCoroutine(_coroutine);
+            BehaviourScriptable.instance.StopCoroutine(_coroutine);
         }
 
 

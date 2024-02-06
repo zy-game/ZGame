@@ -7,8 +7,8 @@ using ZGame.Resource.Config;
 
 namespace ZGame.Editor.ResBuild
 {
-    [SubPageSetting("设置", typeof(ResBuilder), false, typeof(OSSConfig))]
-    public class ResSetting : SubPage
+    [PageConfig("设置", typeof(ResBuilder), false, typeof(OSSConfig))]
+    public class ResSetting : ToolbarScene
     {
         private bool outputIsOn = false;
         private bool resIsOn = false;
@@ -27,7 +27,7 @@ namespace ZGame.Editor.ResBuild
                     ossList.Add(new OSSOptions());
                     BuilderConfig.OnSave();
                     OSSConfig.OnSave();
-                    EditorManager.Refresh();
+                    ToolsWindow.Refresh();
                 }
             }
 
@@ -38,7 +38,7 @@ namespace ZGame.Editor.ResBuild
                     OSSConfig.instance.ossList.Remove(options);
                     BuilderConfig.OnSave();
                     OSSConfig.OnSave();
-                    EditorManager.Refresh();
+                    ToolsWindow.Refresh();
                 }
             }
         }

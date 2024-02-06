@@ -5,7 +5,6 @@ using ZGame.Resource;
 
 namespace ZGame
 {
-    
     public abstract class SingletonScriptableObject<T> : ScriptableObject where T : SingletonScriptableObject<T>
     {
         //懒汉单例模式
@@ -15,21 +14,22 @@ namespace ZGame
         {
             get
             {
-                if (_instance == null)
+                if (_instance != null)
                 {
-                    ResourceReference reference = typeof(T).GetCustomAttribute<ResourceReference>();
-                    if (reference == null)
-                    {
-                        _instance = CreateInstance<T>();
-                    }
-                    else
-                    {
-                        OnLoad(reference.path);
-                    }
-
-                    _instance?.OnAwake();
+                    return _instance;
                 }
 
+                ResourceReference reference = typeof(T).GetCustomAttribute<ResourceReference>();
+                if (reference == null)
+                {
+                    _instance = CreateInstance<T>();
+                }
+                else
+                {
+                    OnLoad(reference.path);
+                }
+
+                _instance?.OnAwake();
                 return _instance;
             }
         }

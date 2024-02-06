@@ -15,18 +15,17 @@ namespace ZGame.Resource
     {
         private List<ResourcePackageListManifest> _packageListManifests = new List<ResourcePackageListManifest>();
 
+        public override void Dispose()
+        {
+            _packageListManifests.Clear();
+        }
+
         /// <summary>
         /// 设置资源包模块
         /// </summary>
         /// <param name="packageName"></param>
         public async UniTask Setup(string packageName)
         {
-// #if UNITY_EDITOR
-//             if (BasicConfig.instance.resMode == ResourceMode.Editor)
-//             {
-//                 return;
-//             }
-// #endif
             ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is not null)
             {

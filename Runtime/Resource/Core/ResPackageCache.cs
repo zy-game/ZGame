@@ -13,7 +13,13 @@ namespace ZGame.Resource
         private List<ResPackage> cacheList = new List<ResPackage>();
         private List<ResPackage> _packageList = new List<ResPackage>();
 
-        protected override void OnUpdate()
+        protected override void OnAwake()
+        {
+            BehaviourScriptable.instance.SetupUpdate(OnUpdate);
+        }
+
+
+        private void OnUpdate()
         {
             if (Time.realtimeSinceStartup < nextCheckTime)
             {
@@ -23,11 +29,6 @@ namespace ZGame.Resource
             nextCheckTime = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
             CheckCanUnloadPackage();
             UnloadPackage();
-        }
-
-        protected override void OnDestroy()
-        {
-            Clear();
         }
 
         private void CheckCanUnloadPackage()
@@ -216,8 +217,20 @@ namespace ZGame.Resource
             UILoading.SetProgress(1);
         }
 
-        public void Clear()
+        public override void Dispose()
         {
+            foreach (var VARIABLE in _packageList)
+            {
+                VARIABLE.Dispose();
+            }
+
+            _packageList.Clear();
+            foreach (var VARIABLE in cacheList)
+            {
+                VARIABLE.Dispose();
+            }
+
+            cacheList.Clear();
         }
 
         private void Clear(params ResourcePackageManifest[] fileList)

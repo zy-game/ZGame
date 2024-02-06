@@ -5,8 +5,8 @@ using ZGame.Editor.PSD2GUI;
 
 namespace ZGame.Editor.PSD2GUI
 {
-    [SubPageSetting("UIBind Rule", typeof(PSD2GUIWindow), false, typeof(UIBindRulerConfig))]
-    public class UIBindRulerEditor : SubPage
+    [PageConfig("UIBind Rule", typeof(PSD2GUIWindow), false, typeof(UIBindRulerConfig))]
+    public class UIBindRulerEditor : ToolbarScene
     {
         private bool nameSpaceFoldout = true;
         private bool typeFoldout = true;
@@ -27,16 +27,16 @@ namespace ZGame.Editor.PSD2GUI
                 {
                     case 1:
                         UIBindRulerConfig.instance.rules.Add(new UIBindRulerItem());
-                        EditorManager.Refresh();
+                        ToolsWindow.Refresh();
                         break;
                     case 2:
                         UIBindRulerConfig.instance.nameSpaces.Add(new ReferenceNameSpace());
-                        EditorManager.Refresh();
+                        ToolsWindow.Refresh();
                         break;
                 }
 
                 UIBindRulerConfig.instance.AddNameSpace(string.Empty);
-                EditorManager.Refresh();
+                ToolsWindow.Refresh();
             }
         }
 
@@ -56,7 +56,7 @@ namespace ZGame.Editor.PSD2GUI
                     if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                     {
                         UIBindRulerConfig.instance.nameSpaces.Remove(item);
-                        EditorManager.Refresh();
+                        ToolsWindow.Refresh();
                     }
 
                     GUILayout.EndHorizontal();
@@ -85,7 +85,7 @@ namespace ZGame.Editor.PSD2GUI
                     if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                     {
                         UIBindRulerConfig.instance.rules.Remove(item);
-                        EditorManager.Refresh();
+                        ToolsWindow.Refresh();
                     }
 
                     GUILayout.EndHorizontal();
@@ -98,7 +98,7 @@ namespace ZGame.Editor.PSD2GUI
             if (EditorGUI.EndChangeCheck())
             {
                 UIBindRulerConfig.OnSave();
-                EditorManager.Refresh();
+                ToolsWindow.Refresh();
             }
         }
     }

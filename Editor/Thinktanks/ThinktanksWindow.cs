@@ -26,8 +26,8 @@ namespace ZGame.Editor.Helpme
         public List<ChatData> chats;
     }
 
-    [SubPageSetting("Think tanks")]
-    public class ThinktanksWindow : SubPage
+    [PageConfig("Think tanks")]
+    public class ThinktanksWindow : ToolbarScene
     {
         private List<HelpData> helps;
 
@@ -78,7 +78,7 @@ namespace ZGame.Editor.Helpme
                 GUILayout.Label(VARIABLE.time);
                 if (this.OnMouseLeftButtonDown(rect))
                 {
-                    EditorManager.SwitchScene<ReaderWindow>(VARIABLE);
+                    ToolsWindow.SwitchScene<ReaderWindow>(VARIABLE);
                 }
 
                 EditorGUILayout.EndHorizontal();

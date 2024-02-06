@@ -26,7 +26,7 @@ namespace ZGame.UI
 
         public void OnStart()
         {
-            this._coroutine = UIManager.instance.StartCoroutine(this.StartCountDown());
+            this._coroutine = BehaviourScriptable.instance.StartCoroutine(this.StartCountDown());
         }
 
         private IEnumerator StartCountDown()
@@ -53,7 +53,7 @@ namespace ZGame.UI
                 return;
             }
 
-            UIManager.instance.StopCoroutine(this._coroutine);
+            BehaviourScriptable.instance.StopCoroutine(this._coroutine);
             this._coroutine = null;
             this._onFinish = null;
             this._text = null;
@@ -132,12 +132,12 @@ namespace ZGame.UI
 
         public Coroutine StartCoroutine(IEnumerator enumerator)
         {
-            return UIManager.instance.StartCoroutine(enumerator);
+            return BehaviourScriptable.instance.StartCoroutine(enumerator);
         }
 
         public void StopCoroutine(Coroutine coroutine)
         {
-            UIManager.instance.StopCoroutine(coroutine);
+            BehaviourScriptable.instance.StopCoroutine(coroutine);
         }
     }
 }

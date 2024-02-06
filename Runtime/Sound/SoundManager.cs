@@ -147,10 +147,22 @@ namespace ZGame.Sound
             AddSoundPlayer(EFFECT_SOUND, false);
             m_ByteBuffer = new byte[m_BufferSize * 1 * k_SizeofInt16];
             records = IRecordAudioHandle.OnCreate(new Action<byte[]>(_ => { }));
+            BehaviourScriptable.instance.SetupUpdate(OnUpdate);
+            BehaviourScriptable.instance.SetupOnDestroy(Clear);
             BehaviourScriptable.instance.gameObject.AddComponent<AudioListener>();
         }
 
-        protected override void OnUpdate()
+        public void Clear()
+        {
+            foreach (var handle in _handles)
+            {
+                handle.Dispose();
+            }
+
+            _handles.Clear();
+        }
+
+        private void OnUpdate()
         {
             CheckSoundPlayer();
             HasRecordTimeout();

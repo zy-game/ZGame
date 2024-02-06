@@ -14,15 +14,15 @@ namespace ZGame.FileSystem
         private List<VFSChunk> segments = new List<VFSChunk>();
         private List<VFSStream> ioList = new List<VFSStream>();
 
-        protected override void OnDestroy()
+
+        public override void Dispose()
         {
-            base.OnDestroy();
             ioList.ForEach(x => x.Dispose());
+            Saved();
         }
 
         protected override void OnAwake()
         {
-            base.OnAwake();
             string filePath = Application.persistentDataPath + "/vfs.ini";
             if (!File.Exists(filePath))
             {
@@ -66,12 +66,6 @@ namespace ZGame.FileSystem
         public bool Exsit(string fileName)
         {
             return segments.Find(x => x.name == fileName) is not null;
-        }
-
-        public void Dispose()
-        {
-            ioList.ForEach(x => x.Dispose());
-            Saved();
         }
 
         private VFSStream GetFileHandle(string vfs)

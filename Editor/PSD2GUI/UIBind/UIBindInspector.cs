@@ -15,7 +15,7 @@ using Object = UnityEngine.Object;
 namespace ZGame.Editor.PSD2GUI
 {
     [CustomEditor(typeof(UIBind))]
-    public class UIBindInspector : CustomEditorWindow
+    public class UIBindInspector : BasicWindow
     {
         private UIBind setting;
         private bool isSetLanguage = false;

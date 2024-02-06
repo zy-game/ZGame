@@ -5,7 +5,7 @@ using ZGame.UI;
 namespace ZGame.Editor.PSD2GUI
 {
     [CustomEditor(typeof(LongPresseButton))]
-    public class LongPersseButtonEditor : CustomEditorWindow
+    public class LongPersseButtonEditor : BasicWindow
     {
         private LongPresseButton template;
 

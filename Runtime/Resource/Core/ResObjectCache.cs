@@ -24,6 +24,16 @@ namespace ZGame.Resource
             ResPackageCache.instance.Add(INTERNAL_RES_PACKAGE);
         }
 
+        public override void Dispose()
+        {
+            foreach (var VARIABLE in cacheList)
+            {
+                VARIABLE.Release(true);
+            }
+
+            cacheList.Clear();
+        }
+
         public ResObject Add(ResPackage parent, object obj, string path)
         {
             ResObject resObject = new ResObject(parent, obj, path);

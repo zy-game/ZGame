@@ -1,13 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using Cysharp.Threading.Tasks;
-using HybridCLR;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.UI;
 using ZGame;
 using ZGame.Config;
 using ZGame.Game;
@@ -18,7 +10,9 @@ public class Startup : MonoBehaviour
 {
     private async void Start()
     {
-        GameManager.instance.Initialized();
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
+        Localliztion.instance.Switch(BasicConfig.instance.language);
+        BehaviourScriptable.instance.SetupKeyDown(KeyCode.Escape, keyEvent => { UIMsgBox.Show(Localliztion.instance.Query("是否退出"), GameManager.instance.QuitGame); });
         UILoading.SetTitle(Localliztion.instance.Query("正在获取配置信息..."));
         UILoading.SetProgress(0);
         if (BasicConfig.instance.curEntry is null)

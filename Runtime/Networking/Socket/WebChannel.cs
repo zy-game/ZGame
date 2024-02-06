@@ -4,10 +4,11 @@ using UnityWebSocket;
 
 namespace ZGame.Networking
 {
-    class WebChannel : IChannel
+    class WebChannel<T> : IChannel where T : ISerialize
     {
         public string address { get; }
         public bool connected { get; set; }
+        public ISerialize serialize { get; }
         private WebSocket _webSocket;
         private UniTaskCompletionSource _taskCompletionSource;
 
@@ -32,7 +33,13 @@ namespace ZGame.Networking
 
         private void OnHandleMessageEvent(object s, MessageEventArgs e)
         {
-            NetworkManager.instance.Receiver(this, e.RawData);
+            IMessage message = serialize.Deserialize(e.RawData, out uint opcode);
+            if (message is null)
+            {
+                return;
+            }
+
+            CommandManager.OnExecuteCommand(opcode.ToString(), message);
         }
 
         private void OnHandleErrorEvent(object s, ErrorEventArgs e)
@@ -55,12 +62,17 @@ namespace ZGame.Networking
             return _taskCompletionSource.Task;
         }
 
-        public void WriteAndFlush(byte[] bytes)
+        public void WriteAndFlush(IMessage message)
         {
             if (connected)
             {
-                _webSocket.SendAsync(bytes);
+                _webSocket.SendAsync(serialize.Serialize(message));
             }
+        }
+
+        public UniTask<T1> WriteAndFlushAsync<T1>(IMessage message) where T1 : IMessage
+        {
+            return default;
         }
 
         public void Dispose()

@@ -4,14 +4,15 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using ZGame.Editor.Command;
 using ZGame.Editor.ResBuild.Config;
 using ZGame.Resource.Config;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    [SubPageSetting("资源包管理", typeof(ResBuilder), false, typeof(PackageSeting))]
-    public class ResPackageSetting : SubPage
+    [PageConfig("资源包管理", typeof(ResBuilder), false, typeof(PackageSeting))]
+    public class ResPackageSetting : ToolbarScene
     {
         public override void OnEnable(params object[] args)
         {
@@ -78,13 +79,14 @@ namespace ZGame.Editor.ResBuild
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
                 BuilderConfig.instance.packages.Remove((PackageSeting)userData);
-                EditorManager.Refresh();
+                ToolsWindow.Refresh();
             }
 
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
-                ResBuilder.OnBuildBundle(new BuilderOptions((PackageSeting)userData));
-                EditorManager.Refresh();
+                ZGame.CommandManager.OnExecuteCommand<BuildPackageCommand>(userData);
+                EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
+                ToolsWindow.Refresh();
             }
         }
 
@@ -203,7 +205,7 @@ namespace ZGame.Editor.ResBuild
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     package.items.Remove(rulerData);
-                    EditorManager.Refresh();
+                    ToolsWindow.Refresh();
                 }
 
                 GUILayout.EndHorizontal();

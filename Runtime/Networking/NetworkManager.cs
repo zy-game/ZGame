@@ -20,23 +20,21 @@ namespace ZGame.Networking
     /// </summary>
     public class NetworkManager : Singleton<NetworkManager>
     {
-        private Dictionary<uint, IRPCHandle> _dispatchers = new();
         private Dictionary<string, IChannel> channels = new();
 
-        protected override void OnDestroy()
+        protected override void OnAwake()
         {
-            foreach (var variable in channels.Values)
+            BehaviourScriptable.instance.SetupOnDestroy(Clear);
+        }
+
+        public void Clear()
+        {
+            foreach (var VARIABLE in channels.Values)
             {
-                variable.Dispose();
+                VARIABLE.Dispose();
             }
 
             channels.Clear();
-            foreach (var variable in _dispatchers.Values)
-            {
-                variable.Dispose();
-            }
-
-            _dispatchers.Clear();
         }
 
         /// <summary>
@@ -44,24 +42,29 @@ namespace ZGame.Networking
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public async UniTask<IChannel> Connect(string address)
+        public async UniTask Connect<T>(string address) where T : ISerialize
         {
             if (channels.TryGetValue(address, out IChannel channel))
             {
-                return channel;
+                return;
             }
 
             if (address.StartsWith("ws"))
             {
-                channel = new WebChannel();
+                channel = new WebChannel<T>();
             }
             else
             {
-                channel = new TcpChannel();
+                channel = new TcpChannel<T>();
             }
 
             await channel.Connect(address);
-            return channel;
+            if (channel.connected is false)
+            {
+                return;
+            }
+
+            channels.Add(address, channel);
         }
 
         /// <summary>
@@ -77,11 +80,11 @@ namespace ZGame.Networking
                 return false;
             }
 
-            MemoryStream memoryStream = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(memoryStream);
-            writer.Write(Crc32.GetCRC32Str(message.GetType().FullName));
-            Serializer.Serialize(memoryStream, message);
-            channel.WriteAndFlush(memoryStream.ToArray());
+            // MemoryStream memoryStream = new MemoryStream();
+            // BinaryWriter writer = new BinaryWriter(memoryStream);
+            // writer.Write(Crc32.GetCRC32Str(message.GetType().FullName));
+            // Serializer.Serialize(memoryStream, message);
+            channel.WriteAndFlush(message);
             return true;
         }
 
@@ -94,24 +97,12 @@ namespace ZGame.Networking
         /// <returns></returns>
         public async UniTask<T> WriteAndFlushAsync<T>(string address, IMessage message) where T : IMessage
         {
-            UniTaskCompletionSource<T> taskCompletionSource = new UniTaskCompletionSource<T>();
-            uint crc = Crc32.GetCRC32Str(typeof(T).FullName);
-            if (_dispatchers.TryGetValue(crc, out IRPCHandle dispatcher) is false)
+            if (channels.TryGetValue(address, out IChannel channel) is false)
             {
-                _dispatchers.Add(crc, dispatcher = new CommonHandle<T>());
+                return default;
             }
 
-            CommonHandle<T> messageReceiverHandle = (CommonHandle<T>)dispatcher;
-
-            void OnCompletion(T message)
-            {
-                taskCompletionSource.TrySetResult(message);
-                messageReceiverHandle.Remove(OnCompletion);
-            }
-
-            messageReceiverHandle.Add(OnCompletion);
-            WriteAndFlush(address, message);
-            return await taskCompletionSource.Task;
+            return await channel.WriteAndFlushAsync<T>(message);
         }
 
         /// <summary>
@@ -128,57 +119,6 @@ namespace ZGame.Networking
 
             await channel.Close();
             return channel;
-        }
-
-        /// <summary>
-        /// 注册消息回调
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <typeparam name="T"></typeparam>
-        public void RegisterMessageHandle<T>(Action<T> callback) where T : IMessage
-        {
-            uint crc = Crc32.GetCRC32Str(typeof(T).FullName);
-            if (_dispatchers.TryGetValue(crc, out IRPCHandle dispatcher) is false)
-            {
-                _dispatchers.Add(crc, dispatcher = new CommonHandle<T>());
-            }
-
-            ((CommonHandle<T>)dispatcher).Add(callback);
-        }
-
-        /// <summary>
-        /// 取消注册消息回调
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <typeparam name="T"></typeparam>
-        public void UnregisterMessageHandle<T>(Action<T> callback) where T : IMessage
-        {
-            uint crc = Crc32.GetCRC32Str(typeof(T).FullName);
-            if (_dispatchers.TryGetValue(crc, out IRPCHandle dispatcher) is false)
-            {
-                return;
-            }
-
-            ((CommonHandle<T>)dispatcher).Remove(callback);
-        }
-
-        internal void Receiver(IChannel channel, byte[] bytes)
-        {
-            if (bytes is null || bytes.Length == 0)
-            {
-                return;
-            }
-
-            MemoryStream memoryStream = new MemoryStream(bytes);
-            BinaryReader reader = new BinaryReader(new MemoryStream(bytes));
-            uint opcode = reader.ReadUInt32();
-            if (_dispatchers.TryGetValue(opcode, out IRPCHandle dispatcher) is false)
-            {
-                Debug.LogError("未知消息类型：" + opcode);
-                return;
-            }
-
-            dispatcher.ReceiveHandle(channel, opcode, memoryStream);
         }
     }
 }

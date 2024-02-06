@@ -7,8 +7,8 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.PSD2GUI
 {
-    [SubPageSetting("PSD转UI")]
-    public class PSD2GUIWindow : SubPage
+    [PageConfig("PSD转UI")]
+    public class PSD2GUIWindow : ToolbarScene
     {
         public override void SearchRightDrawing()
         {
@@ -35,13 +35,13 @@ namespace ZGame.Editor.PSD2GUI
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
                 {
-                    EditorManager.SwitchScene<PSDImportEditorWindow>(import);
+                    ToolsWindow.SwitchScene<PSDImportEditorWindow>(import);
                 }
 
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     PSDConfig.instance.imports.Remove(import);
-                    EditorManager.Refresh();
+                    ToolsWindow.Refresh();
                 }
 
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))

@@ -1,12 +1,13 @@
 using System;
+using Codice.Client.BaseCommands.BranchExplorer.Layout;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.PSD2GUI
 {
-    [SubPageSetting("PSD Editor", typeof(PSD2GUIWindow), true)]
-    public sealed class PSDImportEditorWindow : SubPage
+    [PageConfig("PSD Editor", typeof(PSD2GUIWindow), true)]
+    public sealed class PSDImportEditorWindow : ToolbarScene
     {
         private PSDImport import;
         private Vector2 hierarchyScrollPosition;
@@ -121,7 +122,7 @@ namespace ZGame.Editor.PSD2GUI
                 curLayer = layer;
                 drect = layer.rectDraw;
                 offset = layer.rectDraw.position - Event.current.mousePosition;
-                EditorManager.Refresh();
+                ToolsWindow.Refresh();
             }
 
             GUILayout.EndHorizontal();
@@ -178,7 +179,7 @@ namespace ZGame.Editor.PSD2GUI
 
                         curLayer.parent = to;
                         import.layers.Remove(curLayer);
-                        EditorManager.Refresh();
+                        ToolsWindow.Refresh();
                     }
                     else if (rectDraw.Contains(drect.position))
                     {
@@ -198,9 +199,9 @@ namespace ZGame.Editor.PSD2GUI
                     isDraging = false;
                     e.Use();
                     break;
-                case EventType.MouseUp:
-                    curLayer = null;
-                    break;
+                // case EventType.MouseUp:
+                //     curLayer = null;
+                //     break;
             }
 
             if (isDraging)
@@ -216,6 +217,16 @@ namespace ZGame.Editor.PSD2GUI
 
         private void OnDrawingInspector()
         {
+            if (curLayer is null)
+            {
+                return;
+            }
+
+
+            if (EditorGUILayout.DropdownButton(GUIContent.none, FocusType.Passive, "label"))
+            {
+
+            }
         }
 
         private void Drawlayer(PSDLayer layer)

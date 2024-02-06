@@ -8,7 +8,7 @@ using ZGame.UI;
 namespace ZGame.Editor.PSD2GUI
 {
     [CustomEditor(typeof(AutoContentSize))]
-    public class AutoContentSizeEditor : CustomEditorWindow
+    public class AutoContentSizeEditor : BasicWindow
     {
         private AutoContentSize _content;
         private RectTransform source;

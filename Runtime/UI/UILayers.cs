@@ -70,7 +70,7 @@ namespace ZGame.UI
             return canvas.gameObject;
         }
 
-        protected override void OnDestroy()
+        public override void Dispose()
         {
             foreach (var VARIABLE in layers.Values)
             {

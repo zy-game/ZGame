@@ -25,7 +25,7 @@ namespace ZGame.UI
                 VARIABLE.SetText(content);
             }
 
-            UIManager.instance.StartCoroutine(CheckTimeout(timeout));
+            BehaviourScriptable.instance.StartCoroutine(CheckTimeout(timeout));
         }
 
         private IEnumerator CheckTimeout(float time)

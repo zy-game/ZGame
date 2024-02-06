@@ -7,8 +7,8 @@ using UnityEngine;
 
 namespace ZGame.Editor.ExcelExprot
 {
-    [SubPageSetting("Excel导出", null, false, typeof(ExcelExportList))]
-    public class ExcelExportManager : SubPage
+    [PageConfig("Excel导出", null, false, typeof(ExcelExportList))]
+    public class ExcelExportManager : ToolbarScene
     {
         public override void OnGUI()
         {
@@ -60,7 +60,7 @@ namespace ZGame.Editor.ExcelExprot
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    EditorManager.SwitchScene<ExportEditorWindow>(exporter);
+                    ToolsWindow.SwitchScene<ExportEditorWindow>(exporter);
                 }
 
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))

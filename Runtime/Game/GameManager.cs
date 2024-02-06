@@ -18,19 +18,29 @@ namespace ZGame.Game
         private Assembly assembly = default;
         private SubGame _currentGame = default;
         private List<World> worlds = new();
-        public static World DefaultWorld { get; private set; }
-
+        private static World _defaultWorld = default;
         public SubGame CurrentGame => _currentGame;
 
-        internal void Initialized()
+        public static World DefaultWorld
         {
-            Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            Localliztion.instance.Switch(BasicConfig.instance.language);
-            DefaultWorld = CreateWorld("DEFAULT_WORLD");
-            BehaviourScriptable.instance.SetupKeyDown(KeyCode.Escape, keyEvent => { UIMsgBox.Show(Localliztion.instance.Query("是否退出"), QuitGame); });
+            get
+            {
+                if (_defaultWorld is null)
+                {
+                    _defaultWorld = new World("DEFAULT_WORLD");
+                }
+
+                return _defaultWorld;
+            }
         }
 
-        protected override void OnFixedUpdate()
+        protected override void OnAwake()
+        {
+            BehaviourScriptable.instance.SetupUpdate(OnUpdate);
+            BehaviourScriptable.instance.SetupFixedUpdate(OnFixedUpdate);
+        }
+
+        private void OnFixedUpdate()
         {
             for (int i = worlds.Count - 1; i >= 0; i--)
             {
@@ -38,12 +48,24 @@ namespace ZGame.Game
             }
         }
 
-        protected override void OnUpdate()
+        private void OnUpdate()
         {
             for (int i = worlds.Count - 1; i >= 0; i--)
             {
                 worlds[i].OnUpdate();
             }
+        }
+
+        public override void Dispose()
+        {
+            foreach (World world in worlds)
+            {
+                world.Dispose();
+            }
+
+            worlds.Clear();
+            _currentGame?.Dispose();
+            _currentGame = null;
         }
 
         public World CreateWorld(string name)
@@ -81,18 +103,6 @@ namespace ZGame.Game
             worlds.Remove(world);
         }
 
-
-        protected override void OnDestroy()
-        {
-            foreach (World world in worlds)
-            {
-                world.Dispose();
-            }
-
-            worlds.Clear();
-            _currentGame?.Dispose();
-            _currentGame = null;
-        }
 
         public async UniTask<bool> EntryGame(EntryConfig config)
         {

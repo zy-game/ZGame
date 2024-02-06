@@ -170,7 +170,15 @@ namespace ZGame.Editor.PSD2GUI
         public Texture2D texture;
         public List<PSDLayer> children;
 
-
+        public Vector3 position;
+        public Vector2 anchorMin;
+        public Vector2 anchorMax;
+        public Vector2 anchoredPosition;
+        public Vector2 sizeDelta;
+        public Vector2 offsetMax;
+        public Vector2 offsetMin;
+        public Vector2 pivot;
+        public Vector2 size;
         [NonSerialized] public bool isOn;
         [NonSerialized] public Rect rectDraw;
 

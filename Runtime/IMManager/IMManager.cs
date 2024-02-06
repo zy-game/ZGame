@@ -15,11 +15,7 @@ namespace ZGame.IM
         private List<IMClient> clients = new();
         private UniTaskCompletionSource<bool> _completionSource;
 
-        protected override void OnAwake()
-        {
-        }
-
-        protected override void OnDestroy()
+        public override void Dispose()
         {
             foreach (var VARIABLE in clients)
             {
@@ -27,6 +23,7 @@ namespace ZGame.IM
             }
 
             clients.Clear();
+            current = null;
         }
 
         public async UniTask<bool> Create(IMClient client, params object[] args)
