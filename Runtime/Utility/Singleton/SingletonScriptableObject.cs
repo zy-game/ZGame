@@ -34,7 +34,9 @@ namespace ZGame
             }
         }
 
-        public abstract void OnAwake();
+        public virtual void OnAwake()
+        {
+        }
 
         protected virtual void OnSaved()
         {

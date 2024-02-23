@@ -36,8 +36,8 @@ namespace ZGame.Game
 
         protected override void OnAwake()
         {
-            BehaviourScriptable.instance.SetupUpdate(OnUpdate);
-            BehaviourScriptable.instance.SetupFixedUpdate(OnFixedUpdate);
+            BehaviourScriptable.instance.SetupUpdateEvent(OnUpdate);
+            BehaviourScriptable.instance.SetupFixedUpdateEvent(OnFixedUpdate);
         }
 
         private void OnFixedUpdate()
@@ -104,7 +104,7 @@ namespace ZGame.Game
         }
 
 
-        public async UniTask<bool> EntryGame(EntryConfig config)
+        public async UniTask<bool> JoinGame(EntryConfig config)
         {
             SubGame gameEntry = await SubGame.LoadGame(config);
             if (gameEntry is null)

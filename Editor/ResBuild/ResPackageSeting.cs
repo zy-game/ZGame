@@ -158,12 +158,27 @@ namespace ZGame.Editor.ResBuild
                 package.items = new List<RulerData>();
             }
 
-            OnBeginHeader("Packages", true, package.items, false);
-            GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                package.items.Add(new RulerData()
+                {
+                    // use = true,
+                    selector = new Selector(),
+                    buildType = BuildType.Once
+                });
+            }
+
+            GUILayout.EndHorizontal();
+            // OnBeginHeader("Packages", true, package.items, false);
+            // GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
             for (int i = 0; i < package.items.Count; i++)
             {
                 EditorGUI.BeginChangeCheck();
                 OnDrawingRuleItem(package.items[i], package);
+                GUILayout.Space(5);
                 if (EditorGUI.EndChangeCheck())
                 {
                     OnEnable();
@@ -171,6 +186,7 @@ namespace ZGame.Editor.ResBuild
                 }
             }
 
+            // GUILayout.EndVertical();
             GUILayout.EndVertical();
         }
 

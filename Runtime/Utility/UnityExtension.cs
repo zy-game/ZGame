@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -6,9 +7,36 @@ namespace ZGame
 {
     public static partial class Extension
     {
+        public static void Active(params GameObject[] gameObjects)
+        {
+            for (int i = 0; i < gameObjects.Length; i++)
+            {
+                gameObjects[i].SetActive(true);
+            }
+        }
+
+        public static void Inactive(params GameObject[] gameObjects)
+        {
+            for (int i = 0; i < gameObjects.Length; i++)
+            {
+                gameObjects[i].SetActive(false);
+            }
+        }
+
         public static void OnListenDestroyEvent(this GameObject gameObject, UnityAction action)
         {
-            BehaviourScriptable.instance.ListenerDestroy(gameObject, action);
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            BehaviourScriptable bevaviour = gameObject.GetComponent<BehaviourScriptable>();
+            if (bevaviour == null)
+            {
+                bevaviour = gameObject.AddComponent<BehaviourScriptable>();
+            }
+
+            bevaviour.SetupGameObjectDestroyEvent(action);
         }
 
         public static void SetParent(this GameObject gameObject, Transform parent)

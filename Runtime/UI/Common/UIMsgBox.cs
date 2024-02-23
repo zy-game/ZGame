@@ -22,7 +22,7 @@ namespace ZGame.UI
             this.onYes = (Action)(args[2]);
             this.onNo = (Action)(args[3]);
 
-            BehaviourScriptable.instance.SetupKeyDown(KeyCode.Escape, OnBackup);
+            BehaviourScriptable.instance.SetupKeyDownEvent(KeyCode.Escape, OnBackup);
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>(true);
             foreach (var VARIABLE in texts)
             {
@@ -57,7 +57,7 @@ namespace ZGame.UI
             }
         }
 
-        private void OnBackup(KeyEvent e)
+        private void OnBackup(KeyEventData e)
         {
             e.Use();
             Switch(false);
@@ -75,7 +75,7 @@ namespace ZGame.UI
                     break;
             }
 
-            BehaviourScriptable.instance.UnsetupKeyDown(KeyCode.Escape, OnBackup);
+            BehaviourScriptable.instance.UnsetupKeyDownEvent(KeyCode.Escape, OnBackup);
             this.Disable();
             OnShowMsgBox();
         }

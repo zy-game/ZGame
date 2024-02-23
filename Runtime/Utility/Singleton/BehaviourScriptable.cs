@@ -5,58 +5,9 @@ using UnityEngine.Events;
 
 namespace ZGame
 {
-    public class KeyEvent : IDisposable
-    {
-        public KeyCode keyCode { get; }
-        private bool isUsed { get; set; }
-        private List<UnityAction<KeyEvent>> action { get; }
-
-        public KeyEvent(KeyCode key)
-        {
-            this.keyCode = key;
-            this.action = new List<UnityAction<KeyEvent>>();
-        }
-
-        public void Invoke()
-        {
-            if (this.action is null || this.action.Count == 0)
-            {
-                return;
-            }
-
-            isUsed = false;
-            for (int i = this.action.Count - 1; i >= 0; i--)
-            {
-                if (isUsed)
-                {
-                    return;
-                }
-
-                this.action[i].Invoke(this);
-            }
-        }
-
-        public void AddListener(UnityAction<KeyEvent> action)
-        {
-            this.action.Add(action);
-        }
-
-        public void RemoveListener(UnityAction<KeyEvent> action)
-        {
-            this.action.Remove(action);
-        }
-
-        public void Use()
-        {
-            this.isUsed = true;
-        }
-
-        public void Dispose()
-        {
-            this.action.Clear();
-        }
-    }
-
+    /// <summary>
+    /// Unity单列对象
+    /// </summary>
     public class BehaviourScriptable : MonoBehaviour
     {
         UnityEvent onGUI = new UnityEvent();
@@ -65,11 +16,12 @@ namespace ZGame
         UnityEvent lateUpdate = new UnityEvent();
         UnityEvent fixedUpdate = new UnityEvent();
         UnityEvent onApplicationQuit = new UnityEvent();
-        List<KeyEvent> keyUpEvent = new List<KeyEvent>();
-        List<KeyEvent> keyDownEvent = new List<KeyEvent>();
         UnityEvent<bool> onApplicationPause = new UnityEvent<bool>();
         UnityEvent<bool> onApplicationFocus = new UnityEvent<bool>();
 
+        List<KeyEventData> keyUpEvent = new List<KeyEventData>();
+        List<KeyEventData> keyDownEvent = new List<KeyEventData>();
+        List<KeyEventData> keyPressEvent = new List<KeyEventData>();
 
         private static BehaviourScriptable _instance;
 
@@ -86,31 +38,41 @@ namespace ZGame
                 return _instance;
             }
         }
-
-        public void SetupKeyDown(KeyCode keyCode, UnityAction<KeyEvent> action)
+  
+        /// <summary>
+        /// 设置按键长按事件
+        /// </summary>
+        /// <param name="keyCode"></param>
+        /// <param name="action"></param>
+        public void SetupPressKeyEvent(KeyCode keyCode, UnityAction<KeyEventData> action)
         {
             if (action is null)
             {
                 return;
             }
 
-            KeyEvent keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
+            KeyEventData keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
             if (keyEvent is null)
             {
-                keyDownEvent.Add(keyEvent = new KeyEvent(keyCode));
+                keyDownEvent.Add(keyEvent = new KeyEventData(keyCode));
             }
 
             keyEvent.AddListener(action);
         }
 
-        public void UnsetupKeyDown(KeyCode keyCode, UnityAction<KeyEvent> action)
+        /// <summary>
+        /// 移除按键长按事件
+        /// </summary>
+        /// <param name="keyCode"></param>
+        /// <param name="action"></param>
+        public void UnsetupPressKeyEvent(KeyCode keyCode, UnityAction<KeyEventData> action)
         {
             if (action is null)
             {
                 return;
             }
 
-            KeyEvent keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
+            KeyEventData keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
             if (keyEvent is null)
             {
                 return;
@@ -119,30 +81,40 @@ namespace ZGame
             keyEvent.RemoveListener(action);
         }
 
-        public void SetupKeyUp(KeyCode keyCode, UnityAction<KeyEvent> action)
+        /// <summary>
+        /// 设置按键按下事件
+        /// </summary>
+        /// <param name="keyCode"></param>
+        /// <param name="action"></param>
+        public void SetupKeyDownEvent(KeyCode keyCode, UnityAction<KeyEventData> action)
         {
             if (action is null)
             {
                 return;
             }
 
-            KeyEvent keyEvent = keyUpEvent.Find(x => x.keyCode == keyCode);
+            KeyEventData keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
             if (keyEvent is null)
             {
-                keyUpEvent.Add(keyEvent = new KeyEvent(keyCode));
+                keyDownEvent.Add(keyEvent = new KeyEventData(keyCode));
             }
 
             keyEvent.AddListener(action);
         }
 
-        public void UnsetupKeyUp(KeyCode keyCode, UnityAction<KeyEvent> action)
+        /// <summary>
+        /// 移除按键按下事件
+        /// </summary>
+        /// <param name="keyCode"></param>
+        /// <param name="action"></param>
+        public void UnsetupKeyDownEvent(KeyCode keyCode, UnityAction<KeyEventData> action)
         {
             if (action is null)
             {
                 return;
             }
 
-            KeyEvent keyEvent = keyUpEvent.Find(x => x.keyCode == keyCode);
+            KeyEventData keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
             if (keyEvent is null)
             {
                 return;
@@ -151,9 +123,55 @@ namespace ZGame
             keyEvent.RemoveListener(action);
         }
 
+        /// <summary>
+        /// 设置按键抬起事件
+        /// </summary>
+        /// <param name="keyCode"></param>
+        /// <param name="action"></param>
+        public void SetupKeyUpEvent(KeyCode keyCode, UnityAction<KeyEventData> action)
+        {
+            if (action is null)
+            {
+                return;
+            }
+
+            KeyEventData keyEvent = keyUpEvent.Find(x => x.keyCode == keyCode);
+            if (keyEvent is null)
+            {
+                keyUpEvent.Add(keyEvent = new KeyEventData(keyCode));
+            }
+
+            keyEvent.AddListener(action);
+        }
+
+        /// <summary>
+        /// 移除按键抬起事件
+        /// </summary>
+        /// <param name="keyCode"></param>
+        /// <param name="action"></param>
+        public void UnsetupKeyUpEvent(KeyCode keyCode, UnityAction<KeyEventData> action)
+        {
+            if (action is null)
+            {
+                return;
+            }
+
+            KeyEventData keyEvent = keyUpEvent.Find(x => x.keyCode == keyCode);
+            if (keyEvent is null)
+            {
+                return;
+            }
+
+            keyEvent.RemoveListener(action);
+        }
+
+        /// <summary>
+        /// 清除按键按下事件
+        /// </summary>
+        /// <param name="keyCode"></param>
         public void ClearKeyDownEvent(KeyCode keyCode)
         {
-            KeyEvent keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
+            KeyEventData keyEvent = keyDownEvent.Find(x => x.keyCode == keyCode);
             if (keyEvent is null)
             {
                 return;
@@ -162,9 +180,13 @@ namespace ZGame
             keyDownEvent.Remove(keyEvent);
         }
 
+        /// <summary>
+        /// 清理按键抬起事件
+        /// </summary>
+        /// <param name="keyCode"></param>
         public void ClearKeyUpEvent(KeyCode keyCode)
         {
-            KeyEvent keyEvent = keyUpEvent.Find(x => x.keyCode == keyCode);
+            KeyEventData keyEvent = keyUpEvent.Find(x => x.keyCode == keyCode);
             if (keyEvent is null)
             {
                 return;
@@ -173,103 +195,174 @@ namespace ZGame
             keyUpEvent.Remove(keyEvent);
         }
 
-        public void SetupUpdate(UnityAction action)
+        /// <summary>
+        /// 清理按键长按事件
+        /// </summary>
+        /// <param name="keyCode"></param>
+        public void ClearKeyPressEvent(KeyCode keyCode)
         {
-            update.AddListener(action);
-        }
-
-        public void UnsetupUpdate(UnityAction action)
-        {
-            update.RemoveListener(action);
-        }
-
-        public void SetupFixedUpdate(UnityAction action)
-        {
-            fixedUpdate.AddListener(action);
-        }
-
-        public void UnsetupFixedUpdate(UnityAction action)
-        {
-            fixedUpdate.RemoveListener(action);
-        }
-
-        public void SetupLateUpdate(UnityAction action)
-        {
-            lateUpdate.AddListener(action);
-        }
-
-        public void UnsetupLateUpdate(UnityAction action)
-        {
-            lateUpdate.RemoveListener(action);
-        }
-
-        public void SetupOnGUI(UnityAction action)
-        {
-            onGUI.AddListener(action);
-        }
-
-        public void UnsetupOnGUI(UnityAction action)
-        {
-            onGUI.RemoveListener(action);
-        }
-
-        public void SetupOnApplicationQuit(UnityAction action)
-        {
-            onApplicationQuit.AddListener(action);
-        }
-
-        public void UnsetupOnApplicationQuit(UnityAction action)
-        {
-            onApplicationQuit.RemoveListener(action);
-        }
-
-        public void SetupOnApplicationPause(UnityAction<bool> action)
-        {
-            onApplicationPause.AddListener(action);
-        }
-
-        public void UnsetupOnApplicationPause(UnityAction<bool> action)
-        {
-            onApplicationPause.RemoveListener(action);
-        }
-
-        public void SetupOnApplicationFocus(UnityAction<bool> action)
-        {
-            onApplicationFocus.AddListener(action);
-        }
-
-        public void UnsetupOnApplicationFocus(UnityAction<bool> action)
-        {
-            onApplicationFocus.RemoveListener(action);
-        }
-
-        public void SetupOnDestroy(UnityAction action)
-        {
-            onDestroy.AddListener(action);
-        }
-
-        public void UnsetupOnDestroy(UnityAction action)
-        {
-            onDestroy.RemoveListener(action);
-        }
-
-        public void ListenerDestroy(GameObject gameObject, UnityAction callback)
-        {
-            if (gameObject == null)
+            KeyEventData keyEvent = keyPressEvent.Find(x => x.keyCode == keyCode);
+            if (keyEvent is null)
             {
                 return;
             }
 
-            BehaviourScriptable bevaviour = gameObject.GetComponent<BehaviourScriptable>();
-            if (bevaviour == null)
-            {
-                bevaviour = gameObject.AddComponent<BehaviourScriptable>();
-            }
+            keyPressEvent.Remove(keyEvent);
+        }
 
-            bevaviour.SetupOnDestroy(callback);
+        /// <summary>
+        /// 设置轮询事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void SetupUpdateEvent(UnityAction action)
+        {
+            update.AddListener(action);
+        }
+
+        /// <summary>
+        /// 取消轮询事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void UnsetupUpdateEvent(UnityAction action)
+        {
+            update.RemoveListener(action);
+        }
+
+        /// <summary>
+        /// 设置帧更新事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void SetupFixedUpdateEvent(UnityAction action)
+        {
+            fixedUpdate.AddListener(action);
+        }
+
+        /// <summary>
+        /// 取消帧更新事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void UnsetupFixedUpdateEvent(UnityAction action)
+        {
+            fixedUpdate.RemoveListener(action);
+        }
+
+        /// <summary>
+        /// 设置帧末事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void SetupLateUpdateEvent(UnityAction action)
+        {
+            lateUpdate.AddListener(action);
+        }
+
+        /// <summary>
+        /// 取消帧末事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void UnsetupLateUpdateEvent(UnityAction action)
+        {
+            lateUpdate.RemoveListener(action);
+        }
+
+        /// <summary>
+        /// 设置GUI绘制事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void SetupGUIDrawingEvent(UnityAction action)
+        {
+            onGUI.AddListener(action);
+        }
+
+        /// <summary>
+        /// 取消GUI绘制事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void UnsetupGUIDrawingEvent(UnityAction action)
+        {
+            onGUI.RemoveListener(action);
+        }
+
+        /// <summary>
+        /// 设置应用退出事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void SetupApplicationQuitEvent(UnityAction action)
+        {
+            onApplicationQuit.AddListener(action);
+        }
+
+        /// <summary>
+        /// 取消应用退出事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void UnsetupApplicationQuitEvent(UnityAction action)
+        {
+            onApplicationQuit.RemoveListener(action);
+        }
+
+        /// <summary>
+        /// 设置应用暂停事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void SetupApplicationPauseEvent(UnityAction<bool> action)
+        {
+            onApplicationPause.AddListener(action);
+        }
+
+        /// <summary>
+        /// 取消应用暂停事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void UnsetupApplicationPauseEvent(UnityAction<bool> action)
+        {
+            onApplicationPause.RemoveListener(action);
+        }
+
+        /// <summary>
+        /// 设置应用焦点事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void SetupApplicationFocusChangeEvent(UnityAction<bool> action)
+        {
+            onApplicationFocus.AddListener(action);
+        }
+
+        /// <summary>
+        /// 取消应用焦点事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void UnsetupApplicationFocusChangeEvent(UnityAction<bool> action)
+        {
+            onApplicationFocus.RemoveListener(action);
+        }
+
+        /// <summary>
+        /// 设置游戏对象销毁事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void SetupGameObjectDestroyEvent(UnityAction action)
+        {
+            onDestroy.AddListener(action);
+        }
+
+        /// <summary>
+        /// 取消游戏对象销毁事件
+        /// </summary>
+        /// <param name="action"></param>
+        public void UnsetupGameObjectDestroyEvent(UnityAction action)
+        {
+            onDestroy.RemoveListener(action);
         }
 
         private void Update()
+        {
+            CheckKeyDown();
+            CheckKeyUp();
+            CheckPressKey();
+            update.Invoke();
+        }
+
+        private void CheckKeyDown()
         {
             for (int i = 0; i < keyDownEvent.Count; i++)
             {
@@ -280,7 +373,10 @@ namespace ZGame
 
                 keyDownEvent[i].Invoke();
             }
+        }
 
+        private void CheckKeyUp()
+        {
             for (int i = 0; i < keyUpEvent.Count; i++)
             {
                 if (Input.GetKeyUp(keyUpEvent[i].keyCode) is false)
@@ -290,8 +386,19 @@ namespace ZGame
 
                 keyUpEvent[i].Invoke();
             }
+        }
 
-            update.Invoke();
+        private void CheckPressKey()
+        {
+            for (var i = 0; i < keyPressEvent.Count; i++)
+            {
+                if (Input.GetKey(keyPressEvent[i].keyCode) is false)
+                {
+                    continue;
+                }
+
+                keyPressEvent[i].Invoke();
+            }
         }
 
         private void FixedUpdate()
@@ -317,6 +424,9 @@ namespace ZGame
         private void OnApplicationQuit()
         {
             onApplicationQuit.Invoke();
+            keyUpEvent.ForEach(x => x.Dispose());
+            keyDownEvent.ForEach(x => x.Dispose());
+            keyPressEvent.ForEach(x => x.Dispose());
         }
 
         private void OnApplicationPause(bool pause)

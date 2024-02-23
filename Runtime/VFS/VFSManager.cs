@@ -11,13 +11,13 @@ namespace ZGame.FileSystem
 {
     public class VFSManager : Singleton<VFSManager>
     {
-        private List<VFSChunk> segments = new List<VFSChunk>();
-        private List<VFSStream> ioList = new List<VFSStream>();
+        private List<VFSChunk> chunkList = new List<VFSChunk>();
+        private List<VFStream> vfStreamList = new List<VFStream>();
 
 
         public override void Dispose()
         {
-            ioList.ForEach(x => x.Dispose());
+            vfStreamList.ForEach(x => x.Dispose());
             Saved();
         }
 
@@ -29,7 +29,7 @@ namespace ZGame.FileSystem
                 return;
             }
 
-            segments = JsonConvert.DeserializeObject<List<VFSChunk>>(File.ReadAllText(filePath));
+            chunkList = JsonConvert.DeserializeObject<List<VFSChunk>>(File.ReadAllText(filePath));
         }
 
         /// <summary>
@@ -38,12 +38,27 @@ namespace ZGame.FileSystem
         private void Saved()
         {
             string filePath = Application.persistentDataPath + "/vfs.ini";
-            File.WriteAllText(filePath, JsonConvert.SerializeObject(segments));
+            File.WriteAllText(filePath, JsonConvert.SerializeObject(chunkList));
         }
 
+        private VFStream OpenStream(string vfs)
+        {
+            VFStream handle = vfStreamList.Find(x => x.name == vfs);
+            if (handle is null)
+            {
+                vfStreamList.Add(handle = new VFStream(Application.persistentDataPath + "/" + vfs));
+            }
+
+            return handle;
+        }
+
+        /// <summary>
+        /// 删除文件
+        /// </summary>
+        /// <param name="fileName"></param>
         public void Delete(string fileName)
         {
-            IEnumerable<VFSChunk> fileData = segments.Where(x => x.name == fileName);
+            IEnumerable<VFSChunk> fileData = chunkList.Where(x => x.name == fileName);
             foreach (var file in fileData)
             {
                 file.Free();
@@ -52,9 +67,15 @@ namespace ZGame.FileSystem
             Saved();
         }
 
+        /// <summary>
+        /// 是否存在文件
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
         public bool Exist(string fileName, uint version)
         {
-            VFSChunk vfsChunk = segments.Find(x => x.name == fileName);
+            VFSChunk vfsChunk = chunkList.Find(x => x.name == fileName);
             if (vfsChunk is null)
             {
                 return false;
@@ -63,55 +84,38 @@ namespace ZGame.FileSystem
             return vfsChunk.version == version;
         }
 
+        /// <summary>
+        /// 是否存在文件
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public bool Exsit(string fileName)
         {
-            return segments.Find(x => x.name == fileName) is not null;
-        }
-
-        private VFSStream GetFileHandle(string vfs)
-        {
-            VFSStream handle = ioList.Find(x => x.name == vfs);
-            if (handle is null)
-            {
-                ioList.Add(handle = new VFSStream()
-                {
-                    name = vfs,
-                    time = Time.realtimeSinceStartup,
-                    fileStream = new FileStream(Application.persistentDataPath + "/" + vfs, FileMode.OpenOrCreate, FileAccess.ReadWrite)
-                });
-            }
-
-            handle.time = Time.realtimeSinceStartup + 60;
-            return handle;
+            return chunkList.Find(x => x.name == fileName) is not null;
         }
 
 
         /// <summary>
         /// 获取未使用的VFS数据块，如果不存在未使用的数据块，则创建一个新的VFS
         /// </summary>
-        /// <param name="lenght">指定VFS数据块大小，如果不指定则使用配置大小</param>
+        /// <param name="lenght">指定VFS数据块大小</param>
         /// <returns></returns>
-        public VFSChunk[] GetFreeSgement(int lenght)
+        public VFSChunk[] FindFreeChunkList(int lenght)
         {
             List<VFSChunk> result = new List<VFSChunk>();
             int chunkSize = BasicConfig.instance.vfsConfig.chunkSize;
             int maxCount = BasicConfig.instance.vfsConfig.chunkCount;
-            int count = lenght / chunkSize;
-            count = lenght > count * chunkSize ? count + 1 : count;
-            IEnumerable<VFSChunk> temp = segments.Where(x => x.use is false);
-
+            int count = MathEx.MaxSharinCount(lenght, chunkSize);
+            IEnumerable<VFSChunk> temp = chunkList.Where(x => x.use is false);
             if (temp is null || temp.Count() < count)
             {
-                VFSStream handle = GetFileHandle(Guid.NewGuid().ToString().Replace("-", String.Empty));
+                VFStream handle = OpenStream(Guid.NewGuid().ToString().Replace("-", String.Empty));
                 for (int i = 0; i < maxCount; i++)
                 {
-                    segments.Add(new VFSChunk(handle.name, chunkSize, i * chunkSize)
-                    {
-                        time = DateTimeOffset.Now.ToUnixTimeSeconds()
-                    });
+                    chunkList.Add(new VFSChunk(handle.name, chunkSize, i * chunkSize));
                 }
 
-                temp = segments.Where(x => x.use is false);
+                temp = chunkList.Where(x => x.use is false);
             }
 
             for (int i = 0; i < count; i++)
@@ -122,15 +126,26 @@ namespace ZGame.FileSystem
             return result.ToArray();
         }
 
-        public VFSChunk[] GetFileData(string fileName)
+        /// <summary>
+        /// 获取文件占用的VFS数据块
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public VFSChunk[] FindFileChunkList(string fileName)
         {
-            return segments.Where(x => x.name == fileName).ToArray();
+            return chunkList.Where(x => x.name == fileName).ToArray();
         }
 
+        /// <summary>
+        /// 写入文件数据
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="bytes"></param>
+        /// <param name="version"></param>
         public void Write(string fileName, byte[] bytes, uint version)
         {
             Delete(fileName);
-            VFSChunk[] vfsDataList = GetFreeSgement(bytes.Length);
+            VFSChunk[] vfsDataList = FindFreeChunkList(bytes.Length);
             if (vfsDataList is null || vfsDataList.Length == 0)
             {
                 return;
@@ -140,14 +155,14 @@ namespace ZGame.FileSystem
             int index = 0;
             foreach (var VARIABLE in vfsDataList)
             {
-                VFSStream handle = GetFileHandle(vfsDataList[0].vfs);
+                VFStream handle = OpenStream(vfsDataList[0].vfs);
                 if (handle is null)
                 {
                     return;
                 }
 
                 int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
-                VARIABLE.Use(fileName, length, index, DateTimeOffset.Now.ToUnixTimeMilliseconds(), version);
+                VARIABLE.Use(fileName, length, index, version);
                 handle.Write(VARIABLE.offset, bytes, offset, VARIABLE.fileLenght);
                 offset += VARIABLE.length;
                 index++;
@@ -156,10 +171,16 @@ namespace ZGame.FileSystem
             Saved();
         }
 
+        /// <summary>
+        /// 写入文件数据
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="bytes"></param>
+        /// <param name="version"></param>
         public async UniTask WriteAsync(string fileName, byte[] bytes, uint version)
         {
             Delete(fileName);
-            VFSChunk[] vfsDataList = GetFreeSgement(bytes.Length);
+            VFSChunk[] vfsDataList = FindFreeChunkList(bytes.Length);
             if (vfsDataList is null || vfsDataList.Length == 0)
             {
                 return;
@@ -169,14 +190,14 @@ namespace ZGame.FileSystem
             int index = 0;
             foreach (var VARIABLE in vfsDataList)
             {
-                VFSStream handle = GetFileHandle(vfsDataList[0].vfs);
+                VFStream handle = OpenStream(vfsDataList[0].vfs);
                 if (handle is null)
                 {
                     return;
                 }
 
                 int lenght = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
-                VARIABLE.Use(fileName, lenght, index, DateTimeOffset.Now.ToUnixTimeMilliseconds(), version);
+                VARIABLE.Use(fileName, lenght, index, version);
                 await handle.WriteAsync(VARIABLE.offset, bytes, offset, VARIABLE.fileLenght);
                 offset += VARIABLE.length;
                 index++;
@@ -186,6 +207,11 @@ namespace ZGame.FileSystem
             Saved();
         }
 
+        /// <summary>
+        /// 读取文件数据
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public byte[] Read(string fileName)
         {
             if (Exsit(fileName) is false)
@@ -193,7 +219,7 @@ namespace ZGame.FileSystem
                 return Array.Empty<byte>();
             }
 
-            VFSChunk[] vfsDatas = GetFileData(fileName);
+            VFSChunk[] vfsDatas = FindFileChunkList(fileName);
             if (vfsDatas is null || vfsDatas.Length is 0)
             {
                 return Array.Empty<byte>();
@@ -203,7 +229,7 @@ namespace ZGame.FileSystem
             byte[] bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
             foreach (var VARIABLE in vfsDatas)
             {
-                VFSStream handle = GetFileHandle(VARIABLE.vfs);
+                VFStream handle = OpenStream(VARIABLE.vfs);
                 if (handle is null)
                 {
                     continue;
@@ -216,6 +242,11 @@ namespace ZGame.FileSystem
             return bytes;
         }
 
+        /// <summary>
+        /// 读取文件数据
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public async UniTask<byte[]> ReadAsync(string fileName)
         {
             if (Exsit(fileName) is false)
@@ -223,7 +254,7 @@ namespace ZGame.FileSystem
                 return Array.Empty<byte>();
             }
 
-            VFSChunk[] vfsDatas = GetFileData(fileName);
+            VFSChunk[] vfsDatas = FindFileChunkList(fileName);
             if (vfsDatas is null || vfsDatas.Length is 0)
             {
                 return Array.Empty<byte>();
@@ -233,7 +264,7 @@ namespace ZGame.FileSystem
             byte[] bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
             foreach (var VARIABLE in vfsDatas)
             {
-                VFSStream handle = GetFileHandle(VARIABLE.vfs);
+                VFStream handle = OpenStream(VARIABLE.vfs);
                 if (handle is null)
                 {
                     continue;

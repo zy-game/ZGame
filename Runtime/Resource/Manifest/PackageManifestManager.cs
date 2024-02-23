@@ -11,6 +11,9 @@ using ZGame.Resource.Config;
 
 namespace ZGame.Resource
 {
+    /// <summary>
+    /// 资源包信息管理
+    /// </summary>
     public class PackageManifestManager : Singleton<PackageManifestManager>
     {
         private List<ResourcePackageListManifest> _packageListManifests = new List<ResourcePackageListManifest>();
@@ -39,7 +42,7 @@ namespace ZGame.Resource
             }
             else
             {
-                resourcePackageListManifest = await Request.GetStreamingAsset<ResourcePackageListManifest>(iniFilePath);
+                resourcePackageListManifest = await Request.GetData<ResourcePackageListManifest>(iniFilePath);
             }
 
             if (resourcePackageListManifest is null)
@@ -91,6 +94,12 @@ namespace ZGame.Resource
             return default;
         }
 
+        /// <summary>
+        /// 获取资源的全路径
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="assetName"></param>
+        /// <returns></returns>
         public string GetAssetFullPath(string moduleName, string assetName)
         {
             ResourcePackageListManifest resourcePackageManifest = _packageListManifests.Find(x => x.name == moduleName);

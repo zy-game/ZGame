@@ -8,9 +8,9 @@ namespace ZGame.Sound
 {
     public class SoundPlayer : IDisposable
     {
-        private SoundState current;
         private AudioSource _source;
-        private Queue<SoundState> waiting;
+        private ResObject resObject;
+        private Action<PlayState> callback;
         public string name => _source.name;
 
         public bool isPlaying
@@ -54,102 +54,56 @@ namespace ZGame.Sound
 
         public SoundPlayer(string name, bool isLoop)
         {
-            waiting = new Queue<SoundState>();
             _source = new GameObject(name).AddComponent<AudioSource>();
             _source.transform.parent = BehaviourScriptable.instance.transform;
             _source.transform.localPosition = Vector3.zero;
             _source.loop = isLoop;
         }
 
-        public void OnUpdate()
-        {
-            if (_source.isPlaying)
-            {
-                return;
-            }
-
-            if (current != null)
-            {
-                current.SetState(PlayState.Complete);
-                current.Dispose();
-                current = null;
-            }
-
-            if (waiting.Count == 0)
-            {
-                return;
-            }
-
-            OnStartPlay(waiting.Dequeue());
-        }
 
         public void Play(string clipName, Action<PlayState> callback)
         {
-            SoundState soundState = new SoundState(clipName, callback);
-            if (current is null)
+            resObject = ResourceManager.instance.LoadAsset(name);
+            if (resObject.IsSuccess() is false)
             {
-                OnStartPlay(soundState);
                 return;
             }
 
-            waiting.Enqueue(soundState);
-        }
-
-        public void Play(AudioClip clip, Action<PlayState> callback)
-        {
-            SoundState soundState = new SoundState(clip, callback);
-            if (current is null)
+            Play(resObject.GetAsset<AudioClip>(), x =>
             {
-                OnStartPlay(soundState);
-                return;
-            }
-
-            waiting.Enqueue(soundState);
-        }
-
-        private void OnStartPlay(SoundState soundState)
-        {
-            if (_source.isPlaying)
-            {
-                _source.Stop();
-                if (current is not null)
+                callback?.Invoke(x);
+                if (x == PlayState.Complete)
                 {
-                    current.SetState(PlayState.Complete);
+                    resObject.Release();
                 }
-            }
+            });
+        }
 
-            current = soundState;
-            _source.clip = soundState.clip;
-            _source.Play();
-            current.SetState(PlayState.Playing);
+        public async void Play(AudioClip clip, Action<PlayState> callback)
+        {
+            this.callback = callback;
+            _source.clip = clip;
+            Resume();
+            await UniTask.Delay((int)clip.length * 1000);
+            Stop();
         }
 
         public void Pause()
         {
-            if (current is not null)
-            {
-                current.SetState(PlayState.Paused);
-            }
-
             _source.Pause();
+            callback?.Invoke(PlayState.Paused);
         }
 
         public void Stop()
         {
-            if (current is not null)
-            {
-                current.SetState(PlayState.Complete);
-                current.Dispose();
-                current = null;
-            }
-
-            waiting.Clear();
             _source.Stop();
+            callback?.Invoke(PlayState.Complete);
         }
 
         public void Resume()
         {
             _source.Play();
+            callback?.Invoke(PlayState.Playing);
         }
 
         public void SetVolume(float volume)

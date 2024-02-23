@@ -70,9 +70,10 @@ namespace ZGame.Editor
 
         private void OnShowGameConfig(EntryConfig config)
         {
-            if (config.references is null)
+            if (config.referenceAssemblyList is null)
             {
                 config.references = new();
+                config.referenceAssemblyList = new();
             }
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
@@ -84,8 +85,9 @@ namespace ZGame.Editor
                 config.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(config.path);
             }
 
+            config.version = EditorGUILayout.TextField("版本", config.version);
             config.mode = (CodeMode)EditorGUILayout.EnumPopup("模式", config.mode);
-            config.args = EditorGUILayout.TextField("参数", config.args);
+
             var resList = BuilderConfig.instance.packages.Select(x => x.name).ToList();
             int last = resList.FindIndex(x => x == config.module);
             int curIndex = EditorGUILayout.Popup("资源包", last, resList.ToArray());
@@ -95,6 +97,17 @@ namespace ZGame.Editor
             }
 
             config.assembly = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Assembly", config.assembly, typeof(AssemblyDefinitionAsset), false);
+            GUILayout.BeginHorizontal();
+            resList = config.channels?.Select(x => x.title).ToList();
+            last = resList.FindIndex(x => x == config.currentChannel);
+            curIndex = EditorGUILayout.Popup("当前渠道", last, resList.ToArray());
+            if (curIndex >= 0 && curIndex < resList.Count)
+            {
+                config.currentChannel = resList[curIndex];
+            }
+
+
+            GUILayout.EndHorizontal();
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Reference Assembly", EditorStyles.boldLabel);
@@ -104,34 +117,77 @@ namespace ZGame.Editor
                 config.entryName = config.assembly.name;
             }
 
-            if (config.references is null)
-            {
-                config.references = new List<string>();
-            }
-
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
                 config.references.Add(string.Empty);
+                config.referenceAssemblyList.Add(null);
+                BasicConfig.OnSave();
             }
 
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
-            for (int j = config.references.Count - 1; j >= 0; j--)
+            for (int j = config.referenceAssemblyList.Count - 1; j >= 0; j--)
             {
                 GUILayout.BeginHorizontal(ZStyle.ITEM_BACKGROUND_STYLE);
 
+                config.referenceAssemblyList[j] = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Element " + j, config.referenceAssemblyList[j], typeof(AssemblyDefinitionAsset), false, GUILayout.Width(300));
+                if (config.referenceAssemblyList[j] != null)
+                {
+                    config.references[j] = config.referenceAssemblyList[j].name;
+                }
 
-                config.references[j] = EditorGUILayout.TextField("Element " + j, config.references[j], GUILayout.Width(500));
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     config.references.RemoveAt(j);
+                    config.referenceAssemblyList.RemoveAt(j);
+                    BasicConfig.OnSave();
                 }
 
                 GUILayout.EndHorizontal();
             }
 
             GUILayout.EndVertical();
+
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Channels", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            if (config.channels == null)
+            {
+                config.channels = new();
+            }
+
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                config.channels.Add(new ChannelPackageOptions());
+                BasicConfig.OnSave();
+            }
+
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+            for (int j = config.channels.Count - 1; j >= 0; j--)
+            {
+                GUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.BeginHorizontal();
+                config.channels[j].title = EditorGUILayout.TextField("Channel Name", config.channels[j].title);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+                {
+                    config.channels.RemoveAt(j);
+                    BasicConfig.OnSave();
+                }
+
+                GUILayout.EndHorizontal();
+                config.channels[j].packageName = EditorGUILayout.TextField("Package Name", config.channels[j].packageName);
+                config.channels[j].appName = EditorGUILayout.TextField("App Name", config.channels[j].appName);
+                config.channels[j].icon = (EditorGUILayout.ObjectField("Channel Icon", config.channels[j].icon, typeof(Texture2D), false) as Texture2D);
+                config.channels[j].splash = (EditorGUILayout.ObjectField("Channel Splash", config.channels[j].splash, typeof(Sprite), false) as Sprite);
+                GUILayout.EndVertical();
+            }
+
+            GUILayout.EndVertical();
+
             GUILayout.EndVertical();
         }
     }

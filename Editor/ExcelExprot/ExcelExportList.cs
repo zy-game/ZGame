@@ -18,7 +18,6 @@ namespace ZGame.Editor.ExcelExprot
     public class ExcelExportList : SingletonScriptableObject<ExcelExportList>
     {
         public List<ExcelExporter> exporters;
-        public List<ExportOptions> ExportList;
 
         public override void OnAwake()
         {
@@ -47,11 +46,7 @@ namespace ZGame.Editor.ExcelExprot
 
         public void GenericAll()
         {
-            if (ExportList is null)
-            {
-                ExportList = new List<ExportOptions>();
-            }
-
+            List<ExportOptions> ExportList = new List<ExportOptions>();
             foreach (var VARIABLE in exporters)
             {
                 for (int i = 0; i < VARIABLE.options.Count; i++)
@@ -66,105 +61,86 @@ namespace ZGame.Editor.ExcelExprot
             }
 
             OnSave();
-            ExportAll();
+            Generic(ExportList.ToArray());
         }
 
         public void Generic(params ExportOptions[] options)
         {
-            if (ExportList is null)
-            {
-                ExportList = new List<ExportOptions>();
-            }
-
-            for (int i = 0; i < options.Length; i++)
-            {
-                if (options[i].isExport is false)
-                {
-                    continue;
-                }
-
-                ExportList.Add(options[i]);
-            }
-
-            OnSave();
-            ExportAll();
-        }
-
-        private void ExportAll()
-        {
-            if (ExportList is null || ExportList.Count == 0)
+            if (options is null || options.Length == 0)
             {
                 return;
             }
 
-            for (int i = ExportList.Count - 1; i >= 0; i--)
+            foreach (var VARIABLE in options)
             {
-                ExportOptions options = ExportList[i];
-                if (options.dataTable is null)
+                if (VARIABLE.dataTable is null)
                 {
-                    ExcelExporter exporter = GetExporter(options.parent);
+                    ExcelExporter exporter = GetExporter(VARIABLE.parent);
                     if (exporter is null)
                     {
                         return;
                     }
 
-                    options.dataTable = exporter.GetTable(options.name);
+                    VARIABLE.dataTable = exporter.GetTable(VARIABLE.name);
                 }
 
-                switch (options.type)
+                switch (VARIABLE.type)
                 {
                     case ExportType.Json:
-                        ExportJson(options);
-                        ExportList.Remove(options);
+                        ExportJson(VARIABLE);
                         break;
                     case ExportType.Csharp:
-                        ExportCSharpCode(options);
-                        ExportList.Remove(options);
+                        ExportCSharpCode(VARIABLE);
                         break;
                 }
             }
 
+            OnSave();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
 
+        private string GetDataType(string t)
+        {
+            return t switch
+            {
+                "int" => "int",
+                "float" => "float",
+                "bool" => "bool",
+                _ => "string"
+            };
+        }
 
-        // [UnityEditor.Callbacks.DidReloadScripts]
-        // static void BuildCompletion()
-        // {
-        //     if (ExcelExportList.instance.ExportList is null || ExcelExportList.instance.ExportList.Count == 0)
-        //     {
-        //         return;
-        //     }
-        //
-        //     for (int i = ExcelExportList.instance.ExportList.Count - 1; i >= 0; i--)
-        //     {
-        //         ExportOptions options = ExcelExportList.instance.ExportList[i];
-        //         if (options.type == ExportType.Assets)
-        //         {
-        //             if (options.dataTable is null)
-        //             {
-        //                 ExcelExporter exporter = ExcelExportList.instance.GetExporter(options.parent);
-        //                 if (exporter is null)
-        //                 {
-        //                     return;
-        //                 }
-        //
-        //                 options.dataTable = exporter.GetTable(options.name);
-        //             }
-        //
-        //             EditorUtility.DisplayProgressBar("正在导出数据", options.name, (float)i / ExcelExportList.instance.ExportList.Count);
-        //             ExcelExportList.instance.ExportCsharpData(options);
-        //             ExcelExportList.instance.ExportList.Remove(options);
-        //         }
-        //     }
-        //
-        //     ExcelExportList.OnSave();
-        //     AssetDatabase.SaveAssets();
-        //     AssetDatabase.Refresh();
-        //     EditorUtility.ClearProgressBar();
-        // }
+        private string GetDefaultValue(string t, string name, string v)
+        {
+            return t switch
+            {
+                "int" => $"{name} = {v}, ",
+                "float" => $"{name} = {v}, ",
+                "bool" => $"{name} = {(v == "0")}, ",
+                _ => $"{name} = @\"{v}\",",
+            };
+        }
 
+        private string GetStructData(DataRow row, DataRow header, DataRow typeRow, int rowIndex)
+        {
+            string templete = "\t\t\tnew () {";
+            for (int columnIndex = 0; columnIndex < row.ItemArray.Length; columnIndex++)
+            {
+                string data = row.ItemArray[columnIndex].ToString();
+                string name = header.ItemArray[columnIndex].ToString();
+                if (name.Equals("#") || name.Equals(String.Empty))
+                {
+                    continue;
+                }
+
+                templete += GetDefaultValue(typeRow[columnIndex].ToString(), name, data);
+            }
+
+            templete.Replace("\n", String.Empty);
+            templete += "},";
+            return templete;
+        }
 
         private void ExportCSharpCode(ExportOptions exportSet)
         {
@@ -207,62 +183,23 @@ namespace ZGame.Editor.ExcelExprot
                     continue;
                 }
 
-                string t = typeRow[i].ToString();
-                switch (t)
-                {
-                    case "int":
-                        sb.AppendLine($"\t\tpublic int {header[i]};");
-                        break;
-                    case "float":
-                        sb.AppendLine($"\t\tpublic float {header[i]};");
-                        break;
-                    case "bool":
-                        sb.AppendLine($"\t\tpublic bool {header[i]};");
-                        break;
-                    default:
-                        sb.AppendLine($"\t\tpublic string {header[i]};");
-                        break;
-                }
+                sb.AppendLine($"\t\tpublic {GetDataType(typeRow[i].ToString())} {header[i]} {{ get; set; }}");
             }
 
             sb.AppendLine("\t}");
-
-
             sb.AppendLine($"\tpublic sealed class {assetTypeName} : Singleton<{assetTypeName}>, IQuery<{itemTypeName}>");
             sb.AppendLine("\t{");
-            sb.AppendLine($"\t\tpublic List<{itemTypeName}> cfgList = new ()\n\t\t{{");
+            sb.AppendLine($"\t\tpublic {itemTypeName} this[int index]");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\t\tget => cfgList[index];");
+            sb.AppendLine($"\t\t}}");
+            sb.AppendLine($"\t\tpublic int Count => cfgList.Count;");
+            sb.AppendLine($"\t\tprivate List<{itemTypeName}> cfgList = new ()\n\t\t{{");
+
             for (int rowIndex = exportSet.dataRow; rowIndex < exportSet.dataTable.Rows.Count; rowIndex++)
             {
                 var row = exportSet.dataTable.Rows[rowIndex];
-                string templete = "\t\t\tnew () {";
-                for (int columnIndex = 0; columnIndex < row.ItemArray.Length; columnIndex++)
-                {
-                    string data = row.ItemArray[columnIndex].ToString();
-                    string name = header.ItemArray[columnIndex].ToString();
-                    if (name.Equals("#") || name.Equals(String.Empty))
-                    {
-                        continue;
-                    }
-
-                    string t = typeRow[columnIndex].ToString();
-                    switch (t)
-                    {
-                        case "int":
-                        case "float":
-                            templete += $"{name} = {data}, ";
-                            break;
-                        case "bool":
-                            templete += $"{name} = {(data == "0")}, ";
-                            break;
-                        default:
-                            templete += $"{name} = @\"{data}\",";
-                            break;
-                    }
-                }
-
-                templete.Replace("\n", String.Empty);
-                templete += "},";
-                sb.AppendLine(templete);
+                sb.AppendLine(GetStructData(row, header, typeRow, rowIndex));
             }
 
             sb.AppendLine("\t\t};");
@@ -278,9 +215,9 @@ namespace ZGame.Editor.ExcelExprot
             sb.AppendLine("\t\t\treturn Query(key);");
             sb.AppendLine("\t\t}");
             sb.AppendLine("");
-            sb.AppendLine($"\t\tpublic {itemTypeName} Query(int key)");
+            sb.AppendLine($"\t\tpublic {itemTypeName} Query({typeRow.ItemArray[0].ToString()} key)");
             sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\treturn cfgList.Find(x => x.id_num == key);");
+            sb.AppendLine($"\t\t\treturn cfgList.Find(x => x.{header.ItemArray[0].ToString()} == key);");
             sb.AppendLine("\t\t}");
             sb.AppendLine("");
             sb.AppendLine($"\t\tpublic {itemTypeName} Query(Func<{itemTypeName}, bool> func)");
@@ -323,86 +260,12 @@ namespace ZGame.Editor.ExcelExprot
             File.WriteAllText(path, sb.ToString());
         }
 
-        void ExportCsharpData(ExportOptions options)
-        {
-            if (options is null || options.isExport is false)
-            {
-                return;
-            }
-
-            DataRow header = options.dataTable.Rows[options.headerRow];
-            if (header is null)
-            {
-                return;
-            }
-
-            DataRow typeRow = options.dataTable.Rows[options.typeRow];
-            if (typeRow is null)
-            {
-                return;
-            }
-
-            string assetTypeName = options.nameSpace + "." + options.name;
-            string itemTypeName = options.nameSpace + "." + options.name + "_item";
-
-            Debug.Log("creating");
-            Type type = AppDomain.CurrentDomain.GetType(assetTypeName);
-            Type itemType = AppDomain.CurrentDomain.GetType(itemTypeName);
-            if (type is null)
-            {
-                return;
-            }
-
-            var obj = ScriptableObject.CreateInstance(type);
-            AssetDatabase.CreateAsset(obj, Path.Combine(AssetDatabase.GetAssetPath(options.output), options.name + ".asset"));
-
-            IList list = type.GetField("cfgList") as IList;
-            if (list is null)
-            {
-                object temp = Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType));
-                list = (IList)temp;
-                type.GetField("cfgList").SetValue(obj, temp);
-            }
-
-            for (int rowIndex = options.dataRow; rowIndex < options.dataTable.Rows.Count; rowIndex++)
-            {
-                var row = options.dataTable.Rows[rowIndex];
-                var cfgData = Activator.CreateInstance(itemType);
-                for (int columnIndex = 0; columnIndex < row.ItemArray.Length; columnIndex++)
-                {
-                    string data = row.ItemArray[columnIndex].ToString();
-                    string name = header.ItemArray[columnIndex].ToString();
-                    if (name.Equals("#") || name.Equals(String.Empty))
-                    {
-                        continue;
-                    }
-
-                    FieldInfo field = itemType.GetField(name);
-                    if (field is null)
-                    {
-                        continue;
-                    }
-
-                    if (data.IsNullOrEmpty() is false)
-                    {
-                        field.SetValue(cfgData, Convert.ChangeType(data, field.FieldType));
-                    }
-                }
-
-                list.Add(cfgData);
-            }
-
-            EditorUtility.SetDirty(obj);
-        }
-
-
         private void ExportJson(ExportOptions exportSet)
         {
             if (exportSet.isExport is false)
             {
                 return;
             }
-
 
             DataRow header = exportSet.dataTable.Rows[exportSet.headerRow];
             if (header is null)

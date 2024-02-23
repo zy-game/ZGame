@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
+using ZGame.Networking;
 
 namespace ZGame.Resource
 {
@@ -125,7 +126,7 @@ namespace ZGame.Resource
             if (ResPackageCache.instance.TryGetValue(manifest.name, out var _handle) is false)
             {
                 Debug.Log("重新加载资源包：" + manifest.name);
-                ResPackageCache.instance.LoadSync(manifest);
+                ResPackageCache.instance.LoadingResourcePackageListSync(manifest);
                 return LoadSync(path);
             }
 
@@ -164,32 +165,13 @@ namespace ZGame.Resource
 
             if (path.StartsWith("http"))
             {
-                using (UnityWebRequest request = GetUnityWebRequest(path, extension))
+                asset = await Request.GetStreamingAsset(path, extension);
+                if (asset == null)
                 {
-                    request.useHttpContinue = true;
-                    request.disposeUploadHandlerOnDispose = true;
-                    request.disposeDownloadHandlerOnDispose = true;
-                    await request.SendWebRequest().ToUniTask();
-                    if (request.result is not UnityWebRequest.Result.Success)
-                    {
-                        return default;
-                    }
-
-                    switch (ResType(extension))
-                    {
-                        case 1:
-                            asset = DownloadHandlerTexture.GetContent(request);
-                            break;
-                        case 2:
-                            asset = DownloadHandlerAudioClip.GetContent(request);
-                            break;
-                        default:
-                            asset = new TextAsset(request.downloadHandler.text);
-                            break;
-                    }
-
-                    return Add(NETWORK_RES_PACKAGE, asset, path);
+                    return EMPTY_OBJECT;
                 }
+
+                return Add(NETWORK_RES_PACKAGE, asset, path);
             }
 #if UNITY_EDITOR
             if (BasicConfig.instance.resMode == ResourceMode.Editor)
@@ -215,7 +197,7 @@ namespace ZGame.Resource
 
             if (ResPackageCache.instance.TryGetValue(manifest.name, out var _handle) is false)
             {
-                await ResPackageCache.instance.LoadAsync(manifest);
+                await ResPackageCache.instance.LoadingResourcePackageList(manifest);
                 return await LoadAsync(path);
             }
 
@@ -229,49 +211,6 @@ namespace ZGame.Resource
             }
 
             return Add(_handle, asset, path);
-        }
-
-        private static UnityWebRequest GetUnityWebRequest(string path, string extension)
-        {
-            switch (extension)
-            {
-                case ".png":
-                case ".jpg":
-                case ".jpeg":
-                case ".bmp":
-                case ".tga":
-                    return UnityWebRequestTexture.GetTexture(path);
-                case ".mp3":
-                    return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.MPEG);
-                case ".wav":
-                    return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV);
-                case ".ogg":
-                    return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.OGGVORBIS);
-            }
-
-            return UnityWebRequest.Get(path);
-        }
-
-        private static int ResType(string extension)
-        {
-            switch (extension)
-            {
-                case ".png":
-                case ".jpg":
-                case ".jpeg":
-                case ".bmp":
-                case ".tga":
-                    return 1;
-                case ".mp3":
-                case ".wav":
-                case ".ogg":
-                    return 2;
-                case ".txt":
-                case ".json":
-                    return 3;
-            }
-
-            return 0;
         }
     }
 }

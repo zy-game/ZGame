@@ -27,6 +27,9 @@ namespace ZGame.Resource
         /// <returns>资源加载结果</returns>
         public ResObject LoadAsset(string path, string extension = "")
         {
+            // UniTask<ResObject> task = ResObjectCache.instance.LoadAsync(path, extension);
+            // UniTask<ResObject>.Awaiter awaiter = task.GetAwaiter();
+            // task.Forget();
             return ResObjectCache.instance.LoadSync(path, extension);
         }
 
@@ -46,30 +49,14 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async UniTask PerloadingResourcePackageList(EntryConfig config)
+        public async UniTask PreloadingResourcePackageList(EntryConfig config)
         {
             if (config is null)
             {
                 throw new ArgumentNullException("config");
             }
 
-            await UpdateResPackageAsync(config);
-            await LoadPackageListAsync(config);
-        }
-
-        /// <summary>
-        /// 加载资源包列表
-        /// </summary>
-        /// <param name="progressCallback"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        public async UniTask LoadPackageListAsync(EntryConfig config)
-        {
-            if (config is null)
-            {
-                throw new ArgumentNullException("config");
-            }
-
+            await ResPackageCache.instance.UpdateResourcePackageList(config);
             UILoading.SetTitle(Localliztion.instance.Query("正在加载资源信息..."));
             UILoading.SetProgress(0);
             List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(config.module);
@@ -77,96 +64,11 @@ namespace ZGame.Resource
             {
                 UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
                 UILoading.SetProgress(1);
-            }
-
-            await ResPackageCache.instance.LoadAsync(manifests.ToArray());
-        }
-
-        /// <summary>
-        /// 加载资源模块
-        /// </summary>
-        /// <param name="configName"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public void LoadPackageSync(string configName)
-        {
-            if (configName.IsNullOrEmpty())
-            {
-                throw new ArgumentNullException("configName");
-            }
-
-            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(configName);
-            if (manifests is null || manifests.Count == 0)
-            {
-                UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
-                UILoading.SetProgress(1);
-            }
-
-            ResPackageCache.instance.LoadSync(manifests.ToArray());
-        }
-
-        /// <summary>
-        /// 更新资源列表
-        /// </summary>
-        /// <param name="progressCallback"></param>
-        /// <param name="args"></param>
-        /// <exception cref="NullReferenceException"></exception>
-        public async UniTask UpdateResPackageAsync(EntryConfig config)
-        {
-            if (config is null)
-            {
-                throw new ArgumentNullException("config");
-            }
-
-            UILoading.SetTitle(Localliztion.instance.Query("正在加载资源信息..."));
-            UILoading.SetProgress(0);
-            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
-
-            if (manifests is null || manifests.Count == 0)
-            {
-                UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
-                UILoading.SetProgress(1);
-            }
-
-            Debug.Log("需要更新资源：" + string.Join(",", manifests.Select(x => x.name)));
-            HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
-            HashSet<string> failure = new HashSet<string>();
-            foreach (var packageManifest in manifests)
-            {
-                if (downloadList.Contains(packageManifest))
-                {
-                    continue;
-                }
-
-                string url = OSSConfig.instance.GetFilePath(packageManifest.name);
-                using (UnityWebRequest request = UnityWebRequest.Get(url))
-                {
-                    request.timeout = 5;
-                    request.useHttpContinue = true;
-                    request.disposeUploadHandlerOnDispose = true;
-                    request.disposeDownloadHandlerOnDispose = true;
-                    UILoading.SetTitle(Path.GetFileName(url));
-                    await request.SendWebRequest().ToUniTask(UILoading.Show());
-                    UILoading.SetProgress(1);
-                    if (request.result is not UnityWebRequest.Result.Success)
-                    {
-                        failure.Add(packageManifest.name);
-                        continue;
-                    }
-
-                    await VFSManager.instance.WriteAsync(Path.GetFileName(url), request.downloadHandler.data, packageManifest.version);
-                }
-            }
-
-            if (failure.Count > 0)
-            {
-                Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
-                UIMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
                 return;
             }
 
-            Debug.Log("资源更新完成");
-            UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
-            UILoading.SetProgress(1);
+            Debug.Log("加载资源：" + string.Join(",", manifests.Select(x => x.name)));
+            await ResPackageCache.instance.LoadingResourcePackageList(manifests.ToArray());
         }
 
         /// <summary>

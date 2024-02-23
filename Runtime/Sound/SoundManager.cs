@@ -77,8 +77,6 @@ namespace ZGame.Sound
         private bool _isRecording = false;
         private IRecordAudioHandle records;
         private AudioClip _recordClip = null;
-        private const string BACK_MUSIC = "BackMusic";
-        private const string EFFECT_SOUND = "EffectSound";
         private List<SoundPlayer> _handles = new List<SoundPlayer>();
 
 
@@ -142,13 +140,11 @@ namespace ZGame.Sound
             _limit_time = 60;
             m_BufferSize = m_BufferSeconds * _rate;
             m_FloatBuffer = new float[m_BufferSize * 1];
-            AddSoundPlayer(BACK_MUSIC, true);
             _divName = Microphone.devices.FirstOrDefault();
-            AddSoundPlayer(EFFECT_SOUND, false);
             m_ByteBuffer = new byte[m_BufferSize * 1 * k_SizeofInt16];
             records = IRecordAudioHandle.OnCreate(new Action<byte[]>(_ => { }));
-            BehaviourScriptable.instance.SetupUpdate(OnUpdate);
-            BehaviourScriptable.instance.SetupOnDestroy(Clear);
+            BehaviourScriptable.instance.SetupUpdateEvent(OnUpdate);
+            BehaviourScriptable.instance.SetupGameObjectDestroyEvent(Clear);
             BehaviourScriptable.instance.gameObject.AddComponent<AudioListener>();
         }
 
@@ -164,80 +160,8 @@ namespace ZGame.Sound
 
         private void OnUpdate()
         {
-            CheckSoundPlayer();
             HasRecordTimeout();
             OnSplitAudioClip();
-        }
-
-        private void CheckSoundPlayer()
-        {
-            for (int i = _handles.Count - 1; i >= 0; i--)
-            {
-                _handles[i].OnUpdate();
-            }
-        }
-
-
-        /// <summary>
-        /// 添加播放器
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="isLoop"></param>
-        /// <returns></returns>
-        public SoundPlayer AddSoundPlayer(string name, bool isLoop)
-        {
-            SoundPlayer player = GetSoundPlayer(name);
-            if (player is not null)
-            {
-                return player;
-            }
-
-            _handles.Add(player = new SoundPlayer(name, isLoop));
-            return player;
-        }
-
-        /// <summary>
-        /// 获取指定的播放器
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public SoundPlayer GetSoundPlayer(string name)
-        {
-            return _handles.Find(x => x.name == name);
-        }
-
-        /// <summary>
-        /// 移除播放器
-        /// </summary>
-        /// <param name="name"></param>
-        public void Remove(string name)
-        {
-            SoundPlayer handle = GetSoundPlayer(name);
-            if (handle is null)
-            {
-                return;
-            }
-
-            handle.Stop();
-            _handles.Remove(handle);
-        }
-
-        /// <summary>
-        /// 特殊音效是否在播放
-        /// </summary>
-        /// <returns></returns>
-        public bool EffectPlaying()
-        {
-            return IsPlaying(EFFECT_SOUND);
-        }
-
-        /// <summary>
-        /// 背景音效是否正在播放
-        /// </summary>
-        /// <returns></returns>
-        public bool BackSoundPlaying()
-        {
-            return IsPlaying(BACK_MUSIC);
         }
 
         /// <summary>
@@ -245,88 +169,24 @@ namespace ZGame.Sound
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public bool IsPlaying(string name)
+        public bool HasPlayClip(string name)
         {
             return _handles.Find(x => x.name == name).isPlaying;
         }
 
         /// <summary>
-        /// 在背景音效队列中加入音效
-        /// </summary>
-        /// <param name="clipName"></param>
-        /// <param name="playCallback"></param>
-        public void PlayBackSound(string clipName, Action<PlayState> playCallback = null)
-        {
-            SoundPlayer handle = GetSoundPlayer(BACK_MUSIC);
-            if (handle is null)
-            {
-                handle = AddSoundPlayer(EFFECT_SOUND, true);
-            }
-
-            handle.Play(clipName, playCallback);
-        }
-
-        /// <summary>
-        /// 在背景音效队列中加入音效
-        /// </summary>
-        /// <param name="clip"></param>
-        /// <param name="playCallback"></param>
-        public void PlayBackSound(AudioClip clip, Action<PlayState> playCallback = null)
-        {
-            SoundPlayer handle = GetSoundPlayer(BACK_MUSIC);
-            if (handle is null)
-            {
-                handle = AddSoundPlayer(EFFECT_SOUND, true);
-            }
-
-            handle.Play(clip, playCallback);
-        }
-
-        /// <summary>
-        /// 在默认的音效播放器队列中加入音效
-        /// </summary>
-        /// <param name="clipName"></param>
-        /// <param name="playCallback"></param>
-        public void PlayEffectSound(string clipName, Action<PlayState> playCallback = null)
-        {
-            SoundPlayer handle = GetSoundPlayer(EFFECT_SOUND);
-            if (handle is null)
-            {
-                handle = AddSoundPlayer(EFFECT_SOUND, false);
-            }
-
-            handle.Play(clipName, playCallback);
-        }
-
-        /// <summary>
-        /// 在默认的音效播放器队列中加入音效
-        /// </summary>
-        /// <param name="clip"></param>
-        /// <param name="playCallback"></param>
-        public void PlayEffectSound(AudioClip clip, Action<PlayState> playCallback = null)
-        {
-            SoundPlayer handle = GetSoundPlayer(EFFECT_SOUND);
-            if (handle is null)
-            {
-                handle = AddSoundPlayer(EFFECT_SOUND, false);
-            }
-
-            handle.Play(clip, playCallback);
-        }
-
-        /// <summary>
         /// 将音效加入指定的播放器播放队列
         /// </summary>
         /// <param name="playName"></param>
         /// <param name="clipName"></param>
         /// <param name="isLoop"></param>
         /// <param name="playCallback"></param>
-        public void PlaySound(string playName, string clipName, bool isLoop, Action<PlayState> playCallback = null)
+        public void PlaySound(string clipName, bool isLoop = false, Action<PlayState> playCallback = null)
         {
-            SoundPlayer handle = GetSoundPlayer(playName);
+            SoundPlayer handle = _handles.Find(x => x.isPlaying is false);
             if (handle is null)
             {
-                handle = AddSoundPlayer(playName, isLoop);
+                handle = new SoundPlayer("Audio Player " + _handles.Count, isLoop);
             }
 
             handle.Play(clipName, playCallback);
@@ -339,22 +199,67 @@ namespace ZGame.Sound
         /// <param name="clip"></param>
         /// <param name="isLoop"></param>
         /// <param name="playCallback"></param>
-        public void PlaySound(string playName, AudioClip clip, bool isLoop, Action<PlayState> playCallback = null)
+        public void PlaySound(AudioClip clip, bool isLoop = false, Action<PlayState> playCallback = null)
         {
-            SoundPlayer handle = GetSoundPlayer(playName);
+            SoundPlayer handle = _handles.Find(x => x.isPlaying is false);
             if (handle is null)
             {
-                handle = AddSoundPlayer(playName, isLoop);
+                handle = new SoundPlayer("Audio Player " + _handles.Count, isLoop);
             }
 
             handle.Play(clip, playCallback);
         }
+
+        /// <summary>
+        /// 将音效加入指定的播放器播放队列
+        /// </summary>
+        /// <param name="playName"></param>
+        /// <param name="clipName"></param>
+        /// <param name="isLoop"></param>
+        /// <param name="playCallback"></param>
+        public UniTask PlaySoundAsync(string clipName, bool isLoop = false, Action<PlayState> playCallback = null)
+        {
+            UniTaskCompletionSource tcs = new UniTaskCompletionSource();
+            PlaySound(clipName, isLoop, state =>
+            {
+                if (state is not PlayState.Complete)
+                {
+                    return;
+                }
+
+                tcs.TrySetResult();
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// 将音效加入指定的播放器播放队列
+        /// </summary>
+        /// <param name="playName"></param>
+        /// <param name="clip"></param>
+        /// <param name="isLoop"></param>
+        /// <param name="playCallback"></param>
+        public UniTask PlaySoundAsync(AudioClip clip, bool isLoop = false, Action<PlayState> playCallback = null)
+        {
+            UniTaskCompletionSource tcs = new UniTaskCompletionSource();
+            PlaySound(clip, isLoop, state =>
+            {
+                if (state is not PlayState.Complete)
+                {
+                    return;
+                }
+
+                tcs.TrySetResult();
+            });
+            return tcs.Task;
+        }
+
 
         /// <summary>
         /// 暂停指定的音效
         /// </summary>
         /// <param name="clipName"></param>
-        public void PauseSound(string clipName)
+        public void Pause(string clipName)
         {
             SoundPlayer handle = _handles.Find(x => x.clipName == clipName);
             if (handle is null)
@@ -363,45 +268,15 @@ namespace ZGame.Sound
             }
 
             handle.Pause();
-        }
-
-        /// <summary>
-        /// 暂停指定的音效播放器
-        /// </summary>
-        /// <param name="playName"></param>
-        public void Pause(string playName)
-        {
-            SoundPlayer handle = GetSoundPlayer(playName);
-            if (handle is null)
-            {
-                return;
-            }
-
-            handle.Pause();
-        }
-
-        /// <summary>
-        /// 停止指定的音效
-        /// </summary>
-        /// <param name="clipName"></param>
-        public void StopSound(string clipName)
-        {
-            SoundPlayer handle = _handles.Find(x => x.clipName == clipName);
-            if (handle is null)
-            {
-                return;
-            }
-
-            handle.Stop();
         }
 
         /// <summary>
         /// 停止指定的播放器
         /// </summary>
-        /// <param name="playName"></param>
-        public void Stop(string playName)
+        /// <param name="clipName"></param>
+        public void Stop(string clipName)
         {
-            SoundPlayer handle = GetSoundPlayer(playName);
+            SoundPlayer handle = _handles.Find(x => x.clipName == clipName);
             if (handle is null)
             {
                 return;
@@ -415,20 +290,17 @@ namespace ZGame.Sound
         /// </summary>
         public void StopAll()
         {
-            SoundPlayer handle = GetSoundPlayer(EFFECT_SOUND);
-            if (handle is null)
+            foreach (SoundPlayer soundPlayer in _handles)
             {
-                return;
+                soundPlayer.Stop();
             }
-
-            handle.Stop();
         }
 
         /// <summary>
-        /// 根据音效名设置音效播放
+        /// 恢复指定音效的播放
         /// </summary>
         /// <param name="clipName"></param>
-        public void ResumeSound(string clipName)
+        public void Resume(string clipName)
         {
             SoundPlayer handle = _handles.Find(x => x.clipName == clipName);
             if (handle is null)
@@ -440,34 +312,26 @@ namespace ZGame.Sound
         }
 
         /// <summary>
-        /// 回复指定的播放器播放
+        /// 恢复所有音效的播放
         /// </summary>
-        /// <param name="playName"></param>
-        public void Resume(string playName)
+        public void Resume()
         {
-            SoundPlayer handle = GetSoundPlayer(playName);
-            if (handle is null)
+            foreach (SoundPlayer soundPlayer in _handles)
             {
-                return;
+                soundPlayer.Resume();
             }
-
-            handle.Resume();
         }
 
         /// <summary>
-        /// 设置自动的播放器音量
+        /// 设置播放器音量
         /// </summary>
-        /// <param name="name"></param>
         /// <param name="volume"></param>
-        public void SetVolume(string name, float volume)
+        public void SetVolume(float volume)
         {
-            SoundPlayer handle = GetSoundPlayer(name);
-            if (handle is null)
+            foreach (SoundPlayer soundPlayer in _handles)
             {
-                return;
+                soundPlayer.SetVolume(volume);
             }
-
-            handle.SetVolume(volume);
         }
 
         private void HasRecordTimeout()

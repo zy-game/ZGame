@@ -5,6 +5,7 @@ using System.Linq;
 using HybridCLR.Editor;
 using HybridCLR.Editor.Commands;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEngine;
 using ZGame.Editor.LinkerEditor;
 using ZGame.Editor.ResBuild.Config;
@@ -33,6 +34,7 @@ namespace ZGame.Editor.Command
             var genericAll = args[1] as bool? ?? false;
             //todo 编译资源
             PackageSeting seting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
+            AOTReferenceGeneratorCommand.CompileAndGenerateAOTGenericReference();
             CompileDllCommand.CompileDllActiveBuildTarget();
             LinkerConfig.instance.Generic();
             if (config.mode is CodeMode.Hotfix)
@@ -49,6 +51,7 @@ namespace ZGame.Editor.Command
                 if (aotList is null || aotList.Count == 0)
                 {
                     EditorUtility.DisplayDialog("提示", "AOT 资源编译失败！", "OK");
+                    return;
                 }
 
                 byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
@@ -62,6 +65,65 @@ namespace ZGame.Editor.Command
             }
 
             ZGame.CommandManager.OnExecuteCommand<BuildPackageCommand>(seting);
+
+            try
+            {
+                BuildPlayerOptions options = new BuildPlayerOptions();
+                options.options = BuildOptions.ShowBuiltPlayer;
+                options.target = EditorUserBuildSettings.activeBuildTarget;
+                options.scenes = new[] { "Assets/Startup.unity" };
+                options.locationPathName = $"{BuilderConfig.output}build/{BasicConfig.GetPlatformName()}/{config.currentChannelOptions.packageName}/{config.version}/";
+                if (Directory.Exists(options.locationPathName) is false)
+                {
+                    Directory.CreateDirectory(options.locationPathName);
+                }
+
+                switch (EditorUserBuildSettings.activeBuildTarget)
+                {
+                    case BuildTarget.Android:
+                        options.targetGroup = BuildTargetGroup.Android;
+                        options.locationPathName += config.currentChannelOptions.packageName + "_" + config.version + ".apk";
+                        break;
+                    case BuildTarget.iOS:
+                        options.targetGroup = BuildTargetGroup.iOS;
+                        break;
+                    case BuildTarget.StandaloneWindows:
+                        options.targetGroup = BuildTargetGroup.Standalone;
+                        break;
+                }
+
+                PlayerSettings.SetApplicationIdentifier(options.targetGroup, config.currentChannelOptions.packageName);
+                PlatformIconKind[] kinds = PlayerSettings.GetSupportedIconKindsForPlatform(options.targetGroup);
+                for (int i = 0; i < kinds.Length; i++)
+                {
+                    PlatformIcon[] platformIcons = PlayerSettings.GetPlatformIcons(options.targetGroup, kinds[i]);
+                    for (int j = 0; j < platformIcons.Length; j++)
+                    {
+                        for (int k = 0; k < platformIcons[j].maxLayerCount; k++)
+                        {
+                            platformIcons[j].SetTexture(config.currentChannelOptions.icon, k);
+                        }
+                    }
+
+                    PlayerSettings.SetPlatformIcons(options.targetGroup, kinds[i], platformIcons);
+                }
+
+                PlayerSettings.bundleVersion = config.version;
+                PlayerSettings.companyName = BasicConfig.instance.companyName;
+                PlayerSettings.productName = config.currentChannelOptions.appName;
+                PlayerSettings.SplashScreen.showUnityLogo = config.currentChannelOptions.splash != null;
+                PlayerSettings.SplashScreen.background = config.currentChannelOptions.splash;
+                PlayerSettings.SplashScreen.overlayOpacity = 1;
+                PlayerSettings.SplashScreen.blurBackgroundImage = false;
+                PlayerSettings.SplashScreen.backgroundPortrait = null;
+                PlayerSettings.SplashScreen.showUnityLogo = false;
+                BuildPlayerWindow.DefaultBuildMethods.BuildPlayer(options);
+            }
+            catch (BuildPlayerWindow.BuildMethodException e)
+            {
+                Debug.LogError(e);
+            }
+
             EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
         }
 

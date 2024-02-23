@@ -18,7 +18,7 @@ namespace ZGame
             }
 
             _instance = Activator.CreateInstance<T>();
-            BehaviourScriptable.instance.SetupOnDestroy(_instance.Dispose);
+            BehaviourScriptable.instance.SetupGameObjectDestroyEvent(_instance.Dispose);
             _instance.OnAwake();
             return _instance;
         }

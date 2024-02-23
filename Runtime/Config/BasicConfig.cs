@@ -96,14 +96,52 @@ namespace ZGame
         public List<string> references;
 
         /// <summary>
-        /// 启动参数
+        /// 当前渠道包配置
         /// </summary>
-        public string args;
+        public string currentChannel;
+
+        public string version;
+
+        /// <summary>
+        /// 渠道包配置
+        /// </summary>
+        public List<ChannelPackageOptions> channels;
+
+        public ChannelPackageOptions currentChannelOptions
+        {
+            get
+            {
+                if (channels == null)
+                {
+                    return default;
+                }
+
+                return channels.Find(x => x.title == currentChannel);
+            }
+        }
+
 
 #if UNITY_EDITOR
         [NonSerialized] public bool isOn;
         [NonSerialized] public UnityEditorInternal.AssemblyDefinitionAsset assembly;
+        [NonSerialized] public List<UnityEditorInternal.AssemblyDefinitionAsset> referenceAssemblyList;
 #endif
+    }
+
+    [Serializable]
+    public class ChannelPackageOptions
+    {
+        public string title;
+        public string packageName;
+        public Texture2D icon;
+        public Sprite splash;
+        public string appName;
+
+
+        /// <summary>
+        /// 启动参数
+        /// </summary>
+        public string args;
     }
 
     [Serializable]
@@ -152,6 +190,8 @@ namespace ZGame
         /// 卸载间隔时间
         /// </summary>
         public float resTimeout = 60f;
+
+        public string companyName;
 
         /// <summary>
         /// 默认语言
@@ -211,20 +251,6 @@ namespace ZGame
             return $"{output}/{GetPlatformName()}";
         }
 
-        /// <summary>
-        /// 获取文件资源地址
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        // public static string GetNetworkResourceUrl(string fileName)
-        // {
-        //     if (instance.curEntry.ossType == OSSType.Streaming)
-        //     {
-        //         return $"{Application.streamingAssetsPath}/{fileName}";
-        //     }
-        //
-        //     return $"{instance.curEntry.ossAddress}{GetPlatformName()}/{fileName}";
-        // }
 
         /// <summary>
         /// 获取服务器接口

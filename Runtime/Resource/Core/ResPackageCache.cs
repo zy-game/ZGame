@@ -1,9 +1,15 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 using ZGame.Config;
 using ZGame.FileSystem;
+using ZGame.Game;
+using ZGame.Resource.Config;
 using ZGame.UI;
+using System.Linq;
 
 namespace ZGame.Resource
 {
@@ -15,7 +21,7 @@ namespace ZGame.Resource
 
         protected override void OnAwake()
         {
-            BehaviourScriptable.instance.SetupUpdate(OnUpdate);
+            BehaviourScriptable.instance.SetupUpdateEvent(OnUpdate);
         }
 
 
@@ -103,20 +109,162 @@ namespace ZGame.Resource
             return false;
         }
 
-        public void LoadSync(params ResourcePackageManifest[] manifests)
+        public override void Dispose()
         {
-            LoadAsync(manifests).Forget();
+            foreach (var VARIABLE in _packageList)
+            {
+                VARIABLE.Dispose();
+            }
+
+            _packageList.Clear();
+            foreach (var VARIABLE in cacheList)
+            {
+                VARIABLE.Dispose();
+            }
+
+            cacheList.Clear();
+        }
+
+        public void Clear(params ResourcePackageManifest[] fileList)
+        {
+            foreach (var VARIABLE in fileList)
+            {
+                Remove(VARIABLE.name);
+            }
+        }
+
+        public async UniTask UpdateResourcePackageList(EntryConfig config)
+        {
+            if (config is null)
+            {
+                throw new ArgumentNullException("config");
+            }
+
+            UILoading.SetTitle(Localliztion.instance.Query("正在加载资源信息..."));
+            UILoading.SetProgress(0);
+            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
+
+            if (manifests is null || manifests.Count == 0)
+            {
+                UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
+                UILoading.SetProgress(1);
+            }
+
+            Debug.Log("需要更新资源：" + string.Join(",", manifests.Select(x => x.name)));
+            HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
+            HashSet<string> failure = new HashSet<string>();
+            foreach (var packageManifest in manifests)
+            {
+                if (downloadList.Contains(packageManifest))
+                {
+                    continue;
+                }
+
+                string url = OSSConfig.instance.GetFilePath(packageManifest.name);
+                using (UnityWebRequest request = UnityWebRequest.Get(url))
+                {
+                    request.timeout = 5;
+                    request.useHttpContinue = true;
+                    request.disposeUploadHandlerOnDispose = true;
+                    request.disposeDownloadHandlerOnDispose = true;
+                    UILoading.SetTitle(Path.GetFileName(url));
+                    await request.SendWebRequest().ToUniTask(UILoading.Show());
+                    UILoading.SetProgress(1);
+                    if (request.result is not UnityWebRequest.Result.Success)
+                    {
+                        failure.Add(packageManifest.name);
+                        continue;
+                    }
+
+                    await VFSManager.instance.WriteAsync(Path.GetFileName(url), request.downloadHandler.data, packageManifest.version);
+                }
+            }
+
+            if (failure.Count > 0)
+            {
+                Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
+                UIMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
+                return;
+            }
+
+            Debug.Log("资源更新完成");
+            UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
+            UILoading.SetProgress(1);
+        }
+
+        public async UniTask LoadingResourcePackageList(params ResourcePackageManifest[] manifests)
+        {
             if (manifests is null || manifests.Length == 0)
             {
-                Debug.Log("没有需要加载的资源包");
-                return;
+                throw new ArgumentNullException("manifests");
             }
 
             for (int i = 0; i < manifests.Length; i++)
             {
+                UILoading.SetProgress(i / (float)manifests.Length);
                 if (ResPackageCache.instance.TryGetValue(manifests[i].name, out _))
                 {
-                    Debug.Log("已经加载了资源包：" + manifests[i].name);
+                    Debug.Log("资源包已加载：" + manifests[i].name);
+                    continue;
+                }
+
+                AssetBundle assetBundle = default;
+                byte[] bytes = await VFSManager.instance.ReadAsync(manifests[i].name);
+                if (bytes is null || bytes.Length == 0)
+                {
+                    ResPackageCache.instance.Clear(manifests.ToArray());
+                    UILoading.SetTitle(Localliztion.instance.Query("资源加载失败..."));
+                    return;
+                }
+
+                assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
+                ResPackageCache.instance.Add(new ResPackage(assetBundle));
+                Debug.Log("资源包加载完成：" + manifests[i].name);
+            }
+
+            for (int i = 0; i < manifests.Length; i++)
+            {
+                if (ResPackageCache.instance.TryGetValue(manifests[i].name, out var target) is false)
+                {
+                    continue;
+                }
+
+                if (manifests[i].dependencies is null || manifests[i].dependencies.Length == 0)
+                {
+                    continue;
+                }
+
+                List<ResPackage> dependencies = new List<ResPackage>();
+                foreach (var dependency in manifests[i].dependencies)
+                {
+                    if (ResPackageCache.instance.TryGetValue(dependency, out var packageHandle) is false)
+                    {
+                        continue;
+                    }
+
+                    dependencies.Add(packageHandle);
+                }
+
+                target.SetDependencies(dependencies.ToArray());
+            }
+
+            UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
+            UILoading.SetProgress(1);
+        }
+
+        public void LoadingResourcePackageListSync(params ResourcePackageManifest[] manifests)
+        {
+            if (manifests is null || manifests.Length is 0)
+            {
+                throw new ArgumentNullException("manifests");
+            }
+
+            for (int i = 0; i < manifests.Length; i++)
+            {
+                UILoading.SetProgress(i / (float)manifests.Length);
+                if (ResPackageCache.instance.TryGetValue(manifests[i].name, out _))
+                {
+                    Debug.Log("资源包已加载：" + manifests[i].name);
                     continue;
                 }
 
@@ -124,8 +272,8 @@ namespace ZGame.Resource
                 byte[] bytes = VFSManager.instance.Read(manifests[i].name);
                 if (bytes is null || bytes.Length == 0)
                 {
-                    Clear(manifests);
-                    Debug.Log("读取资源包失败：" + manifests[i].name);
+                    ResPackageCache.instance.Clear(manifests.ToArray());
+                    UILoading.SetTitle(Localliztion.instance.Query("资源加载失败..."));
                     return;
                 }
 
@@ -159,86 +307,9 @@ namespace ZGame.Resource
 
                 target.SetDependencies(dependencies.ToArray());
             }
-        }
-
-        public async UniTask LoadAsync(params ResourcePackageManifest[] manifests)
-        {
-            for (int i = 0; i < manifests.Length; i++)
-            {
-                UILoading.SetProgress(i / (float)manifests.Length);
-                if (ResPackageCache.instance.TryGetValue(manifests[i].name, out _))
-                {
-                    Debug.Log("资源包已加载：" + manifests[i].name);
-                    continue;
-                }
-
-                AssetBundle assetBundle = default;
-                byte[] bytes = await VFSManager.instance.ReadAsync(manifests[i].name);
-                if (bytes is null || bytes.Length == 0)
-                {
-                    Clear(manifests);
-                    UILoading.SetTitle(Localliztion.instance.Query("资源加载失败..."));
-                    return;
-                }
-
-                assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
-                ResPackageCache.instance.Add(new ResPackage(assetBundle));
-                Debug.Log("资源包加载完成：" + manifests[i].name);
-            }
-
-            for (int i = 0; i < manifests.Length; i++)
-            {
-                if (ResPackageCache.instance.TryGetValue(manifests[i].name, out var target) is false)
-                {
-                    continue;
-                }
-
-                if (manifests[i].dependencies is null || manifests[i].dependencies.Length == 0)
-                {
-                    continue;
-                }
-
-                List<ResPackage> dependencies = new List<ResPackage>();
-                foreach (var dependency in manifests[i].dependencies)
-                {
-                    if (ResPackageCache.instance.TryGetValue(dependency, out var packageHandle) is false)
-                    {
-                        continue;
-                    }
-
-                    //
-                    dependencies.Add(packageHandle);
-                }
-
-                target.SetDependencies(dependencies.ToArray());
-            }
 
             UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
             UILoading.SetProgress(1);
-        }
-
-        public override void Dispose()
-        {
-            foreach (var VARIABLE in _packageList)
-            {
-                VARIABLE.Dispose();
-            }
-
-            _packageList.Clear();
-            foreach (var VARIABLE in cacheList)
-            {
-                VARIABLE.Dispose();
-            }
-
-            cacheList.Clear();
-        }
-
-        private void Clear(params ResourcePackageManifest[] fileList)
-        {
-            foreach (var VARIABLE in fileList)
-            {
-                Remove(VARIABLE.name);
-            }
         }
     }
 }

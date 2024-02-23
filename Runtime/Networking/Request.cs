@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
 
 namespace ZGame.Networking
 {
@@ -22,67 +23,6 @@ namespace ZGame.Networking
             {
                 return true;
             }
-        }
-
-        private static T GetResultData<T>(UnityWebRequest request)
-        {
-            object _data = default;
-            if (typeof(T) == typeof(string))
-            {
-                _data = request.downloadHandler.text;
-            }
-            else if (typeof(T) == typeof(byte[]))
-            {
-                _data = request.downloadHandler.data;
-            }
-            else if (typeof(T) is JObject)
-            {
-                _data = JObject.Parse(request.downloadHandler.text);
-            }
-            else
-            {
-                _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
-            }
-
-            return (T)_data;
-        }
-
-        private static async UniTask<WWWForm> CreateWWWForm(Dictionary<string, object> map)
-        {
-            var form = new WWWForm();
-            if (map is null || map.Count == 0)
-            {
-                return form;
-            }
-
-            foreach (var VARIABLE in map)
-            {
-                switch (VARIABLE.Value)
-                {
-                    case byte[] bytes:
-                        form.AddBinaryData(VARIABLE.Key, VARIABLE.Value as byte[]);
-                        break;
-                    case string str:
-                        if (str.Contains("http"))
-                        {
-                            form.AddBinaryData(VARIABLE.Key, await GetStreamingAsset(str), "icon.png");
-                        }
-                        else
-                        {
-                            form.AddField(VARIABLE.Key, VARIABLE.Value.ToString());
-                        }
-
-                        break;
-                    case AudioClip audioClip:
-                        form.AddBinaryData(VARIABLE.Key, WavUtility.FromAudioClip(audioClip), VARIABLE.Key + ".wav");
-                        break;
-                    default:
-                        form.AddField(VARIABLE.Key, VARIABLE.Value.ToString());
-                        break;
-                }
-            }
-
-            return form;
         }
 
         /// <summary>
@@ -109,9 +49,12 @@ namespace ZGame.Networking
         {
             Extension.StartSample();
             object _data = default;
-            string str = data is string ? (string)data : JsonConvert.SerializeObject(data);
-            Debug.Log($"POST DATA:{url} parmas:{(str).ToString()}");
-            using (UnityWebRequest request = UnityWebRequest.Post(url, str))
+            if (data is not string postData)
+            {
+                postData = JsonConvert.SerializeObject(data);
+            }
+
+            using (UnityWebRequest request = UnityWebRequest.Post(url, postData))
             {
                 request.useHttpContinue = true;
                 request.certificateHandler = new CertificateController();
@@ -126,10 +69,10 @@ namespace ZGame.Networking
 
                 request.uploadHandler.Dispose();
                 request.uploadHandler = null;
-                using (request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(str)))
+                using (request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(postData)))
                 {
                     await request.SendWebRequest().ToUniTask();
-                    UnityEngine.Debug.Log($"POST DATA:{url} parmas:{(str).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
+                    UnityEngine.Debug.Log($"POST DATA:{url} parmas:{(postData).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
                     if (request.result is UnityWebRequest.Result.Success)
                     {
                         _data = GetResultData<T>(request);
@@ -151,12 +94,10 @@ namespace ZGame.Networking
         /// <param name="headers">标头</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public static async UniTask<T> PostDataForm<T>(string url, Dictionary<string, object> map, Dictionary<string, object> headers)
+        public static async UniTask<T> PostDataForm<T>(string url, WWWForm form, Dictionary<string, object> headers)
         {
             object _data = default;
             Extension.StartSample();
-            WWWForm form = await CreateWWWForm(map);
-            Debug.Log($"POST DATA:{url}");
             using (UnityWebRequest request = UnityWebRequest.Post(url, form))
             {
                 request.useHttpContinue = true;
@@ -194,15 +135,18 @@ namespace ZGame.Networking
         /// <param name="url">请求地址</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public static async UniTask<T> GetData<T>(string url)
+        public static async UniTask<T> GetData<T>(string url, bool isJson = true)
         {
             Extension.StartSample();
-            Debug.Log($"GET:{url}");
             object _data = default;
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
                 request.certificateHandler = new CertificateController();
-                request.SetRequestHeader("Content-Type", "application/json");
+                if (isJson)
+                {
+                    request.SetRequestHeader("Content-Type", "application/json");
+                }
+
                 await request.SendWebRequest().ToUniTask();
                 Debug.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 if (request.result is UnityWebRequest.Result.Success)
@@ -226,7 +170,6 @@ namespace ZGame.Networking
         public static async UniTask<string> GetHead(string url, string headName)
         {
             Extension.StartSample();
-            Debug.Log($"GET:{url}");
             string result = "";
             using (UnityWebRequest request = UnityWebRequest.Head(url))
             {
@@ -251,22 +194,19 @@ namespace ZGame.Networking
         /// <param name="url"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public static async UniTask<byte[]> GetStreamingAsset(string url, IProgress<float> callback = null)
+        public static async UniTask<Object> GetStreamingAsset(string url, string extension, IProgress<float> callback = null)
         {
             Extension.StartSample();
-            Debug.Log($"GET:{url}");
-            byte[] result = Array.Empty<byte>();
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            Object result = default;
+            using (UnityWebRequest request = CreateStreamingAssetObjectRequest(url, extension))
             {
                 request.certificateHandler = new CertificateController();
                 await request.SendWebRequest().ToUniTask(callback);
                 Debug.Log($"GET STRWAMING ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 if (request.result is UnityWebRequest.Result.Success)
                 {
-                    result = new byte[request.downloadHandler.data.Length];
-                    System.Array.Copy(request.downloadHandler.data, result, result.Length);
+                    result = GetStreamingAssetObject(extension, request);
                 }
-
 
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
@@ -275,21 +215,87 @@ namespace ZGame.Networking
         }
 
         /// <summary>
-        /// 获取网络资源数据，这个接口主要用于下载json数据或者TextAsset
+        /// 获取资源对象
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="callback"></param>
-        /// <typeparam name="T"></typeparam>
+        /// <param name="extension"></param>
+        /// <param name="request"></param>
         /// <returns></returns>
-        public static async UniTask<T> GetStreamingAsset<T>(string url, IProgress<float> callback = null)
+        /// <exception cref="NotSupportedException"></exception>
+        private static Object GetStreamingAssetObject(string extension, UnityWebRequest request)
         {
-            byte[] result = await GetStreamingAsset(url);
-            if (result is null || result.Length == 0)
+            switch (extension)
             {
-                return default;
+                case ".png":
+                case ".jpg":
+                case ".jpeg":
+                case ".bmp":
+                case ".tga":
+                    return DownloadHandlerTexture.GetContent(request);
+                    break;
+                case ".mp3":
+                case ".wav":
+                case ".ogg":
+                    return DownloadHandlerAudioClip.GetContent(request);
+                    break;
+                case ".assetbundle":
+                    return DownloadHandlerAssetBundle.GetContent(request);
+                    break;
+                default:
+                    throw new NotSupportedException("不支持的资源类型");
+            }
+        }
+
+        /// <summary>
+        /// 创建资源对象请求
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="extension"></param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
+        private static UnityWebRequest CreateStreamingAssetObjectRequest(string path, string extension)
+        {
+            switch (extension)
+            {
+                case ".png":
+                case ".jpg":
+                case ".jpeg":
+                case ".bmp":
+                case ".tga":
+                    return UnityWebRequestTexture.GetTexture(path);
+                case ".mp3":
+                    return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.MPEG);
+                case ".wav":
+                    return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV);
+                case ".ogg":
+                    return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.OGGVORBIS);
+                case ".assetbundle":
+                    return UnityWebRequestAssetBundle.GetAssetBundle(path);
+                default:
+                    throw new NotSupportedException("不支持的资源类型");
+            }
+        }
+
+        private static T GetResultData<T>(UnityWebRequest request)
+        {
+            object _data = default;
+            if (typeof(T) == typeof(string))
+            {
+                _data = request.downloadHandler.text;
+            }
+            else if (typeof(T) == typeof(byte[]))
+            {
+                _data = request.downloadHandler.data;
+            }
+            else if (typeof(T) is JObject)
+            {
+                _data = JObject.Parse(request.downloadHandler.text);
+            }
+            else
+            {
+                _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
             }
 
-            return JsonUtility.FromJson<T>(Encoding.UTF8.GetString(result));
+            return (T)_data;
         }
     }
 }

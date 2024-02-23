@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 
 namespace ZGame
 {
@@ -17,5 +18,15 @@ namespace ZGame
         /// </summary>
         /// <param name="args">参数</param>
         void Executer(params object[] args);
+    }
+
+    public interface ICommandExecuteAsync : ICommandExecuter
+    {
+        UniTask ExecuterAsync(params object[] args);
+    }
+
+    public interface ICommandExecuteAsync<T> : ICommandExecuteAsync
+    {
+        UniTask<T> ExecuterAsync(params object[] args);
     }
 }

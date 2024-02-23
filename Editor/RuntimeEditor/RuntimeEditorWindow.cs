@@ -29,6 +29,7 @@ namespace ZGame.Editor
             int last = 0;
             int curIndex = 0;
             EditorGUI.BeginChangeCheck();
+            BasicConfig.instance.companyName = EditorGUILayout.TextField("公司名称", BasicConfig.instance.companyName);
             GUILayout.BeginHorizontal();
             last = BasicConfig.instance.entries.FindIndex(x => x.title == BasicConfig.instance.curEntryName);
             curIndex = EditorGUILayout.Popup("模块入口", last, BasicConfig.instance.entries.Select(x => x.title).ToArray());
@@ -62,8 +63,20 @@ namespace ZGame.Editor
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Generic Porject"), false, () => ZGame.CommandManager.OnExecuteCommand<SubGameBuildCommand>(BasicConfig.instance.curEntry, true));
                     menu.AddItem(new GUIContent("Generic Dll"), false, () => ZGame.CommandManager.OnExecuteCommand<SubGameBuildCommand>(BasicConfig.instance.curEntry, false));
+                    menu.AddItem(new GUIContent("Generic Porject"), false, () => ZGame.CommandManager.OnExecuteCommand<SubGameBuildCommand>(BasicConfig.instance.curEntry, true));
+                    if (BasicConfig.instance.curEntry.channels != null && BasicConfig.instance.curEntry.channels.Count > 0)
+                    {
+                        foreach (var VARIABLE in BasicConfig.instance.curEntry.channels)
+                        {
+                            menu.AddItem(new GUIContent("Channels/" + VARIABLE.title), false, () =>
+                            {
+                                BasicConfig.instance.curEntry.currentChannel = VARIABLE.title;
+                                ZGame.CommandManager.OnExecuteCommand<SubGameBuildCommand>(BasicConfig.instance.curEntry, false);
+                            });
+                        }
+                    }
+
                     menu.ShowAsContext();
                 }
             }

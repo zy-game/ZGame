@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using ZGame;
 
@@ -13,6 +14,28 @@ namespace ZGame
         private static List<ICommandExecuter> recviers = new List<ICommandExecuter>();
         private static Dictionary<string, ICommandExecuter> recviersMap = new Dictionary<string, ICommandExecuter>();
 
+        public static async UniTask OnExecuteCommandAsync<T>(params object[] args) where T : ICommandExecuteAsync
+        {
+            ICommandExecuteAsync commandCommandExecuter = (ICommandExecuteAsync)recviers.Find(x => x.GetType() == typeof(T));
+            if (commandCommandExecuter is null)
+            {
+                recviers.Add(commandCommandExecuter = (ICommandExecuteAsync)Activator.CreateInstance(typeof(T)));
+            }
+
+            await commandCommandExecuter.ExecuterAsync(args);
+        }
+
+        public static async UniTask<T> OnExecuteCommandAsync<T, T2>(params object[] args) where T2 : ICommandExecuteAsync<T>
+        {
+            ICommandExecuteAsync<T> commandCommandExecuter = (ICommandExecuteAsync<T>)recviers.Find(x => x.GetType() == typeof(T));
+            if (commandCommandExecuter is null)
+            {
+                recviers.Add(commandCommandExecuter = (ICommandExecuteAsync<T>)Activator.CreateInstance(typeof(T)));
+            }
+
+            return await commandCommandExecuter.ExecuterAsync(args);
+        }
+
         /// <summary>
         /// 执行命令
         /// </summary>
@@ -20,24 +43,14 @@ namespace ZGame
         /// <param name="args"></param>
         public static void OnExecuteCommand<T>(params object[] args)
         {
-            OnExecuteCommand(typeof(T), args);
-        }
-
-        /// <summary>
-        /// 执行命令
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="args"></param>
-        public static void OnExecuteCommand(Type type, params object[] args)
-        {
-            ICommandExecuter commandCommandExecuter = recviers.Find(x => x.GetType() == type);
+            ICommandExecuter commandCommandExecuter = recviers.Find(x => x.GetType() == typeof(T));
             if (commandCommandExecuter is null)
             {
-                recviers.Add(commandCommandExecuter = (ICommandExecuter)Activator.CreateInstance(type));
+                recviers.Add(commandCommandExecuter = (ICommandExecuter)Activator.CreateInstance(typeof(T)));
             }
 
+            Debug.Log("Execute Command:" + typeof(T));
             commandCommandExecuter.Executer(args);
-            Debug.Log("Execute Command:" + type);
         }
 
         /// <summary>

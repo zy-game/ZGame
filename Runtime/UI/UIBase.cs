@@ -1,70 +1,12 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ZGame.UI
 {
-    public class CountDownHelper : IDisposable
-    {
-        private TMP_Text _text;
-        private int _count;
-        private int _interval;
-        private string _format;
-        private Action _onFinish;
-        private Coroutine _coroutine;
-
-        public CountDownHelper(TMP_Text tmpText, int count, int interval, string format, Action onFinish)
-        {
-            this._text = tmpText;
-            this._count = count;
-            this._interval = interval;
-            this._format = format;
-            this._onFinish = onFinish;
-        }
-
-        public void OnStart()
-        {
-            this._coroutine = BehaviourScriptable.instance.StartCoroutine(this.StartCountDown());
-        }
-
-        private IEnumerator StartCountDown()
-        {
-            while (this._count > 0)
-            {
-                this._count--;
-                this._text.text = string.Format(_format, this._count);
-                yield return new WaitForSeconds(this._interval);
-            }
-
-            if (this._onFinish != null)
-            {
-                this._onFinish();
-            }
-
-            this._text.text = "";
-        }
-
-        public void Dispose()
-        {
-            if (this._coroutine == null)
-            {
-                return;
-            }
-
-            BehaviourScriptable.instance.StopCoroutine(this._coroutine);
-            this._coroutine = null;
-            this._onFinish = null;
-            this._text = null;
-            this._count = 0;
-            this._interval = 0;
-            this._format = null;
-            GC.SuppressFinalize(this);
-        }
-    }
-
-
     /// <summary>
     /// UI界面
     /// </summary>
@@ -75,8 +17,7 @@ namespace ZGame.UI
         public Transform transform { get; }
         public RectTransform rect_transform { get; }
 
-        private CountDownHelper countDownHelper;
-
+        private Dictionary<object, Coroutine> _coroutines = new Dictionary<object, Coroutine>();
 
         public UIBase(GameObject gameObject)
         {
@@ -112,29 +53,75 @@ namespace ZGame.UI
         /// </summary>
         public virtual void Dispose()
         {
-            this.StopCountDown();
+            this.StopCountDown(null);
         }
 
+        /// <summary>
+        /// 启动一个倒计时
+        /// </summary>
+        /// <param name="tmp_text"></param>
+        /// <param name="count"></param>
+        /// <param name="interval"></param>
+        /// <param name="format"></param>
+        /// <param name="onFinish"></param>
         public void StartCountDown(TMP_Text tmp_text, int count, int interval, string format, Action onFinish)
         {
-            this.countDownHelper = new CountDownHelper(tmp_text, count, interval, format, onFinish);
-            this.countDownHelper.OnStart();
+            if (tmp_text == null)
+            {
+                return;
+            }
+
+            StopCountDown(tmp_text);
+            _coroutines.Add(tmp_text, this.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
         }
 
-        public void StopCountDown()
+        private IEnumerator OnStartCountDown(TMP_Text tmp_text, int count, int interval, string format, Action onFinish)
         {
-            if (this.countDownHelper != null)
+            while (count > 0)
             {
-                this.countDownHelper.Dispose();
-                this.countDownHelper = null;
+                tmp_text.text = string.Format(format, count);
+                yield return new WaitForSeconds(interval);
+                count--;
+            }
+
+            if (onFinish != null)
+            {
+                onFinish();
             }
         }
 
+        /// <summary>
+        /// 停止倒计时
+        /// </summary>
+        /// <param name="target"></param>
+        public void StopCountDown(object target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            if (_coroutines.TryGetValue(target, out Coroutine coroutine))
+            {
+                StopCoroutine(coroutine);
+                _coroutines.Remove(target);
+            }
+        }
+
+        /// <summary>
+        /// 开启一个协程
+        /// </summary>
+        /// <param name="enumerator"></param>
+        /// <returns></returns>
         public Coroutine StartCoroutine(IEnumerator enumerator)
         {
             return BehaviourScriptable.instance.StartCoroutine(enumerator);
         }
 
+        /// <summary>
+        /// 停止协程
+        /// </summary>
+        /// <param name="coroutine"></param>
         public void StopCoroutine(Coroutine coroutine)
         {
             BehaviourScriptable.instance.StopCoroutine(coroutine);

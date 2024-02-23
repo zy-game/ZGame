@@ -24,7 +24,7 @@ namespace ZGame.Networking
 
         protected override void OnAwake()
         {
-            BehaviourScriptable.instance.SetupOnDestroy(Clear);
+            BehaviourScriptable.instance.SetupGameObjectDestroyEvent(Clear);
         }
 
         public void Clear()

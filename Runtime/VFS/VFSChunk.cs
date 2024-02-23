@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace ZGame.FileSystem
 {
+    /// <summary>
+    /// 文件数据块
+    /// </summary>
     public class VFSChunk
     {
         /// <summary>
@@ -59,12 +62,11 @@ namespace ZGame.FileSystem
             this.length = length;
         }
 
-        public void Use(string name, int useLenght, int sort, long time, uint version)
+        public void Use(string name, int useLenght, int sort, uint version)
         {
             this.name = name;
             this.fileLenght = useLenght;
             this.sort = sort;
-            this.time = time;
             this.version = version;
             this.use = true;
         }
@@ -72,7 +74,6 @@ namespace ZGame.FileSystem
         public void Free()
         {
             sort = 0;
-            time = 0;
             use = false;
             fileLenght = 0;
             name = String.Empty;

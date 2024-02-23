@@ -53,13 +53,13 @@ namespace ZGame.Editor.PSD2GUI
                         continue;
                     }
 
+                    Debug.Log(VARIABLE2.name);
                     if (UIBindRulerConfig.instance.TryGetRuler(VARIABLE2.name, out var rule) is false)
                     {
                         continue;
                     }
 
                     GenericInitializedCode(VARIABLE, rule);
-
                     switch (rule.TypeName)
                     {
                         case "Button":
@@ -97,9 +97,6 @@ namespace ZGame.Editor.PSD2GUI
                             GenericUISwitcherComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
                         case "UIToolbar":
-                            break;
-                        case "UIPopMsg":
-                            GenericPopMsgComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
                         case "UIBind":
                             GenericTempleteComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
@@ -166,38 +163,6 @@ namespace ZGame.Editor.PSD2GUI
 
             UIBindGeneric generic = new UIBindGeneric(bindData);
             templeteList.Add(generic.GetTempleteCode());
-        }
-
-        private void GenericPopMsgComponent(UIBindData variable, string fieldName)
-        {
-            AddField($"\t\tprivate UnityEvent<object> _event_{fieldName}_completion;");
-            AddInit($"\t\t\t_event_{fieldName}_completion = new UnityEvent<object>();");
-            AddField($"\t\tprivate UnityEvent<object> _event_{fieldName}_play;");
-            AddInit($"\t\t\t_event_{fieldName}_play = new UnityEvent<object>();");
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Complete(UnityAction<object> callback)");
-            AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_completion.AddListener(callback);");
-            AddSetup("\t\t}");
-
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Play(UnityAction<object> callback)");
-            AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_completion.AddListener(callback);");
-            AddSetup("\t\t}");
-
-            AddEvent($"\t\t\t{fieldName}?.onCompletion.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onCompletion.AddListener(on_Handle_popmsg_{variable.name}_Complete);");
-            AddEvent($"\t\t\t{fieldName}?.onShowPopMsg.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onShowPopMsg.AddListener(on_Handle_popmsg_{variable.name}_Play);");
-            AddCallback($"\t\tprotected virtual void on_Handle_PopMsg_{variable.name}_Play(object obj)");
-            AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_play.Invoke(obj);");
-            AddCallback("\t\t}");
-            AddCallback("");
-            AddCallback($"\t\tprotected virtual void on_Handle_PopMsg_{variable.name}_Complete(object obj)");
-            AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_completion.Invoke(obj);");
-            AddCallback("\t\t}");
-            AddCallback("");
         }
 
         private void GenericUISwitcherComponent(UIBindData variable, string fieldName)
