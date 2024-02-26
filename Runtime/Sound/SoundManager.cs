@@ -17,52 +17,6 @@ namespace ZGame.Sound
         Complete,
     }
 
-    public interface IRecordAudioHandle : IDisposable
-    {
-        void StartRecord();
-        void StopRecord();
-        void Recording(byte[] bytes);
-
-
-        public static IRecordAudioHandle OnCreate(Action<byte[]> callback)
-        {
-            return new Default(callback);
-        }
-
-        class Default : IRecordAudioHandle
-        {
-            private Action<byte[]> callback;
-
-            public Default(Action<byte[]> callback)
-            {
-                this.callback = callback;
-            }
-
-            public void Dispose()
-            {
-                callback = null;
-            }
-
-            public void StartRecord()
-            {
-            }
-
-            public void StopRecord()
-            {
-            }
-
-            public void Recording(byte[] bytes)
-            {
-                if (callback is null)
-                {
-                    return;
-                }
-
-                callback(bytes);
-            }
-        }
-    }
-
     /// <summary>
     /// 音效管理器
     /// </summary>
@@ -271,6 +225,17 @@ namespace ZGame.Sound
         }
 
         /// <summary>
+        /// 暂停所有播放
+        /// </summary>
+        public void PauseAll()
+        {
+            foreach (SoundPlayer soundPlayer in _handles)
+            {
+                soundPlayer.Pause();
+            }
+        }
+
+        /// <summary>
         /// 停止指定的播放器
         /// </summary>
         /// <param name="clipName"></param>
@@ -440,22 +405,6 @@ namespace ZGame.Sound
                 }
             }
         }
-
-
-        // /// <summary>
-        // /// 开始录音
-        // /// </summary>
-        // public void StartRecordingSound(int timeout, Action<AudioClip> callback)
-        // {
-        //     this.isHeader = true;
-        //     this._isRecording = true;
-        //     this._limit_time = timeout;
-        //     this._recordStartTime = Time.realtimeSinceStartup;
-        //     this.records = IRecordAudioHandle.OnCreate(callback);
-        //     this._recordClip = Microphone.Start(_divName, timeout <= 0, Math.Max(1, _limit_time), _rate);
-        //     this._position = Microphone.GetPosition(_divName);
-        //     Debug.Log("Start Recording:" + _divName + " :" + Microphone.IsRecording(_divName));
-        // }
 
         /// <summary>
         /// 开始录音

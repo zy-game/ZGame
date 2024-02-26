@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEngine;
 
 namespace ZGame.Editor
 {
@@ -9,10 +10,9 @@ namespace ZGame.Editor
 
         public override void OnGUI()
         {
-            EditorGUI.BeginChangeCheck();
             BasicConfig.instance.vfsConfig.chunkSize = EditorGUILayout.IntField("分片大小", BasicConfig.instance.vfsConfig.chunkSize);
             BasicConfig.instance.vfsConfig.chunkCount = EditorGUILayout.IntField("单个文件最大分片数", BasicConfig.instance.vfsConfig.chunkCount);
-            if (EditorGUI.EndChangeCheck())
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
             {
                 BasicConfig.OnSave();
             }

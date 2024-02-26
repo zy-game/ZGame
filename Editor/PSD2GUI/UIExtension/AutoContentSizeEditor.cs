@@ -34,8 +34,6 @@ namespace ZGame.Editor.PSD2GUI
                 _content.targets = new();
             }
 
-            EditorGUI.BeginChangeCheck();
-
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
             {
@@ -90,9 +88,11 @@ namespace ZGame.Editor.PSD2GUI
             _content.maxSize = EditorGUILayout.Vector2Field("Max Size", _content.maxSize);
             EditorGUI.EndDisabledGroup();
             _content.Refresh();
-            if (EditorGUI.EndChangeCheck())
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
             {
                 EditorUtility.SetDirty(_content);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
         }
     }

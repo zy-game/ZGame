@@ -6,9 +6,29 @@ namespace ZGame.Data
     /// <summary>
     /// 运行时游戏数据
     /// </summary>
-    public class RuntimeDatable : Singleton<RuntimeDatable>
+    public class RuntimeDatableManager : Singleton<RuntimeDatableManager>
     {
         private Dictionary<string, object> map = new();
+
+        /// <summary>
+        /// 是否存在数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public bool HasKey<T>()
+        {
+            return HasKey(typeof(T).FullName);
+        }
+
+        /// <summary>
+        /// 是否存在数据
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool HasKey(string key)
+        {
+            return map.ContainsKey(key);
+        }
 
         /// <summary>
         /// 获取数据

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Serialization;
 using ZGame.Config;
@@ -122,7 +123,8 @@ namespace ZGame
 
 
 #if UNITY_EDITOR
-        [NonSerialized] public bool isOn;
+        [NonSerialized] public bool isShowChannels;
+        [NonSerialized] public bool isShowReferences;
         [NonSerialized] public UnityEditorInternal.AssemblyDefinitionAsset assembly;
         [NonSerialized] public List<UnityEditorInternal.AssemblyDefinitionAsset> referenceAssemblyList;
 #endif
@@ -163,7 +165,7 @@ namespace ZGame
         public int chunkCount = 1024;
     }
 
-    [ResourceReference("Resources/Config/GlobalConfig.asset")]
+    [ResourceReference("Resources/BasicConfig.asset")]
     public sealed class BasicConfig : SingletonScriptableObject<BasicConfig>
     {
         /// <summary>
@@ -199,14 +201,6 @@ namespace ZGame
         public LanguageDefine language = LanguageDefine.English;
 
         /// <summary>
-        /// 当前游戏入口配置
-        /// </summary>
-        public EntryConfig curEntry
-        {
-            get { return entries.Find(x => x.title == curEntryName); }
-        }
-
-        /// <summary>
         /// 当前游戏地址
         /// </summary>
         public IPConfig curAddress
@@ -217,7 +211,7 @@ namespace ZGame
         /// <summary>
         /// 游戏入口列表
         /// </summary>
-        public List<EntryConfig> entries;
+        public EntryConfig curEntry;
 
         /// <summary>
         /// 地址列表
@@ -228,6 +222,25 @@ namespace ZGame
         public override void OnAwake()
         {
             vfsConfig ??= new VFSConfig();
+            if (address is null || address.Count == 0)
+            {
+                address = new List<IPConfig>();
+            }
+
+            if (curEntry.referenceAssemblyList is null)
+            {
+                curEntry.referenceAssemblyList = new List<AssemblyDefinitionAsset>();
+            }
+
+            if (curEntry.channels is null)
+            {
+                curEntry.channels = new List<ChannelPackageOptions>();
+            }
+
+            if (curEntry.references is null)
+            {
+                curEntry.references = new List<string>();
+            }
         }
 
         /// <summary>

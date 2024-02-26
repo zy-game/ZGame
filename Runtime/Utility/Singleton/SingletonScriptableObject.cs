@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
@@ -19,18 +20,85 @@ namespace ZGame
                     return _instance;
                 }
 
-                ResourceReference reference = typeof(T).GetCustomAttribute<ResourceReference>();
-                if (reference == null)
+                Load();
+                if (_instance == null)
                 {
-                    _instance = CreateInstance<T>();
-                }
-                else
-                {
-                    OnLoad(reference.path);
+                    Create();
                 }
 
                 _instance?.OnAwake();
                 return _instance;
+            }
+        }
+
+        private static void Create()
+        {
+            ResourceReference resourceReference = typeof(T).GetCustomAttribute<ResourceReference>();
+            if (resourceReference is null)
+            {
+                return;
+            }
+#if UNITY_EDITOR
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
+            _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(resourceReference.path);
+            if (_instance != null || Application.isPlaying)
+            {
+                return;
+            }
+
+            if (resourceReference.path.StartsWith("Assets") is false)
+            {
+                resourceReference.path = "Assets/" + resourceReference.path;
+            }
+
+            string folder = Path.GetDirectoryName(resourceReference.path);
+            if (Directory.Exists(folder) is false)
+            {
+                Directory.CreateDirectory(folder);
+            }
+
+            _instance = CreateInstance<T>();
+            UnityEditor.AssetDatabase.CreateAsset(_instance, resourceReference.path);
+            UnityEditor.EditorUtility.SetDirty(_instance);
+            UnityEditor.AssetDatabase.SaveAssets();
+            UnityEditor.AssetDatabase.Refresh();
+#endif
+        }
+
+        private static void Load()
+        {
+            ResourceReference resourceReference = typeof(T).GetCustomAttribute<ResourceReference>();
+            if (resourceReference is null)
+            {
+                return;
+            }
+
+            if (resourceReference.path.StartsWith("Resources"))
+            {
+                string path = resourceReference.path.Substring(resourceReference.path.IndexOf("/") + 1);
+                path = path.Substring(0, path.LastIndexOf("."));
+                _instance = Resources.Load<T>(path);
+                return;
+            }
+#if UNITY_EDITOR
+            if (Application.isPlaying is false)
+            {
+                _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(resourceReference.path);
+                return;
+            }
+#endif
+            using (ResObject resObject = ResourceManager.instance.LoadAsset(resourceReference.path))
+            {
+                if (resObject is null || resObject.IsSuccess() is false)
+                {
+                    return;
+                }
+
+                _instance = resObject.GetAsset<T>();
             }
         }
 
@@ -56,54 +124,6 @@ namespace ZGame
             }
 
             _instance.OnSaved();
-        }
-
-        public static void OnLoad(string path)
-        {
-            if (path.StartsWith("Resources"))
-            {
-                path = path.Substring(path.IndexOf("/") + 1);
-                path = path.Substring(0, path.LastIndexOf("."));
-                _instance = Resources.Load<T>(path);
-                return;
-            }
-#if UNITY_EDITOR
-            if (BasicConfig.instance.resMode == ResourceMode.Editor || Application.isPlaying is false)
-            {
-                _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(path);
-                if (_instance != null || Application.isPlaying)
-                {
-                    return;
-                }
-
-                if (path.StartsWith("Assets") is false)
-                {
-                    path = "Assets/" + path;
-                }
-
-                string folder = Path.GetDirectoryName(path);
-                if (Directory.Exists(folder) is false)
-                {
-                    Directory.CreateDirectory(folder);
-                }
-
-                _instance = CreateInstance<T>();
-                UnityEditor.AssetDatabase.CreateAsset(_instance, path);
-                UnityEditor.EditorUtility.SetDirty(_instance);
-                UnityEditor.AssetDatabase.SaveAssets();
-                UnityEditor.AssetDatabase.Refresh();
-                return;
-            }
-#endif
-            using (ResObject resObject = ResourceManager.instance.LoadAsset(path))
-            {
-                if (resObject is null || resObject.IsSuccess() is false)
-                {
-                    return;
-                }
-
-                _instance = resObject.GetAsset<T>();
-            }
         }
     }
 }

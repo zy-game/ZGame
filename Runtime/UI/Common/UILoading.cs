@@ -77,7 +77,7 @@ namespace ZGame.UI
                 return _instance;
             }
 
-            string resPath = $"Resources/{BasicConfig.instance.curEntry.entryName}/Loading";
+            string resPath = $"Resources/Loading";
             return _instance = UIManager.instance.Open<UILoading>(resPath);
         }
 

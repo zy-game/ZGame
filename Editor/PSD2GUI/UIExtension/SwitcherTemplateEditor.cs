@@ -17,7 +17,6 @@ namespace ZGame.Editor.PSD2GUI
 
         public override void OnInspectorGUI()
         {
-            EditorGUI.BeginChangeCheck();
             template.type = (SwitchType2)EditorGUILayout.EnumPopup("Type", template.type);
             switch (template.type)
             {
@@ -64,9 +63,12 @@ namespace ZGame.Editor.PSD2GUI
                     break;
             }
 
-            if (EditorGUI.EndChangeCheck())
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
             {
                 EditorUtility.SetDirty(template);
+                serializedObject.ApplyModifiedProperties();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
         }
     }

@@ -50,7 +50,7 @@ namespace ZGame.Editor.ExcelExprot
 
             options = exporter.options[index];
             GUILayout.BeginVertical();
-            EditorGUI.BeginChangeCheck();
+            
             options.nameSpace = EditorGUILayout.TextField("命名空间", options.nameSpace);
             options.headerRow = EditorGUILayout.IntField("表头行", options.headerRow);
             options.typeRow = EditorGUILayout.IntField("字段类型行", options.typeRow);
@@ -61,11 +61,6 @@ namespace ZGame.Editor.ExcelExprot
             if (options.type == ExportType.Csharp)
             {
                 options.code = (UnityEngine.Object)EditorGUILayout.ObjectField("代码保存路径", options.code, typeof(UnityEngine.Object), false);
-            }
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                ExcelExportList.OnSave();
             }
 
             if (GUILayout.Button("Generic"))
@@ -144,6 +139,10 @@ namespace ZGame.Editor.ExcelExprot
             }
 
             GUILayout.EndVertical();
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
+            {
+                ExcelExportList.OnSave();
+            }
         }
     }
 }

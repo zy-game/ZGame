@@ -173,8 +173,11 @@ namespace ZGame.Editor.ExcelExprot
             sb.AppendLine("using ZGame.Config;");
             sb.AppendLine($"namespace {exportSet.nameSpace}");
             sb.AppendLine("{");
-            sb.AppendLine($"\tpublic class {itemTypeName}");
+
+            sb.AppendLine($"\tpublic sealed class {assetTypeName} : Singleton<{assetTypeName}>, IQuery<{assetTypeName}.{itemTypeName}>");
             sb.AppendLine("\t{");
+            sb.AppendLine($"\t\tpublic class {itemTypeName}");
+            sb.AppendLine("\t\t{");
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
                 string name = header.ItemArray[i].ToString();
@@ -183,12 +186,10 @@ namespace ZGame.Editor.ExcelExprot
                     continue;
                 }
 
-                sb.AppendLine($"\t\tpublic {GetDataType(typeRow[i].ToString())} {header[i]} {{ get; set; }}");
+                sb.AppendLine($"\t\t\tpublic {GetDataType(typeRow[i].ToString())} {header[i]} {{ get; set; }}");
             }
 
-            sb.AppendLine("\t}");
-            sb.AppendLine($"\tpublic sealed class {assetTypeName} : Singleton<{assetTypeName}>, IQuery<{itemTypeName}>");
-            sb.AppendLine("\t{");
+            sb.AppendLine("\t\t}");
             sb.AppendLine($"\t\tpublic {itemTypeName} this[int index]");
             sb.AppendLine($"\t\t{{");
             sb.AppendLine($"\t\t\tget => cfgList[index];");

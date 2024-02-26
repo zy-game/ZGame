@@ -23,6 +23,18 @@ namespace ZGame
             }
         }
 
+        public static void SetActive(bool state, params GameObject[] gameObjects)
+        {
+            if (state)
+            {
+                Active(gameObjects);
+            }
+            else
+            {
+                Inactive(gameObjects);
+            }
+        }
+
         public static void OnListenDestroyEvent(this GameObject gameObject, UnityAction action)
         {
             if (gameObject == null)

@@ -17,7 +17,6 @@ namespace ZGame.Editor.PSD2GUI
 
         public override void OnInspectorGUI()
         {
-            EditorGUI.BeginChangeCheck();
             SerializedProperty limitTime = serializedObject.FindProperty("limitTime");
             EditorGUILayout.PropertyField(limitTime);
 
@@ -44,7 +43,7 @@ namespace ZGame.Editor.PSD2GUI
                 EditorGUILayout.PropertyField(onCancel);
             }
 
-            if (EditorGUI.EndChangeCheck())
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
             {
                 serializedObject.ApplyModifiedProperties();
                 EditorUtility.SetDirty(template);

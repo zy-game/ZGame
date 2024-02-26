@@ -22,9 +22,6 @@ namespace ZGame.Editor.ResBuild
 
         public override void OnGUI()
         {
-            EditorGUI.BeginChangeCheck();
-
-
             GUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField("Package List", EditorStyles.boldLabel);
             GUILayout.Space(5);
@@ -63,7 +60,7 @@ namespace ZGame.Editor.ResBuild
                 EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
             }
 
-            if (EditorGUI.EndChangeCheck())
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
             {
                 BuilderConfig.OnSave();
             }

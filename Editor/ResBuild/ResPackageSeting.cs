@@ -114,7 +114,6 @@ namespace ZGame.Editor.ResBuild
 
         private void DrawingRuleInfo(PackageSeting package)
         {
-            EditorGUI.BeginChangeCheck();
             package.name = EditorGUILayout.TextField("规则名称", package.name);
             package.describe = EditorGUILayout.TextField("描述", package.describe);
             if (package.service == null || package.service.items == null || package.service.Count == 0)
@@ -148,10 +147,7 @@ namespace ZGame.Editor.ResBuild
             }
 
             GUILayout.EndHorizontal();
-            if (EditorGUI.EndChangeCheck())
-            {
-                BuilderConfig.OnSave();
-            }
+
 
             if (package.items == null)
             {
@@ -176,18 +172,17 @@ namespace ZGame.Editor.ResBuild
             // GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
             for (int i = 0; i < package.items.Count; i++)
             {
-                EditorGUI.BeginChangeCheck();
                 OnDrawingRuleItem(package.items[i], package);
                 GUILayout.Space(5);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    OnEnable();
-                    BuilderConfig.OnSave();
-                }
             }
 
             // GUILayout.EndVertical();
             GUILayout.EndVertical();
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
+            {
+                OnEnable();
+                BuilderConfig.OnSave();
+            }
         }
 
         private void OnDrawingRuleItem(RulerData rulerData, PackageSeting package)

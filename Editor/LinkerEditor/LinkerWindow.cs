@@ -65,6 +65,10 @@ namespace ZGame.Editor.LinkerEditor
             {
                 DrawingLinker(LinkerConfig.instance.assemblies[i]);
             }
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
+            {
+                LinkerConfig.OnSave();
+            }
         }
 
         private void DrawingLinker(Linker linker)
@@ -84,12 +88,9 @@ namespace ZGame.Editor.LinkerEditor
                     foreach (LinkClass linkClass in linkerNameSpace.classes)
                     {
                         GUILayout.BeginHorizontal(EditorStyles.helpBox);
-                        EditorGUI.BeginChangeCheck();
+
                         linkClass.isOn = GUILayout.Toggle(linkClass.isOn, $"{linkClass.nameSpace}.{linkClass.name}");
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            LinkerConfig.OnSave();
-                        }
+  
 
                         GUILayout.FlexibleSpace();
                         GUILayout.EndHorizontal();

@@ -49,7 +49,7 @@ namespace ZGame.Editor.ResBuild
             {
                 GUILayout.BeginVertical("", EditorStyles.helpBox);
                 GUILayout.Space(20);
-                EditorGUI.BeginChangeCheck();
+
                 BuilderConfig.instance.comperss = (BuildAssetBundleOptions)EditorGUILayout.EnumPopup("压缩方式", BuilderConfig.instance.comperss);
                 BuilderConfig.instance.useActiveTarget = EditorGUILayout.Toggle("是否跟随激活平台", BuilderConfig.instance.useActiveTarget);
                 EditorGUI.BeginDisabledGroup(BuilderConfig.instance.useActiveTarget);
@@ -57,11 +57,6 @@ namespace ZGame.Editor.ResBuild
                 EditorGUI.EndDisabledGroup();
                 BuilderConfig.instance.fileExtension = EditorGUILayout.TextField("文件扩展名", BuilderConfig.instance.fileExtension);
                 GUILayout.EndVertical();
-                if (EditorGUI.EndChangeCheck())
-                {
-                    BuilderConfig.OnSave();
-                    OSSConfig.OnSave();
-                }
             }
 
             if (resIsOn = OnBeginHeader("资源服配置", resIsOn, OSSConfig.instance.ossList))
@@ -85,6 +80,12 @@ namespace ZGame.Editor.ResBuild
 
                 GUILayout.EndVertical();
             }
+
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
+            {
+                BuilderConfig.OnSave();
+                OSSConfig.OnSave();
+            }
         }
 
         // public string title;
@@ -98,12 +99,11 @@ namespace ZGame.Editor.ResBuild
         // public string password;
         private void DrawingOptionsItem(OSSOptions options)
         {
-            EditorGUI.BeginChangeCheck();
             options.title = EditorGUILayout.TextField("名称", options.title);
             options.type = (OSSType)EditorGUILayout.EnumPopup("类型", options.type);
             if (options.type == OSSType.Streaming)
             {
-                if (EditorGUI.EndChangeCheck())
+                if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
                 {
                     BuilderConfig.OnSave();
                     OSSConfig.OnSave();
@@ -116,7 +116,7 @@ namespace ZGame.Editor.ResBuild
             options.bucket = EditorGUILayout.TextField("Bucket", options.bucket);
             options.key = EditorGUILayout.TextField("SecretId", options.key);
             options.password = EditorGUILayout.TextField("SecretKey", options.password);
-            if (EditorGUI.EndChangeCheck())
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
             {
                 BuilderConfig.OnSave();
                 OSSConfig.OnSave();

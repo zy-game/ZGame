@@ -42,7 +42,6 @@ namespace ZGame.Editor.PSD2GUI
 
         public override void OnGUI()
         {
-            EditorGUI.BeginChangeCheck();
             nameSpaceFoldout = OnBeginHeader("Refrence NameSpace", nameSpaceFoldout, 2);
             if (nameSpaceFoldout)
             {
@@ -95,7 +94,7 @@ namespace ZGame.Editor.PSD2GUI
                 }
             }
 
-            if (EditorGUI.EndChangeCheck())
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
             {
                 UIBindRulerConfig.OnSave();
                 ToolsWindow.Refresh();

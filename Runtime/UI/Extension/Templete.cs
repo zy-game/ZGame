@@ -29,6 +29,7 @@ namespace ZGame.UI
             GameObject temp = GameObject.Instantiate(this.gameObject);
             temp.transform.parent = this.gameObject.transform.parent;
             T templete = (T)Activator.CreateInstance(typeof(T), new object[] { temp });
+            templete.Awake();
             templete.Enable(args);
             return templete;
         }

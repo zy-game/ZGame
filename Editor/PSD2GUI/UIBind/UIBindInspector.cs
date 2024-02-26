@@ -68,7 +68,7 @@ namespace ZGame.Editor.PSD2GUI
                 setting.options = new List<UIBindData>();
             }
 
-            GUILayout.BeginVertical(EditorStyles.helpBox);
+            Rect dropRect = EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             GUILayout.BeginHorizontal();
             {
@@ -160,12 +160,37 @@ namespace ZGame.Editor.PSD2GUI
                 GUILayout.EndVertical();
             }
 
+            if (Event.current.type == EventType.DragUpdated && dropRect.Contains(Event.current.mousePosition))
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+            }
+
+            if (Event.current.type == EventType.DragPerform && dropRect.Contains(Event.current.mousePosition))
+            {
+                DragAndDrop.AcceptDrag();
+                foreach (UnityEngine.Object obj in DragAndDrop.objectReferences)
+                {
+                    if (obj is GameObject gameObject)
+                    {
+                        if (GetPath(gameObject.transform, out string path))
+                        {
+                            AddGameObject(gameObject, path);
+                        }
+                    }
+                }
+
+                EditorUtility.SetDirty(setting);
+                AssetDatabase.SaveAssets();
+            }
+
             if (EditorGUI.EndChangeCheck())
             {
                 EditorUtility.SetDirty(setting);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
 
-            GUILayout.EndVertical();
+            EditorGUILayout.EndVertical();
         }
 
         private bool GetPath(Transform _transform, out string path)
@@ -207,23 +232,28 @@ namespace ZGame.Editor.PSD2GUI
                     continue;
                 }
 
-                UIBindData data = new UIBindData();
-                data.target = VARIABLE.gameObject;
-                data.name = VARIABLE.name;
-                data.path = path;
-                data.selector = new Selector();
-                data.selector.Add(VARIABLE.GetComponents(typeof(Component)).Select(x => x.GetType().FullName).ToArray());
-                data.selector.items.ForEach(x =>
-                {
-                    if (UIBindRulerConfig.instance.TryGetRuler(x.name, out var rulerItem) is false)
-                    {
-                        return;
-                    }
-
-                    x.isOn = VARIABLE.name.StartsWith(rulerItem.prefix);
-                });
-                setting.options.Add(data);
+                AddGameObject(VARIABLE.gameObject, path);
             }
+        }
+
+        private void AddGameObject(GameObject gameObject, string path)
+        {
+            UIBindData data = new UIBindData();
+            data.target = gameObject;
+            data.name = gameObject.name;
+            data.path = path;
+            data.selector = new Selector();
+            data.selector.Add(gameObject.GetComponents(typeof(Component)).Select(x => x.GetType().FullName).ToArray());
+            data.selector.items.ForEach(x =>
+            {
+                if (UIBindRulerConfig.instance.TryGetRuler(x.name, out var rulerItem) is false)
+                {
+                    return;
+                }
+
+                x.isOn = gameObject.name.StartsWith(rulerItem.prefix);
+            });
+            setting.options.Add(data);
         }
 
         private void OnDrawingBindItemData(UIBindData options)

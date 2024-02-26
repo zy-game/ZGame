@@ -88,7 +88,7 @@ namespace ZGame.Editor.PSD2GUI
                     new() { nameSpace = "TMPro", isDefault = true },
                     new() { nameSpace = "System", isDefault = true },
                     new() { nameSpace = "ZGame", isDefault = true },
-                    new() { nameSpace = "ZGame.Window", isDefault = true },
+                    new() { nameSpace = "ZGame.UI", isDefault = true },
                     new() { nameSpace = "ZGame.Config", isDefault = true },
                     new() { nameSpace = "ZGame.Resource", isDefault = true },
                 };

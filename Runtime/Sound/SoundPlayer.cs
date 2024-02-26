@@ -97,7 +97,9 @@ namespace ZGame.Sound
         public void Stop()
         {
             _source.Stop();
+            _source.clip = null;
             callback?.Invoke(PlayState.Complete);
+            resObject = null;
         }
 
         public void Resume()

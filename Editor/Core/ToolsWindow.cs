@@ -27,6 +27,12 @@ namespace ZGame.Editor
             _docker = null;
         }
 
+        public override void SaveChanges()
+        {
+            base.SaveChanges();
+            Debug.Log("=====================");
+        }
+
         private void OnGUI()
         {
             if (current == null)

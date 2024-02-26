@@ -26,38 +26,57 @@ namespace ZGame.Editor
 
         public override void OnGUI()
         {
+            OnShowBasicConfigDrawing();
+            OnShowGameConfigDrawing();
+            OnShowAddressConfigDrawing();
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
+            {
+                OSSConfig.OnSave();
+                BasicConfig.OnSave();
+            }
+        }
+
+        private void OnShowBasicConfigDrawing()
+        {
             int last = 0;
             int curIndex = 0;
-            EditorGUI.BeginChangeCheck();
+
             BasicConfig.instance.companyName = EditorGUILayout.TextField("公司名称", BasicConfig.instance.companyName);
+            BasicConfig.instance.language = (LanguageDefine)EditorGUILayout.EnumPopup("默认语言", BasicConfig.instance.language);
+            NativeLeakDetection.Mode = (NativeLeakDetectionMode)EditorGUILayout.EnumPopup("Enable Stack Trace", NativeLeakDetection.Mode);
             GUILayout.BeginHorizontal();
-            last = BasicConfig.instance.entries.FindIndex(x => x.title == BasicConfig.instance.curEntryName);
-            curIndex = EditorGUILayout.Popup("模块入口", last, BasicConfig.instance.entries.Select(x => x.title).ToArray());
-
-            if (curIndex >= 0 && curIndex < BasicConfig.instance.entries.Count && last != curIndex)
+            last = BasicConfig.instance.address.FindIndex(x => x.title == BasicConfig.instance.curAddressName);
+            curIndex = EditorGUILayout.Popup("服务器地址", last, BasicConfig.instance.address.Select(x => x.title).ToArray());
+            GUILayout.EndHorizontal();
+            if (curIndex >= 0 && curIndex < BasicConfig.instance.address.Count && last != curIndex)
             {
-                BasicConfig.instance.curEntryName = BasicConfig.instance.entries[curIndex].title;
-                List<AssemblyDefinitionAsset> hotfixAssemblies = new List<AssemblyDefinitionAsset>();
-                if (BasicConfig.instance.curEntry.mode == CodeMode.Hotfix)
-                {
-                    if (BasicConfig.instance.curEntry.path.IsNullOrEmpty() is false && BasicConfig.instance.curEntry.assembly == null)
-                    {
-                        BasicConfig.instance.curEntry.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(BasicConfig.instance.curEntry.path);
-                    }
-
-                    hotfixAssemblies.Add(BasicConfig.instance.curEntry.assembly);
-                }
-
-                HybridCLRSettings.Instance.hotUpdateAssemblyDefinitions = hotfixAssemblies.ToArray();
-                HybridCLRSettings.Instance.enable = hotfixAssemblies.Count > 0;
-                HybridCLRSettings.Save();
+                BasicConfig.instance.curAddressName = BasicConfig.instance.address[curIndex].title;
             }
 
+            GUILayout.BeginHorizontal();
+            BasicConfig.instance.resMode = (ResourceMode)EditorGUILayout.EnumPopup("资源模式", BasicConfig.instance.resMode);
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
             {
-                ToolsWindow.SwitchScene<GameWindow>();
+                ToolsWindow.SwitchScene<ResSetting>();
             }
 
+            GUILayout.EndHorizontal();
+            BasicConfig.instance.resTimeout = EditorGUILayout.Slider("包检查间隔时间", BasicConfig.instance.resTimeout, 10, byte.MaxValue);
+            last = OSSConfig.instance.ossList.FindIndex(x => x.title == OSSConfig.instance.seletion);
+            curIndex = EditorGUILayout.Popup("资源服务器地址", last, OSSConfig.instance.ossList.Select(x => x.title).ToArray());
+
+            if (curIndex >= 0 && curIndex < OSSConfig.instance.ossList.Count && last != curIndex)
+            {
+                OSSConfig.instance.seletion = OSSConfig.instance.ossList[curIndex].title;
+                OSSConfig.OnSave();
+            }
+        }
+
+        private void OnShowGameConfigDrawing()
+        {
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
             if (BasicConfig.instance.curEntry is not null && BasicConfig.instance.curEntry.mode == CodeMode.Hotfix)
             {
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
@@ -82,46 +101,159 @@ namespace ZGame.Editor
             }
 
             GUILayout.EndHorizontal();
-            BasicConfig.instance.language = (LanguageDefine)EditorGUILayout.EnumPopup("默认语言", BasicConfig.instance.language);
-            NativeLeakDetection.Mode = (NativeLeakDetectionMode)EditorGUILayout.EnumPopup("Enable Stack Trace", NativeLeakDetection.Mode);
-            GUILayout.BeginHorizontal();
-            last = BasicConfig.instance.address.FindIndex(x => x.title == BasicConfig.instance.curAddressName);
-            curIndex = EditorGUILayout.Popup("服务器地址", last, BasicConfig.instance.address.Select(x => x.title).ToArray());
-            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
+            BasicConfig.instance.curEntry.title = EditorGUILayout.TextField("游戏名", BasicConfig.instance.curEntry.title);
+            if (BasicConfig.instance.curEntry.path.IsNullOrEmpty() is false && BasicConfig.instance.curEntry.assembly == null)
             {
-                ToolsWindow.SwitchScene<AddressWindow>();
+                BasicConfig.instance.curEntry.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(BasicConfig.instance.curEntry.path);
+            }
+
+            BasicConfig.instance.curEntry.version = EditorGUILayout.TextField("版本", BasicConfig.instance.curEntry.version);
+            var mode = (CodeMode)EditorGUILayout.EnumPopup("模式", BasicConfig.instance.curEntry.mode);
+            if (mode != BasicConfig.instance.curEntry.mode)
+            {
+                BasicConfig.instance.curEntry.mode = mode;
+                List<AssemblyDefinitionAsset> hotfixAssemblies = new List<AssemblyDefinitionAsset>();
+                if (BasicConfig.instance.curEntry.mode == CodeMode.Hotfix)
+                {
+                    if (BasicConfig.instance.curEntry.path.IsNullOrEmpty() is false && BasicConfig.instance.curEntry.assembly == null)
+                    {
+                        BasicConfig.instance.curEntry.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(BasicConfig.instance.curEntry.path);
+                    }
+
+                    hotfixAssemblies.Add(BasicConfig.instance.curEntry.assembly);
+                }
+
+                HybridCLRSettings.Instance.hotUpdateAssemblyDefinitions = hotfixAssemblies.ToArray();
+                HybridCLRSettings.Instance.enable = hotfixAssemblies.Count > 0;
+                HybridCLRSettings.Save();
+            }
+
+            var resList = BuilderConfig.instance.packages.Select(x => x.name).ToList();
+            int last = resList.FindIndex(x => x == BasicConfig.instance.curEntry.module);
+            int curIndex = EditorGUILayout.Popup("资源包", last, resList.ToArray());
+            if (curIndex >= 0 && curIndex < resList.Count)
+            {
+                BasicConfig.instance.curEntry.module = resList[curIndex];
+            }
+
+            BasicConfig.instance.curEntry.assembly = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Assembly", BasicConfig.instance.curEntry.assembly, typeof(AssemblyDefinitionAsset), false);
+            GUILayout.BeginHorizontal();
+            resList = BasicConfig.instance.curEntry.channels?.Select(x => x.title).ToList();
+            last = resList.FindIndex(x => x == BasicConfig.instance.curEntry.currentChannel);
+            curIndex = EditorGUILayout.Popup("当前渠道", last, resList.ToArray());
+            if (curIndex >= 0 && curIndex < resList.Count)
+            {
+                BasicConfig.instance.curEntry.currentChannel = resList[curIndex];
             }
 
             GUILayout.EndHorizontal();
-            if (curIndex >= 0 && curIndex < BasicConfig.instance.address.Count && last != curIndex)
-            {
-                BasicConfig.instance.curAddressName = BasicConfig.instance.address[curIndex].title;
-            }
-
+            GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
-            BasicConfig.instance.resMode = (ResourceMode)EditorGUILayout.EnumPopup("资源模式", BasicConfig.instance.resMode);
-            // GUILayout.FlexibleSpace();
-            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
+            BasicConfig.instance.curEntry.isShowReferences = EditorGUILayout.Foldout(BasicConfig.instance.curEntry.isShowReferences, "Reference Assembly");
+            GUILayout.FlexibleSpace();
+            if (BasicConfig.instance.curEntry.assembly != null)
             {
-                ToolsWindow.SwitchScene<ResSetting>();
+                BasicConfig.instance.curEntry.entryName = BasicConfig.instance.curEntry.assembly.name;
             }
 
-            GUILayout.EndHorizontal();
-            BasicConfig.instance.resTimeout = EditorGUILayout.Slider("包检查间隔时间", BasicConfig.instance.resTimeout, 10, byte.MaxValue);
-            last = OSSConfig.instance.ossList.FindIndex(x => x.title == OSSConfig.instance.seletion);
-            curIndex = EditorGUILayout.Popup("资源服务器地址", last, OSSConfig.instance.ossList.Select(x => x.title).ToArray());
-
-            if (curIndex >= 0 && curIndex < OSSConfig.instance.ossList.Count && last != curIndex)
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
-                OSSConfig.instance.seletion = OSSConfig.instance.ossList[curIndex].title;
-                OSSConfig.OnSave();
-            }
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                OSSConfig.OnSave();
+                BasicConfig.instance.curEntry.references.Add(string.Empty);
+                BasicConfig.instance.curEntry.referenceAssemblyList.Add(null);
                 BasicConfig.OnSave();
             }
+
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+            if (BasicConfig.instance.curEntry.isShowReferences)
+            {
+                for (int j = BasicConfig.instance.curEntry.referenceAssemblyList.Count - 1; j >= 0; j--)
+                {
+                    GUILayout.BeginHorizontal(ZStyle.ITEM_BACKGROUND_STYLE);
+                    BasicConfig.instance.curEntry.referenceAssemblyList[j] = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Element " + j, BasicConfig.instance.curEntry.referenceAssemblyList[j], typeof(AssemblyDefinitionAsset), false, GUILayout.Width(300));
+                    if (BasicConfig.instance.curEntry.referenceAssemblyList[j] != null)
+                    {
+                        BasicConfig.instance.curEntry.references[j] = BasicConfig.instance.curEntry.referenceAssemblyList[j].name;
+                    }
+
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+                    {
+                        BasicConfig.instance.curEntry.references.RemoveAt(j);
+                        BasicConfig.instance.curEntry.referenceAssemblyList.RemoveAt(j);
+                        BasicConfig.OnSave();
+                    }
+
+                    GUILayout.EndHorizontal();
+                }
+            }
+
+
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.BeginHorizontal();
+            BasicConfig.instance.curEntry.isShowChannels = EditorGUILayout.Foldout(BasicConfig.instance.curEntry.isShowChannels, "Channels");
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                BasicConfig.instance.curEntry.channels.Add(new ChannelPackageOptions());
+                BasicConfig.OnSave();
+            }
+
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+            if (BasicConfig.instance.curEntry.isShowChannels)
+            {
+                for (int j = BasicConfig.instance.curEntry.channels.Count - 1; j >= 0; j--)
+                {
+                    GUILayout.BeginVertical(EditorStyles.helpBox);
+                    GUILayout.BeginHorizontal();
+                    BasicConfig.instance.curEntry.channels[j].title = EditorGUILayout.TextField("Channel Name", BasicConfig.instance.curEntry.channels[j].title);
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+                    {
+                        BasicConfig.instance.curEntry.channels.RemoveAt(j);
+                        BasicConfig.OnSave();
+                    }
+
+                    GUILayout.EndHorizontal();
+                    BasicConfig.instance.curEntry.channels[j].packageName = EditorGUILayout.TextField("Package Name", BasicConfig.instance.curEntry.channels[j].packageName);
+                    BasicConfig.instance.curEntry.channels[j].appName = EditorGUILayout.TextField("App Name", BasicConfig.instance.curEntry.channels[j].appName);
+                    BasicConfig.instance.curEntry.channels[j].icon = (EditorGUILayout.ObjectField("Channel Icon", BasicConfig.instance.curEntry.channels[j].icon, typeof(Texture2D), false) as Texture2D);
+                    BasicConfig.instance.curEntry.channels[j].splash = (EditorGUILayout.ObjectField("Channel Splash", BasicConfig.instance.curEntry.channels[j].splash, typeof(Sprite), false) as Sprite);
+                    GUILayout.EndVertical();
+                }
+            }
+
+            GUILayout.EndVertical();
+            GUILayout.EndVertical();
+        }
+
+        private void OnShowAddressConfigDrawing()
+        {
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Address", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                BasicConfig.instance.address.Add(new IPConfig());
+            }
+
+            GUILayout.EndHorizontal();
+            for (int i = 0; i < BasicConfig.instance.address.Count; i++)
+            {
+                IPConfig config = BasicConfig.instance.address[i];
+                config.isOn = OnBeginHeader(config.title, config.isOn, config);
+                if (config.isOn)
+                {
+                    config.title = EditorGUILayout.TextField("别名", config.title);
+                    config.address = EditorGUILayout.TextField("IP", config.address);
+                    config.port = EditorGUILayout.IntField("端口", config.port);
+                }
+            }
+
+            GUILayout.EndVertical();
         }
     }
 }

@@ -30,7 +30,7 @@ namespace ZGame.Resource
         public async UniTask Setup(string packageName)
         {
             ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
-            if (resourcePackageListManifest is not null)
+            if (resourcePackageListManifest is not null || BasicConfig.instance.resMode == ResourceMode.Editor)
             {
                 return;
             }

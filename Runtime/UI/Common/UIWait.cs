@@ -55,7 +55,7 @@ namespace ZGame.UI
 
         public static void Show(string s, float timeout = 0)
         {
-            string resPath = $"Resources/{BasicConfig.instance.curEntry.entryName}/Waiting";
+            string resPath = $"Resources/Waiting";
             UIManager.instance.Open<UIWait>(resPath, s, timeout);
         }
 

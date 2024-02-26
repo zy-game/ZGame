@@ -37,7 +37,7 @@ namespace ZGame.UI
 
         public static void Show(string content, float timeout = 5)
         {
-            string resPath = $"Resources/{BasicConfig.instance.curEntry.entryName}/Tips";
+            string resPath = $"Resources/Tips";
             UIManager.instance.Open<UITips>(resPath, content, timeout);
         }
     }

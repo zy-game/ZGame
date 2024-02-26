@@ -36,21 +36,26 @@ namespace ZGame.UI
                     VARIABLE.SetText(args[1].ToString());
                 }
 
-                if (VARIABLE.name.Equals("text_btn_confirm_text"))
+                if (VARIABLE.name.Equals("text_yes"))
                 {
                     VARIABLE.SetText(Localliztion.instance.Query("确定"));
+                }
+                
+                if (VARIABLE.name.Equals("text_no"))
+                {
+                    VARIABLE.SetText(Localliztion.instance.Query("取消"));
                 }
             }
 
             Button[] buttons = this.gameObject.GetComponentsInChildren<Button>(true);
             foreach (var VARIABLE in buttons)
             {
-                if (VARIABLE.name.Equals("yes"))
+                if (VARIABLE.name.Equals("btn_yes"))
                 {
                     VARIABLE.onClick.AddListener(() => Switch(true));
                 }
 
-                if (VARIABLE.name.Equals("no"))
+                if (VARIABLE.name.Equals("btn_no"))
                 {
                     VARIABLE.onClick.AddListener(() => Switch(false));
                 }
@@ -106,7 +111,7 @@ namespace ZGame.UI
             }
 
             MsgData data = _msgQueue.Dequeue();
-            string resPath = $"Resources/{BasicConfig.instance.curEntry.entryName}/MsgBox";
+            string resPath = $"Resources/MsgBox";
             if (_instance is null)
             {
                 _instance = UIManager.instance.Open<UIMsgBox>(resPath, data.title, data.content, data.onYes, data.onNo);
