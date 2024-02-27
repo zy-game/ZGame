@@ -162,6 +162,7 @@ namespace ZGame.Editor.PSD2GUI
 
             UIBindGeneric generic = new UIBindGeneric(bindData);
             templeteList.Add(generic.GetTempleteCode());
+            AddInit($"\t\t\ttemp_{bindData.NameSpace}.Disable();");
         }
 
         private void GenericUISwitcherComponent(UIBindData variable, string fieldName)

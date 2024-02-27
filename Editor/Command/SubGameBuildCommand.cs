@@ -13,17 +13,9 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.Command
 {
-    public class SubGameBuildCommand : ICommandExecuter
+    public class SubGameBuildCommand
     {
-        public void Dispose()
-        {
-        }
-
-        public void Awake()
-        {
-        }
-
-        public void Executer(params object[] args)
+        public static void Executer(params object[] args)
         {
             if (args.Length != 2)
             {
@@ -64,7 +56,7 @@ namespace ZGame.Editor.Command
                 AssetDatabase.Refresh();
             }
 
-            ZGame.CommandManager.OnExecuteCommand<BuildPackageCommand>(seting);
+            BuildPackageCommand.Executer(seting);
 
             try
             {

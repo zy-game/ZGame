@@ -10,6 +10,7 @@ namespace ZGame
     /// </summary>
     public class BehaviourScriptable : MonoBehaviour
     {
+        private bool isTouch = false;
         UnityEvent onGUI = new UnityEvent();
         UnityEvent update = new UnityEvent();
         UnityEvent onDestroy = new UnityEvent();
@@ -38,7 +39,7 @@ namespace ZGame
                 return _instance;
             }
         }
-  
+
         /// <summary>
         /// 设置按键长按事件
         /// </summary>
@@ -366,12 +367,11 @@ namespace ZGame
         {
             for (int i = 0; i < keyDownEvent.Count; i++)
             {
-                if (Input.GetKeyDown(keyDownEvent[i].keyCode) is false)
+                if ((IsTouch(keyDownEvent[i].keyCode) && isTouch is false) || Input.GetKeyDown(keyDownEvent[i].keyCode))
                 {
-                    continue;
+                    isTouch = IsMouse(keyDownEvent[i].keyCode);
+                    keyDownEvent[i].Invoke();
                 }
-
-                keyDownEvent[i].Invoke();
             }
         }
 
@@ -379,12 +379,11 @@ namespace ZGame
         {
             for (int i = 0; i < keyUpEvent.Count; i++)
             {
-                if (Input.GetKeyUp(keyUpEvent[i].keyCode) is false)
+                if ((IsTouch(keyUpEvent[i].keyCode) && isTouch) || Input.GetKeyUp(keyUpEvent[i].keyCode))
                 {
-                    continue;
+                    isTouch = false;
+                    keyUpEvent[i].Invoke();
                 }
-
-                keyUpEvent[i].Invoke();
             }
         }
 
@@ -392,13 +391,21 @@ namespace ZGame
         {
             for (var i = 0; i < keyPressEvent.Count; i++)
             {
-                if (Input.GetKey(keyPressEvent[i].keyCode) is false)
+                if ((IsTouch(keyPressEvent[i].keyCode) && isTouch) || Input.GetKey(keyPressEvent[i].keyCode))
                 {
-                    continue;
+                    keyPressEvent[i].Invoke();
                 }
-
-                keyPressEvent[i].Invoke();
             }
+        }
+
+        private bool IsMouse(KeyCode keyCode)
+        {
+            return keyCode >= KeyCode.Mouse0 && keyCode <= KeyCode.Mouse6;
+        }
+
+        private bool IsTouch(KeyCode keyCode)
+        {
+            return IsMouse(keyCode) && Input.touchCount > 0;
         }
 
         private void FixedUpdate()

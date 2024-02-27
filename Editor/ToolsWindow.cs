@@ -24,6 +24,8 @@ namespace ZGame.Editor
         [MenuItem("ZGame/Home %h")]
         static void BackupHome()
         {
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
             EditorSceneManager.OpenScene("Assets/Startup.unity");
         }
 

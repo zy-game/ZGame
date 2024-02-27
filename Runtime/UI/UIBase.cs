@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using ZGame.Sound;
 
 namespace ZGame.UI
 {
@@ -21,8 +23,8 @@ namespace ZGame.UI
 
         public UIBase(GameObject gameObject)
         {
-            this.gameObject = gameObject;
             this.name = gameObject.name;
+            this.gameObject = gameObject;
             this.transform = gameObject.transform;
             this.rect_transform = gameObject.GetComponent<RectTransform>();
         }
@@ -57,6 +59,50 @@ namespace ZGame.UI
         }
 
         /// <summary>
+        /// 播放音效
+        /// </summary>
+        /// <param name="path"></param>
+        public void PlaySound(string path)
+        {
+            SoundManager.instance.PlaySound(path);
+        }
+
+        /// <summary>
+        /// 播放音效
+        /// </summary>
+        /// <param name="clip"></param>
+        public void PlaySound(AudioClip clip)
+        {
+            SoundManager.instance.PlaySound(clip);
+        }
+
+        /// <summary>
+        /// 停止音效
+        /// </summary>
+        /// <param name="path"></param>
+        public void StopSound(string path)
+        {
+            SoundManager.instance.Stop(path);
+        }
+
+        /// <summary>
+        /// 停止音效
+        /// </summary>
+        /// <param name="clip"></param>
+        public void StopSound(AudioClip clip)
+        {
+            SoundManager.instance.Stop(clip.name);
+        }
+
+        /// <summary>
+        /// 停止所有音效播放
+        /// </summary>
+        public void StopAll()
+        {
+            SoundManager.instance.StopAll();
+        }
+
+        /// <summary>
         /// 启动一个倒计时
         /// </summary>
         /// <param name="tmp_text"></param>
@@ -75,6 +121,15 @@ namespace ZGame.UI
             _coroutines.Add(tmp_text, this.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
         }
 
+        /// <summary>
+        /// 启动一个倒计时
+        /// </summary>
+        /// <param name="tmp_text"></param>
+        /// <param name="count"></param>
+        /// <param name="interval"></param>
+        /// <param name="format"></param>
+        /// <param name="onFinish"></param>
+        /// <returns></returns>
         private IEnumerator OnStartCountDown(TMP_Text tmp_text, int count, int interval, string format, Action onFinish)
         {
             while (count > 0)

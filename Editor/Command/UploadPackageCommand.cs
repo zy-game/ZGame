@@ -6,22 +6,13 @@ using ZGame.Resource.Config;
 
 namespace ZGame.Editor.Command
 {
-    public class UploadPackageCommand : ICommandExecuter
+    public class UploadPackageCommand
     {
-        private Aliyun.OSS.OssClient client;
-        private COSXML.CosXmlServer server;
+        private static Aliyun.OSS.OssClient client;
+        private static COSXML.CosXmlServer server;
 
-        public void Dispose()
-        {
-            client = null;
-            server = null;
-        }
 
-        public void Awake()
-        {
-        }
-
-        public void Executer(params object[] args)
+        public static void Executer(params object[] args)
         {
             if (args is null || args.Length < 2)
             {
@@ -53,7 +44,7 @@ namespace ZGame.Editor.Command
             Debug.Log("upload:" + filePath);
         }
 
-        private void StreamingUpload(OSSOptions options, string filePath)
+        private static void StreamingUpload(OSSOptions options, string filePath)
         {
             string path = options.GetFilePath(Path.GetFileName(filePath));
             if (Directory.Exists(Application.streamingAssetsPath) is false)
@@ -69,7 +60,7 @@ namespace ZGame.Editor.Command
             File.Copy(filePath, path, true);
         }
 
-        private void OSSUpload(OSSOptions options, string filePath)
+        private static void OSSUpload(OSSOptions options, string filePath)
         {
             string putName = $"{BasicConfig.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
 
@@ -100,7 +91,7 @@ namespace ZGame.Editor.Command
             }
         }
 
-        public async void COSUpload(OSSOptions options, string filePath)
+        private static async void COSUpload(OSSOptions options, string filePath)
         {
             try
             {

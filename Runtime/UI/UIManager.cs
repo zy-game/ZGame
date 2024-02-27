@@ -52,6 +52,11 @@ namespace ZGame.UI
             UIBase uiBase = GetWindow(type);
             if (uiBase is not null)
             {
+                if (uiBase.gameObject.activeSelf is false)
+                {
+                    Active(type, args);
+                }
+
                 return uiBase;
             }
 
@@ -98,6 +103,25 @@ namespace ZGame.UI
             return uiBase;
         }
 
+        /// <summary>
+        /// 是否打开窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public bool HasOpened<T>() where T : UIBase
+        {
+            return HasOpened(typeof(T));
+        }
+
+        /// <summary>
+        /// 是否打开窗口
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public bool HasOpened(Type type)
+        {
+            return GetWindow(type) is not null;
+        }
 
         /// <summary>
         /// 获取窗口

@@ -39,7 +39,7 @@ namespace ZGame.Networking
                 return;
             }
 
-            CommandManager.OnExecuteCommand(opcode.ToString(), message);
+            ModuleManager.OnAction(opcode.ToString(), message);
         }
 
         private void OnHandleErrorEvent(object s, ErrorEventArgs e)

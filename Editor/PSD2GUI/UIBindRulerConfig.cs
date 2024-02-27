@@ -193,10 +193,12 @@ namespace ZGame.Editor.PSD2GUI
 
                 if (File.Exists(output))
                 {
-                    if (EditorUtility.DisplayDialog("Warning", "当前UI代码文件已经存在, 是否覆盖写入?", "Yes", "No"))
+                    if (EditorUtility.DisplayDialog("Warning", "当前UI代码文件已经存在, 是否覆盖写入?", "Yes", "No") is false)
                     {
-                        File.Delete(output);
+                        return;
                     }
+
+                    File.Delete(output);
                 }
 
                 File.WriteAllText(output, generic.GetOverloadCode());

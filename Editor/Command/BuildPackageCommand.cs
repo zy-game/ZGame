@@ -13,17 +13,9 @@ using ZGame.Resource.Config;
 
 namespace ZGame.Editor.Command
 {
-    public class BuildPackageCommand : ICommandExecuter
+    public class BuildPackageCommand
     {
-        public void Dispose()
-        {
-        }
-
-        public void Awake()
-        {
-        }
-
-        public void Executer(params object[] args)
+        public static void Executer(params object[] args)
         {
             using (ResourcePackageCollector collector = new ResourcePackageCollector())
             {
@@ -48,7 +40,7 @@ namespace ZGame.Editor.Command
             }
         }
 
-        private List<ResourcePackageListManifest> CreatePackageManifest(string output, AssetBundleManifest manifest, params PackageBuilderOptions[] builds)
+        private static List<ResourcePackageListManifest> CreatePackageManifest(string output, AssetBundleManifest manifest, params PackageBuilderOptions[] builds)
         {
             BuildPipeline.GetCRCForAssetBundle(new DirectoryInfo(output).Name, out uint crc);
             List<ResourcePackageListManifest> packageListManifests = new List<ResourcePackageListManifest>();
@@ -83,7 +75,7 @@ namespace ZGame.Editor.Command
             return packageListManifests;
         }
 
-        private void OnUploadResourcePackageList(string output, List<ResourcePackageListManifest> manifests, params PackageBuilderOptions[] builds)
+        private static void OnUploadResourcePackageList(string output, List<ResourcePackageListManifest> manifests, params PackageBuilderOptions[] builds)
         {
             int allCount = builds.Sum(x => x.builds.Length * x.seting.service.Selected.Length);
             int successCount = 0;
@@ -101,13 +93,13 @@ namespace ZGame.Editor.Command
                     {
                         successCount++;
                         string dest = output + "/" + bundle.assetBundleName;
-                        ZGame.CommandManager.OnExecuteCommand<UploadPackageCommand>(oss, dest);
+                        UploadPackageCommand.Executer(oss, dest);
                         EditorUtility.DisplayProgressBar("上传进度", dest, successCount / (float)allCount);
                     }
 
                     foreach (ResourcePackageListManifest manifest in manifests)
                     {
-                        ZGame.CommandManager.OnExecuteCommand<UploadPackageCommand>(oss, output + "/" + manifest.name + ".ini");
+                        UploadPackageCommand.Executer(oss, output + "/" + manifest.name + ".ini");
                     }
                 }
             }

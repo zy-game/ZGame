@@ -82,8 +82,8 @@ namespace ZGame.Editor
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Generic Dll"), false, () => ZGame.CommandManager.OnExecuteCommand<SubGameBuildCommand>(BasicConfig.instance.curEntry, false));
-                    menu.AddItem(new GUIContent("Generic Porject"), false, () => ZGame.CommandManager.OnExecuteCommand<SubGameBuildCommand>(BasicConfig.instance.curEntry, true));
+                    menu.AddItem(new GUIContent("Generic Dll"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, false));
+                    menu.AddItem(new GUIContent("Generic Porject"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, true));
                     if (BasicConfig.instance.curEntry.channels != null && BasicConfig.instance.curEntry.channels.Count > 0)
                     {
                         foreach (var VARIABLE in BasicConfig.instance.curEntry.channels)
@@ -91,7 +91,7 @@ namespace ZGame.Editor
                             menu.AddItem(new GUIContent("Channels/" + VARIABLE.title), false, () =>
                             {
                                 BasicConfig.instance.curEntry.currentChannel = VARIABLE.title;
-                                ZGame.CommandManager.OnExecuteCommand<SubGameBuildCommand>(BasicConfig.instance.curEntry, false);
+                                SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, false);
                             });
                         }
                     }
