@@ -143,7 +143,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t}}");
             AddSetup($"\t\t\tthis.{fieldName}.Switch(sceneName);");
             AddSetup($"\t\t}}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
         }
 
         private void GenericTempleteComponent(UIBindData variable, string fieldName)
@@ -182,7 +182,7 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_switch.Invoke(obj);");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
         }
 
         private void GenericLongPressButtonComponent(UIBindData variable, string fieldName)
@@ -223,7 +223,7 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_Cancel.Invoke();");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
 
             AddEvent($"\t\t\t{fieldName}?.onDown.RemoveAllListeners();");
             AddEvent($"\t\t\t{fieldName}?.onDown.AddListener(on_Handle_{variable.name}_Down);");
@@ -231,7 +231,7 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_Down.Invoke();");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
 
             AddEvent($"\t\t\t{fieldName}?.onUp.RemoveAllListeners();");
             AddEvent($"\t\t\t{fieldName}?.onUp.AddListener(on_Handle_{variable.name}_Up);");
@@ -239,7 +239,7 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_Up.Invoke();");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
 
             AddEvent($"\t\t\t{fieldName}?.onClick.RemoveAllListeners();");
             AddEvent($"\t\t\t{fieldName}?.onClick.AddListener(on_Handle_{variable.name}_Click);");
@@ -247,7 +247,7 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_Click.Invoke();");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
         }
 
         private void GenericButtonComponent(UIBindData VARIABLE, string fieldName)
@@ -266,7 +266,7 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_Click.Invoke();");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
         }
 
         private void GenericToggleComponent(UIBindData VARIABLE, string fieldName)
@@ -284,15 +284,15 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_Click.Invoke(isOn);");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(bool isOn)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.SetIsOnWithoutNotify(isOn);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
         }
 
         private void GenericSliderComponent(UIBindData VARIABLE, string fieldName)
@@ -311,16 +311,16 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_Change.Invoke(value);");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
 
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(float value)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.SetValueWithoutNotify(value);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
         }
 
         private void GenericInputFieldComponent(UIBindData VARIABLE, string fieldName)
@@ -338,32 +338,32 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_Submit.Invoke(value);");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
 
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(string value)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.SetTextWithoutNotify(value);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(TMP_FontAsset fontAsset)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.SetGlobalFontAsset(fontAsset);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(int size)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.SetGlobalPointSize(size);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
         }
 
         private void GenericDropdownComponent(UIBindData VARIABLE, string fieldName, string componentName)
@@ -381,39 +381,39 @@ namespace ZGame.Editor.PSD2GUI
             AddCallback("\t\t{");
             AddCallback($"\t\t\t_event_{fieldName}_Change.Invoke(value);");
             AddCallback("\t\t}");
-            AddCallback("");
+            AddCallback(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(int index)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.SetValueWithoutNotify(index);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(List<string> items)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(List<Sprite> items)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(List<{componentName}.OptionData> items)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
         }
 
         private void GenericImageComponent(UIBindData VARIABLE, string fieldName)
@@ -422,29 +422,29 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\tResObject handle = ResourceManager.instance.LoadAsset(path);");
             AddSetup($"\t\t\tif (handle is null || handle.IsSuccess() == false)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup($"\t\t\thandle.SetSprite({fieldName});");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(Sprite sprite)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.sprite = sprite;");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(Texture2D texture)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
         }
 
         private void GenericRawImageComponent(UIBindData VARIABLE, string fieldName)
@@ -453,39 +453,39 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\tResObject handle = ResourceManager.instance.LoadAsset(path);");
             AddSetup($"\t\t\tif (handle is null || handle.IsSuccess() == false)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup($"\t\t\thandle.SetTexture2D({fieldName});");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
 
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(Sprite sprite)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.texture = sprite.texture;");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(Texture2D texture)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.texture = texture;");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
 
             AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(RenderTexture texture)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.texture = texture;");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
         }
 
         private void GenericTextComponent(UIBindData VARIABLE, string fieldName)
@@ -494,10 +494,10 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
             AddSetup($"\t\t\t{fieldName}.text = info == null ? \"\" : info.ToString();");
             AddSetup("\t\t}");
-            AddSetup("");
+            AddSetup(Environment.NewLine);
         }
 
         private void AddInit(string str)
@@ -567,6 +567,12 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t}");
             int index = 0;
+            sb.AppendLine(Environment.NewLine);
+            sb.AppendLine("\t\tpublic override void Awake()");
+            sb.AppendLine("\t\t{{");
+            sb.AppendLine("\t\t\tbase.Awake()");
+            sb.AppendLine("\t\t}}");
+            sb.AppendLine(Environment.NewLine);
             callbackList.ForEach(x =>
             {
                 if (index % 5 != 2)
@@ -596,35 +602,37 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine($"\t\t\tpublic Templete_{setting.NameSpace}(GameObject gameObject) : base(gameObject)");
             sb.AppendLine($"\t\t\t{{");
             sb.AppendLine($"\t\t\t}}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\t\tpublic override void Awake()");
             sb.AppendLine("\t\t\t{");
             sb.AppendLine("\t\t\t\tif(this.gameObject == null)");
             sb.AppendLine("\t\t\t\t{");
             sb.AppendLine("\t\t\t\t\treturn;");
             sb.AppendLine("\t\t\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\t\t\tOnBindField();");
             sb.AppendLine("\t\t\t\tOnBindEvents();");
             sb.AppendLine("\t\t\t\tOnBindLanguage();");
             sb.AppendLine("\t\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\t\tprivate void OnBindLanguage()");
             sb.AppendLine("\t\t\t{");
             language.ForEach(x => sb.AppendLine("\t" + x));
             sb.AppendLine("\t\t\t}");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\t\tprivate void OnBindField()");
             sb.AppendLine("\t\t\t{");
             initList.ForEach(x => sb.AppendLine("\t" + x));
             sb.AppendLine("\t\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\t\tprivate void OnBindEvents()");
             sb.AppendLine("\t\t\t{");
             eventList.ForEach(x => sb.AppendLine("\t" + x));
             sb.AppendLine("\t\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             callbackList.ForEach(x => sb.AppendLine("\t" + x));
             setupList.ForEach(x => sb.AppendLine("\t" + x));
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\t\tpublic override void Dispose()");
             sb.AppendLine("\t\t\t{");
             disposeList.ForEach(x => sb.AppendLine("\t" + x));
@@ -652,39 +660,39 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("\t{");
             templeteList.ForEach(x => sb.AppendLine(x));
             fieldList.ForEach(x => sb.AppendLine(x));
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
 
             sb.AppendLine($"\t\tpublic UIBind_{setting.name}(GameObject gameObject) : base(gameObject)");
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\tpublic override void Awake()");
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t\tif(this.gameObject == null)");
             sb.AppendLine("\t\t\t{");
             sb.AppendLine("\t\t\t\treturn;");
             sb.AppendLine("\t\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\t\tOnBindField();");
             sb.AppendLine("\t\t\tOnBindEvents();");
             sb.AppendLine("\t\t\tOnBindLanguage();");
             sb.AppendLine("\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\tprivate void OnBindLanguage()");
             sb.AppendLine("\t\t{");
             language.ForEach(x => sb.AppendLine(x));
             sb.AppendLine("\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\tprivate void OnBindField()");
             sb.AppendLine("\t\t{");
             initList.ForEach(x => sb.AppendLine(x));
             sb.AppendLine("\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\tprivate void OnBindEvents()");
             sb.AppendLine("\t\t{");
             eventList.ForEach(x => sb.AppendLine(x));
             sb.AppendLine("\t\t}");
-            sb.AppendLine("");
+            sb.AppendLine(Environment.NewLine);
             callbackList.ForEach(x => sb.AppendLine(x));
             setupList.ForEach(x => sb.AppendLine(x));
             sb.AppendLine("\t\tpublic override void Dispose()");

@@ -26,17 +26,11 @@ namespace ZGame.Editor.Command
             var genericAll = args[1] as bool? ?? false;
             //todo 编译资源
             PackageSeting seting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
-            AOTReferenceGeneratorCommand.CompileAndGenerateAOTGenericReference();
+            StripAOTDllCommand.GenerateStripedAOTDlls();
             CompileDllCommand.CompileDllActiveBuildTarget();
             LinkerConfig.instance.Generic();
             if (config.mode is CodeMode.Hotfix)
             {
-                //todo 编译DLL资源
-                if (genericAll)
-                {
-                    PrebuildCommand.GenerateAll();
-                }
-
                 string hotfixPacageDir = GetHotfixPackagePath(seting);
                 string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
                 IReadOnlyList<string> aotList = AppDomain.CurrentDomain.GetStaticFieldValue<IReadOnlyList<string>>("AOTGenericReferences", "PatchedAOTAssemblyList");
@@ -57,6 +51,12 @@ namespace ZGame.Editor.Command
             }
 
             BuildPackageCommand.Executer(seting);
+
+            if (genericAll is false)
+            {
+                EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
+                return;
+            }
 
             try
             {

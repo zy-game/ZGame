@@ -103,7 +103,7 @@ namespace ZGame.UI
             {
                 if (_instance is not null)
                 {
-                    UIManager.instance.Close<UIMsgBox>();
+                    UIManager.instance.Inactive<UIMsgBox>();
                     _instance = null;
                 }
 

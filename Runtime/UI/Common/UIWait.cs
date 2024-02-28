@@ -39,7 +39,7 @@ namespace ZGame.UI
         {
             yield return new WaitForSeconds(time);
             _coroutine = null;
-            UIManager.instance.Close<UIWait>();
+            UIManager.instance.Inactive<UIWait>();
         }
 
         public override void Dispose()

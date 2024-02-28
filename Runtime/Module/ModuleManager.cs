@@ -32,7 +32,17 @@ namespace ZGame
         /// <returns></returns>
         public static object OnAction(string actionName, params object[] args)
         {
-            return default;
+            object result = default;
+            foreach (var VARIABLE in _modules.Values)
+            {
+                result = VARIABLE.DOAction(actionName, args);
+                if (result is not null)
+                {
+                    break;
+                }
+            }
+
+            return result;
         }
 
         /// <summary>

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Serialization;
 using ZGame.Config;
@@ -226,11 +225,13 @@ namespace ZGame
             {
                 address = new List<IPConfig>();
             }
-
+#if UNITY_EDITOR
             if (curEntry.referenceAssemblyList is null)
             {
-                curEntry.referenceAssemblyList = new List<AssemblyDefinitionAsset>();
+                curEntry.referenceAssemblyList = new List<UnityEditorInternal.AssemblyDefinitionAsset>();
             }
+#endif
+            
 
             if (curEntry.channels is null)
             {

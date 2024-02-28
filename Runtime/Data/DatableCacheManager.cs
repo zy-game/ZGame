@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using UnityEngine;
 using ZGame.FileSystem;
 
 namespace ZGame.Data
@@ -20,7 +21,9 @@ namespace ZGame.Data
                 return;
             }
 
-            cacheDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.Text.Encoding.UTF8.GetString(bytes));
+            string json = System.Text.Encoding.UTF8.GetString(bytes);
+            Debug.Log(json);
+            cacheDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
         }
 
         /// <summary>
@@ -134,8 +137,10 @@ namespace ZGame.Data
         /// </summary>
         public void Save()
         {
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(cacheDic));
+            string json = JsonConvert.SerializeObject(cacheDic);
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
             VFSManager.instance.Write("dataCache.ini", bytes, 0);
+            Debug.Log(json);
         }
     }
 }

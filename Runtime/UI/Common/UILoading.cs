@@ -93,7 +93,7 @@ namespace ZGame.UI
                 return;
             }
 
-            UIManager.instance.Close<UILoading>();
+            UIManager.instance.Inactive<UILoading>();
             _instance = null;
         }
     }

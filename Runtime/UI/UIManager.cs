@@ -14,8 +14,9 @@ namespace ZGame.UI
     /// </summary>
     public sealed class UIManager : Singleton<UIManager>
     {
-        private List<UIBase> _windows = new();
-        private Dictionary<Type, Type> basicTypes = new();
+        // private List<UIBase> _windows = new();
+        private List<UIBase> uiQueue = new();
+        private List<UIBase> uiCache = new();
 
         /// <summary>
         /// 打开窗口
@@ -44,7 +45,7 @@ namespace ZGame.UI
         /// <returns></returns>
         public UIBase Open(Type type, params object[] args)
         {
-            if (type is null || type.IsInterface || type.IsAbstract)
+            if (type is null || type.IsInterface || type.IsAbstract || typeof(UIBase).IsAssignableFrom(type) is false)
             {
                 return default;
             }
@@ -52,11 +53,7 @@ namespace ZGame.UI
             UIBase uiBase = GetWindow(type);
             if (uiBase is not null)
             {
-                if (uiBase.gameObject.activeSelf is false)
-                {
-                    Active(type, args);
-                }
-
+                Active(uiBase, args);
                 return uiBase;
             }
 
@@ -85,22 +82,75 @@ namespace ZGame.UI
             UIBase uiBase = GetWindow(type);
             if (uiBase is not null)
             {
+                Active(uiBase, args);
                 return uiBase;
             }
 
             ResObject resObject = ResourceManager.instance.LoadAsset(resPath);
             if (resObject.IsSuccess() is false)
             {
+                Debug.Log("加载资源失败：" + resPath);
                 return default;
             }
 
             uiBase = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
             UILayers.instance.TrySetup(uiBase.gameObject, 1, Vector3.zero, Vector3.zero, Vector3.one);
             uiBase.gameObject.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
-            _windows.Add(uiBase);
             uiBase.Awake();
-            Active(type, args);
+            Active(uiBase, args);
             return uiBase;
+        }
+
+        public void BackHome(params object[] args)
+        {
+            for (int i = uiQueue.Count - 1; i >= 0; i--)
+            {
+                var VARIABLE = uiQueue[i];
+                HomeUI homeUI = VARIABLE.GetType().GetCustomAttribute<HomeUI>();
+                if (homeUI is not null)
+                {
+                    Active(VARIABLE, args);
+                    break;
+                }
+
+                Inactive(VARIABLE);
+            }
+
+            for (int i = uiCache.Count - 1; i >= 0; i--)
+            {
+                var VARIABLE = uiCache[i];
+                HomeUI homeUI = VARIABLE.GetType().GetCustomAttribute<HomeUI>();
+                if (homeUI is not null)
+                {
+                    Active(VARIABLE, args);
+                    break;
+                }
+            }
+        }
+
+        public void Back(params object[] args)
+        {
+            UIBase top = uiQueue.LastOrDefault();
+            if (top is null)
+            {
+                return;
+            }
+
+            Inactive(top);
+            Debug.Log(string.Join(",", uiQueue.Select(x => x.name)));
+            if (uiQueue.Count > 0)
+            {
+                Active(uiQueue.LastOrDefault(), args);
+                return;
+            }
+
+            top = uiCache.LastOrDefault();
+            if (top is null)
+            {
+                return;
+            }
+
+            Active(top, args);
         }
 
         /// <summary>
@@ -140,12 +190,18 @@ namespace ZGame.UI
         /// <returns></returns>
         public UIBase GetWindow(Type type)
         {
-            if (type is null)
+            if (type is null || typeof(UIBase).IsAssignableFrom(type) is false)
             {
                 return default;
             }
 
-            return _windows.Find(x => type.IsAssignableFrom(x.GetType()));
+            UIBase temp = uiQueue.Find(x => type.IsAssignableFrom(x.GetType()));
+            if (temp is null)
+            {
+                temp = uiCache.Find(x => type.IsAssignableFrom(x.GetType()));
+            }
+
+            return temp;
         }
 
         /// <summary>
@@ -163,14 +219,26 @@ namespace ZGame.UI
         /// <param name="type"></param>
         public void Active(Type type, params object[] args)
         {
-            UIBase uiBase = GetWindow(type);
+            Active(GetWindow(type), args);
+        }
+
+        /// <summary>
+        /// 激活UI
+        /// </summary>
+        /// <param name="uiBase"></param>
+        public void Active(UIBase uiBase, params object[] args)
+        {
             if (uiBase is null)
             {
                 return;
             }
 
+            uiQueue.Remove(uiBase);
+            uiQueue.Add(uiBase);
+            uiCache.Remove(uiBase);
             uiBase.gameObject.SetActive(true);
             uiBase.Enable(args);
+            Debug.Log(string.Join(",", uiQueue.Select(x => x.name)));
         }
 
         /// <summary>
@@ -188,12 +256,23 @@ namespace ZGame.UI
         /// <param name="type"></param>
         public void Inactive(Type type)
         {
-            UIBase uiBase = GetWindow(type);
+            Inactive(GetWindow(type));
+        }
+
+        /// <summary>
+        /// 失活活UI
+        /// </summary>
+        /// <param name="uiBase"></param>
+        public void Inactive(UIBase uiBase)
+        {
             if (uiBase is null)
             {
                 return;
             }
 
+            uiQueue.Remove(uiBase);
+            uiCache.Remove(uiBase);
+            uiCache.Add(uiBase);
             uiBase.gameObject.SetActive(false);
             uiBase.Disable();
         }
@@ -201,8 +280,8 @@ namespace ZGame.UI
         /// <summary>
         /// 关闭窗口
         /// </summary>
-        /// <param name="system"></param>
-        /// <typeparam name="T"></typeparam>
+        /// <param name="dispose">是否释放UI</param>
+        /// <typeparam name="T">UI类型</typeparam>
         public void Close<T>(bool dispose = true)
         {
             Close(typeof(T), dispose);
@@ -211,7 +290,8 @@ namespace ZGame.UI
         /// <summary>
         /// 关闭窗口
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name="type">UI类型</param>
+        /// <param name="dispose">是否释放UI</param>
         public void Close(Type type, bool dispose = true)
         {
             UIBase uiBase = GetWindow(type);
@@ -221,9 +301,15 @@ namespace ZGame.UI
             }
 
             uiBase.Disable();
+            uiQueue.Remove(uiBase);
+            if (dispose is false)
+            {
+                uiCache.Add(uiBase);
+                return;
+            }
+
             uiBase.Dispose();
             GameObject.DestroyImmediate(uiBase.gameObject);
-            _windows.Remove(uiBase);
         }
 
         /// <summary>
@@ -231,14 +317,22 @@ namespace ZGame.UI
         /// </summary>
         public void Clear()
         {
-            foreach (var VARIABLE in _windows)
+            foreach (var VARIABLE in uiQueue)
             {
                 VARIABLE.Disable();
                 VARIABLE.Dispose();
                 GameObject.DestroyImmediate(VARIABLE.gameObject);
             }
 
-            _windows.Clear();
+            foreach (var VARIABLE in uiCache)
+            {
+                VARIABLE.Disable();
+                VARIABLE.Dispose();
+                GameObject.DestroyImmediate(VARIABLE.gameObject);
+            }
+
+            uiQueue.Clear();
+            uiCache.Clear();
         }
     }
 }

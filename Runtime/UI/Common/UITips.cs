@@ -31,7 +31,7 @@ namespace ZGame.UI
         private IEnumerator CheckTimeout(float time)
         {
             yield return new WaitForSeconds(time);
-            UIManager.instance.Close<UITips>();
+            UIManager.instance.Inactive<UITips>();
         }
 
 

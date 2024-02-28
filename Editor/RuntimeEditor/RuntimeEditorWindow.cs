@@ -82,8 +82,7 @@ namespace ZGame.Editor
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Generic Dll"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, false));
-                    menu.AddItem(new GUIContent("Generic Porject"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, true));
+                    menu.AddItem(new GUIContent("Update Hotfix Assets"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, false));
                     if (BasicConfig.instance.curEntry.channels != null && BasicConfig.instance.curEntry.channels.Count > 0)
                     {
                         foreach (var VARIABLE in BasicConfig.instance.curEntry.channels)
@@ -91,7 +90,7 @@ namespace ZGame.Editor
                             menu.AddItem(new GUIContent("Channels/" + VARIABLE.title), false, () =>
                             {
                                 BasicConfig.instance.curEntry.currentChannel = VARIABLE.title;
-                                SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, false);
+                                SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, true);
                             });
                         }
                     }
@@ -137,6 +136,11 @@ namespace ZGame.Editor
             }
 
             BasicConfig.instance.curEntry.assembly = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Assembly", BasicConfig.instance.curEntry.assembly, typeof(AssemblyDefinitionAsset), false);
+            if (BasicConfig.instance.curEntry.assembly != null)
+            {
+                BasicConfig.instance.curEntry.path = AssetDatabase.GetAssetPath(BasicConfig.instance.curEntry.assembly);
+            }
+
             GUILayout.BeginHorizontal();
             resList = BasicConfig.instance.curEntry.channels?.Select(x => x.title).ToList();
             last = resList.FindIndex(x => x == BasicConfig.instance.curEntry.currentChannel);

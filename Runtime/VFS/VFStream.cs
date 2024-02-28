@@ -40,6 +40,7 @@ namespace ZGame.FileSystem
             fileStream.Seek(scrOffset, SeekOrigin.Begin);
             fileStream.Write(bytes, offset, lenght);
             time = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
+            fileStream.Flush();
         }
 
         public async UniTask WriteAsync(int scrOffset, byte[] bytes, int offset, int lenght)
@@ -47,6 +48,7 @@ namespace ZGame.FileSystem
             fileStream.Seek(scrOffset, SeekOrigin.Begin);
             await fileStream.WriteAsync(bytes, offset, lenght);
             time = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
+            await fileStream.FlushAsync();
         }
 
         public void Read(int scrOffset, byte[] bytes, int offset, int lenght)

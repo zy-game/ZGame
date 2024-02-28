@@ -140,7 +140,7 @@ namespace ZGame.Sound
             SoundPlayer handle = _handles.Find(x => x.isPlaying is false);
             if (handle is null)
             {
-                handle = new SoundPlayer("Audio Player " + _handles.Count, isLoop);
+                _handles.Add(handle = new SoundPlayer("Audio Player " + _handles.Count, isLoop));
             }
 
             handle.Play(clipName, playCallback);
@@ -158,7 +158,7 @@ namespace ZGame.Sound
             SoundPlayer handle = _handles.Find(x => x.isPlaying is false);
             if (handle is null)
             {
-                handle = new SoundPlayer("Audio Player " + _handles.Count, isLoop);
+                _handles.Add(handle = new SoundPlayer("Audio Player " + _handles.Count, isLoop));
             }
 
             handle.Play(clip, playCallback);

@@ -10,6 +10,13 @@ using ZGame.Sound;
 namespace ZGame.UI
 {
     /// <summary>
+    /// 标记主界面UI
+    /// </summary>
+    public sealed class HomeUI : Attribute
+    {
+    }
+
+    /// <summary>
     /// UI界面
     /// </summary>
     public class UIBase : IDisposable
@@ -56,50 +63,6 @@ namespace ZGame.UI
         public virtual void Dispose()
         {
             this.StopCountDown(null);
-        }
-
-        /// <summary>
-        /// 播放音效
-        /// </summary>
-        /// <param name="path"></param>
-        public void PlaySound(string path)
-        {
-            SoundManager.instance.PlaySound(path);
-        }
-
-        /// <summary>
-        /// 播放音效
-        /// </summary>
-        /// <param name="clip"></param>
-        public void PlaySound(AudioClip clip)
-        {
-            SoundManager.instance.PlaySound(clip);
-        }
-
-        /// <summary>
-        /// 停止音效
-        /// </summary>
-        /// <param name="path"></param>
-        public void StopSound(string path)
-        {
-            SoundManager.instance.Stop(path);
-        }
-
-        /// <summary>
-        /// 停止音效
-        /// </summary>
-        /// <param name="clip"></param>
-        public void StopSound(AudioClip clip)
-        {
-            SoundManager.instance.Stop(clip.name);
-        }
-
-        /// <summary>
-        /// 停止所有音效播放
-        /// </summary>
-        public void StopAll()
-        {
-            SoundManager.instance.StopAll();
         }
 
         /// <summary>

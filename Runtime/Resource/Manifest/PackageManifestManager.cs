@@ -29,8 +29,14 @@ namespace ZGame.Resource
         /// <param name="packageName"></param>
         public async UniTask Setup(string packageName)
         {
+#if UNITY_EDITOR
+            if (BasicConfig.instance.resMode == ResourceMode.Editor)
+            {
+                return;
+            }
+#endif
             ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
-            if (resourcePackageListManifest is not null || BasicConfig.instance.resMode == ResourceMode.Editor)
+            if (resourcePackageListManifest is not null)
             {
                 return;
             }
