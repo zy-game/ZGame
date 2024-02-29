@@ -8,6 +8,8 @@ using ZGame.Config;
 
 namespace ZGame.UI
 {
+    [ResourceReference("Resources/MsgBox")]
+    [UIOptions(UILAYER.MESSAGE)]
     public class UIMsgBox : UIBase
     {
         private Action onYes;
@@ -40,7 +42,7 @@ namespace ZGame.UI
                 {
                     VARIABLE.SetText(Localliztion.instance.Query("确定"));
                 }
-                
+
                 if (VARIABLE.name.Equals("text_no"))
                 {
                     VARIABLE.SetText(Localliztion.instance.Query("取消"));
@@ -70,6 +72,8 @@ namespace ZGame.UI
 
         private void Switch(bool state)
         {
+            BehaviourScriptable.instance.UnsetupKeyDownEvent(KeyCode.Escape, OnBackup);
+            UIManager.instance.Inactive(this);
             switch (state)
             {
                 case true:
@@ -79,64 +83,11 @@ namespace ZGame.UI
                     this.onNo?.Invoke();
                     break;
             }
-
-            BehaviourScriptable.instance.UnsetupKeyDownEvent(KeyCode.Escape, OnBackup);
-            this.Disable();
-            OnShowMsgBox();
-        }
-
-
-        class MsgData
-        {
-            public string title;
-            public string content;
-            public Action onYes;
-            public Action onNo;
-        }
-
-        private static UIMsgBox _instance;
-        private static Queue<MsgData> _msgQueue = new Queue<MsgData>();
-
-        private static void OnShowMsgBox()
-        {
-            if (_msgQueue.Count == 0)
-            {
-                if (_instance is not null)
-                {
-                    UIManager.instance.Inactive<UIMsgBox>();
-                    _instance = null;
-                }
-
-                return;
-            }
-
-            MsgData data = _msgQueue.Dequeue();
-            string resPath = $"Resources/MsgBox";
-            if (_instance is null)
-            {
-                _instance = UIManager.instance.Open<UIMsgBox>(resPath, data.title, data.content, data.onYes, data.onNo);
-            }
-            else
-            {
-                _instance.Enable(data.title, data.content, data.onYes, data.onNo);
-            }
         }
 
         public static void Show(string title, string content, Action onYes, Action onNo)
         {
-            _msgQueue.Enqueue(new MsgData()
-            {
-                title = title,
-                content = content,
-                onYes = onYes,
-                onNo = onNo,
-            });
-            if (_instance is not null)
-            {
-                return;
-            }
-
-            OnShowMsgBox();
+            UIManager.instance.Open<UIMsgBox>(new object[] { title, content, onYes, onNo });
         }
 
         public static void Show(string content, Action onYes, Action onNo)

@@ -43,7 +43,7 @@ namespace ZGame.Editor.PSD2GUI
         {
             foreach (var VARIABLE in setting.options)
             {
-                AddField($"\t\tpublic GameObject go_{VARIABLE.name};");
+                AddField($"\t\tpublic GameObject go_{VARIABLE.name}{{ get; private set; }}");
                 AddDispose($"\t\t\tgo_{VARIABLE.name} = null;");
                 AddInit($"\t\t\tgo_{VARIABLE.name} = this.gameObject.transform.Find(\"{VARIABLE.path}\").gameObject;");
                 foreach (var VARIABLE2 in VARIABLE.selector.items)
@@ -121,13 +121,13 @@ namespace ZGame.Editor.PSD2GUI
                     return;
                 }
 
-                AddField($"\t\tpublic Templete_{bindData.NameSpace} temp_{bindData.NameSpace};");
+                AddField($"\t\tpublic Templete_{bindData.NameSpace} temp_{bindData.NameSpace}{{ get; private set; }}");
                 AddInit($"\t\t\ttemp_{bindData.NameSpace} = new Templete_{bindData.NameSpace}(this.gameObject.transform.Find(\"{variable.path}\").gameObject);");
                 AddDispose($"\t\t\ttemp_{bindData.NameSpace} = null;");
             }
             else
             {
-                AddField($"\t\tpublic {rule.TypeName} {rule.GetFieldName(variable.name)};");
+                AddField($"\t\tpublic {rule.TypeName} {rule.GetFieldName(variable.name)}{{ get; private set; }}");
                 AddInit($"\t\t\t{rule.GetFieldName(variable.name)} =  this.go_{variable.name}.GetComponent<{rule.TypeName}>();");
                 AddDispose($"\t\t\t{rule.GetFieldName(variable.name)} = null;");
             }
@@ -167,125 +167,124 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericUISwitcherComponent(UIBindData variable, string fieldName)
         {
-            AddField($"\t\tprivate UnityEvent<object> _event_{fieldName}_switch;");
-            AddInit($"\t\t\t_event_{fieldName}_switch = new UnityEvent<object>();");
+            AddField($"\t\tprivate UnityEvent<object> _{fieldName}_switchEvent;");
+            AddInit($"\t\t\t_{fieldName}_switchEvent = new UnityEvent<object>();");
 
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Switch(UnityAction<object> callback)");
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_SwitchEvent(UnityAction<object> callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_switch.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_switchEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
+            AddSetup(Environment.NewLine);
 
             AddEvent($"\t\t\t{fieldName}?.onSelect.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onSelect.AddListener(on_Handle_Switch_{variable.name});");
-            AddCallback($"\t\tprotected virtual void on_Handle_Switch_{variable.name}(object obj)");
+            AddEvent($"\t\t\t{fieldName}?.onSelect.AddListener(on_handle_{variable.name}_SwitchEvent);");
+            AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_SwitchEvent(object obj)");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_switch.Invoke(obj);");
+            AddCallback($"\t\t\t_{fieldName}_SwitchEvent.Invoke();");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
         }
 
         private void GenericLongPressButtonComponent(UIBindData variable, string fieldName)
         {
-            AddField($"\t\tprivate UnityEvent _event_{fieldName}_Cancel;");
-            AddInit($"\t\t\t_event_{fieldName}_Cancel = new UnityEvent();");
-            AddField($"\t\tprivate UnityEvent _event_{fieldName}_Down;");
-            AddInit($"\t\t\t_event_{fieldName}_Down = new UnityEvent();");
-            AddField($"\t\tprivate UnityEvent _event_{fieldName}_Up;");
-            AddInit($"\t\t\t_event_{fieldName}_Up = new UnityEvent();");
-            AddField($"\t\tprivate UnityEvent _event_{fieldName}_Click;");
-            AddInit($"\t\t\t_event_{fieldName}_Click = new UnityEvent();");
+            AddField($"\t\tprivate UnityEvent _{fieldName}_CancelEvent;");
+            AddInit($"\t\t\t_{fieldName}_CancelEvent = new UnityEvent();");
+            AddField($"\t\tprivate UnityEvent _{fieldName}_MouseDownEvent;");
+            AddInit($"\t\t\t_{fieldName}_MouseDownEvent = new UnityEvent();");
+            AddField($"\t\tprivate UnityEvent _{fieldName}_MouseUpEvent;");
+            AddInit($"\t\t\t_{fieldName}_MouseUpEvent = new UnityEvent();");
+            AddField($"\t\tprivate UnityEvent _{fieldName}_ClickEvent;");
+            AddInit($"\t\t\t_{fieldName}_ClickEvent = new UnityEvent();");
 
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Cancel(UnityAction callback)");
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_CancelEvent(UnityAction callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_Cancel.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_CancelEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Down(UnityAction callback)");
+            AddSetup(Environment.NewLine);
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_MouseDownEvent(UnityAction callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_Down.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_MouseDownEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Up(UnityAction callback)");
+            AddSetup(Environment.NewLine);
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_MouseUpEvent(UnityAction callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_Up.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_MouseUpEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Click(UnityAction callback)");
+            AddSetup(Environment.NewLine);
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_ClickEvent(UnityAction callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_Click.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_ClickEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
+            AddSetup(Environment.NewLine);
 
             AddEvent($"\t\t\t{fieldName}?.onCancel.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onCancel.AddListener(on_Handle_{variable.name}_Cancel);");
-            AddCallback($"\t\tprotected virtual void on_Handle_{variable.name}_Cancel()");
+            AddEvent($"\t\t\t{fieldName}?.onCancel.AddListener(on_handle_{variable.name}_CancelEvent);");
+            AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_CancelEvent()");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_Cancel.Invoke();");
+            AddCallback($"\t\t\t_{fieldName}_CancelEvent.Invoke();");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
-
             AddEvent($"\t\t\t{fieldName}?.onDown.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onDown.AddListener(on_Handle_{variable.name}_Down);");
-            AddCallback($"\t\tprotected virtual void on_Handle_{variable.name}_Down()");
+            AddEvent($"\t\t\t{fieldName}?.onDown.AddListener(on_handle_{variable.name}_MouseDownEvent);");
+            AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_MouseDownEvent()");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_Down.Invoke();");
+            AddCallback($"\t\t\t_{fieldName}_MouseDownEvent.Invoke();");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
 
             AddEvent($"\t\t\t{fieldName}?.onUp.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onUp.AddListener(on_Handle_{variable.name}_Up);");
-            AddCallback($"\t\tprotected virtual void on_Handle_{variable.name}_Up()");
+            AddEvent($"\t\t\t{fieldName}?.onUp.AddListener(on_handle_{variable.name}_MouseUpEvent);");
+            AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_MouseUpEvent()");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_Up.Invoke();");
+            AddCallback($"\t\t\t_{fieldName}_MouseUpEvent.Invoke();");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
 
             AddEvent($"\t\t\t{fieldName}?.onClick.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onClick.AddListener(on_Handle_{variable.name}_Click);");
-            AddCallback($"\t\tprotected virtual void on_Handle_{variable.name}_Click()");
+            AddEvent($"\t\t\t{fieldName}?.onClick.AddListener(on_handle_{variable.name}_ClickEvent);");
+            AddCallback($"\t\tprotected virtual void on_handle_{variable.name}_ClickEvent()");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_Click.Invoke();");
+            AddCallback($"\t\t\t_{fieldName}_ClickEvent.Invoke();");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
         }
 
         private void GenericButtonComponent(UIBindData VARIABLE, string fieldName)
         {
-            AddField($"\t\tprivate UnityEvent _event_{fieldName}_Click;");
-            AddInit($"\t\t\t_event_{fieldName}_Click = new UnityEvent();");
+            AddField($"\t\tprivate UnityEvent _{fieldName}_ClickEvent;");
+            AddInit($"\t\t\t_{fieldName}_ClickEvent = new UnityEvent();");
 
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Click(UnityAction callback)");
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_ClickEvent(UnityAction callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_Click.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_ClickEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
+            AddSetup(Environment.NewLine);
             AddEvent($"\t\t\t{fieldName}?.onClick.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onClick.AddListener(on_Handle_{VARIABLE.name});");
-            AddCallback($"\t\tprotected virtual void on_Handle_{VARIABLE.name}()");
+            AddEvent($"\t\t\t{fieldName}?.onClick.AddListener(on_handle_{VARIABLE.name}_ClickEvent);");
+            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}_ClickEvent()");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_Click.Invoke();");
+            AddCallback($"\t\t\t_{fieldName}_ClickEvent.Invoke();");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
         }
 
         private void GenericToggleComponent(UIBindData VARIABLE, string fieldName)
         {
-            AddField($"\t\tprivate UnityEvent<bool> _event_{fieldName}_Change;");
-            AddInit($"\t\t\t_event_{fieldName}_Click = new UnityEvent();");
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Change(UnityAction<bool> callback)");
+            AddField($"\t\tprivate UnityEvent<bool> _{fieldName}_ChangeEvent;");
+            AddInit($"\t\t\t_{fieldName}_Click = new UnityEvent();");
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_ChangeEvent(UnityAction<bool> callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_Change.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_ChangeEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
+            AddSetup(Environment.NewLine);
             AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_Handle_{VARIABLE.name});");
-            AddCallback($"\t\tprotected virtual void on_Handle_{VARIABLE.name}(bool isOn)");
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name}_ChangeEvent);");
+            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}_ChangeEvent(bool value)");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_Click.Invoke(isOn);");
+            AddCallback($"\t\t\t_{fieldName}_ChangeEvent.Invoke(value);");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(bool isOn)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(bool value)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -297,23 +296,23 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericSliderComponent(UIBindData VARIABLE, string fieldName)
         {
-            AddField($"\t\tprivate UnityEvent<float> _event_{fieldName}_Change;");
-            AddInit($"\t\t\t_event_{fieldName}_Change = new UnityEvent<float>();");
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Change(UnityAction<float> callback)");
+            AddField($"\t\tprivate UnityEvent<float> _{fieldName}_ChangeEvent;");
+            AddInit($"\t\t\t_{fieldName}_ChangeEvent = new UnityEvent<float>();");
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_ChangeEvent(UnityAction<float> callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_Change.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_ChangeEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
+            AddSetup(Environment.NewLine);
 
             AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_Handle_{VARIABLE.name});");
-            AddCallback($"\t\tprotected virtual void on_Handle_{VARIABLE.name}(float value)");
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name}_ChangeEvent);");
+            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}_ChangeEvent(float value)");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_Change.Invoke(value);");
+            AddCallback($"\t\t\t_{fieldName}_ChangeEvent.Invoke(value);");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
 
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(float value)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(float value)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -325,22 +324,22 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericInputFieldComponent(UIBindData VARIABLE, string fieldName)
         {
-            AddField($"\t\tprivate UnityEvent<string> _event_{fieldName}_Submit;");
-            AddInit($"\t\t\t_event_{fieldName}_Submit = new UnityEvent<string>();");
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Submit(UnityAction<string> callback)");
+            AddField($"\t\tprivate UnityEvent<string> _{fieldName}_SubmitEvent;");
+            AddInit($"\t\t\t_{fieldName}_SubmitEvent = new UnityEvent<string>();");
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_SubmitEvent(UnityAction<string> callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_Submit.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_SubmitEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
+            AddSetup(Environment.NewLine);
             AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
-            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_Handle_{VARIABLE.name});");
-            AddCallback($"\t\tprotected virtual void on_Handle_{VARIABLE.name}(string value)");
+            AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_handle_{VARIABLE.name}_SubmitEvent);");
+            AddCallback($"\t\tprotected virtual void on_handle_{VARIABLE.name}_SubmitEvent(string value)");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_Submit.Invoke(value);");
+            AddCallback($"\t\t\t_{fieldName}_SubmitEvent.Invoke(value);");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
 
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(string value)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}_TextValue(string value)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -348,7 +347,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.SetTextWithoutNotify(value);");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(TMP_FontAsset fontAsset)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}_FontAsset(TMP_FontAsset fontAsset)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -356,7 +355,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.SetGlobalFontAsset(fontAsset);");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(int size)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}_FontSize(int size)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -368,21 +367,21 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericDropdownComponent(UIBindData VARIABLE, string fieldName, string componentName)
         {
-            AddField($"\t\tprivate UnityEvent<int> _event_{fieldName}_Change;");
-            AddInit($"\t\t\t_event_{fieldName}_Change = new UnityEvent<int>();");
-            AddSetup($"\t\tpublic void on_Setup_Callback_{fieldName}_Change(UnityAction<int> callback)");
+            AddField($"\t\tprivate UnityEvent<int> _{fieldName}_SelectionEvent;");
+            AddInit($"\t\t\t_{fieldName}_Change = new UnityEvent<int>();");
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_SelectionEvent(UnityAction<int> callback)");
             AddSetup("\t\t{");
-            AddSetup($"\t\t\t_event_{fieldName}_Change.AddListener(callback);");
+            AddSetup($"\t\t\t_{fieldName}_SelectionEvent.AddListener(callback);");
             AddSetup("\t\t}");
-
+            AddSetup(Environment.NewLine);
             AddEvent($"\t\t\t{fieldName}?.onValueChanged.RemoveAllListeners();");
             AddEvent($"\t\t\t{fieldName}?.onValueChanged.AddListener(on_Handle_{VARIABLE.name});");
             AddCallback($"\t\tprotected virtual void on_Handle_{VARIABLE.name}(int value)");
             AddCallback("\t\t{");
-            AddCallback($"\t\t\t_event_{fieldName}_Change.Invoke(value);");
+            AddCallback($"\t\t\t_{fieldName}_SelectionEvent.Invoke(value);");
             AddCallback("\t\t}");
             AddCallback(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(int index)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(int index)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -390,7 +389,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.SetValueWithoutNotify(index);");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(List<string> items)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}_DorpdownItems(List<string> items)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -398,7 +397,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(List<Sprite> items)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}_DorpdownItems(List<Sprite> items)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -406,7 +405,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.AddOptions(items);");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(List<{componentName}.OptionData> items)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}_DorpdownItems(List<{componentName}.OptionData> items)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -418,7 +417,7 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericImageComponent(UIBindData VARIABLE, string fieldName)
         {
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(string path)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string path)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -429,7 +428,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\thandle.SetSprite({fieldName});");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(Sprite sprite)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -437,7 +436,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.sprite = sprite;");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(Texture2D texture)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Texture2D texture)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -449,7 +448,7 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericRawImageComponent(UIBindData VARIABLE, string fieldName)
         {
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(string path)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(string path)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -461,7 +460,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
 
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(Sprite sprite)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -469,7 +468,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.texture = sprite.texture;");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(Texture2D texture)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Texture2D texture)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -478,7 +477,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
 
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(RenderTexture texture)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(RenderTexture texture)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -490,7 +489,7 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericTextComponent(UIBindData VARIABLE, string fieldName)
         {
-            AddSetup($"\t\tpublic void on_Setup_{VARIABLE.name}(object info)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(object info)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -569,9 +568,19 @@ namespace ZGame.Editor.PSD2GUI
             int index = 0;
             sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\tpublic override void Awake()");
-            sb.AppendLine("\t\t{{");
-            sb.AppendLine("\t\t\tbase.Awake()");
-            sb.AppendLine("\t\t}}");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\tbase.Awake();");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine(Environment.NewLine);
+            sb.AppendLine("\t\tpublic override void Enable(params object[] args)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine(Environment.NewLine);
+            sb.AppendLine("\t\t}");
+            sb.AppendLine(Environment.NewLine);
+            sb.AppendLine("\t\tpublic override void Disable()");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine(Environment.NewLine);
+            sb.AppendLine("\t\t}");
             sb.AppendLine(Environment.NewLine);
             callbackList.ForEach(x =>
             {

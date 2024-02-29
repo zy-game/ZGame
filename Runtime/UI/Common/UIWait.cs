@@ -5,6 +5,8 @@ using ZGame;
 
 namespace ZGame.UI
 {
+    [ResourceReference("Resources/Waiting")]
+    [UIOptions(UILAYER.WAITING)]
     public sealed class UIWait : UIBase
     {
         private Coroutine _coroutine;
@@ -55,13 +57,12 @@ namespace ZGame.UI
 
         public static void Show(string s, float timeout = 0)
         {
-            string resPath = $"Resources/Waiting";
-            UIManager.instance.Open<UIWait>(resPath, s, timeout);
+            UIManager.instance.Open<UIWait>(new object[] { s, timeout });
         }
 
         public static void Hide()
         {
-            UIManager.instance.Close<UIWait>();
+            UIManager.instance.Inactive<UIWait>();
         }
     }
 }

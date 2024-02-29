@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 namespace ZGame.UI
 {
+    [ResourceReference("Resources/Loading")]
+    [UIOptions(UILAYER.LOADING)]
     public class UILoading : UIBase, IProgress<float>
     {
         private Slider slider;
@@ -77,13 +79,7 @@ namespace ZGame.UI
                 return _instance;
             }
 
-            string resPath = $"Resources/Loading";
-            return _instance = UIManager.instance.Open<UILoading>(resPath);
-        }
-
-        public static async void Show(IUIRunning running, params object[] args)
-        {
-            await running.Run(Show(), args);
+            return _instance = UIManager.instance.Open<UILoading>();
         }
 
         public static void Hide()
@@ -96,16 +92,5 @@ namespace ZGame.UI
             UIManager.instance.Inactive<UILoading>();
             _instance = null;
         }
-    }
-
-
-    public interface IUIRunning : IDisposable
-    {
-        UniTask Run(UILoading loading, params object[] args);
-    }
-
-    public interface IUIRunning<T> : IUIRunning
-    {
-        UniTask<T> Run(UILoading loading, params object[] args);
     }
 }

@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace ZGame.UI
 {
+    [ResourceReference("Resources/Tips")]
+    [UIOptions(UILAYER.TIPS)]
     public sealed class UITips : UIBase
     {
         public UITips(GameObject gameObject) : base(gameObject)
@@ -37,8 +39,7 @@ namespace ZGame.UI
 
         public static void Show(string content, float timeout = 5)
         {
-            string resPath = $"Resources/Tips";
-            UIManager.instance.Open<UITips>(resPath, content, timeout);
+            UIManager.instance.Open<UITips>(new object[] { content, timeout });
         }
     }
 }

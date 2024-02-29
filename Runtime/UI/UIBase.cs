@@ -10,21 +10,14 @@ using ZGame.Sound;
 namespace ZGame.UI
 {
     /// <summary>
-    /// 标记主界面UI
-    /// </summary>
-    public sealed class HomeUI : Attribute
-    {
-    }
-
-    /// <summary>
     /// UI界面
     /// </summary>
     public class UIBase : IDisposable
     {
-        public string name { get; }
-        public GameObject gameObject { get; }
-        public Transform transform { get; }
-        public RectTransform rect_transform { get; }
+        public string name { get; private set; }
+        public Transform transform { get; private set; }
+        public GameObject gameObject { get; private set; }
+        public RectTransform rect_transform { get; private set; }
 
         private Dictionary<object, Coroutine> _coroutines = new Dictionary<object, Coroutine>();
 
@@ -62,7 +55,13 @@ namespace ZGame.UI
         /// </summary>
         public virtual void Dispose()
         {
+            transform = null;
+            name = String.Empty;
+            rect_transform = null;
             this.StopCountDown(null);
+            _coroutines.Clear();
+            GameObject.DestroyImmediate(gameObject);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
