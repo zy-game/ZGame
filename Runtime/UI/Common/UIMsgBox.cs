@@ -9,7 +9,7 @@ using ZGame.Config;
 namespace ZGame.UI
 {
     [ResourceReference("Resources/MsgBox")]
-    [UIOptions(UILAYER.MESSAGE)]
+    [UIOptions(UILayer.Notification, SceneType.Addition, CacheType.Permanent)]
     public class UIMsgBox : UIBase
     {
         private Action onYes;
@@ -21,6 +21,7 @@ namespace ZGame.UI
 
         public override void Enable(params object[] args)
         {
+            base.Enable(args);
             this.onYes = (Action)(args[2]);
             this.onNo = (Action)(args[3]);
 
@@ -87,7 +88,7 @@ namespace ZGame.UI
 
         public static void Show(string title, string content, Action onYes, Action onNo)
         {
-            UIManager.instance.Open<UIMsgBox>(new object[] { title, content, onYes, onNo });
+            UIManager.instance.Active<UIMsgBox>(new object[] { title, content, onYes, onNo });
         }
 
         public static void Show(string content, Action onYes, Action onNo)

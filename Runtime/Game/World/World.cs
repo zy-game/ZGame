@@ -21,11 +21,8 @@ namespace ZGame.Game
         private Gradient sunshineGradient;
         private List<Tuple<int, Camera>> subCameras = new();
         private UniversalAdditionalCameraData universalAdditionalCameraData;
-        private List<ActorEntity> _actors = new();
+        private List<GameEntity> _entities = new();
 
-        /// <summary>
-        /// 世界名
-        /// </summary>
         public string name
         {
             get { return _name; }
@@ -71,10 +68,10 @@ namespace ZGame.Game
             get { return _second; }
         }
 
-        internal World(string name)
+        public World(string name)
         {
             _name = name;
-            _camera = new GameObject(name).AddComponent<Camera>();
+            _camera = new GameObject(_name).AddComponent<Camera>();
             universalAdditionalCameraData = main.gameObject.AddComponent<UniversalAdditionalCameraData>();
             universalAdditionalCameraData.renderShadows = false;
             universalAdditionalCameraData.renderType = CameraRenderType.Base;
@@ -82,9 +79,11 @@ namespace ZGame.Game
             universalAdditionalCameraData.volumeLayerMask = 0;
             main.allowMSAA = false;
             skybox = main.gameObject.AddComponent<Skybox>();
+            BehaviourScriptable.instance.SetupFixedUpdateEvent(OnFixedUpdate);
+            BehaviourScriptable.instance.SetupUpdateEvent(OnUpdate);
         }
 
-        public void OnFixedUpdate()
+        private void OnFixedUpdate()
         {
             _second += _speed;
             if (_second < 60)
@@ -108,11 +107,11 @@ namespace ZGame.Game
             }
         }
 
-        public void OnUpdate()
+        private void OnUpdate()
         {
-            for (int i = _actors.Count - 1; i >= 0; i--)
+            for (int i = _entities.Count - 1; i >= 0; i--)
             {
-                _actors[i].OnUpdate();
+                _entities[i].OnUpdate();
             }
         }
 
@@ -266,35 +265,55 @@ namespace ZGame.Game
             }
         }
 
-        
-        public void SetActor(ActorEntity actor)
+        public GameEntity FindEntityByName(string name)
         {
-            _actors.Add(actor);
+            return _entities.Find(x => x.name == name);
         }
 
-        public void RemoveActor(ActorEntity actor)
+        public GameEntity FindEntityById(string id)
         {
-            _actors.Remove(actor);
+            return _entities.Find(x => x.id == id);
         }
 
-        public ActorEntity GetActor(string name)
+        public GameEntity CreateEntity(string name, string modelPath)
         {
-            return _actors.Find(x => x.name == name);
+            GameEntity entity = GameEntity.Create<GameEntity>(name, modelPath);
+            _entities.Add(entity);
+            return entity;
         }
 
-        public ActorEntity CreateActor(string name, string modelPath)
+        public void RemoveEntityByName(string name)
         {
-            ActorEntity actor = ActorEntity.Create<ActorEntity>(name, modelPath);
-            SetActor(actor);
-            return actor;
-        }
-
-        public void ClearActor()
-        {
-            for (var i = 0; i < _actors.Count; i++)
+            GameEntity gameEntity = FindEntityByName(name);
+            if (gameEntity is null)
             {
-                _actors[i].Dispose();
+                return;
             }
+
+            _entities.Remove(gameEntity);
+            gameEntity.Dispose();
+        }
+
+        public void RemoveEntityById(string id)
+        {
+            GameEntity gameEntity = FindEntityById(id);
+            if (gameEntity is null)
+            {
+                return;
+            }
+
+            _entities.Remove(gameEntity);
+            gameEntity.Dispose();
+        }
+
+        public void ClearEntitys()
+        {
+            for (var i = 0; i < _entities.Count; i++)
+            {
+                _entities[i].Dispose();
+            }
+
+            _entities.Clear();
         }
 
         public void Dispose()
@@ -314,6 +333,9 @@ namespace ZGame.Game
                 GameObject.DestroyImmediate(_camera.gameObject);
             }
 
+            BehaviourScriptable.instance.UnsetupFixedUpdateEvent(OnFixedUpdate);
+            BehaviourScriptable.instance.UnsetupUpdateEvent(OnUpdate);
+            ClearEntitys();
             subCameras.Clear();
             sunshineGradient = null;
             skybox = null;

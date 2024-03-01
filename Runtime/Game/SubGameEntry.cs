@@ -6,17 +6,12 @@ using System.Reflection;
 using Cysharp.Threading.Tasks;
 using HybridCLR;
 using UnityEngine;
-using ZGame.FileSystem;
-using ZGame.Networking;
 using ZGame.Resource;
 
 namespace ZGame.Game
 {
-    public abstract class SubGame : IDisposable
+    public class SubGameEntry : IDisposable
     {
-        public Assembly assembly { get; private set; }
-        public EntryConfig config { get; private set; }
-
         public virtual void OnEntry()
         {
         }
@@ -25,28 +20,7 @@ namespace ZGame.Game
         {
         }
 
-        public static async UniTask<SubGame> LoadGame(EntryConfig config)
-        {
-            Assembly assembly = await LoadGameAssembly(config);
-            if (assembly is null)
-            {
-                throw new NullReferenceException(nameof(assembly));
-            }
-
-            Type entryType = assembly.GetAllSubClasses<SubGame>().FirstOrDefault();
-            if (entryType is null)
-            {
-                throw new EntryPointNotFoundException();
-            }
-
-            SubGame subGameEntry = Activator.CreateInstance(entryType) as SubGame;
-            subGameEntry.assembly = assembly;
-            subGameEntry.config = config;
-
-            return subGameEntry;
-        }
-
-        private static async UniTask<Assembly> LoadGameAssembly(EntryConfig config)
+        internal static async UniTask<Assembly> LoadGameAssembly(EntryConfig config)
         {
             if (config.mode is CodeMode.Native || (BasicConfig.instance.resMode == ResourceMode.Editor && Application.isEditor))
             {

@@ -574,12 +574,12 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\tpublic override void Enable(params object[] args)");
             sb.AppendLine("\t\t{");
-            sb.AppendLine(Environment.NewLine);
+            sb.AppendLine("\t\t\tbase.Enable(args);");
             sb.AppendLine("\t\t}");
             sb.AppendLine(Environment.NewLine);
             sb.AppendLine("\t\tpublic override void Disable()");
             sb.AppendLine("\t\t{");
-            sb.AppendLine(Environment.NewLine);
+            sb.AppendLine("\t\t\tbase.Disable();");
             sb.AppendLine("\t\t}");
             sb.AppendLine(Environment.NewLine);
             callbackList.ForEach(x =>
@@ -707,6 +707,7 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("\t\tpublic override void Dispose()");
             sb.AppendLine("\t\t{");
             disposeList.ForEach(x => sb.AppendLine(x));
+            sb.AppendLine("\t\t\t\tbase.Dispose();");
             sb.AppendLine("\t\t\tGC.SuppressFinalize(this);");
             sb.AppendLine("\t\t}");
             sb.AppendLine("\t}");

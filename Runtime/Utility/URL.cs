@@ -15,11 +15,7 @@ namespace ZGame
             return UrlEncodeBytesToBytesInternal(bytes, 0, bytes.Length, false);
         }
 
-        private static byte[] UrlEncodeBytesToBytesInternal(
-            byte[] bytes,
-            int offset,
-            int count,
-            bool alwaysCreateReturnValue)
+        private static byte[] UrlEncodeBytesToBytesInternal(byte[] bytes, int offset, int count, bool alwaysCreateReturnValue)
         {
             int num1 = 0;
             int num2 = 0;

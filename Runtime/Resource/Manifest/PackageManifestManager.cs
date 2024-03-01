@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.IO;
@@ -5,9 +6,12 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
+using ZGame.Config;
 using ZGame.FileSystem;
+using ZGame.Game;
 using ZGame.Networking;
 using ZGame.Resource.Config;
+using ZGame.UI;
 
 namespace ZGame.Resource
 {
@@ -27,18 +31,18 @@ namespace ZGame.Resource
         /// 设置资源包模块
         /// </summary>
         /// <param name="packageName"></param>
-        public async UniTask Setup(string packageName)
+        public async UniTask<bool> SetupPackageManifest(string packageName)
         {
 #if UNITY_EDITOR
             if (BasicConfig.instance.resMode == ResourceMode.Editor)
             {
-                return;
+                return true;
             }
 #endif
             ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is not null)
             {
-                return;
+                return true;
             }
 
             string iniFilePath = OSSConfig.instance.GetFilePath($"{packageName}.ini");
@@ -54,7 +58,17 @@ namespace ZGame.Resource
             if (resourcePackageListManifest is null)
             {
                 Debug.LogError("没有找到资源包列表配置文件：" + iniFilePath);
-                return;
+                return false;
+            }
+
+            if (resourcePackageListManifest.appVersion.Equals(BasicConfig.instance.curEntry.version) is false)
+            {
+                UIMsgBox.Show(Localliztion.instance.Query("App 版本过低，请重新安装App后在使用"), () =>
+                {
+                    Application.OpenURL(BasicConfig.instance.apkUrl);
+                    GameManager.instance.QuitGame();
+                });
+                throw new Exception("App 版本过低，请重新安装App后在使用");
             }
 
             _packageListManifests.Add(resourcePackageListManifest);
@@ -62,9 +76,11 @@ namespace ZGame.Resource
             {
                 foreach (var VARIABLE in resourcePackageListManifest.dependencies)
                 {
-                    await Setup(VARIABLE);
+                    await SetupPackageManifest(VARIABLE);
                 }
             }
+
+            return true;
         }
 
         public ResourcePackageManifest GetResourcePackageManifest(string packageName)
@@ -137,6 +153,7 @@ namespace ZGame.Resource
             {
                 return needUpdatePackages;
             }
+
 
             foreach (var package in resourcePackageListManifest.packages)
             {

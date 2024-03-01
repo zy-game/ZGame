@@ -83,7 +83,7 @@ namespace ZGame.Networking
                     return;
                 }
 
-                ModuleManager.OnAction(opcode.ToString(), message);
+                //ModuleManager.OnAction(opcode.ToString(), message);
             }
         }
 

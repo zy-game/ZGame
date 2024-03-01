@@ -17,6 +17,11 @@ namespace ZGame.Resource
         public uint version;
 
         /// <summary>
+        /// 绑定的安装包版本
+        /// </summary>
+        public string appVersion;
+
+        /// <summary>
         /// 引用的资源模块
         /// </summary>
         public List<string> dependencies;

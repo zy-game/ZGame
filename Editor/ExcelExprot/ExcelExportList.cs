@@ -107,19 +107,69 @@ namespace ZGame.Editor.ExcelExprot
                 "int" => "int",
                 "float" => "float",
                 "bool" => "bool",
+                "string" => "string",
+                "int[]" => "int[]",
+                "float[]" => "float[]",
+                "bool[]" => "bool[]",
+                "string[]" => "string[]",
                 _ => "string"
             };
         }
 
         private string GetDefaultValue(string t, string name, string v)
         {
-            return t switch
+            string temp = $"{name} = ";
+            switch (t)
             {
-                "int" => $"{name} = {v}, ",
-                "float" => $"{name} = {v}, ",
-                "bool" => $"{name} = {(v == "0")}, ",
-                _ => $"{name} = @\"{v}\",",
-            };
+                case "int":
+                case "float":
+                    temp += $"{v}, ";
+                    break;
+                case "bool":
+                    temp += $"{(v == "0" ? "false" : "true")}, ";
+                    break;
+                case "string":
+                    temp += $"@\"{v}\", ";
+                    break;
+                case "int[]":
+                    temp += $"new int [] {{{v}}}";
+                    break;
+                case "float[]":
+                    temp += $"new float [] {{v}}";
+                    break;
+                case "bool[]":
+                    string[] m = v.Split(",");
+                    temp += $"new bool [] {{";
+                    for (int i = 0; i < m.Length; i++)
+                    {
+                        temp += m[i] == "0" ? "false" : "true";
+                        if (i != m.Length - 1)
+                        {
+                            temp += ", ";
+                        }
+                    }
+
+                    temp += "}, ";
+                    break;
+                case "string[]":
+                    temp += $"new string [] {{";
+                    string[] m2 = v.Split(",");
+                    for (int i = 0; i < m2.Length; i++)
+                    {
+                        temp += $"@\"{m2[i]}\"";
+                        if (i != m2.Length - 1)
+                        {
+                            temp += ", ";
+                        }
+                    }
+
+                    temp += "}, ";
+                    break;
+                default:
+                    break;
+            }
+
+            return temp;
         }
 
         private string GetStructData(DataRow row, DataRow header, DataRow typeRow, int rowIndex)

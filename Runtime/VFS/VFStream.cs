@@ -31,6 +31,7 @@ namespace ZGame.FileSystem
             time = 0;
             Debug.Log("Dispose File: " + name);
             name = String.Empty;
+            fileStream.Flush();
             fileStream.Close();
             fileStream.Dispose();
         }

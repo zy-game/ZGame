@@ -50,6 +50,7 @@ namespace ZGame.Editor.Command
                 packageListManifest.name = VARIABLE.seting.name;
                 packageListManifest.packages = new ResourcePackageManifest[VARIABLE.builds.Length];
                 packageListManifest.version = Crc32.GetCRC32Str(DateTime.Now.ToString("g"));
+                packageListManifest.appVersion = BasicConfig.instance.curEntry.version;
                 for (int i = 0; i < VARIABLE.builds.Length; i++)
                 {
                     string[] dependencies = manifest.GetAllDependencies(VARIABLE.builds[i].assetBundleName);

@@ -4,51 +4,86 @@ using UnityEngine.Serialization;
 namespace ZGame.UI
 {
     /// <summary>
+    /// UI选项
+    /// </summary>
+    public sealed class UIOptions : Attribute
+    {
+        public int layer;
+        public SceneType sceneType;
+        public CacheType cacheType;
+
+        public UIOptions(int layer, SceneType sceneType, CacheType cacheType)
+        {
+            this.layer = layer;
+            this.sceneType = sceneType;
+            this.cacheType = cacheType;
+        }
+
+        public UIOptions(UILayer layer, SceneType sceneType, CacheType cacheType) : this((int)layer, sceneType, cacheType)
+        {
+        }
+    }
+
+    /// <summary>
     /// 界面默认层级
     /// </summary>
-    public enum UILAYER : byte
+    public enum UILayer : byte
     {
-        BACKGROUND = 10,
-        BOTTOM = 30,
-        MIDDLE = 50,
-        TOP = 60,
-        LOADING = 80,
-        WAITING = 90,
-        MESSAGE = 100,
-        TIPS = 110,
+        /// <summary>
+        /// 底层
+        /// </summary>
+        Background = 1,
+
+        /// <summary>
+        /// 内容层
+        /// </summary>
+        Middle = 50,
+
+        /// <summary>
+        /// 弹窗层
+        /// </summary>
+        Popup = 100,
+
+        /// <summary>
+        /// 通知弹窗层
+        /// </summary>
+        Notification = 150,
     }
 
     /// <summary>
     /// 界面显示方式
     /// </summary>
-    public enum LOADTYPE : byte
+    public enum SceneType : byte
     {
-        ADDITION,
-        OVERLAP,
+        /// <summary>
+        /// 叠加窗口
+        /// </summary>
+        Addition,
+
+        /// <summary>
+        /// 覆盖窗口
+        /// </summary>
+        Overlap,
     }
 
-    public sealed class UIOptions : Attribute
+    /// <summary>
+    /// 缓存类型
+    /// </summary>
+    public enum CacheType : byte
     {
-        public int layer;
-        public Type parent;
-        public LOADTYPE loadtype;
+        /// <summary>
+        /// 零时缓存，用完就删，不会缓存此标记的物体
+        /// </summary>
+        Temp,
 
-        public UIOptions(int layer, LOADTYPE loadtype = LOADTYPE.OVERLAP)
-        {
-            this.layer = layer;
-            this.loadtype = loadtype;
-        }
+        /// <summary>
+        /// 常驻行，用完回收进缓存池中，等待下次使用
+        /// </summary>
+        Permanent,
 
-        public UIOptions(UILAYER layer, LOADTYPE loadtype = LOADTYPE.OVERLAP) : this((int)layer, loadtype)
-        {
-        }
-
-
-        public UIOptions(Type parent, LOADTYPE loadtype = LOADTYPE.OVERLAP)
-        {
-            this.layer = -1;
-            this.parent = parent;
-            this.loadtype = loadtype;
-        }
+        /// <summary>
+        /// 自动管理，由框架根据运行时状态自动管理卸载
+        /// </summary>
+        Auto,
     }
 }

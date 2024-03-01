@@ -41,6 +41,12 @@ namespace ZGame.UI
         /// </summary>
         public virtual void Enable(params object[] args)
         {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -48,6 +54,12 @@ namespace ZGame.UI
         /// </summary>
         public virtual void Disable()
         {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -61,6 +73,7 @@ namespace ZGame.UI
             this.StopCountDown(null);
             _coroutines.Clear();
             GameObject.DestroyImmediate(gameObject);
+            gameObject = null;
             GC.SuppressFinalize(this);
         }
 

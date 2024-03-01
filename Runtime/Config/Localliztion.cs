@@ -42,7 +42,8 @@ namespace ZGame.Config
             new("资源加载完成...", "Resources loaded successfully..."),
             new("正在加载资源信息...", "Loading resource information..."),
             new("资源更新完成...", "Resource update completed..."),
-            new("确定", "Confirm")
+            new("确定", "Confirm"),
+            new("App 版本过低，请重新安装App后在使用", "The app version is too low. Please reinstall the app before using it")
         };
 
         /// <summary>

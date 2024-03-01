@@ -4,7 +4,7 @@ using ZGame.Resource;
 
 namespace ZGame.Game
 {
-    public class ActorEntity : IDisposable
+    public class GameEntity : IDisposable
     {
         private string _id;
         private string _name;
@@ -20,7 +20,7 @@ namespace ZGame.Game
         public AnimatorManager animatorManager => _animatorManager;
 
 
-        public static T Create<T>(string name, string modelPath) where T : ActorEntity
+        public static T Create<T>(string name, string modelPath) where T : GameEntity
         {
             Debug.Log(modelPath);
             ResObject resObject = ResourceManager.instance.LoadAsset(modelPath);

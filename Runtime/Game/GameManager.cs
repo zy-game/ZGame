@@ -1,25 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
 using Cysharp.Threading.Tasks.Triggers;
-using HybridCLR;
 using UnityEngine;
 using ZGame.Config;
-using ZGame.Resource;
 using ZGame.UI;
 
 namespace ZGame.Game
 {
     public sealed class GameManager : Singleton<GameManager>
     {
-        private Assembly assembly = default;
-        private SubGame _currentGame = default;
+        private SubGameEntry _currentGame;
         private List<World> worlds = new();
         private static World _defaultWorld = default;
-        public SubGame CurrentGame => _currentGame;
 
         public static World DefaultWorld
         {
@@ -27,34 +22,13 @@ namespace ZGame.Game
             {
                 if (_defaultWorld is null)
                 {
-                    _defaultWorld = new World("DEFAULT_WORLD");
+                    instance.worlds.Add(_defaultWorld = new World("DEFAULT"));
                 }
 
                 return _defaultWorld;
             }
         }
 
-        protected override void OnAwake()
-        {
-            BehaviourScriptable.instance.SetupUpdateEvent(OnUpdate);
-            BehaviourScriptable.instance.SetupFixedUpdateEvent(OnFixedUpdate);
-        }
-
-        private void OnFixedUpdate()
-        {
-            for (int i = worlds.Count - 1; i >= 0; i--)
-            {
-                worlds[i].OnFixedUpdate();
-            }
-        }
-
-        private void OnUpdate()
-        {
-            for (int i = worlds.Count - 1; i >= 0; i--)
-            {
-                worlds[i].OnUpdate();
-            }
-        }
 
         public override void Dispose()
         {
@@ -64,58 +38,37 @@ namespace ZGame.Game
             }
 
             worlds.Clear();
+            Debug.Log("Dispose SubGame:" + _currentGame);
             _currentGame?.Dispose();
             _currentGame = null;
         }
 
-        public World CreateWorld(string name)
+        public async UniTask EntrySubGame(EntryConfig config)
         {
-            World world = GetWorld(name);
-            if (world is not null)
+            Assembly assembly = await SubGameEntry.LoadGameAssembly(config);
+            if (assembly is null)
             {
-                return world;
+                throw new NullReferenceException(nameof(assembly));
             }
 
-            world = new(name);
-            worlds.Add(world);
-            return world;
-        }
-
-        public World GetWorld(string name)
-        {
-            return worlds.Find(x => x.name == name);
-        }
-
-        public void RemoveWorld(string name)
-        {
-            if (name == "DEFAULT_WORLD")
+            Type entryType = assembly.GetAllSubClasses<SubGameEntry>().FirstOrDefault();
+            if (entryType is null)
             {
+                throw new EntryPointNotFoundException();
+            }
+
+            _currentGame = Activator.CreateInstance(entryType) as SubGameEntry;
+            if (_currentGame is null)
+            {
+                Debug.LogError("加载入口失败");
                 return;
             }
 
-            World world = GetWorld(name);
-            if (world is null)
-            {
-                return;
-            }
-
-            world.Dispose();
-            worlds.Remove(world);
-        }
-
-
-        public async UniTask<bool> JoinGame(EntryConfig config)
-        {
-            SubGame gameEntry = await SubGame.LoadGame(config);
-            if (gameEntry is null)
-            {
-                return false;
-            }
-
-            _currentGame = gameEntry;
+            Debug.Log("Entry SubGame:" + _currentGame);
             _currentGame.OnEntry();
-            return true;
+            return;
         }
+
 
         public void QuitGame()
         {

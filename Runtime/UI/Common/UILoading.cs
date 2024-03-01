@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace ZGame.UI
 {
     [ResourceReference("Resources/Loading")]
-    [UIOptions(UILAYER.LOADING)]
+    [UIOptions(UILayer.Notification, SceneType.Overlap, CacheType.Permanent)]
     public class UILoading : UIBase, IProgress<float>
     {
         private Slider slider;
@@ -22,7 +22,6 @@ namespace ZGame.UI
         public override void Awake()
         {
             slider = this.gameObject.GetComponentInChildren<Slider>();
-
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
             foreach (var VARIABLE in texts)
             {
@@ -79,7 +78,7 @@ namespace ZGame.UI
                 return _instance;
             }
 
-            return _instance = UIManager.instance.Open<UILoading>();
+            return _instance = UIManager.instance.Active<UILoading>();
         }
 
         public static void Hide()

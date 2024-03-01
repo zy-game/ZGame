@@ -42,6 +42,7 @@ namespace ZGame.Editor
             int curIndex = 0;
 
             BasicConfig.instance.companyName = EditorGUILayout.TextField("公司名称", BasicConfig.instance.companyName);
+            BasicConfig.instance.apkUrl = EditorGUILayout.TextField("安装包下载地址", BasicConfig.instance.apkUrl);
             BasicConfig.instance.language = (LanguageDefine)EditorGUILayout.EnumPopup("默认语言", BasicConfig.instance.language);
             NativeLeakDetection.Mode = (NativeLeakDetectionMode)EditorGUILayout.EnumPopup("Enable Stack Trace", NativeLeakDetection.Mode);
             GUILayout.BeginHorizontal();

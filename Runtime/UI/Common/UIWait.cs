@@ -6,7 +6,7 @@ using ZGame;
 namespace ZGame.UI
 {
     [ResourceReference("Resources/Waiting")]
-    [UIOptions(UILAYER.WAITING)]
+    [UIOptions(UILayer.Notification, SceneType.Addition, CacheType.Permanent)]
     public sealed class UIWait : UIBase
     {
         private Coroutine _coroutine;
@@ -17,6 +17,7 @@ namespace ZGame.UI
 
         public override void Enable(params object[] args)
         {
+            base.Enable();
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
             foreach (var VARIABLE in texts)
             {
@@ -46,6 +47,7 @@ namespace ZGame.UI
 
         public override void Dispose()
         {
+            base.Dispose();
             if (_coroutine == null)
             {
                 return;
@@ -57,7 +59,7 @@ namespace ZGame.UI
 
         public static void Show(string s, float timeout = 0)
         {
-            UIManager.instance.Open<UIWait>(new object[] { s, timeout });
+            UIManager.instance.Active<UIWait>(new object[] { s, timeout });
         }
 
         public static void Hide()

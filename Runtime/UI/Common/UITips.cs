@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ZGame.UI
 {
     [ResourceReference("Resources/Tips")]
-    [UIOptions(UILAYER.TIPS)]
+    [UIOptions(UILayer.Notification, SceneType.Addition, CacheType.Permanent)]
     public sealed class UITips : UIBase
     {
         public UITips(GameObject gameObject) : base(gameObject)
@@ -14,6 +14,7 @@ namespace ZGame.UI
 
         public override void Enable(params object[] args)
         {
+            base.Enable(args);
             string content = args[0].ToString();
             float timeout = (float)args[1];
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
@@ -39,7 +40,7 @@ namespace ZGame.UI
 
         public static void Show(string content, float timeout = 5)
         {
-            UIManager.instance.Open<UITips>(new object[] { content, timeout });
+            UIManager.instance.Active<UITips>(new object[] { content, timeout });
         }
     }
 }

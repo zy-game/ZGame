@@ -192,7 +192,15 @@ namespace ZGame
         /// </summary>
         public float resTimeout = 60f;
 
+        /// <summary>
+        /// 公司名
+        /// </summary>
         public string companyName;
+
+        /// <summary>
+        /// 安装包地址
+        /// </summary>
+        public string apkUrl;
 
         /// <summary>
         /// 默认语言
@@ -231,7 +239,7 @@ namespace ZGame
                 curEntry.referenceAssemblyList = new List<UnityEditorInternal.AssemblyDefinitionAsset>();
             }
 #endif
-            
+
 
             if (curEntry.channels is null)
             {

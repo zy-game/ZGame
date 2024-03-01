@@ -62,13 +62,6 @@ namespace ZGame
             gameObject.transform.localPosition = position;
             gameObject.transform.localRotation = Quaternion.Euler(rotation);
             gameObject.transform.localScale = scale;
-            // RectTransform rectTransform = default;
-            // if ((rectTransform = gameObject.GetComponent<RectTransform>()) == null)
-            // {
-            //     return;
-            // }
-            //
-            // rectTransform.anchoredPosition = position;
         }
 
         public static string ToBase64String(this AudioClip clip)

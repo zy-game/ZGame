@@ -144,47 +144,44 @@ namespace ZGame.Resource
             UILoading.SetProgress(0);
             List<ResourcePackageManifest> manifests = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
 
-            if (manifests is null || manifests.Count == 0)
+            if (manifests is not null && manifests.Count > 0)
             {
-                UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
-                UILoading.SetProgress(1);
-            }
-
-            Debug.Log("需要更新资源：" + string.Join(",", manifests.Select(x => x.name)));
-            HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
-            HashSet<string> failure = new HashSet<string>();
-            foreach (var packageManifest in manifests)
-            {
-                if (downloadList.Contains(packageManifest))
+                Debug.Log("需要更新资源：" + string.Join(",", manifests.Select(x => x.name)));
+                HashSet<ResourcePackageManifest> downloadList = new HashSet<ResourcePackageManifest>();
+                HashSet<string> failure = new HashSet<string>();
+                foreach (var packageManifest in manifests)
                 {
-                    continue;
-                }
-
-                string url = OSSConfig.instance.GetFilePath(packageManifest.name);
-                using (UnityWebRequest request = UnityWebRequest.Get(url))
-                {
-                    request.timeout = 5;
-                    request.useHttpContinue = true;
-                    request.disposeUploadHandlerOnDispose = true;
-                    request.disposeDownloadHandlerOnDispose = true;
-                    UILoading.SetTitle(Path.GetFileName(url));
-                    await request.SendWebRequest().ToUniTask(UILoading.Show());
-                    UILoading.SetProgress(1);
-                    if (request.result is not UnityWebRequest.Result.Success)
+                    if (downloadList.Contains(packageManifest))
                     {
-                        failure.Add(packageManifest.name);
                         continue;
                     }
 
-                    await VFSManager.instance.WriteAsync(Path.GetFileName(url), request.downloadHandler.data, packageManifest.version);
-                }
-            }
+                    string url = OSSConfig.instance.GetFilePath(packageManifest.name);
+                    using (UnityWebRequest request = UnityWebRequest.Get(url))
+                    {
+                        request.timeout = 5;
+                        request.useHttpContinue = true;
+                        request.disposeUploadHandlerOnDispose = true;
+                        request.disposeDownloadHandlerOnDispose = true;
+                        UILoading.SetTitle(Path.GetFileName(url));
+                        await request.SendWebRequest().ToUniTask(UILoading.Show());
+                        UILoading.SetProgress(1);
+                        if (request.result is not UnityWebRequest.Result.Success)
+                        {
+                            failure.Add(packageManifest.name);
+                            continue;
+                        }
 
-            if (failure.Count > 0)
-            {
-                Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
-                UIMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
-                return;
+                        await VFSManager.instance.WriteAsync(Path.GetFileName(url), request.downloadHandler.data, packageManifest.version);
+                    }
+                }
+
+                if (failure.Count > 0)
+                {
+                    Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
+                    UIMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
+                    return;
+                }
             }
 
             Debug.Log("资源更新完成");

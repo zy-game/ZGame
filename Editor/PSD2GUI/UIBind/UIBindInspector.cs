@@ -282,7 +282,12 @@ namespace ZGame.Editor.PSD2GUI
             GUILayout.Label("Bind Components", GUILayout.Width(110));
             if (EditorGUILayout.DropdownButton(new GUIContent(options.selector.ToString()), FocusType.Passive))
             {
-                options.selector.ShowContext(() => { EditorUtility.SetDirty(setting); });
+                options.selector.ShowContext(() =>
+                {
+                    EditorUtility.SetDirty(setting);
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+                });
             }
 
             GUILayout.EndHorizontal();

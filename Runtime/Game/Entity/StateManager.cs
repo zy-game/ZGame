@@ -10,7 +10,7 @@ namespace ZGame.Game
         private List<Stateable> _states = new List<Stateable>();
 
 
-        public StateManager(ActorEntity actor)
+        public StateManager(GameEntity entity)
         {
         }
 

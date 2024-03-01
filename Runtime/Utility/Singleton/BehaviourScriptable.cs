@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using ZGame.Config;
+using ZGame.Game;
+using ZGame.UI;
 
 namespace ZGame
 {
@@ -353,6 +356,11 @@ namespace ZGame
         public void UnsetupGameObjectDestroyEvent(UnityAction action)
         {
             onDestroy.RemoveListener(action);
+        }
+
+        private void Awake()
+        {
+            SetupKeyDownEvent(KeyCode.Escape, keyEvent => { UIMsgBox.Show(Localliztion.instance.Query("是否退出"), GameManager.instance.QuitGame); });
         }
 
         private void Update()

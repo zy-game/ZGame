@@ -63,10 +63,6 @@ namespace ZGame
             }
         }
 
-        public static T CheckNotNull<T>(T value, string name) where T : class => (object)value != null ? value : throw new ArgumentNullException(name);
-
-        internal static T CheckNotNullUnconstrained<T>(T value, string name) => (object)value != null ? value : throw new ArgumentNullException(name);
-
         public static int GetLoopCount(int value, int min, int max)
         {
             if (value > max)
