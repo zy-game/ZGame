@@ -84,7 +84,7 @@ namespace ZGame.Sound
             this.callback = callback;
             _source.clip = clip;
             Resume();
-            await UniTask.Delay((int)clip.length * 1000);
+            await UniTask.Delay((int)clip.length * 1000 + 1000);
             Stop();
         }
 

@@ -57,12 +57,12 @@ namespace ZGame.Resource
             }
 
             await ResPackageCache.instance.UpdateResourcePackageList(config);
-            UILoading.SetTitle(Localliztion.instance.Query("正在加载资源信息..."));
+            UILoading.SetTitle(Localize.instance.Query("正在加载资源信息..."));
             UILoading.SetProgress(0);
             List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(config.module);
             if (manifests is null || manifests.Count == 0)
             {
-                UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
+                UILoading.SetTitle(Localize.instance.Query("资源加载完成..."));
                 UILoading.SetProgress(1);
                 return;
             }

@@ -112,6 +112,10 @@ namespace ZGame.Editor.PSD2GUI
                     new() { fullName = typeof(TMP_Dropdown).FullName, prefix = "dorp_", isDefault = true },
                     new() { fullName = typeof(TMP_Text).FullName, prefix = "text_", isDefault = true },
                     new() { fullName = typeof(RawImage).FullName, prefix = "raw_", isDefault = true },
+                    new() { fullName = typeof(LoopScrollViewer).FullName, prefix = "loop_", isDefault = true },
+                    new() { fullName = typeof(UIBind).FullName, prefix = "temp_", isDefault = true },
+                    new() { fullName = typeof(LongPresseButton).FullName, prefix = "lbtn_", isDefault = true },
+                    
                 };
             }
 

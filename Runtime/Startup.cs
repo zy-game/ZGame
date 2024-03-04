@@ -13,8 +13,8 @@ public class Startup : MonoBehaviour
     {
         Debug.Log(GameManager.DefaultWorld.name);
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
-        Localliztion.instance.Switch(BasicConfig.instance.language);
-        UILoading.SetTitle(Localliztion.instance.Query("正在获取配置信息..."));
+        Localize.instance.Switch(BasicConfig.instance.language);
+        UILoading.SetTitle(Localize.instance.Query("正在获取配置信息..."));
         UILoading.SetProgress(0);
         if (BasicConfig.instance.curEntry is null)
         {

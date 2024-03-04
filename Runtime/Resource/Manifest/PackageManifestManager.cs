@@ -63,7 +63,7 @@ namespace ZGame.Resource
 
             if (resourcePackageListManifest.appVersion.Equals(BasicConfig.instance.curEntry.version) is false)
             {
-                UIMsgBox.Show(Localliztion.instance.Query("App 版本过低，请重新安装App后在使用"), () =>
+                UIMsgBox.Show(Localize.instance.Query("App 版本过低，请重新安装App后在使用"), () =>
                 {
                     Application.OpenURL(BasicConfig.instance.apkUrl);
                     GameManager.instance.QuitGame();

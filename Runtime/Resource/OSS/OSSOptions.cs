@@ -4,6 +4,14 @@ using UnityEngine;
 
 namespace ZGame.Resource.Config
 {
+    public enum OSSType
+    {
+        None,
+        Aliyun,
+        Tencent,
+        Streaming,
+    }
+
     [Serializable]
     public class OSSOptions
     {

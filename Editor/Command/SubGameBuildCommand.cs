@@ -23,7 +23,7 @@ namespace ZGame.Editor.Command
             }
 
             var config = args[0] as EntryConfig;
-            var genericAll = args[1] as bool? ?? false;
+            var channel = args[1] as ChannelOptions;
             //todo 编译资源
             PackageSeting seting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
             StripAOTDllCommand.GenerateStripedAOTDlls();
@@ -52,7 +52,7 @@ namespace ZGame.Editor.Command
 
             BuildPackageCommand.Executer(seting);
 
-            if (genericAll is false)
+            if (channel is null)
             {
                 EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
                 return;
@@ -64,7 +64,7 @@ namespace ZGame.Editor.Command
                 options.options = BuildOptions.ShowBuiltPlayer;
                 options.target = EditorUserBuildSettings.activeBuildTarget;
                 options.scenes = new[] { "Assets/Startup.unity" };
-                options.locationPathName = $"{BuilderConfig.output}build/{BasicConfig.GetPlatformName()}/{config.currentChannelOptions.packageName}/{config.version}/";
+                options.locationPathName = $"{BuilderConfig.output}build/{BasicConfig.GetPlatformName()}/{channel.packageName}/{config.version}/";
                 if (Directory.Exists(options.locationPathName) is false)
                 {
                     Directory.CreateDirectory(options.locationPathName);
@@ -74,7 +74,7 @@ namespace ZGame.Editor.Command
                 {
                     case BuildTarget.Android:
                         options.targetGroup = BuildTargetGroup.Android;
-                        options.locationPathName += config.currentChannelOptions.packageName + "_" + config.version + ".apk";
+                        options.locationPathName += channel.packageName + "_" + config.version + ".apk";
                         break;
                     case BuildTarget.iOS:
                         options.targetGroup = BuildTargetGroup.iOS;
@@ -84,7 +84,7 @@ namespace ZGame.Editor.Command
                         break;
                 }
 
-                PlayerSettings.SetApplicationIdentifier(options.targetGroup, config.currentChannelOptions.packageName);
+                PlayerSettings.SetApplicationIdentifier(options.targetGroup, channel.packageName);
                 PlatformIconKind[] kinds = PlayerSettings.GetSupportedIconKindsForPlatform(options.targetGroup);
                 for (int i = 0; i < kinds.Length; i++)
                 {
@@ -93,7 +93,7 @@ namespace ZGame.Editor.Command
                     {
                         for (int k = 0; k < platformIcons[j].maxLayerCount; k++)
                         {
-                            platformIcons[j].SetTexture(config.currentChannelOptions.icon, k);
+                            platformIcons[j].SetTexture(channel.icon, k);
                         }
                     }
 
@@ -102,9 +102,9 @@ namespace ZGame.Editor.Command
 
                 PlayerSettings.bundleVersion = config.version;
                 PlayerSettings.companyName = BasicConfig.instance.companyName;
-                PlayerSettings.productName = config.currentChannelOptions.appName;
-                PlayerSettings.SplashScreen.showUnityLogo = config.currentChannelOptions.splash != null;
-                PlayerSettings.SplashScreen.background = config.currentChannelOptions.splash;
+                PlayerSettings.productName = channel.appName;
+                PlayerSettings.SplashScreen.showUnityLogo = channel.splash != null;
+                PlayerSettings.SplashScreen.background = channel.splash;
                 PlayerSettings.SplashScreen.overlayOpacity = 1;
                 PlayerSettings.SplashScreen.blurBackgroundImage = false;
                 PlayerSettings.SplashScreen.backgroundPortrait = null;

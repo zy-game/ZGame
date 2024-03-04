@@ -41,12 +41,12 @@ namespace ZGame.UI
 
                 if (VARIABLE.name.Equals("text_yes"))
                 {
-                    VARIABLE.SetText(Localliztion.instance.Query("确定"));
+                    VARIABLE.SetText(Localize.instance.Query("确定"));
                 }
 
                 if (VARIABLE.name.Equals("text_no"))
                 {
-                    VARIABLE.SetText(Localliztion.instance.Query("取消"));
+                    VARIABLE.SetText(Localize.instance.Query("取消"));
                 }
             }
 
@@ -93,17 +93,17 @@ namespace ZGame.UI
 
         public static void Show(string content, Action onYes, Action onNo)
         {
-            Show(Localliztion.instance.Query("提示"), content, onYes, onNo);
+            Show(Localize.instance.Query("提示"), content, onYes, onNo);
         }
 
         public static void Show(string content, Action onYes)
         {
-            Show(Localliztion.instance.Query("提示"), content, onYes, null);
+            Show(Localize.instance.Query("提示"), content, onYes, null);
         }
 
         public static void Show(string content)
         {
-            Show(Localliztion.instance.Query("提示"), content, null, null);
+            Show(Localize.instance.Query("提示"), content, null, null);
         }
     }
 }

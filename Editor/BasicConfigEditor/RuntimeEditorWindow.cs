@@ -40,7 +40,8 @@ namespace ZGame.Editor
         {
             int last = 0;
             int curIndex = 0;
-
+            GUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("基础配置", EditorStyles.boldLabel);
             BasicConfig.instance.companyName = EditorGUILayout.TextField("公司名称", BasicConfig.instance.companyName);
             BasicConfig.instance.apkUrl = EditorGUILayout.TextField("安装包下载地址", BasicConfig.instance.apkUrl);
             BasicConfig.instance.language = (LanguageDefine)EditorGUILayout.EnumPopup("默认语言", BasicConfig.instance.language);
@@ -71,28 +72,27 @@ namespace ZGame.Editor
                 OSSConfig.instance.seletion = OSSConfig.instance.ossList[curIndex].title;
                 OSSConfig.OnSave();
             }
+
+            GUILayout.EndVertical();
         }
 
         private void OnShowGameConfigDrawing()
         {
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("游戏设置", EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
             if (BasicConfig.instance.curEntry is not null && BasicConfig.instance.curEntry.mode == CodeMode.Hotfix)
             {
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Update Hotfix Assets"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, false));
+                    menu.AddItem(new GUIContent("Build Hotfix Assets"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, null));
                     if (BasicConfig.instance.curEntry.channels != null && BasicConfig.instance.curEntry.channels.Count > 0)
                     {
                         foreach (var VARIABLE in BasicConfig.instance.curEntry.channels)
                         {
-                            menu.AddItem(new GUIContent("Channels/" + VARIABLE.title), false, () =>
-                            {
-                                BasicConfig.instance.curEntry.currentChannel = VARIABLE.title;
-                                SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, true);
-                            });
+                            menu.AddItem(new GUIContent("Build Install Package/" + VARIABLE.title), false, () => { SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, VARIABLE); });
                         }
                     }
 
@@ -142,16 +142,6 @@ namespace ZGame.Editor
                 BasicConfig.instance.curEntry.path = AssetDatabase.GetAssetPath(BasicConfig.instance.curEntry.assembly);
             }
 
-            GUILayout.BeginHorizontal();
-            resList = BasicConfig.instance.curEntry.channels?.Select(x => x.title).ToList();
-            last = resList.FindIndex(x => x == BasicConfig.instance.curEntry.currentChannel);
-            curIndex = EditorGUILayout.Popup("当前渠道", last, resList.ToArray());
-            if (curIndex >= 0 && curIndex < resList.Count)
-            {
-                BasicConfig.instance.curEntry.currentChannel = resList[curIndex];
-            }
-
-            GUILayout.EndHorizontal();
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
             BasicConfig.instance.curEntry.isShowReferences = EditorGUILayout.Foldout(BasicConfig.instance.curEntry.isShowReferences, "Reference Assembly");
@@ -201,7 +191,7 @@ namespace ZGame.Editor
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
-                BasicConfig.instance.curEntry.channels.Add(new ChannelPackageOptions());
+                BasicConfig.instance.curEntry.channels.Add(new ChannelOptions());
                 BasicConfig.OnSave();
             }
 

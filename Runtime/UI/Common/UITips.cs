@@ -40,6 +40,7 @@ namespace ZGame.UI
 
         public static void Show(string content, float timeout = 5)
         {
+            Debug.Log("tips:" + content);
             UIManager.instance.Active<UITips>(new object[] { content, timeout });
         }
     }

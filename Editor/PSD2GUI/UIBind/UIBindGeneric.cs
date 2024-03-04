@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using ZGame.UI;
 using SystemInfo = UnityEngine.Device.SystemInfo;
 
@@ -61,48 +63,88 @@ namespace ZGame.Editor.PSD2GUI
                     GenericInitializedCode(VARIABLE, rule);
                     switch (rule.TypeName)
                     {
-                        case "Button":
+                        case nameof(Button):
                             GenericButtonComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
-                        case "Toggle":
+                        case nameof(Toggle):
                             GenericToggleComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
-                        case "Slider":
+                        case nameof(Slider):
                             GenericSliderComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
-                        case "TMP_InputField":
-                        case "InputField":
+                        case nameof(TMP_InputField):
+                        case nameof(InputField):
                             GenericInputFieldComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
-                        case "TMP_Dropdown":
-                        case "Dropdown":
+                        case nameof(TMP_Dropdown):
+                        case nameof(Dropdown):
                             GenericDropdownComponent(VARIABLE, rule.GetFieldName(VARIABLE.name), rule.TypeName);
                             break;
-                        case "Image":
+                        case nameof(Image):
                             GenericImageComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
-                        case "RawImage":
+                        case nameof(RawImage):
                             GenericRawImageComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
-                        case "TextMeshProUGUI":
-                        case "TMP_Text":
-                        case "Text":
+                        case nameof(TextMeshProUGUI):
+                        case nameof(TMP_Text):
+                        case nameof(Text):
                             GenericTextComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
-                        case "LongPresseButton":
+                        case nameof(LongPresseButton):
                             GenericLongPressButtonComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
-                        case "UISwitcher":
+                        case nameof(UISwitcher):
                             GenericUISwitcherComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
-                        case "UIToolbar":
+                        case nameof(UIToolbar):
                             break;
-                        case "UIBind":
+                        case nameof(UIBind):
                             GenericTempleteComponent(VARIABLE, rule.GetFieldName(VARIABLE.name));
+                            break;
+                        case nameof(LoopScrollViewer):
+                            GenericLoopScrollViewerCode(VARIABLE, rule.GetFieldName(VARIABLE.name));
                             break;
                     }
                 }
             }
+        }
+
+
+        private void GenericLoopScrollViewerCode(UIBindData variable, string fieldName)
+        {
+            LoopScrollViewer loopScrollViewer = setting.transform.Find(variable.path).GetComponent<LoopScrollViewer>();
+            if (loopScrollViewer == null)
+            {
+                return;
+            }
+
+            LoopScrollCellView cellView = loopScrollViewer.prefab;
+            if (cellView is null)
+            {
+                return;
+            }
+            AddEvent($"\t\t\t{fieldName}?.onCellViewRefreshed.RemoveAllListeners();");
+            AddEvent($"\t\t\t{fieldName}?.onCellViewRefreshed.AddListener(on_handle_{fieldName}_RefreshCellView);");
+     
+            AddField($"\t\tprivate UnityEvent<LoopScrollCellView> _{fieldName}_refreshEvent;");
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_RefreshCellViewEvent(UnityAction<LoopScrollCellView> callback)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\t_{fieldName}_refreshEvent.AddListener(callback);");
+            AddSetup("\t\t}");
+            AddSetup(Environment.NewLine);
+            
+            AddInit($"\t\t\t_{fieldName}_refreshEvent = new UnityEvent<LoopScrollCellView>();");
+            AddCallback($"\t\tprotected virtual void on_handle_{fieldName}_RefreshCellView(LoopScrollCellView value)");
+            AddCallback("\t\t{");
+            AddCallback($"\t\t\t_{fieldName}_refreshEvent?.Invoke(value);");
+            AddCallback("\t\t}");
+            AddSetup(Environment.NewLine);
+            AddSetup($"\t\tpublic void on_setup_{fieldName}_DataList(params object[] args)");
+            AddSetup("\t\t{");
+            AddSetup($"\t\t\t{fieldName}.SetDataList(args);");
+            AddSetup("\t\t}");
+            AddSetup(Environment.NewLine);
         }
 
         private void GenericInitializedCode(UIBindData variable, UIBindRulerItem rule)
@@ -707,7 +749,7 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("\t\tpublic override void Dispose()");
             sb.AppendLine("\t\t{");
             disposeList.ForEach(x => sb.AppendLine(x));
-            sb.AppendLine("\t\t\t\tbase.Dispose();");
+            sb.AppendLine("\t\t\tbase.Dispose();");
             sb.AppendLine("\t\t\tGC.SuppressFinalize(this);");
             sb.AppendLine("\t\t}");
             sb.AppendLine("\t}");

@@ -140,7 +140,7 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("config");
             }
 
-            UILoading.SetTitle(Localliztion.instance.Query("正在加载资源信息..."));
+            UILoading.SetTitle(Localize.instance.Query("正在加载资源信息..."));
             UILoading.SetProgress(0);
             List<ResourcePackageManifest> manifests = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
 
@@ -185,7 +185,7 @@ namespace ZGame.Resource
             }
 
             Debug.Log("资源更新完成");
-            UILoading.SetTitle(Localliztion.instance.Query("资源更新完成..."));
+            UILoading.SetTitle(Localize.instance.Query("资源更新完成..."));
             UILoading.SetProgress(1);
         }
 
@@ -210,7 +210,7 @@ namespace ZGame.Resource
                 if (bytes is null || bytes.Length == 0)
                 {
                     ResPackageCache.instance.Clear(manifests.ToArray());
-                    UILoading.SetTitle(Localliztion.instance.Query("资源加载失败..."));
+                    UILoading.SetTitle(Localize.instance.Query("资源加载失败..."));
                     return;
                 }
 
@@ -245,7 +245,7 @@ namespace ZGame.Resource
                 target.SetDependencies(dependencies.ToArray());
             }
 
-            UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
+            UILoading.SetTitle(Localize.instance.Query("资源加载完成..."));
             UILoading.SetProgress(1);
         }
 
@@ -270,7 +270,7 @@ namespace ZGame.Resource
                 if (bytes is null || bytes.Length == 0)
                 {
                     ResPackageCache.instance.Clear(manifests.ToArray());
-                    UILoading.SetTitle(Localliztion.instance.Query("资源加载失败..."));
+                    UILoading.SetTitle(Localize.instance.Query("资源加载失败..."));
                     return;
                 }
 
@@ -305,7 +305,7 @@ namespace ZGame.Resource
                 target.SetDependencies(dependencies.ToArray());
             }
 
-            UILoading.SetTitle(Localliztion.instance.Query("资源加载完成..."));
+            UILoading.SetTitle(Localize.instance.Query("资源加载完成..."));
             UILoading.SetProgress(1);
         }
     }

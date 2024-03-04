@@ -26,12 +26,16 @@ namespace ZGame.Editor.PSD2GUI
             this.setting.templetee = setting.transform.parent != null && setting.transform.parent.GetComponentInParent<UIBind>() != null;
         }
 
-
         public override void OnInspectorGUI()
         {
+            OnDrawingInspectorGUI(setting, this);
+        }
+
+        public static void OnDrawingInspectorGUI(UIBind setting, BasicWindow window)
+        {
             EditorGUI.BeginChangeCheck();
-            setting.NameSpace = EditorGUILayout.TextField(this.setting.templetee ? "Template Name" : "NameSpace", setting.NameSpace);
-            if (this.setting.templetee is false)
+            setting.NameSpace = EditorGUILayout.TextField(setting.templetee ? "Template Name" : "NameSpace", setting.NameSpace);
+            if (setting.templetee is false)
             {
                 EditorGUILayout.BeginHorizontal();
                 setting.output = EditorGUILayout.ObjectField("Output", setting.output, typeof(DefaultAsset), false);
@@ -58,9 +62,9 @@ namespace ZGame.Editor.PSD2GUI
                 EditorGUILayout.EndHorizontal();
             }
 
-            this.BeginColor(ZStyle.inColor);
+            window.BeginColor(ZStyle.inColor);
             GUILayout.Box("", ZStyle.GUI_STYLE_LINE, GUILayout.Height(1));
-            this.EndColor();
+            window.EndColor();
 
 
             if (setting.options == null)
@@ -84,7 +88,7 @@ namespace ZGame.Editor.PSD2GUI
                 GUILayout.Space(-1);
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.REFRESH_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    OnRefreshBindData();
+                    OnRefreshBindData(setting);
                 }
 
                 GUILayout.EndVertical();
@@ -131,7 +135,7 @@ namespace ZGame.Editor.PSD2GUI
                     if (options.target == null)
                     {
                         options.target = target;
-                        OnDrawingBindItemData(options);
+                        OnDrawingBindItemData(setting, options);
                         EditorUtility.SetDirty(setting);
                     }
                 }
@@ -141,7 +145,7 @@ namespace ZGame.Editor.PSD2GUI
                 {
                     setting.options.Remove(options);
                     EditorUtility.SetDirty(setting);
-                    this.Repaint();
+                    window.Repaint();
                 }
 
                 GUILayout.EndHorizontal();
@@ -154,7 +158,7 @@ namespace ZGame.Editor.PSD2GUI
 
                 if (options.isOn)
                 {
-                    OnDrawingBindItemData(setting.options[i]);
+                    OnDrawingBindItemData(setting, setting.options[i]);
                 }
 
                 GUILayout.EndVertical();
@@ -172,9 +176,9 @@ namespace ZGame.Editor.PSD2GUI
                 {
                     if (obj is GameObject gameObject)
                     {
-                        if (GetPath(gameObject.transform, out string path))
+                        if (GetPath(setting, gameObject.transform, out string path))
                         {
-                            AddGameObject(gameObject, path);
+                            AddGameObject(setting, gameObject, path);
                         }
                     }
                 }
@@ -193,7 +197,8 @@ namespace ZGame.Editor.PSD2GUI
             EditorGUILayout.EndVertical();
         }
 
-        private bool GetPath(Transform _transform, out string path)
+
+        private static bool GetPath(UIBind setting, Transform _transform, out string path)
         {
             if (_transform.Equals(setting.transform))
             {
@@ -217,12 +222,12 @@ namespace ZGame.Editor.PSD2GUI
             return true;
         }
 
-        private void OnRefreshBindData()
+        private static void OnRefreshBindData(UIBind setting)
         {
             RectTransform[] rectTransforms = setting.GetComponentsInChildren<RectTransform>();
             foreach (var VARIABLE in rectTransforms)
             {
-                if (GetPath(VARIABLE.transform, out string path) is false)
+                if (GetPath(setting, VARIABLE.transform, out string path) is false)
                 {
                     continue;
                 }
@@ -232,11 +237,11 @@ namespace ZGame.Editor.PSD2GUI
                     continue;
                 }
 
-                AddGameObject(VARIABLE.gameObject, path);
+                AddGameObject(setting, VARIABLE.gameObject, path);
             }
         }
 
-        private void AddGameObject(GameObject gameObject, string path)
+        private static void AddGameObject(UIBind setting, GameObject gameObject, string path)
         {
             UIBindData data = new UIBindData();
             data.target = gameObject;
@@ -256,7 +261,7 @@ namespace ZGame.Editor.PSD2GUI
             setting.options.Add(data);
         }
 
-        private void OnDrawingBindItemData(UIBindData options)
+        private static void OnDrawingBindItemData(UIBind setting, UIBindData options)
         {
             if (options.target == null)
             {
@@ -264,7 +269,7 @@ namespace ZGame.Editor.PSD2GUI
             }
 
             GUILayout.Space(10);
-            GetPath(options.target.transform, out options.path);
+            GetPath(setting, options.target.transform, out options.path);
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Path", GUILayout.Width(110));

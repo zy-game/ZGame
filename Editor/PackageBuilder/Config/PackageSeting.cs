@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Serialization;
+using ZGame.Resource.Config;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild.Config
