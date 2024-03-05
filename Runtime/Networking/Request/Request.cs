@@ -203,6 +203,11 @@ namespace ZGame.Networking
                 request.certificateHandler = new CertificateController();
                 await request.SendWebRequest().ToUniTask(callback);
                 Debug.Log($"GET STRWAMING ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                if (request.GetResponseHeader("Content-Type") == "application/json")
+                {
+                    Debug.Log(request.downloadHandler.text);
+                }
+
                 if (request.result is UnityWebRequest.Result.Success)
                 {
                     result = GetStreamingAssetObject(extension, request);

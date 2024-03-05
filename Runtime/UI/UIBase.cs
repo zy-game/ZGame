@@ -70,7 +70,11 @@ namespace ZGame.UI
             transform = null;
             name = String.Empty;
             rect_transform = null;
-            this.StopCountDown(null);
+            foreach (var VARIABLE in _coroutines.Values)
+            {
+                StopCoroutine(VARIABLE);
+            }
+
             _coroutines.Clear();
             GameObject.DestroyImmediate(gameObject);
             gameObject = null;
