@@ -63,7 +63,7 @@ namespace ZGame.Sound
 
         public void Play(string clipName, Action<PlayState> callback)
         {
-            resObject = ResourceManager.instance.LoadAsset(name);
+            resObject = WorkApi.Resource.LoadAsset(name);
             if (resObject.IsSuccess() is false)
             {
                 return;

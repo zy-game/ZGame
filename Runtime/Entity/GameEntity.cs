@@ -23,7 +23,7 @@ namespace ZGame.Game
         public static T Create<T>(string name, string modelPath) where T : GameEntity
         {
             Debug.Log(modelPath);
-            ResObject resObject = ResourceManager.instance.LoadAsset(modelPath);
+            ResObject resObject = WorkApi.Resource.LoadAsset(modelPath);
             if (resObject.IsSuccess() is false)
             {
                 return default;

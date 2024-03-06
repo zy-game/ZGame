@@ -34,14 +34,14 @@ namespace ZGame.UI
         private IEnumerator CheckTimeout(float time)
         {
             yield return new WaitForSeconds(time);
-            UIManager.instance.Inactive<UITips>();
+            WorkApi.UI.Inactive<UITips>();
         }
 
 
         public static void Show(string content, float timeout = 5)
         {
             Debug.Log("tips:" + content);
-            UIManager.instance.Active<UITips>(new object[] { content, timeout });
+            WorkApi.UI.Active<UITips>(new object[] { content, timeout });
         }
     }
 }

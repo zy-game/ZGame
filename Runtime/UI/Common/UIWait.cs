@@ -42,7 +42,7 @@ namespace ZGame.UI
         {
             yield return new WaitForSeconds(time);
             _coroutine = null;
-            UIManager.instance.Inactive<UIWait>();
+            Hide();
         }
 
         public override void Dispose()
@@ -59,12 +59,12 @@ namespace ZGame.UI
 
         public static void Show(string s, float timeout = 0)
         {
-            UIManager.instance.Active<UIWait>(new object[] { s, timeout });
+            WorkApi.UI.Active<UIWait>(new object[] { s, timeout });
         }
 
         public static void Hide()
         {
-            UIManager.instance.Inactive<UIWait>();
+            WorkApi.UI.Inactive<UIWait>();
         }
     }
 }

@@ -91,7 +91,7 @@ namespace ZGame
                 return;
             }
 #endif
-            using (ResObject resObject = ResourceManager.instance.LoadAsset(resourceReference.path))
+            using (ResObject resObject = WorkApi.Resource.LoadAsset(resourceReference.path))
             {
                 if (resObject is null || resObject.IsSuccess() is false)
                 {

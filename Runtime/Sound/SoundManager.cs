@@ -5,6 +5,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using ZGame;
+using ZGame.Module;
 using ZGame.Resource;
 
 namespace ZGame.Sound
@@ -20,7 +21,7 @@ namespace ZGame.Sound
     /// <summary>
     /// 音效管理器
     /// </summary>
-    public class SoundManager : Singleton<SoundManager>
+    public class SoundManager : IModule
     {
         private int _rate;
         private float _volume;
@@ -88,7 +89,7 @@ namespace ZGame.Sound
             get { return _isRecording; }
         }
 
-        protected override void OnAwake()
+        public void OnAwake()
         {
             _rate = 16000;
             _limit_time = 60;
@@ -100,6 +101,14 @@ namespace ZGame.Sound
             BehaviourScriptable.instance.SetupUpdateEvent(OnUpdate);
             BehaviourScriptable.instance.SetupGameObjectDestroyEvent(Clear);
             BehaviourScriptable.instance.gameObject.AddComponent<AudioListener>();
+        }
+
+        public void Dispose()
+        {
+            StopAll();
+            StopRecordingSound(true);
+            Clear();
+            GC.SuppressFinalize(this);
         }
 
         public void Clear()

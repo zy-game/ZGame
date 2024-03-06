@@ -6,22 +6,23 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 using ZGame.Config;
+using ZGame.Module;
 
 namespace ZGame.FileSystem
 {
-    public class VFSManager : Singleton<VFSManager>
+    public class VFSManager : IModule
     {
         private List<VFSChunk> chunkList = new List<VFSChunk>();
         private List<VFStream> vfStreamList = new List<VFStream>();
 
 
-        public override void Dispose()
+        public void Dispose()
         {
             vfStreamList.ForEach(x => x.Dispose());
             Saved();
         }
 
-        protected override void OnAwake()
+        public void OnAwake()
         {
             string filePath = Application.persistentDataPath + "/vfs.ini";
             if (!File.Exists(filePath))

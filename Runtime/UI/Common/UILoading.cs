@@ -78,7 +78,7 @@ namespace ZGame.UI
                 return _instance;
             }
 
-            return _instance = UIManager.instance.Active<UILoading>();
+            return _instance = WorkApi.UI.Active<UILoading>();
         }
 
         public static void Hide()
@@ -88,7 +88,7 @@ namespace ZGame.UI
                 return;
             }
 
-            UIManager.instance.Inactive<UILoading>();
+            WorkApi.UI.Inactive<UILoading>();
             _instance = null;
         }
     }

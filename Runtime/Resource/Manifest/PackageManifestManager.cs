@@ -9,6 +9,7 @@ using UnityEngine;
 using ZGame.Config;
 using ZGame.FileSystem;
 using ZGame.Game;
+using ZGame.Module;
 using ZGame.Networking;
 using ZGame.Resource.Config;
 using ZGame.UI;
@@ -18,11 +19,15 @@ namespace ZGame.Resource
     /// <summary>
     /// 资源包信息管理
     /// </summary>
-    public class PackageManifestManager : Singleton<PackageManifestManager>
+    internal class PackageManifestManager : IModule
     {
         private List<ResourcePackageListManifest> _packageListManifests = new List<ResourcePackageListManifest>();
 
-        public override void Dispose()
+        public void OnAwake()
+        {
+        }
+
+        public void Dispose()
         {
             _packageListManifests.Clear();
         }
@@ -52,7 +57,7 @@ namespace ZGame.Resource
             }
             else
             {
-                resourcePackageListManifest = await Request.GetData<ResourcePackageListManifest>(iniFilePath);
+                resourcePackageListManifest = await WorkApi.Web.GetData<ResourcePackageListManifest>(iniFilePath);
             }
 
             if (resourcePackageListManifest is null)
@@ -63,10 +68,10 @@ namespace ZGame.Resource
 
             if (resourcePackageListManifest.appVersion.Equals(BasicConfig.instance.curEntry.version) is false)
             {
-                UIMsgBox.Show(Localize.instance.Query("App 版本过低，请重新安装App后在使用"), () =>
+                UIMsgBox.Show(WorkApi.Language.Query("App 版本过低，请重新安装App后在使用"), () =>
                 {
                     Application.OpenURL(BasicConfig.instance.apkUrl);
-                    GameManager.instance.QuitGame();
+                    WorkApi.Uninitialized();
                 });
                 throw new Exception("App 版本过低，请重新安装App后在使用");
             }
@@ -157,7 +162,7 @@ namespace ZGame.Resource
 
             foreach (var package in resourcePackageListManifest.packages)
             {
-                if (VFSManager.instance.Exist(package.name, package.version) || needUpdatePackages.Contains(package))
+                if (WorkApi.VFS.Exist(package.name, package.version) || needUpdatePackages.Contains(package))
                 {
                     continue;
                 }

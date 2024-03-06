@@ -10,16 +10,17 @@ using ZGame.Game;
 using ZGame.Resource.Config;
 using ZGame.UI;
 using System.Linq;
+using ZGame.Module;
 
 namespace ZGame.Resource
 {
-    class ResPackageCache : Singleton<ResPackageCache>
+    internal class ResPackageCache : IModule
     {
         private float nextCheckTime;
         private List<ResPackage> cacheList = new List<ResPackage>();
         private List<ResPackage> _packageList = new List<ResPackage>();
 
-        protected override void OnAwake()
+        public void OnAwake()
         {
             BehaviourScriptable.instance.SetupUpdateEvent(OnUpdate);
         }
@@ -109,7 +110,7 @@ namespace ZGame.Resource
             return false;
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             foreach (var VARIABLE in _packageList)
             {
@@ -140,9 +141,9 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("config");
             }
 
-            UILoading.SetTitle(Localize.instance.Query("正在加载资源信息..."));
+            UILoading.SetTitle(WorkApi.Language.Query("正在加载资源信息..."));
             UILoading.SetProgress(0);
-            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.CheckNeedUpdatePackageList(config.module);
+            List<ResourcePackageManifest> manifests = WorkApi.Resource.PackageManifest.CheckNeedUpdatePackageList(config.module);
 
             if (manifests is not null && manifests.Count > 0)
             {
@@ -172,24 +173,24 @@ namespace ZGame.Resource
                             continue;
                         }
 
-                        await VFSManager.instance.WriteAsync(Path.GetFileName(url), request.downloadHandler.data, packageManifest.version);
+                        await WorkApi.VFS.WriteAsync(Path.GetFileName(url), request.downloadHandler.data, packageManifest.version);
                     }
                 }
 
                 if (failure.Count > 0)
                 {
                     Debug.LogError($"Download failure:{string.Join(",", failure.ToArray())}");
-                    UIMsgBox.Show("更新资源失败", GameManager.instance.QuitGame);
+                    UIMsgBox.Show("更新资源失败", WorkApi.Uninitialized);
                     return;
                 }
             }
 
             Debug.Log("资源更新完成");
-            UILoading.SetTitle(Localize.instance.Query("资源更新完成..."));
+            UILoading.SetTitle(WorkApi.Language.Query("资源更新完成..."));
             UILoading.SetProgress(1);
         }
 
-        public async UniTask LoadingResourcePackageList(params ResourcePackageManifest[] manifests)
+        public async UniTask LoadingResourcePackageListAsync(params ResourcePackageManifest[] manifests)
         {
             if (manifests is null || manifests.Length == 0)
             {
@@ -199,29 +200,29 @@ namespace ZGame.Resource
             for (int i = 0; i < manifests.Length; i++)
             {
                 UILoading.SetProgress(i / (float)manifests.Length);
-                if (ResPackageCache.instance.TryGetValue(manifests[i].name, out _))
+                if (TryGetValue(manifests[i].name, out _))
                 {
                     Debug.Log("资源包已加载：" + manifests[i].name);
                     continue;
                 }
 
                 AssetBundle assetBundle = default;
-                byte[] bytes = await VFSManager.instance.ReadAsync(manifests[i].name);
+                byte[] bytes = await WorkApi.VFS.ReadAsync(manifests[i].name);
                 if (bytes is null || bytes.Length == 0)
                 {
-                    ResPackageCache.instance.Clear(manifests.ToArray());
-                    UILoading.SetTitle(Localize.instance.Query("资源加载失败..."));
+                    Clear(manifests.ToArray());
+                    UILoading.SetTitle(WorkApi.Language.Query("资源加载失败..."));
                     return;
                 }
 
                 assetBundle = await AssetBundle.LoadFromMemoryAsync(bytes);
-                ResPackageCache.instance.Add(new ResPackage(assetBundle));
+                Add(new ResPackage(assetBundle));
                 Debug.Log("资源包加载完成：" + manifests[i].name);
             }
 
             for (int i = 0; i < manifests.Length; i++)
             {
-                if (ResPackageCache.instance.TryGetValue(manifests[i].name, out var target) is false)
+                if (TryGetValue(manifests[i].name, out var target) is false)
                 {
                     continue;
                 }
@@ -234,7 +235,7 @@ namespace ZGame.Resource
                 List<ResPackage> dependencies = new List<ResPackage>();
                 foreach (var dependency in manifests[i].dependencies)
                 {
-                    if (ResPackageCache.instance.TryGetValue(dependency, out var packageHandle) is false)
+                    if (TryGetValue(dependency, out var packageHandle) is false)
                     {
                         continue;
                     }
@@ -245,7 +246,7 @@ namespace ZGame.Resource
                 target.SetDependencies(dependencies.ToArray());
             }
 
-            UILoading.SetTitle(Localize.instance.Query("资源加载完成..."));
+            UILoading.SetTitle(WorkApi.Language.Query("资源加载完成..."));
             UILoading.SetProgress(1);
         }
 
@@ -259,29 +260,29 @@ namespace ZGame.Resource
             for (int i = 0; i < manifests.Length; i++)
             {
                 UILoading.SetProgress(i / (float)manifests.Length);
-                if (ResPackageCache.instance.TryGetValue(manifests[i].name, out _))
+                if (TryGetValue(manifests[i].name, out _))
                 {
                     Debug.Log("资源包已加载：" + manifests[i].name);
                     continue;
                 }
 
                 AssetBundle assetBundle = default;
-                byte[] bytes = VFSManager.instance.Read(manifests[i].name);
+                byte[] bytes = WorkApi.VFS.Read(manifests[i].name);
                 if (bytes is null || bytes.Length == 0)
                 {
-                    ResPackageCache.instance.Clear(manifests.ToArray());
-                    UILoading.SetTitle(Localize.instance.Query("资源加载失败..."));
+                    Clear(manifests.ToArray());
+                    UILoading.SetTitle(WorkApi.Language.Query("资源加载失败..."));
                     return;
                 }
 
                 assetBundle = AssetBundle.LoadFromMemory(bytes);
-                ResPackageCache.instance.Add(new ResPackage(assetBundle));
+                Add(new ResPackage(assetBundle));
                 Debug.Log("资源包加载完成：" + manifests[i].name);
             }
 
             for (int i = 0; i < manifests.Length; i++)
             {
-                if (ResPackageCache.instance.TryGetValue(manifests[i].name, out var target) is false)
+                if (TryGetValue(manifests[i].name, out var target) is false)
                 {
                     continue;
                 }
@@ -294,7 +295,7 @@ namespace ZGame.Resource
                 List<ResPackage> dependencies = new List<ResPackage>();
                 foreach (var dependency in manifests[i].dependencies)
                 {
-                    if (ResPackageCache.instance.TryGetValue(dependency, out var packageHandle) is false)
+                    if (TryGetValue(dependency, out var packageHandle) is false)
                     {
                         continue;
                     }
@@ -305,7 +306,7 @@ namespace ZGame.Resource
                 target.SetDependencies(dependencies.ToArray());
             }
 
-            UILoading.SetTitle(Localize.instance.Query("资源加载完成..."));
+            UILoading.SetTitle(WorkApi.Language.Query("资源加载完成..."));
             UILoading.SetProgress(1);
         }
     }

@@ -37,6 +37,11 @@ namespace ZGame.Resource
             this.parent = parent;
         }
 
+        public static ResObject Create(Object obj, string path)
+        {
+            return new ResObject(null, obj, path);
+        }
+
         public bool IsSubAsset(ResPackage handle)
         {
             if (parent is null)

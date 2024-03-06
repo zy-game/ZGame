@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 using ZGame.Config;
 using ZGame.FileSystem;
 using ZGame.Game;
+using ZGame.Module;
 using ZGame.Networking;
 using ZGame.Resource.Config;
 using ZGame.UI;
@@ -18,8 +19,33 @@ namespace ZGame.Resource
     /// <summary>
     /// 资源管理器
     /// </summary>
-    public sealed class ResourceManager : Singleton<ResourceManager>
+    public sealed class ResourceManager : IModule
     {
+        internal ResPackageCache ResPackageCache { get; set; }
+        internal ResObjectCache ResObjectCache { get; set; }
+        internal PackageManifestManager PackageManifest { get; set; }
+
+        public void OnAwake()
+        {
+            ResPackageCache = new ResPackageCache();
+            ResPackageCache.OnAwake();
+            ResObjectCache = new ResObjectCache();
+            ResObjectCache.OnAwake();
+            PackageManifest = new PackageManifestManager();
+            PackageManifest.OnAwake();
+        }
+
+        public void Dispose()
+        {
+            ResPackageCache.Dispose();
+            ResObjectCache.Dispose();
+            PackageManifest.Dispose();
+            ResPackageCache = null;
+            ResObjectCache = null;
+            PackageManifest = null;
+            GC.SuppressFinalize(this);
+        }
+
         /// <summary>
         /// 加载资源
         /// </summary>
@@ -27,10 +53,7 @@ namespace ZGame.Resource
         /// <returns>资源加载结果</returns>
         public ResObject LoadAsset(string path, string extension = "")
         {
-            // UniTask<ResObject> task = ResObjectCache.instance.LoadAsync(path, extension);
-            // UniTask<ResObject>.Awaiter awaiter = task.GetAwaiter();
-            // task.Forget();
-            return ResObjectCache.instance.LoadSync(path, extension);
+            return ResObjectCache.LoadSync(path, extension);
         }
 
         /// <summary>
@@ -40,7 +63,7 @@ namespace ZGame.Resource
         /// <returns>资源加载任务</returns>
         public async UniTask<ResObject> LoadAssetAsync(string path, string extension = "")
         {
-            return await ResObjectCache.instance.LoadAsync(path, extension);
+            return await ResObjectCache.LoadAsync(path, extension);
         }
 
         /// <summary>
@@ -56,19 +79,20 @@ namespace ZGame.Resource
                 throw new ArgumentNullException("config");
             }
 
-            await ResPackageCache.instance.UpdateResourcePackageList(config);
-            UILoading.SetTitle(Localize.instance.Query("正在加载资源信息..."));
+            await PackageManifest.SetupPackageManifest(BasicConfig.instance.curEntry.module);
+            await ResPackageCache.UpdateResourcePackageList(config);
+            UILoading.SetTitle(WorkApi.Language.Query("正在加载资源信息..."));
             UILoading.SetProgress(0);
-            List<ResourcePackageManifest> manifests = PackageManifestManager.instance.GetResourcePackageAndDependencyList(config.module);
+            List<ResourcePackageManifest> manifests = PackageManifest.GetResourcePackageAndDependencyList(config.module);
             if (manifests is null || manifests.Count == 0)
             {
-                UILoading.SetTitle(Localize.instance.Query("资源加载完成..."));
+                UILoading.SetTitle(WorkApi.Language.Query("资源加载完成..."));
                 UILoading.SetProgress(1);
                 return;
             }
 
             Debug.Log("加载资源：" + string.Join(",", manifests.Select(x => x.name)));
-            await ResPackageCache.instance.LoadingResourcePackageList(manifests.ToArray());
+            await ResPackageCache.LoadingResourcePackageListAsync(manifests.ToArray());
         }
 
         /// <summary>

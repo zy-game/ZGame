@@ -6,11 +6,12 @@ using Cysharp.Threading.Tasks;
 using Cysharp.Threading.Tasks.Triggers;
 using UnityEngine;
 using ZGame.Config;
+using ZGame.Module;
 using ZGame.UI;
 
 namespace ZGame.Game
 {
-    public sealed class GameManager : Singleton<GameManager>
+    public sealed class GameManager : IModule
     {
         private SubGameEntry _currentGame;
         private List<World> worlds = new();
@@ -18,19 +19,16 @@ namespace ZGame.Game
 
         public static World DefaultWorld
         {
-            get
-            {
-                if (_defaultWorld is null)
-                {
-                    instance.worlds.Add(_defaultWorld = new World("DEFAULT"));
-                }
-
-                return _defaultWorld;
-            }
+            get { return _defaultWorld; }
         }
 
+        public void OnAwake()
+        {
+            _defaultWorld = new World("DEFAULT");
+            worlds.Add(_defaultWorld);
+        }
 
-        public override void Dispose()
+        public void Dispose()
         {
             foreach (World world in worlds)
             {
@@ -72,11 +70,7 @@ namespace ZGame.Game
 
         public void QuitGame()
         {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
+
         }
     }
 }

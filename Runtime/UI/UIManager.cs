@@ -5,17 +5,18 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using ZGame.Game;
+using ZGame.Module;
 
 namespace ZGame.UI
 {
     /// <summary>
     /// 界面管理器
     /// </summary>
-    public sealed class UIManager : Singleton<UIManager>
+    public sealed class UIManager : IModule
     {
         private List<UIRoot> rootList;
 
-        protected override void OnAwake()
+        public void OnAwake()
         {
             BehaviourScriptable.instance.gameObject.AddComponent<EventSystem>();
             BehaviourScriptable.instance.gameObject.AddComponent<StandaloneInputModule>();
@@ -133,6 +134,12 @@ namespace ZGame.UI
             }
 
             rootList.Clear();
+        }
+
+        public void Dispose()
+        {
+            Clear();
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -12,19 +12,26 @@ using ProtoBuf.Meta;
 using UnityEngine;
 using UnityEngine.Networking;
 using ZGame.FileSystem;
+using ZGame.Module;
 
 namespace ZGame.Networking
 {
     /// <summary>
     /// 网络管理器
     /// </summary>
-    public class NetworkManager : Singleton<NetworkManager>
+    public class NetworkManager : IModule
     {
         private Dictionary<string, IChannel> channels = new();
 
-        protected override void OnAwake()
+        public void OnAwake()
         {
             BehaviourScriptable.instance.SetupGameObjectDestroyEvent(Clear);
+        }
+
+        public void Dispose()
+        {
+            Clear();
+            GC.SuppressFinalize(this);
         }
 
         public void Clear()

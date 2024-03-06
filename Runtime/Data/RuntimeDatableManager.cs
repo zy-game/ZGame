@@ -1,14 +1,19 @@
 using System;
 using System.Collections.Generic;
+using ZGame.Module;
 
 namespace ZGame.Data
 {
     /// <summary>
     /// 运行时游戏数据
     /// </summary>
-    public class RuntimeDatableManager : Singleton<RuntimeDatableManager>
+    public class RuntimeDatableManager : IModule
     {
         private Dictionary<string, object> map = new();
+
+        public void OnAwake()
+        {
+        }
 
         /// <summary>
         /// 是否存在数据
@@ -110,6 +115,12 @@ namespace ZGame.Data
             {
                 map.Remove(key);
             }
+        }
+
+        public void Dispose()
+        {
+            Clear();
+            GC.SuppressFinalize(this);
         }
     }
 }

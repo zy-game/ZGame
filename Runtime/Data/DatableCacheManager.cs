@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
 using ZGame.FileSystem;
+using ZGame.Module;
 
 namespace ZGame.Data
 {
     /// <summary>
     /// 本地数据缓存管理器
     /// </summary>
-    public class DatableCacheManager : Singleton<DatableCacheManager>
+    public class DatableCacheManager : IModule
     {
         private Dictionary<string, string> cacheDic = new Dictionary<string, string>();
 
-        protected override void OnAwake()
+        public void OnAwake()
         {
-            byte[] bytes = VFSManager.instance.Read("dataCache.ini");
+            byte[] bytes = WorkApi.VFS.Read("dataCache.ini");
             if (bytes is null || bytes.Length == 0)
             {
                 return;
@@ -139,8 +140,15 @@ namespace ZGame.Data
         {
             string json = JsonConvert.SerializeObject(cacheDic);
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
-            VFSManager.instance.Write("dataCache.ini", bytes, 0);
+            WorkApi.VFS.Write("dataCache.ini", bytes, 0);
             Debug.Log(json);
+        }
+
+        public void Dispose()
+        {
+            Save();
+            cacheDic.Clear();
+            GC.SuppressFinalize(this);
         }
     }
 }

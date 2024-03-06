@@ -34,10 +34,10 @@ namespace ZGame.Game
                 return AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             }
 
-            string aotZipPath = PackageManifestManager.instance.GetAssetFullPath(config.module, $"{config.entryName.ToLower()}_aot.bytes");
-            string hotfixZipPath = PackageManifestManager.instance.GetAssetFullPath(config.module, $"{config.entryName.ToLower()}_hotfix.bytes");
+            string aotZipPath = WorkApi.Resource.PackageManifest.GetAssetFullPath(config.module, $"{config.entryName.ToLower()}_aot.bytes");
+            string hotfixZipPath = WorkApi.Resource.PackageManifest.GetAssetFullPath(config.module, $"{config.entryName.ToLower()}_hotfix.bytes");
             Debug.Log("补元数据：" + aotZipPath);
-            using (ResObject resObject = await ResourceManager.instance.LoadAssetAsync(aotZipPath))
+            using (ResObject resObject = await WorkApi.Resource.LoadAssetAsync(aotZipPath))
             {
                 if (resObject == null || resObject.IsSuccess() is false)
                 {
@@ -58,7 +58,7 @@ namespace ZGame.Game
             }
 
             Debug.Log("热更代码：" + hotfixZipPath);
-            using (ResObject resObject = await ResourceManager.instance.LoadAssetAsync(hotfixZipPath))
+            using (ResObject resObject = await WorkApi.Resource.LoadAssetAsync(hotfixZipPath))
             {
                 if (resObject == null || resObject.IsSuccess() is false)
                 {

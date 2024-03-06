@@ -10,13 +10,22 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
+using ZGame.Module;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Networking
 {
-    public class Request
+    public class WebNet : IModule
     {
+        public void Dispose()
+        {
+        }
+
+        public void OnAwake()
+        {
+        }
+
         public class CertificateController : CertificateHandler
         {
             protected override bool ValidateCertificate(byte[] certificateData)
@@ -32,7 +41,7 @@ namespace ZGame.Networking
         /// <param name="data">消息数据</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public static UniTask<T> PostData<T>(string url, object data)
+        public UniTask<T> PostData<T>(string url, object data)
         {
             return PostData<T>(url, data, null);
         }
@@ -45,7 +54,7 @@ namespace ZGame.Networking
         /// <param name="headers">标头</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public static async UniTask<T> PostData<T>(string url, object data, Dictionary<string, object> headers)
+        public async UniTask<T> PostData<T>(string url, object data, Dictionary<string, object> headers)
         {
             Extension.StartSample();
             object _data = default;
@@ -75,6 +84,7 @@ namespace ZGame.Networking
                     UnityEngine.Debug.Log($"POST DATA:{url} parmas:{(postData).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
                     if (request.result is UnityWebRequest.Result.Success)
                     {
+                        Debug.Log(request.downloadHandler.text);
                         _data = GetResultData<T>(request);
                     }
 
@@ -94,7 +104,7 @@ namespace ZGame.Networking
         /// <param name="headers">标头</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public static async UniTask<T> PostDataForm<T>(string url, WWWForm form, Dictionary<string, object> headers)
+        public async UniTask<T> PostDataForm<T>(string url, WWWForm form, Dictionary<string, object> headers)
         {
             object _data = default;
             Extension.StartSample();
@@ -135,7 +145,7 @@ namespace ZGame.Networking
         /// <param name="url">请求地址</param>
         /// <typeparam name="T">返回数据类型</typeparam>
         /// <returns></returns>
-        public static async UniTask<T> GetData<T>(string url, bool isJson = true)
+        public async UniTask<T> GetData<T>(string url, bool isJson = true)
         {
             Extension.StartSample();
             object _data = default;
@@ -167,7 +177,7 @@ namespace ZGame.Networking
         /// <param name="url"></param>
         /// <param name="headName"></param>
         /// <returns></returns>
-        public static async UniTask<string> GetHead(string url, string headName)
+        public async UniTask<string> GetHead(string url, string headName)
         {
             Extension.StartSample();
             string result = "";
@@ -194,7 +204,7 @@ namespace ZGame.Networking
         /// <param name="url"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public static async UniTask<Object> GetStreamingAsset(string url, string extension, IProgress<float> callback = null)
+        public async UniTask<Object> GetStreamingAsset(string url, string extension, IProgress<float> callback = null)
         {
             Extension.StartSample();
             Object result = default;
@@ -226,7 +236,7 @@ namespace ZGame.Networking
         /// <param name="request"></param>
         /// <returns></returns>
         /// <exception cref="NotSupportedException"></exception>
-        private static Object GetStreamingAssetObject(string extension, UnityWebRequest request)
+        private Object GetStreamingAssetObject(string extension, UnityWebRequest request)
         {
             switch (extension)
             {
@@ -257,7 +267,7 @@ namespace ZGame.Networking
         /// <param name="extension"></param>
         /// <returns></returns>
         /// <exception cref="NotSupportedException"></exception>
-        private static UnityWebRequest CreateStreamingAssetObjectRequest(string path, string extension)
+        private UnityWebRequest CreateStreamingAssetObjectRequest(string path, string extension)
         {
             switch (extension)
             {
@@ -280,7 +290,7 @@ namespace ZGame.Networking
             }
         }
 
-        private static T GetResultData<T>(UnityWebRequest request)
+        private T GetResultData<T>(UnityWebRequest request)
         {
             object _data = default;
             if (typeof(T) == typeof(string))

@@ -4,28 +4,26 @@ using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
+using ZGame.Module;
 using ZGame.Networking;
 
 namespace ZGame.Resource
 {
-    class ResObjectCache : Singleton<ResObjectCache>
+    internal class ResObjectCache : IModule
     {
         private List<ResObject> cacheList;
 
         private static readonly ResObject EMPTY_OBJECT = new ResObject(null, null, "");
-        private static readonly ResPackage EDITOR_RES_PACKAGE = new ResPackage("EDITOR_RESOURCES_PACKAGE");
-        private static readonly ResPackage NETWORK_RES_PACKAGE = new ResPackage("NETWORK_RESOURCES_PACKAGE");
-        private static readonly ResPackage INTERNAL_RES_PACKAGE = new ResPackage("INTERNAL_RESOURCES_PACKAGE");
+        public static readonly ResPackage EDITOR_RES_PACKAGE = new ResPackage("EDITOR_RESOURCES_PACKAGE");
+        public static readonly ResPackage NETWORK_RES_PACKAGE = new ResPackage("NETWORK_RESOURCES_PACKAGE");
+        public static readonly ResPackage INTERNAL_RES_PACKAGE = new ResPackage("INTERNAL_RESOURCES_PACKAGE");
 
-        protected override void OnAwake()
+        public void OnAwake()
         {
             cacheList = new List<ResObject>();
-            ResPackageCache.instance.Add(EDITOR_RES_PACKAGE);
-            ResPackageCache.instance.Add(NETWORK_RES_PACKAGE);
-            ResPackageCache.instance.Add(INTERNAL_RES_PACKAGE);
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             foreach (var VARIABLE in cacheList)
             {
@@ -79,7 +77,7 @@ namespace ZGame.Resource
 
         public ResObject LoadSync(string path, string extension = "")
         {
-            if (ResObjectCache.instance.TryGetValue(path, out ResObject handle))
+            if (TryGetValue(path, out ResObject handle))
             {
                 return handle;
             }
@@ -116,17 +114,17 @@ namespace ZGame.Resource
                 return Add(EDITOR_RES_PACKAGE, asset, path);
             }
 #endif
-            ResourcePackageManifest manifest = PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path);
+            ResourcePackageManifest manifest = WorkApi.Resource.PackageManifest.GetResourcePackageManifestWithAssetName(path);
             if (manifest is null)
             {
                 Debug.Log("没有找到资源信息配置:" + path);
                 return EMPTY_OBJECT;
             }
 
-            if (ResPackageCache.instance.TryGetValue(manifest.name, out var _handle) is false)
+            if (WorkApi.Resource.ResPackageCache.TryGetValue(manifest.name, out var _handle) is false)
             {
                 Debug.Log("重新加载资源包：" + manifest.name);
-                ResPackageCache.instance.LoadingResourcePackageListSync(manifest);
+                WorkApi.Resource.ResPackageCache.LoadingResourcePackageListSync(manifest);
                 return LoadSync(path);
             }
 
@@ -145,7 +143,7 @@ namespace ZGame.Resource
 
         public async UniTask<ResObject> LoadAsync(string path, string extension = "")
         {
-            if (ResObjectCache.instance.TryGetValue(path, out ResObject handle))
+            if (TryGetValue(path, out ResObject handle))
             {
                 return handle;
             }
@@ -165,7 +163,7 @@ namespace ZGame.Resource
 
             if (path.StartsWith("http"))
             {
-                asset = await Request.GetStreamingAsset(path, extension);
+                asset = await WorkApi.Web.GetStreamingAsset(path, extension);
                 if (asset == null)
                 {
                     return EMPTY_OBJECT;
@@ -188,16 +186,16 @@ namespace ZGame.Resource
                 return Add(EDITOR_RES_PACKAGE, asset, path);
             }
 #endif
-            ResourcePackageManifest manifest = PackageManifestManager.instance.GetResourcePackageManifestWithAssetName(path);
+            ResourcePackageManifest manifest = WorkApi.Resource.PackageManifest.GetResourcePackageManifestWithAssetName(path);
             if (manifest is null)
             {
                 Debug.Log("没有找到资源信息配置:" + path);
                 return EMPTY_OBJECT;
             }
 
-            if (ResPackageCache.instance.TryGetValue(manifest.name, out var _handle) is false)
+            if (WorkApi.Resource.ResPackageCache.TryGetValue(manifest.name, out var _handle) is false)
             {
-                await ResPackageCache.instance.LoadingResourcePackageList(manifest);
+                await WorkApi.Resource.ResPackageCache.LoadingResourcePackageListAsync(manifest);
                 return await LoadAsync(path);
             }
 

@@ -360,7 +360,7 @@ namespace ZGame
 
         private void Awake()
         {
-            SetupKeyDownEvent(KeyCode.Escape, keyEvent => { UIMsgBox.Show(Localize.instance.Query("是否退出"), GameManager.instance.QuitGame); });
+            SetupKeyDownEvent(KeyCode.Escape, keyEvent => { UIMsgBox.Show(WorkApi.Language.Query("是否退出"), WorkApi.Uninitialized); });
         }
 
         private void Update()

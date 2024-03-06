@@ -86,7 +86,7 @@ namespace ZGame.Resource
 
         public void Dispose()
         {
-            ResObjectCache.instance.RemovePackage(this);
+            WorkApi.Resource.ResObjectCache.RemovePackage(this);
             bundle?.Unload(true);
             Resources.UnloadUnusedAssets();
             Debug.Log("释放资源包:" + name);

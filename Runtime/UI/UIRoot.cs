@@ -73,7 +73,7 @@ namespace ZGame.UI
                 return default;
             }
 
-            ResObject resObject = ResourceManager.instance.LoadAsset(reference.path);
+            ResObject resObject = WorkApi.Resource.LoadAsset(reference.path);
             if (resObject.IsSuccess() is false)
             {
                 Debug.Log("加载资源失败：" + reference.path);
