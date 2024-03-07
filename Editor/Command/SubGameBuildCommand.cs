@@ -65,6 +65,10 @@ namespace ZGame.Editor.Command
                 options.target = EditorUserBuildSettings.activeBuildTarget;
                 options.scenes = new[] { "Assets/Startup.unity" };
                 options.locationPathName = $"{BuilderConfig.output}build/{BasicConfig.GetPlatformName()}/{channel.packageName}/{config.version}/";
+                BasicConfig.instance.language = channel.language;
+                BasicConfig.OnSave();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
                 if (Directory.Exists(options.locationPathName) is false)
                 {
                     Directory.CreateDirectory(options.locationPathName);

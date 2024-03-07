@@ -43,6 +43,16 @@ namespace ZGame
             }
         }
 
+        private void OnBecameInvisible()
+        {
+            throw new NotImplementedException();
+        }
+        
+        private void OnBecameVisible()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// 设置按键长按事件
         /// </summary>

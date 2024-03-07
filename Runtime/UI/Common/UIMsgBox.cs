@@ -74,7 +74,7 @@ namespace ZGame.UI
         private void Switch(bool state)
         {
             BehaviourScriptable.instance.UnsetupKeyDownEvent(KeyCode.Escape, OnBackup);
-            WorkApi.UI.Inactive(this);
+            WorkApi.UI?.Inactive(this);
             switch (state)
             {
                 case true:

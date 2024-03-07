@@ -212,7 +212,6 @@ namespace ZGame.Editor.ExcelExprot
             }
 
             string assetTypeName = exportSet.name;
-            string itemTypeName = exportSet.name + "_item";
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Linq;");
@@ -223,11 +222,9 @@ namespace ZGame.Editor.ExcelExprot
             sb.AppendLine("using ZGame.Config;");
             sb.AppendLine($"namespace {exportSet.nameSpace}");
             sb.AppendLine("{");
-
-            sb.AppendLine($"\tpublic sealed class {assetTypeName} : Singleton<{assetTypeName}>, IQuery<{assetTypeName}.{itemTypeName}>");
+            sb.AppendLine($"\tpublic sealed class {assetTypeName}");
             sb.AppendLine("\t{");
-            sb.AppendLine($"\t\tpublic class {itemTypeName}");
-            sb.AppendLine("\t\t{");
+
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
                 string name = header.ItemArray[i].ToString();
@@ -239,68 +236,66 @@ namespace ZGame.Editor.ExcelExprot
                 sb.AppendLine($"\t\t\tpublic {GetDataType(typeRow[i].ToString())} {header[i]} {{ get; set; }}");
             }
 
-            sb.AppendLine("\t\t}");
-            sb.AppendLine($"\t\tpublic {itemTypeName} this[int index]");
+            //private static Character _instance;
+            //private static List<Character> cfgList;
+            sb.AppendLine($"\t\tprivate static {assetTypeName} _instance;");
+            sb.AppendLine($"\t\tprivate static List<{assetTypeName}> cfgList;");
+            sb.AppendLine($"\t\tpublic static {assetTypeName} instance");
             sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\t\tget => cfgList[index];");
+            sb.AppendLine($"\t\t\tget");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\t\t\tif (_instance == null)");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\t_instance = new {assetTypeName}();");
+            sb.AppendLine($"\t\tcfgList = InitConfig();");
             sb.AppendLine($"\t\t}}");
-            sb.AppendLine($"\t\tpublic int Count => cfgList.Count;");
-            sb.AppendLine($"\t\tprivate List<{itemTypeName}> cfgList = new ()\n\t\t{{");
+            sb.AppendLine($"\t\treturn _instance;");
+            sb.AppendLine($"\t\t}}");
+            sb.AppendLine($"\t\t}}");
+            sb.AppendLine($"\t\tpublic {assetTypeName} this[int index]");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\tget");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\tif (index < 0 || index >= cfgList.Count)");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\tthrow new IndexOutOfRangeException();");
+            sb.AppendLine($"\t\t}}");
+            sb.AppendLine($"\t\treturn cfgList[index];");
+            sb.AppendLine($"\t\t}}");
+            sb.AppendLine($"\t\t}}");
+            sb.AppendLine($"\t\tpublic int Count");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\tget");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\tif (cfgList is null)");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\treturn 0;");
+            sb.AppendLine($"\t\t}}");
+            sb.AppendLine($"\t\treturn cfgList.Count;");
+            sb.AppendLine($"\t\t}}");
+            sb.AppendLine($"\t\t}}");
 
-            for (int rowIndex = exportSet.dataRow; rowIndex < exportSet.dataTable.Rows.Count; rowIndex++)
+            sb.AppendLine($"\t\tpublic {assetTypeName} Query(int key)");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\treturn cfgList.Find(x => x.{header.ItemArray[0].ToString()} == key);");
+            sb.AppendLine($"\t\t}}");
+
+            sb.AppendLine($"\t\tprivate static List<{assetTypeName}> InitConfig()");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine($"\t\t\t return new () {{");
+            for (int rowIndex = exportSet.dataRow;
+                 rowIndex < exportSet.dataTable.Rows.Count;
+                 rowIndex++)
             {
                 var row = exportSet.dataTable.Rows[rowIndex];
                 sb.AppendLine(GetStructData(row, header, typeRow, rowIndex));
             }
 
-            sb.AppendLine("\t\t};");
-
-            sb.AppendLine("");
-            sb.AppendLine("\t\tpublic void Dispose()");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tcfgList.Clear();");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine("\t\tobject IQuery.Query(int key)");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\treturn Query(key);");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine($"\t\tpublic {itemTypeName} Query({typeRow.ItemArray[0].ToString()} key)");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine($"\t\t\treturn cfgList.Find(x => x.{header.ItemArray[0].ToString()} == key);");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine($"\t\tpublic {itemTypeName} Query(Func<{itemTypeName}, bool> func)");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\treturn cfgList.Find(x => func(x));");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine("\t\tpublic object Query(Func<object, bool> whereFunc)");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\treturn cfgList.Find(x => whereFunc(x));");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine($"\t\tpublic List<{itemTypeName}> Wheres(Func<{itemTypeName}, bool> func)");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\treturn cfgList.Where(x => func(x)).ToList();");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine("\t\tpublic List<object> Wheres(Func<object, bool> whereFunc)");
-            sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tList<object> result = new List<object>();");
-            sb.AppendLine("\t\t\tforeach (var item in cfgList)");
-            sb.AppendLine("\t\t\t{");
-            sb.AppendLine("\t\t\t\tif (whereFunc(item))");
-            sb.AppendLine("\t\t\t\t{");
-            sb.AppendLine("\t\t\t\t\tresult.Add(item);");
-            sb.AppendLine("\t\t\t\t}");
-            sb.AppendLine("\t\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine("\t\t\treturn result;");
+            sb.AppendLine("\t\t\t};");
             sb.AppendLine("\t\t}");
             sb.AppendLine("\t}");
             sb.AppendLine("}");
+
             string path = Path.Combine(AssetDatabase.GetAssetPath(exportSet.code), assetTypeName + ".cs");
             if (File.Exists(path))
             {

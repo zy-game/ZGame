@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using ZGame.Config;
 
 namespace ZGame
 {
@@ -11,7 +12,7 @@ namespace ZGame
         public Texture2D icon;
         public Sprite splash;
         public string appName;
-
+        public LanguageDefine language;
 
         /// <summary>
         /// 启动参数

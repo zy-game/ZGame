@@ -212,6 +212,7 @@ namespace ZGame.Editor
                     }
 
                     GUILayout.EndHorizontal();
+                    BasicConfig.instance.curEntry.channels[j].language = (LanguageDefine)EditorGUILayout.EnumPopup("Language", BasicConfig.instance.curEntry.channels[j].language);
                     BasicConfig.instance.curEntry.channels[j].packageName = EditorGUILayout.TextField("Package Name", BasicConfig.instance.curEntry.channels[j].packageName);
                     BasicConfig.instance.curEntry.channels[j].appName = EditorGUILayout.TextField("App Name", BasicConfig.instance.curEntry.channels[j].appName);
                     BasicConfig.instance.curEntry.channels[j].icon = (EditorGUILayout.ObjectField("Channel Icon", BasicConfig.instance.curEntry.channels[j].icon, typeof(Texture2D), false) as Texture2D);

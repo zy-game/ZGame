@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using UnityEngine;
 using ZGame.Resource.Config;
@@ -63,14 +64,31 @@ namespace ZGame.Editor.Command
         private static void OSSUpload(OSSOptions options, string filePath)
         {
             string putName = $"{BasicConfig.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
-
-
-            if (client.DoesBucketExist(options.bucket) is false)
+            if (client is null)
             {
-                var request = new Aliyun.OSS.CreateBucketRequest(options.bucket);
-                request.ACL = Aliyun.OSS.CannedAccessControlList.PublicRead;
-                request.DataRedundancyType = Aliyun.OSS.DataRedundancyType.ZRS;
-                client.CreateBucket(request);
+                var accessKeyId = options.key;
+                var accessKeySecret = options.password;
+                string endpoint = "https://oss-cn-beijing.aliyuncs.com";
+                client = new Aliyun.OSS.OssClient(endpoint, accessKeyId, accessKeySecret);
+            }
+
+            var buckets = client.ListBuckets().ToList();
+            if (buckets.Exists(x => x.Name.Equals(options.bucket)) is false)
+            {
+                try
+                {
+                    var request = new Aliyun.OSS.CreateBucketRequest(options.bucket);
+                    //设置读写权限ACL为公共读PublicRead，默认为私有权限。
+                    request.ACL = Aliyun.OSS.CannedAccessControlList.PublicRead;
+                    //设置数据容灾类型为同城冗余存储。
+                    request.DataRedundancyType = Aliyun.OSS.DataRedundancyType.ZRS;
+                    client.CreateBucket(request);
+                    Debug.Log("Create bucket succeeded");
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError(string.Format("Create bucket failed. {0}", ex.Message));
+                }
             }
 
             try
