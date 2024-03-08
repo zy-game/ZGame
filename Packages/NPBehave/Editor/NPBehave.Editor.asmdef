@@ -1,0 +1,18 @@
+{
+    "name": "NPBehave.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:858936e0c221f3d4b841d100c1759dfa"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
