@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using HybridCLR.Editor.Settings;
+using NUnit.Framework;
 using Unity.Collections;
 using UnityEditor;
 using UnityEditorInternal;
@@ -44,7 +46,6 @@ namespace ZGame.Editor
             EditorGUILayout.LabelField("基础配置", EditorStyles.boldLabel);
             BasicConfig.instance.companyName = EditorGUILayout.TextField("公司名称", BasicConfig.instance.companyName);
             BasicConfig.instance.apkUrl = EditorGUILayout.TextField("安装包下载地址", BasicConfig.instance.apkUrl);
-            BasicConfig.instance.language = (LanguageDefine)EditorGUILayout.EnumPopup("默认语言", BasicConfig.instance.language);
             NativeLeakDetection.Mode = (NativeLeakDetectionMode)EditorGUILayout.EnumPopup("Enable Stack Trace", NativeLeakDetection.Mode);
             GUILayout.BeginHorizontal();
             last = BasicConfig.instance.address.FindIndex(x => x.title == BasicConfig.instance.curAddressName);
@@ -82,17 +83,17 @@ namespace ZGame.Editor
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("游戏设置", EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
-            if (BasicConfig.instance.curEntry is not null && BasicConfig.instance.curEntry.mode == CodeMode.Hotfix)
+            if (BasicConfig.instance.curGame is not null && BasicConfig.instance.curGame.mode == CodeMode.Hotfix)
             {
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Build Hotfix Assets"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, null));
-                    if (BasicConfig.instance.curEntry.channels != null && BasicConfig.instance.curEntry.channels.Count > 0)
+                    menu.AddItem(new GUIContent("Build Hotfix Assets"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curGame, null));
+                    if (BasicConfig.instance.curGame.channels != null && BasicConfig.instance.curGame.channels.Count > 0)
                     {
-                        foreach (var VARIABLE in BasicConfig.instance.curEntry.channels)
+                        foreach (var VARIABLE in BasicConfig.instance.curGame.channels)
                         {
-                            menu.AddItem(new GUIContent("Build Install Package/" + VARIABLE.title), false, () => { SubGameBuildCommand.Executer(BasicConfig.instance.curEntry, VARIABLE); });
+                            menu.AddItem(new GUIContent("Build Install Package/" + VARIABLE.title), false, () => { SubGameBuildCommand.Executer(BasicConfig.instance.curGame, VARIABLE); });
                         }
                     }
 
@@ -101,26 +102,26 @@ namespace ZGame.Editor
             }
 
             GUILayout.EndHorizontal();
-            BasicConfig.instance.curEntry.title = EditorGUILayout.TextField("游戏名", BasicConfig.instance.curEntry.title);
-            if (BasicConfig.instance.curEntry.path.IsNullOrEmpty() is false && BasicConfig.instance.curEntry.assembly == null)
+            BasicConfig.instance.curGame.title = EditorGUILayout.TextField("游戏名", BasicConfig.instance.curGame.title);
+            if (BasicConfig.instance.curGame.path.IsNullOrEmpty() is false && BasicConfig.instance.curGame.assembly == null)
             {
-                BasicConfig.instance.curEntry.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(BasicConfig.instance.curEntry.path);
+                BasicConfig.instance.curGame.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(BasicConfig.instance.curGame.path);
             }
 
-            BasicConfig.instance.curEntry.version = EditorGUILayout.TextField("版本", BasicConfig.instance.curEntry.version);
-            var mode = (CodeMode)EditorGUILayout.EnumPopup("模式", BasicConfig.instance.curEntry.mode);
-            if (mode != BasicConfig.instance.curEntry.mode)
+            BasicConfig.instance.curGame.version = EditorGUILayout.TextField("版本", BasicConfig.instance.curGame.version);
+            var mode = (CodeMode)EditorGUILayout.EnumPopup("模式", BasicConfig.instance.curGame.mode);
+            if (mode != BasicConfig.instance.curGame.mode)
             {
-                BasicConfig.instance.curEntry.mode = mode;
+                BasicConfig.instance.curGame.mode = mode;
                 List<AssemblyDefinitionAsset> hotfixAssemblies = new List<AssemblyDefinitionAsset>();
-                if (BasicConfig.instance.curEntry.mode == CodeMode.Hotfix)
+                if (BasicConfig.instance.curGame.mode == CodeMode.Hotfix)
                 {
-                    if (BasicConfig.instance.curEntry.path.IsNullOrEmpty() is false && BasicConfig.instance.curEntry.assembly == null)
+                    if (BasicConfig.instance.curGame.path.IsNullOrEmpty() is false && BasicConfig.instance.curGame.assembly == null)
                     {
-                        BasicConfig.instance.curEntry.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(BasicConfig.instance.curEntry.path);
+                        BasicConfig.instance.curGame.assembly = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(BasicConfig.instance.curGame.path);
                     }
 
-                    hotfixAssemblies.Add(BasicConfig.instance.curEntry.assembly);
+                    hotfixAssemblies.Add(BasicConfig.instance.curGame.assembly);
                 }
 
                 HybridCLRSettings.Instance.hotUpdateAssemblyDefinitions = hotfixAssemblies.ToArray();
@@ -129,94 +130,113 @@ namespace ZGame.Editor
             }
 
             var resList = BuilderConfig.instance.packages.Select(x => x.name).ToList();
-            int last = resList.FindIndex(x => x == BasicConfig.instance.curEntry.module);
+            int last = resList.FindIndex(x => x == BasicConfig.instance.curGame.module);
             int curIndex = EditorGUILayout.Popup("资源包", last, resList.ToArray());
             if (curIndex >= 0 && curIndex < resList.Count)
             {
-                BasicConfig.instance.curEntry.module = resList[curIndex];
+                BasicConfig.instance.curGame.module = resList[curIndex];
             }
 
-            BasicConfig.instance.curEntry.assembly = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Assembly", BasicConfig.instance.curEntry.assembly, typeof(AssemblyDefinitionAsset), false);
-            if (BasicConfig.instance.curEntry.assembly != null)
+            BasicConfig.instance.curGame.assembly = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Assembly", BasicConfig.instance.curGame.assembly, typeof(AssemblyDefinitionAsset), false);
+            if (BasicConfig.instance.curGame.assembly != null)
             {
-                BasicConfig.instance.curEntry.path = AssetDatabase.GetAssetPath(BasicConfig.instance.curEntry.assembly);
+                BasicConfig.instance.curGame.path = AssetDatabase.GetAssetPath(BasicConfig.instance.curGame.assembly);
             }
 
+            last = BasicConfig.instance.curGame.channels.FindIndex(x => x.title == BasicConfig.instance.curGame.currentChannel);
+            curIndex = EditorGUILayout.Popup("当前渠道", last, BasicConfig.instance.curGame.channels.Select(x => x.title).ToArray());
+            if (curIndex >= 0 && curIndex < BasicConfig.instance.curGame.channels.Count && last != curIndex)
+            {
+                BasicConfig.instance.curGame.currentChannel = BasicConfig.instance.curGame.channels[curIndex].title;
+                SubGameBuildCommand.SetPlayerSetting(BasicConfig.instance.curGame.currentChannelOptions, BasicConfig.instance.curGame.version);
+            }
+
+            // GUILayout.BeginVertical(EditorStyles.helpBox);
+            // GUILayout.BeginHorizontal();
+            // BasicConfig.instance.curEntry.isShowReferences = EditorGUILayout.Foldout(BasicConfig.instance.curEntry.isShowReferences, "Reference Assembly");
+            // GUILayout.FlexibleSpace();
+            // if (BasicConfig.instance.curEntry.assembly != null)
+            // {
+            //     BasicConfig.instance.curEntry.entryName = BasicConfig.instance.curEntry.assembly.name;
+            // }
+            //
+            // if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            // {
+            //     BasicConfig.instance.curEntry.references.Add(string.Empty);
+            //     BasicConfig.instance.curEntry.referenceAssemblyList.Add(null);
+            //     BasicConfig.OnSave();
+            // }
+            //
+            // GUILayout.EndHorizontal();
+            // GUILayout.Space(5);
+            // if (BasicConfig.instance.curEntry.isShowReferences)
+            // {
+            //     for (int j = BasicConfig.instance.curEntry.referenceAssemblyList.Count - 1; j >= 0; j--)
+            //     {
+            //         GUILayout.BeginHorizontal(ZStyle.ITEM_BACKGROUND_STYLE);
+            //         BasicConfig.instance.curEntry.referenceAssemblyList[j] = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Element " + j, BasicConfig.instance.curEntry.referenceAssemblyList[j], typeof(AssemblyDefinitionAsset), false, GUILayout.Width(300));
+            //         if (BasicConfig.instance.curEntry.referenceAssemblyList[j] != null)
+            //         {
+            //             BasicConfig.instance.curEntry.references[j] = BasicConfig.instance.curEntry.referenceAssemblyList[j].name;
+            //         }
+            //
+            //         GUILayout.FlexibleSpace();
+            //         if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            //         {
+            //             BasicConfig.instance.curEntry.references.RemoveAt(j);
+            //             BasicConfig.instance.curEntry.referenceAssemblyList.RemoveAt(j);
+            //             BasicConfig.OnSave();
+            //         }
+            //
+            //         GUILayout.EndHorizontal();
+            //     }
+            // }
+            //
+            //
+            // GUILayout.EndVertical();
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
-            BasicConfig.instance.curEntry.isShowReferences = EditorGUILayout.Foldout(BasicConfig.instance.curEntry.isShowReferences, "Reference Assembly");
+            BasicConfig.instance.curGame.isShowChannels = EditorGUILayout.Foldout(BasicConfig.instance.curGame.isShowChannels, "Channels");
             GUILayout.FlexibleSpace();
-            if (BasicConfig.instance.curEntry.assembly != null)
-            {
-                BasicConfig.instance.curEntry.entryName = BasicConfig.instance.curEntry.assembly.name;
-            }
-
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
-                BasicConfig.instance.curEntry.references.Add(string.Empty);
-                BasicConfig.instance.curEntry.referenceAssemblyList.Add(null);
+                BasicConfig.instance.curGame.channels.Add(new ChannelOptions());
                 BasicConfig.OnSave();
             }
 
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
-            if (BasicConfig.instance.curEntry.isShowReferences)
+            if (BasicConfig.instance.curGame.isShowChannels)
             {
-                for (int j = BasicConfig.instance.curEntry.referenceAssemblyList.Count - 1; j >= 0; j--)
-                {
-                    GUILayout.BeginHorizontal(ZStyle.ITEM_BACKGROUND_STYLE);
-                    BasicConfig.instance.curEntry.referenceAssemblyList[j] = (AssemblyDefinitionAsset)EditorGUILayout.ObjectField("Element " + j, BasicConfig.instance.curEntry.referenceAssemblyList[j], typeof(AssemblyDefinitionAsset), false, GUILayout.Width(300));
-                    if (BasicConfig.instance.curEntry.referenceAssemblyList[j] != null)
-                    {
-                        BasicConfig.instance.curEntry.references[j] = BasicConfig.instance.curEntry.referenceAssemblyList[j].name;
-                    }
-
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
-                    {
-                        BasicConfig.instance.curEntry.references.RemoveAt(j);
-                        BasicConfig.instance.curEntry.referenceAssemblyList.RemoveAt(j);
-                        BasicConfig.OnSave();
-                    }
-
-                    GUILayout.EndHorizontal();
-                }
-            }
-
-
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical(EditorStyles.helpBox);
-            GUILayout.BeginHorizontal();
-            BasicConfig.instance.curEntry.isShowChannels = EditorGUILayout.Foldout(BasicConfig.instance.curEntry.isShowChannels, "Channels");
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
-            {
-                BasicConfig.instance.curEntry.channels.Add(new ChannelOptions());
-                BasicConfig.OnSave();
-            }
-
-            GUILayout.EndHorizontal();
-            GUILayout.Space(5);
-            if (BasicConfig.instance.curEntry.isShowChannels)
-            {
-                for (int j = BasicConfig.instance.curEntry.channels.Count - 1; j >= 0; j--)
+                for (int j = BasicConfig.instance.curGame.channels.Count - 1; j >= 0; j--)
                 {
                     GUILayout.BeginVertical(EditorStyles.helpBox);
                     GUILayout.BeginHorizontal();
-                    BasicConfig.instance.curEntry.channels[j].title = EditorGUILayout.TextField("Channel Name", BasicConfig.instance.curEntry.channels[j].title);
+                    // BasicConfig.instance.curEntry.channels[j].title = EditorGUILayout.TextField("Channel Name", BasicConfig.instance.curEntry.channels[j].title);
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                     {
-                        BasicConfig.instance.curEntry.channels.RemoveAt(j);
+                        BasicConfig.instance.curGame.channels.RemoveAt(j);
                         BasicConfig.OnSave();
                     }
 
                     GUILayout.EndHorizontal();
-                    BasicConfig.instance.curEntry.channels[j].language = (LanguageDefine)EditorGUILayout.EnumPopup("Language", BasicConfig.instance.curEntry.channels[j].language);
-                    BasicConfig.instance.curEntry.channels[j].packageName = EditorGUILayout.TextField("Package Name", BasicConfig.instance.curEntry.channels[j].packageName);
-                    BasicConfig.instance.curEntry.channels[j].appName = EditorGUILayout.TextField("App Name", BasicConfig.instance.curEntry.channels[j].appName);
-                    BasicConfig.instance.curEntry.channels[j].icon = (EditorGUILayout.ObjectField("Channel Icon", BasicConfig.instance.curEntry.channels[j].icon, typeof(Texture2D), false) as Texture2D);
-                    BasicConfig.instance.curEntry.channels[j].splash = (EditorGUILayout.ObjectField("Channel Splash", BasicConfig.instance.curEntry.channels[j].splash, typeof(Sprite), false) as Sprite);
+                    BasicConfig.instance.curGame.channels[j].title = EditorGUILayout.TextField("名称", BasicConfig.instance.curGame.channels[j].title);
+
+                    List<string> title = LanguageConfig.instance.languageTempletes.Select(x => x.name).ToList();
+                    List<string> filters = LanguageConfig.instance.languageTempletes.Select(x => x.filter).ToList();
+                    last = filters.FindIndex(x => x == BasicConfig.instance.curGame.channels[j].language);
+                    curIndex = EditorGUILayout.Popup("语言", last, title.ToArray());
+                    if (curIndex != last)
+                    {
+                        BasicConfig.instance.curGame.channels[j].language = LanguageConfig.instance.languageTempletes[curIndex].filter;
+                    }
+
+                    BasicConfig.instance.curGame.channels[j].args = EditorGUILayout.TextField("Args", BasicConfig.instance.curGame.channels[j].args);
+                    BasicConfig.instance.curGame.channels[j].packageName = EditorGUILayout.TextField("Package Name", BasicConfig.instance.curGame.channels[j].packageName);
+                    BasicConfig.instance.curGame.channels[j].appName = EditorGUILayout.TextField("App Name", BasicConfig.instance.curGame.channels[j].appName);
+                    BasicConfig.instance.curGame.channels[j].icon = (EditorGUILayout.ObjectField("Channel Icon", BasicConfig.instance.curGame.channels[j].icon, typeof(Texture2D), false) as Texture2D);
+                    BasicConfig.instance.curGame.channels[j].splash = (EditorGUILayout.ObjectField("Channel Splash", BasicConfig.instance.curGame.channels[j].splash, typeof(Sprite), false) as Sprite);
                     GUILayout.EndVertical();
                 }
             }

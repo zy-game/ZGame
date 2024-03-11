@@ -116,6 +116,7 @@ namespace ZGame.Editor.ResBuild
             options.bucket = EditorGUILayout.TextField("Bucket", options.bucket);
             options.key = EditorGUILayout.TextField("SecretId", options.key);
             options.password = EditorGUILayout.TextField("SecretKey", options.password);
+            options.enableAccelerate = EditorGUILayout.Toggle("启用全球加速", options.enableAccelerate);
             if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
             {
                 BuilderConfig.OnSave();

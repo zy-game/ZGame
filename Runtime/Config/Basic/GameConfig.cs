@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ZGame
 {
     [Serializable]
-    public class EntryConfig
+    public class GameConfig
     {
         /// <summary>
         /// 标题
@@ -40,6 +40,29 @@ namespace ZGame
         /// APP版本
         /// </summary>
         public string version;
+
+        /// <summary>
+        /// 当前使用的渠道
+        /// </summary>
+        public string currentChannel;
+
+        public string language
+        {
+            get
+            {
+                if (currentChannelOptions is null)
+                {
+                    return "zh";
+                }
+
+                return currentChannelOptions.language;
+            }
+        }
+
+        public ChannelOptions currentChannelOptions
+        {
+            get { return channels.Find(x => x.title == currentChannel); }
+        }
 
         /// <summary>
         /// 渠道包配置

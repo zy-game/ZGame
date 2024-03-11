@@ -72,15 +72,21 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async UniTask PreloadingResourcePackageList(EntryConfig config)
+        public async UniTask<bool> PreloadingResourcePackageList(GameConfig config)
         {
             if (config is null)
             {
                 throw new ArgumentNullException("config");
             }
 
-            await PackageManifest.SetupPackageManifest(BasicConfig.instance.curEntry.module);
-            await ResPackageCache.UpdateResourcePackageList(config);
+            Extension.StartSample();
+            await PackageManifest.SetupPackageManifest(BasicConfig.instance.curGame.module);
+            bool state = await ResPackageCache.UpdateResourcePackageList(config);
+            if (state is false)
+            {
+                return false;
+            }
+
             UILoading.SetTitle(WorkApi.Language.Query("正在加载资源信息..."));
             UILoading.SetProgress(0);
             List<ResourcePackageManifest> manifests = PackageManifest.GetResourcePackageAndDependencyList(config.module);
@@ -88,11 +94,13 @@ namespace ZGame.Resource
             {
                 UILoading.SetTitle(WorkApi.Language.Query("资源加载完成..."));
                 UILoading.SetProgress(1);
-                return;
+                return true;
             }
 
             Debug.Log("加载资源：" + string.Join(",", manifests.Select(x => x.name)));
             await ResPackageCache.LoadingResourcePackageListAsync(manifests.ToArray());
+            Debug.Log($"资源预加载完成，总计耗时：{Extension.GetSampleTime()}");
+            return true;
         }
 
         /// <summary>

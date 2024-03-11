@@ -22,7 +22,7 @@ namespace ZGame.Editor.Command
                 return;
             }
 
-            var config = args[0] as EntryConfig;
+            var config = args[0] as GameConfig;
             var channel = args[1] as ChannelOptions;
             //todo 编译资源
             PackageSeting seting = BuilderConfig.instance.packages.Find(x => x.name == config.module);
@@ -65,7 +65,6 @@ namespace ZGame.Editor.Command
                 options.target = EditorUserBuildSettings.activeBuildTarget;
                 options.scenes = new[] { "Assets/Startup.unity" };
                 options.locationPathName = $"{BuilderConfig.output}build/{BasicConfig.GetPlatformName()}/{channel.packageName}/{config.version}/";
-                BasicConfig.instance.language = channel.language;
                 BasicConfig.OnSave();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -78,7 +77,7 @@ namespace ZGame.Editor.Command
                 {
                     case BuildTarget.Android:
                         options.targetGroup = BuildTargetGroup.Android;
-                        options.locationPathName += channel.packageName + "_" + config.version + ".apk";
+                        options.locationPathName += $"{channel.packageName}_{config.version}_{DateTime.Now.ToString("yyyyMMddHH")}.apk";
                         break;
                     case BuildTarget.iOS:
                         options.targetGroup = BuildTargetGroup.iOS;
@@ -88,31 +87,7 @@ namespace ZGame.Editor.Command
                         break;
                 }
 
-                PlayerSettings.SetApplicationIdentifier(options.targetGroup, channel.packageName);
-                PlatformIconKind[] kinds = PlayerSettings.GetSupportedIconKindsForPlatform(options.targetGroup);
-                for (int i = 0; i < kinds.Length; i++)
-                {
-                    PlatformIcon[] platformIcons = PlayerSettings.GetPlatformIcons(options.targetGroup, kinds[i]);
-                    for (int j = 0; j < platformIcons.Length; j++)
-                    {
-                        for (int k = 0; k < platformIcons[j].maxLayerCount; k++)
-                        {
-                            platformIcons[j].SetTexture(channel.icon, k);
-                        }
-                    }
-
-                    PlayerSettings.SetPlatformIcons(options.targetGroup, kinds[i], platformIcons);
-                }
-
-                PlayerSettings.bundleVersion = config.version;
-                PlayerSettings.companyName = BasicConfig.instance.companyName;
-                PlayerSettings.productName = channel.appName;
-                PlayerSettings.SplashScreen.showUnityLogo = channel.splash != null;
-                PlayerSettings.SplashScreen.background = channel.splash;
-                PlayerSettings.SplashScreen.overlayOpacity = 1;
-                PlayerSettings.SplashScreen.blurBackgroundImage = false;
-                PlayerSettings.SplashScreen.backgroundPortrait = null;
-                PlayerSettings.SplashScreen.showUnityLogo = false;
+                SetPlayerSetting(channel, config.version);
                 BuildPlayerWindow.DefaultBuildMethods.BuildPlayer(options);
             }
             catch (BuildPlayerWindow.BuildMethodException e)
@@ -121,6 +96,51 @@ namespace ZGame.Editor.Command
             }
 
             EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
+        }
+
+        public static void SetPlayerSetting(ChannelOptions channel, string version)
+        {
+            BuildTargetGroup targetGroup = BuildTargetGroup.Unknown;
+            switch (EditorUserBuildSettings.activeBuildTarget)
+            {
+                case BuildTarget.Android:
+                    targetGroup = BuildTargetGroup.Android;
+                    break;
+                case BuildTarget.iOS:
+                    targetGroup = BuildTargetGroup.iOS;
+                    break;
+                case BuildTarget.StandaloneWindows:
+                    targetGroup = BuildTargetGroup.Standalone;
+
+                    break;
+            }
+
+            PlayerSettings.SetApplicationIdentifier(targetGroup, channel.packageName);
+
+            PlatformIconKind[] kinds = PlayerSettings.GetSupportedIconKindsForPlatform(targetGroup);
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                PlatformIcon[] platformIcons = PlayerSettings.GetPlatformIcons(targetGroup, kinds[i]);
+                for (int j = 0; j < platformIcons.Length; j++)
+                {
+                    for (int k = 0; k < platformIcons[j].maxLayerCount; k++)
+                    {
+                        platformIcons[j].SetTexture(channel.icon, k);
+                    }
+                }
+
+                PlayerSettings.SetPlatformIcons(targetGroup, kinds[i], platformIcons);
+            }
+
+            PlayerSettings.bundleVersion = version;
+            PlayerSettings.companyName = BasicConfig.instance.companyName;
+            PlayerSettings.productName = channel.appName;
+            PlayerSettings.SplashScreen.showUnityLogo = channel.splash != null;
+            PlayerSettings.SplashScreen.background = channel.splash;
+            PlayerSettings.SplashScreen.overlayOpacity = 1;
+            PlayerSettings.SplashScreen.blurBackgroundImage = false;
+            PlayerSettings.SplashScreen.backgroundPortrait = null;
+            PlayerSettings.SplashScreen.showUnityLogo = false;
         }
 
         private static string GetHotfixPackagePath(PackageSeting seting)

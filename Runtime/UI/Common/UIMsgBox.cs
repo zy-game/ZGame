@@ -22,6 +22,8 @@ namespace ZGame.UI
         public override void Enable(params object[] args)
         {
             base.Enable(args);
+            string title = args[0].ToString();
+            string content = args[1].ToString();
             this.onYes = (Action)(args[2]);
             this.onNo = (Action)(args[3]);
 
@@ -31,12 +33,12 @@ namespace ZGame.UI
             {
                 if (VARIABLE.name.Equals("title"))
                 {
-                    VARIABLE.SetText(args[0].ToString());
+                    VARIABLE.SetText(title);
                 }
 
                 if (VARIABLE.name.Equals("content"))
                 {
-                    VARIABLE.SetText(args[1].ToString());
+                    VARIABLE.SetText(content);
                 }
 
                 if (VARIABLE.name.Equals("text_yes"))

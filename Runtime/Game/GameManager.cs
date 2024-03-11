@@ -41,7 +41,7 @@ namespace ZGame.Game
             _currentGame = null;
         }
 
-        public async UniTask EntrySubGame(EntryConfig config)
+        public async UniTask EntrySubGame(GameConfig config)
         {
             Assembly assembly = await SubGameEntry.LoadGameAssembly(config);
             if (assembly is null)

@@ -58,6 +58,7 @@ namespace ZGame.Networking
         {
             Extension.StartSample();
             object _data = default;
+            Debug.Log($"POST:{url}");
             if (data is not string postData)
             {
                 postData = JsonConvert.SerializeObject(data);
@@ -108,6 +109,7 @@ namespace ZGame.Networking
         {
             object _data = default;
             Extension.StartSample();
+            Debug.Log($"POST:{url}");
             using (UnityWebRequest request = UnityWebRequest.Post(url, form))
             {
                 request.useHttpContinue = true;
@@ -148,6 +150,7 @@ namespace ZGame.Networking
         public async UniTask<T> GetData<T>(string url, bool isJson = true)
         {
             Extension.StartSample();
+            Debug.Log($"GET:{url}");
             object _data = default;
             using (UnityWebRequest request = UnityWebRequest.Get(url))
             {
@@ -181,6 +184,7 @@ namespace ZGame.Networking
         {
             Extension.StartSample();
             string result = "";
+            Debug.Log($"HEAD:{url}");
             using (UnityWebRequest request = UnityWebRequest.Head(url))
             {
                 request.certificateHandler = new CertificateController();
@@ -208,6 +212,7 @@ namespace ZGame.Networking
         {
             Extension.StartSample();
             Object result = default;
+            Debug.Log($"GET STRWAMING:{url}");
             using (UnityWebRequest request = CreateStreamingAssetObjectRequest(url, extension))
             {
                 request.certificateHandler = new CertificateController();

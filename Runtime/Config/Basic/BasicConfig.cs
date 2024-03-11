@@ -24,11 +24,6 @@ namespace ZGame
     public sealed class BasicConfig : SingletonScriptableObject<BasicConfig>
     {
         /// <summary>
-        /// 当前选择的游戏入口名
-        /// </summary>
-        public string curEntryName;
-
-        /// <summary>
         /// 当前选择的服务器地址
         /// </summary>
         public string curAddressName;
@@ -54,11 +49,6 @@ namespace ZGame
         public string apkUrl;
 
         /// <summary>
-        /// 默认语言
-        /// </summary>
-        public LanguageDefine language = LanguageDefine.English;
-
-        /// <summary>
         /// 当前游戏地址
         /// </summary>
         public IPConfig curAddress
@@ -69,7 +59,7 @@ namespace ZGame
         /// <summary>
         /// 游戏入口列表
         /// </summary>
-        public EntryConfig curEntry;
+        public GameConfig curGame;
 
         /// <summary>
         /// 地址列表
@@ -89,21 +79,21 @@ namespace ZGame
                 address = new List<IPConfig>();
             }
 #if UNITY_EDITOR
-            if (curEntry.referenceAssemblyList is null)
+            if (curGame.referenceAssemblyList is null)
             {
-                curEntry.referenceAssemblyList = new List<UnityEditorInternal.AssemblyDefinitionAsset>();
+                curGame.referenceAssemblyList = new List<UnityEditorInternal.AssemblyDefinitionAsset>();
             }
 #endif
 
 
-            if (curEntry.channels is null)
+            if (curGame.channels is null)
             {
-                curEntry.channels = new List<ChannelOptions>();
+                curGame.channels = new List<ChannelOptions>();
             }
 
-            if (curEntry.references is null)
+            if (curGame.references is null)
             {
-                curEntry.references = new List<string>();
+                curGame.references = new List<string>();
             }
         }
 

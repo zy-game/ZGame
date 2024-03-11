@@ -199,6 +199,9 @@ namespace ZGame.Editor.ExcelExprot
                 return;
             }
 
+
+            // ExcelOutputTemplete templete = new ExcelOutputTemplete();
+            // templete.TransformText();
             DataRow header = exportSet.dataTable.Rows[exportSet.headerRow];
             if (header is null)
             {
@@ -211,7 +214,11 @@ namespace ZGame.Editor.ExcelExprot
                 return;
             }
 
-            string assetTypeName = exportSet.name;
+            // CodeGen codeGen = new CodeGen(exportSet.name);
+            // codeGen.AddReferenceNameSpace("System", "System.Linq", "System.Collections", "System.Collections.Generic", "UnityEngine", "ZGame");
+            // codeGen.SetNameSpace(exportSet.nameSpace);
+
+            // string assetTypeName = exportSet.name;
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Linq;");
@@ -219,10 +226,9 @@ namespace ZGame.Editor.ExcelExprot
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using UnityEngine;");
             sb.AppendLine("using ZGame;");
-            sb.AppendLine("using ZGame.Config;");
             sb.AppendLine($"namespace {exportSet.nameSpace}");
             sb.AppendLine("{");
-            sb.AppendLine($"\tpublic sealed class {assetTypeName}");
+            sb.AppendLine($"\tpublic sealed class {exportSet.name} : IDatableTemplete<{exportSet.name}>");
             sb.AppendLine("\t{");
 
             for (int i = 0; i < header.ItemArray.Length; i++)
@@ -233,70 +239,96 @@ namespace ZGame.Editor.ExcelExprot
                     continue;
                 }
 
-                sb.AppendLine($"\t\t\tpublic {GetDataType(typeRow[i].ToString())} {header[i]} {{ get; set; }}");
+                // codeGen.SetProperty(header[i].ToString(), typeRow[i].ToString(), CodeGen.ACL.PUBLIC);
+
+                sb.AppendLine($"\t\t\tpublic {GetDataType(typeRow[i].ToString())} {header[i]} {{ get; private set; }}");
             }
 
-            //private static Character _instance;
-            //private static List<Character> cfgList;
-            sb.AppendLine($"\t\tprivate static {assetTypeName} _instance;");
-            sb.AppendLine($"\t\tprivate static List<{assetTypeName}> cfgList;");
-            sb.AppendLine($"\t\tpublic static {assetTypeName} instance");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\t\tget");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\t\t\tif (_instance == null)");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\t_instance = new {assetTypeName}();");
-            sb.AppendLine($"\t\tcfgList = InitConfig();");
-            sb.AppendLine($"\t\t}}");
-            sb.AppendLine($"\t\treturn _instance;");
-            sb.AppendLine($"\t\t}}");
-            sb.AppendLine($"\t\t}}");
-            sb.AppendLine($"\t\tpublic {assetTypeName} this[int index]");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\tget");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\tif (index < 0 || index >= cfgList.Count)");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\tthrow new IndexOutOfRangeException();");
-            sb.AppendLine($"\t\t}}");
-            sb.AppendLine($"\t\treturn cfgList[index];");
-            sb.AppendLine($"\t\t}}");
-            sb.AppendLine($"\t\t}}");
-            sb.AppendLine($"\t\tpublic int Count");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\tget");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\tif (cfgList is null)");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\treturn 0;");
-            sb.AppendLine($"\t\t}}");
-            sb.AppendLine($"\t\treturn cfgList.Count;");
-            sb.AppendLine($"\t\t}}");
-            sb.AppendLine($"\t\t}}");
+            // codeGen.BeginOverrideMethod("Equals", string.Empty, CodeGen.ACL.PUBLIC, new CodeGen.ParamsList(new CodeGen.Params("object", "value")));
+            // codeGen.BeginConditional("if (value is null)");
+            // codeGen.Return("false");
+            // codeGen.EndConditional();
+            // codeGen.Return("id == (int)value");
 
-            sb.AppendLine($"\t\tpublic {assetTypeName} Query(int key)");
+            sb.AppendLine($"\t\tpublic override bool Equals(object obj)");
             sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\treturn cfgList.Find(x => x.{header.ItemArray[0].ToString()} == key);");
+            sb.AppendLine($"\t\t\tif (obj is null)");
+            sb.AppendLine($"\t\t\t{{");
+            sb.AppendLine($"\t\t\t\treturn false;");
+            sb.AppendLine($"\t\t\t}}");
+            sb.AppendLine("");
+            sb.AppendLine($"\t\t\tif (obj is  {exportSet.name} temp)");
+            sb.AppendLine("\t\t\t{");
+            sb.AppendLine($"\t\t\t\treturn this.{header.ItemArray[0].ToString()}.Equals(temp.{header.ItemArray[0].ToString()});");
+            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("");
+            sb.AppendLine($"\t\t\treturn {header.ItemArray[0].ToString()}.Equals(obj);");
             sb.AppendLine($"\t\t}}");
+            // codeGen.BeginOverrideMethod("Equals", String.Empty, CodeGen.ACL.PUBLIC, new CodeGen.ParamsList(new CodeGen.Params("string", "field"), new CodeGen.Params("object", "value")));
+            // codeGen.BeginSwitch("field");
 
-            sb.AppendLine($"\t\tprivate static List<{assetTypeName}> InitConfig()");
+            sb.AppendLine($"\t\tpublic bool Equals(string field, object value)");
+            sb.AppendLine($"\t\t{{");
+            sb.AppendLine($"\t\t\tswitch (field)");
+            sb.AppendLine($"\t\t\t{{");
+            for (int i = 0; i < header.ItemArray.Length; i++)
+            {
+                string name = header.ItemArray[i].ToString();
+                if (name.Equals("#") || name.Equals(String.Empty))
+                {
+                    continue;
+                }
+
+                // codeGen.Case(header[i].ToString());
+                // codeGen.Return($"{header[i]}.Equals(value)");
+                sb.AppendLine($"\t\t\t\tcase \"{header[i]}\":");
+                sb.AppendLine($"\t\t\t\t\treturn {header[i]}.Equals(value);");
+            }
+
+            sb.AppendLine($"\t\t\t}}");
+            // codeGen.Return("false");
+            sb.AppendLine($"\t\t\treturn false;");
+            sb.AppendLine($"\t\t}}");
+            // codeGen.BeginMethod("Dispose", String.Empty, CodeGen.ACL.PUBLIC);
+            sb.AppendLine($"\t\tpublic void Dispose()");
+            sb.AppendLine($"\t\t{{");
+            for (int i = 0; i < header.ItemArray.Length; i++)
+            {
+                string name = header.ItemArray[i].ToString();
+                if (name.Equals("#") || name.Equals(String.Empty))
+                {
+                    continue;
+                }
+
+                // codeGen.Code($"{header[i]} = default");
+                sb.AppendLine($"\t\t\t{header[i]} = default;");
+            }
+
+            // codeGen.Code("GC.SuppressFinalize(this)");
+            // codeGen.EndMethod();
+            sb.AppendLine($"\t\t\tGC.SuppressFinalize(this);");
+            sb.AppendLine($"\t\t}}");
+            // codeGen.BeginStaticMethod("InitConfig", $"List<{exportSet.name}>", CodeGen.ACL.PRIVATE);
+            sb.AppendLine($"\t\tprivate static List<{exportSet.name}> InitConfig()");
             sb.AppendLine("\t\t{");
+            // codeGen.BeginListInstance(exportSet.name, "temp");
             sb.AppendLine($"\t\t\t return new () {{");
-            for (int rowIndex = exportSet.dataRow;
-                 rowIndex < exportSet.dataTable.Rows.Count;
-                 rowIndex++)
+            for (int rowIndex = exportSet.dataRow; rowIndex < exportSet.dataTable.Rows.Count; rowIndex++)
             {
                 var row = exportSet.dataTable.Rows[rowIndex];
                 sb.AppendLine(GetStructData(row, header, typeRow, rowIndex));
+                // codeGen.Code(GetStructData(row, header, typeRow, rowIndex));
             }
 
+            // codeGen.EndListInstance();
+            // codeGen.Return(codeGen.GetLastValueName());
+            // codeGen.EndStaticMethod();
             sb.AppendLine("\t\t\t};");
             sb.AppendLine("\t\t}");
             sb.AppendLine("\t}");
             sb.AppendLine("}");
 
-            string path = Path.Combine(AssetDatabase.GetAssetPath(exportSet.code), assetTypeName + ".cs");
+            string path = Path.Combine(AssetDatabase.GetAssetPath(exportSet.code), exportSet.name + ".cs");
             if (File.Exists(path))
             {
                 File.Delete(path);

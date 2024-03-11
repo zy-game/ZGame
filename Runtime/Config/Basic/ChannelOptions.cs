@@ -12,7 +12,7 @@ namespace ZGame
         public Texture2D icon;
         public Sprite splash;
         public string appName;
-        public LanguageDefine language;
+        public string language;
 
         /// <summary>
         /// 启动参数

@@ -26,9 +26,9 @@ namespace ZGame.FileSystem
         public string vfs;
 
         /// <summary>
-        /// 文件长度
+        /// 实际数据占用长度
         /// </summary>
-        public int fileLenght;
+        public int useLenght;
 
         /// <summary>
         /// 文件序号
@@ -65,7 +65,7 @@ namespace ZGame.FileSystem
         public void Use(string name, int useLenght, int sort, uint version)
         {
             this.name = name;
-            this.fileLenght = useLenght;
+            this.useLenght = useLenght;
             this.sort = sort;
             this.version = version;
             this.use = true;
@@ -75,7 +75,7 @@ namespace ZGame.FileSystem
         {
             sort = 0;
             use = false;
-            fileLenght = 0;
+            useLenght = 0;
             name = String.Empty;
             version = 0;
         }

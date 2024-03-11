@@ -42,15 +42,38 @@ namespace ZGame.FileSystem
             File.WriteAllText(filePath, JsonConvert.SerializeObject(chunkList));
         }
 
-        private VFStream OpenStream(string vfs)
+        private VFStream GetStream(string vfs)
         {
             VFStream handle = vfStreamList.Find(x => x.name == vfs);
             if (handle is null)
             {
+                if (File.Exists(Application.persistentDataPath + "/" + vfs) is false)
+                {
+                    return default;
+                }
+
                 vfStreamList.Add(handle = new VFStream(Application.persistentDataPath + "/" + vfs));
             }
 
             return handle;
+        }
+
+        private VFSChunk GetFreeChunk()
+        {
+            VFSChunk freeChunk = chunkList.Find(x => x.use == false);
+            if (freeChunk is null)
+            {
+                string vfs = Guid.NewGuid().ToString().Replace("-", String.Empty);
+                vfStreamList.Add(new VFStream(Application.persistentDataPath + "/" + vfs));
+                for (int i = 0; i < BasicConfig.instance.vfsConfig.chunkCount; i++)
+                {
+                    chunkList.Add(new VFSChunk(vfs, BasicConfig.instance.vfsConfig.chunkSize, i * BasicConfig.instance.vfsConfig.chunkSize));
+                }
+
+                freeChunk = GetFreeChunk();
+            }
+
+            return freeChunk;
         }
 
         /// <summary>
@@ -97,37 +120,6 @@ namespace ZGame.FileSystem
 
 
         /// <summary>
-        /// 获取未使用的VFS数据块，如果不存在未使用的数据块，则创建一个新的VFS
-        /// </summary>
-        /// <param name="lenght">指定VFS数据块大小</param>
-        /// <returns></returns>
-        public VFSChunk[] FindFreeChunkList(int lenght)
-        {
-            List<VFSChunk> result = new List<VFSChunk>();
-            int chunkSize = BasicConfig.instance.vfsConfig.chunkSize;
-            int maxCount = BasicConfig.instance.vfsConfig.chunkCount;
-            int count = MathEx.MaxSharinCount(lenght, chunkSize);
-            IEnumerable<VFSChunk> temp = chunkList.Where(x => x.use is false);
-            if (temp is null || temp.Count() < count)
-            {
-                VFStream handle = OpenStream(Guid.NewGuid().ToString().Replace("-", String.Empty));
-                for (int i = 0; i < maxCount; i++)
-                {
-                    chunkList.Add(new VFSChunk(handle.name, chunkSize, i * chunkSize));
-                }
-
-                temp = chunkList.Where(x => x.use is false);
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                result.Add(temp.ElementAt(i));
-            }
-
-            return result.ToArray();
-        }
-
-        /// <summary>
         /// 获取文件占用的VFS数据块
         /// </summary>
         /// <param name="fileName"></param>
@@ -146,26 +138,26 @@ namespace ZGame.FileSystem
         public void Write(string fileName, byte[] bytes, uint version)
         {
             Delete(fileName);
-            VFSChunk[] vfsDataList = FindFreeChunkList(bytes.Length);
-            if (vfsDataList is null || vfsDataList.Length == 0)
-            {
-                return;
-            }
-
             int offset = 0;
             int index = 0;
-            foreach (var VARIABLE in vfsDataList)
+            while (offset < bytes.Length)
             {
-                VFStream handle = OpenStream(vfsDataList[0].vfs);
-                if (handle is null)
+                VFSChunk chunk = GetFreeChunk();
+                if (chunk is null)
                 {
-                    return;
+                    throw new Exception("没有可用的VFS数据块");
                 }
 
-                int length = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
-                VARIABLE.Use(fileName, length, index, version);
-                handle.Write(VARIABLE.offset, bytes, offset, VARIABLE.fileLenght);
-                offset += VARIABLE.length;
+                VFStream stream = GetStream(chunk.vfs);
+                if (stream is null)
+                {
+                    throw new FileNotFoundException(chunk.vfs);
+                }
+
+                int length = bytes.Length - offset > chunk.length ? chunk.length : bytes.Length - offset;
+                stream.Write(chunk.offset, bytes, offset, length);
+                chunk.Use(fileName, length, index, version);
+                offset += length;
                 index++;
             }
 
@@ -181,30 +173,30 @@ namespace ZGame.FileSystem
         public async UniTask WriteAsync(string fileName, byte[] bytes, uint version)
         {
             Delete(fileName);
-            VFSChunk[] vfsDataList = FindFreeChunkList(bytes.Length);
-            if (vfsDataList is null || vfsDataList.Length == 0)
-            {
-                return;
-            }
-
             int offset = 0;
             int index = 0;
-            foreach (var VARIABLE in vfsDataList)
+            while (offset < bytes.Length)
             {
-                VFStream handle = OpenStream(vfsDataList[0].vfs);
-                if (handle is null)
+                VFSChunk chunk = GetFreeChunk();
+                if (chunk is null)
                 {
-                    return;
+                    throw new Exception("没有可用的VFS数据块");
                 }
 
-                int lenght = bytes.Length - offset > VARIABLE.length ? VARIABLE.length : bytes.Length - offset;
-                VARIABLE.Use(fileName, lenght, index, version);
-                await handle.WriteAsync(VARIABLE.offset, bytes, offset, VARIABLE.fileLenght);
-                offset += VARIABLE.length;
+                VFStream stream = GetStream(chunk.vfs);
+                if (stream is null)
+                {
+                    throw new FileNotFoundException(chunk.vfs);
+                }
+
+                int lenght = bytes.Length - offset > chunk.length ? chunk.length : bytes.Length - offset;
+                chunk.Use(fileName, lenght, index, version);
+                await stream.WriteAsync(chunk.offset, bytes, offset, chunk.useLenght);
+                offset += chunk.useLenght;
                 index++;
             }
 
-            Debug.Log("write file: " + fileName);
+            Debug.Log("write file: " + fileName + " Lenght:" + bytes.Length + " ChunkCount:" + index);
             Saved();
         }
 
@@ -227,17 +219,17 @@ namespace ZGame.FileSystem
             }
 
             int offset = 0;
-            byte[] bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
+            byte[] bytes = new byte[vfsDatas.Sum(x => x.useLenght)];
             foreach (var VARIABLE in vfsDatas)
             {
-                VFStream handle = OpenStream(VARIABLE.vfs);
+                VFStream handle = GetStream(VARIABLE.vfs);
                 if (handle is null)
                 {
-                    continue;
+                    throw new FileNotFoundException(VARIABLE.vfs);
                 }
 
-                handle.Read(VARIABLE.offset, bytes, offset, VARIABLE.fileLenght);
-                offset += VARIABLE.fileLenght;
+                handle.Read(VARIABLE.offset, bytes, offset, VARIABLE.useLenght);
+                offset += VARIABLE.useLenght;
             }
 
             return bytes;
@@ -262,17 +254,17 @@ namespace ZGame.FileSystem
             }
 
             int offset = 0;
-            byte[] bytes = new byte[vfsDatas.Sum(x => x.fileLenght)];
+            byte[] bytes = new byte[vfsDatas.Sum(x => x.useLenght)];
             foreach (var VARIABLE in vfsDatas)
             {
-                VFStream handle = OpenStream(VARIABLE.vfs);
+                VFStream handle = GetStream(VARIABLE.vfs);
                 if (handle is null)
                 {
-                    continue;
+                    throw new FileNotFoundException(VARIABLE.vfs);
                 }
 
-                await handle.ReadAsync(VARIABLE.offset, bytes, offset, VARIABLE.fileLenght);
-                offset += VARIABLE.fileLenght;
+                await handle.ReadAsync(VARIABLE.offset, bytes, offset, VARIABLE.useLenght);
+                offset += VARIABLE.useLenght;
             }
 
             return bytes;

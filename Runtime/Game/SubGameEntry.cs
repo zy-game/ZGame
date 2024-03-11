@@ -20,7 +20,7 @@ namespace ZGame.Game
         {
         }
 
-        internal static async UniTask<Assembly> LoadGameAssembly(EntryConfig config)
+        internal static async UniTask<Assembly> LoadGameAssembly(GameConfig config)
         {
             if (config.mode is CodeMode.Native || (BasicConfig.instance.resMode == ResourceMode.Editor && Application.isEditor))
             {

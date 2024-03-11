@@ -60,13 +60,14 @@ namespace ZGame.Resource
                 resourcePackageListManifest = await WorkApi.Web.GetData<ResourcePackageListManifest>(iniFilePath);
             }
 
+        
             if (resourcePackageListManifest is null)
             {
                 Debug.LogError("没有找到资源包列表配置文件：" + iniFilePath);
                 return false;
             }
 
-            if (resourcePackageListManifest.appVersion.Equals(BasicConfig.instance.curEntry.version) is false)
+            if (resourcePackageListManifest.appVersion.Equals(BasicConfig.instance.curGame.version) is false)
             {
                 UIMsgBox.Show(WorkApi.Language.Query("App 版本过低，请重新安装App后在使用"), () =>
                 {
@@ -75,10 +76,11 @@ namespace ZGame.Resource
                 });
                 throw new Exception("App 版本过低，请重新安装App后在使用");
             }
-
+ 
             _packageListManifests.Add(resourcePackageListManifest);
             if (resourcePackageListManifest.dependencies is not null && resourcePackageListManifest.dependencies.Count > 0)
             {
+        
                 foreach (var VARIABLE in resourcePackageListManifest.dependencies)
                 {
                     await SetupPackageManifest(VARIABLE);

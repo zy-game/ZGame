@@ -82,6 +82,11 @@ namespace ZGame
         public static EntityManager Entity { get; private set; }
 
         /// <summary>
+        /// 配置管理
+        /// </summary>
+        public static ConfigManager Config { get; private set; }
+
+        /// <summary>
         /// 初始化框架
         /// </summary>
         public static async void Initialized()
@@ -98,19 +103,25 @@ namespace ZGame
             World = GetOrCreateModule<WorldManager>();
             Entity = GetOrCreateModule<EntityManager>();
             Notify = GetOrCreateModule<NotifyManager>();
+            Config = GetOrCreateModule<ConfigManager>();
             Debug.Log(GameManager.DefaultWorld.name);
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            WorkApi.Language.Switch(BasicConfig.instance.language);
+            WorkApi.Language.Switch(BasicConfig.instance.curGame.language);
             UILoading.SetTitle(WorkApi.Language.Query("正在获取配置信息..."));
             UILoading.SetProgress(0);
-            if (BasicConfig.instance.curEntry is null)
+            if (BasicConfig.instance.curGame is null)
             {
                 Debug.LogError(new EntryPointNotFoundException());
                 return;
             }
 
-            await WorkApi.Resource.PreloadingResourcePackageList(BasicConfig.instance.curEntry);
-            await WorkApi.Game.EntrySubGame(BasicConfig.instance.curEntry);
+            bool state = await WorkApi.Resource.PreloadingResourcePackageList(BasicConfig.instance.curGame);
+            if (state is false)
+            {
+                return;
+            }
+
+            await WorkApi.Game.EntrySubGame(BasicConfig.instance.curGame);
         }
 
         /// <summary>
