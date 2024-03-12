@@ -35,6 +35,11 @@ namespace ZGame.Config
             cfgMap.Add(typeof(T), templetes);
         }
 
+        /// <summary>
+        /// 获取配置数量
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public int Count<T>() where T : IDatable
         {
             if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes))
@@ -46,11 +51,23 @@ namespace ZGame.Config
             return Count<T>();
         }
 
-        public bool HasConfig<T>(object value) where T : IDatable
+        /// <summary>
+        /// 判断配置项是否存在
+        /// </summary>
+        /// <param name="value"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public bool Contains<T>(object value) where T : IDatable
         {
             return GetConfig<T>(value) is not null;
         }
 
+        /// <summary>
+        /// 获取配置项
+        /// </summary>
+        /// <param name="value"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public T GetConfig<T>(object value) where T : IDatable
         {
             if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes))
@@ -62,6 +79,77 @@ namespace ZGame.Config
             return GetConfig<T>(value);
         }
 
+        /// <summary>
+        /// 获取配置项
+        /// </summary>
+        /// <param name="match"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetConfig<T>(Predicate<T> match) where T : IDatable
+        {
+            if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datables))
+            {
+                return (T)datables.Find(x => match((T)x));
+            }
+
+            InitConfig<T>();
+            return GetConfig<T>(match);
+        }
+
+        /// <summary>
+        /// 获取所有配置项
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public List<T> All<T>() where T : IDatable
+        {
+            List<T> templeteList = new List<T>();
+            if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes))
+            {
+                foreach (var VARIABLE in datableTempletes)
+                {
+                    templeteList.Add((T)VARIABLE);
+                }
+
+                return templeteList;
+            }
+
+            InitConfig<T>();
+            return All<T>();
+        }
+
+        /// <summary>
+        /// 筛选配置项
+        /// </summary>
+        /// <param name="match"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public List<T> Where<T>(Predicate<T> match) where T : IDatable
+        {
+            List<T> templeteList = new List<T>();
+            if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes) is false)
+            {
+                foreach (var VARIABLE in datableTempletes)
+                {
+                    if (match((T)VARIABLE))
+                    {
+                        templeteList.Add((T)VARIABLE);
+                    }
+                }
+
+                return templeteList;
+            }
+
+            InitConfig<T>();
+            return Where<T>(match);
+        }
+
+        /// <summary>
+        /// 通过下标获取配置
+        /// </summary>
+        /// <param name="index"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public T GetConfigWithIndex<T>(int index) where T : IDatable
         {
             if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes))

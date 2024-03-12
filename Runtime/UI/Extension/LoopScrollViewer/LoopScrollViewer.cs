@@ -33,6 +33,7 @@ namespace ZGame.UI
                 _data = new SmallList<object>();
             }
 
+            _data.Clear();
             for (var i = 0; i < args.Length; i++)
             {
                 _data.Add(args[i]);

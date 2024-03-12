@@ -62,7 +62,13 @@ namespace ZGame.UI
             UIBase uiBase = uiList.Find(x => x.GetType() == type);
             if (uiBase is not null)
             {
+                if (options.sceneType == SceneType.Overlap)
+                {
+                    uiList.ForEach(x => x.Disable());
+                }
+
                 uiBase.Enable(args);
+                uiBase.gameObject.transform.SetAsLastSibling();
                 return uiBase;
             }
 

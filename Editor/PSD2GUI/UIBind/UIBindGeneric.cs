@@ -464,7 +464,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\t\tResObject handle = ResourceManager.instance.LoadAsset(path);");
+            AddSetup($"\t\t\tResObject handle = WorkApi.Resource.LoadAsset(path);");
             AddSetup($"\t\t\tif (handle is null || handle.IsSuccess() == false)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup($"\t\t\thandle.SetSprite({fieldName});");
@@ -495,7 +495,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\t\tResObject handle = ResourceManager.instance.LoadAsset(path);");
+            AddSetup($"\t\t\tResObject handle = WorkApi.Resource.LoadAsset(path);");
             AddSetup($"\t\t\tif (handle is null || handle.IsSuccess() == false)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup($"\t\t\thandle.SetTexture2D({fieldName});");

@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
+using ZGame.Editor.CodeGen;
 
 namespace ZGame.Editor.ExcelExprot
 {
@@ -199,9 +200,6 @@ namespace ZGame.Editor.ExcelExprot
                 return;
             }
 
-
-            // ExcelOutputTemplete templete = new ExcelOutputTemplete();
-            // templete.TransformText();
             DataRow header = exportSet.dataTable.Rows[exportSet.headerRow];
             if (header is null)
             {
@@ -214,23 +212,9 @@ namespace ZGame.Editor.ExcelExprot
                 return;
             }
 
-            // CodeGen codeGen = new CodeGen(exportSet.name);
-            // codeGen.AddReferenceNameSpace("System", "System.Linq", "System.Collections", "System.Collections.Generic", "UnityEngine", "ZGame");
-            // codeGen.SetNameSpace(exportSet.nameSpace);
-
-            // string assetTypeName = exportSet.name;
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("using System;");
-            sb.AppendLine("using System.Linq;");
-            sb.AppendLine("using System.Collections;");
-            sb.AppendLine("using System.Collections.Generic;");
-            sb.AppendLine("using UnityEngine;");
-            sb.AppendLine("using ZGame;");
-            sb.AppendLine($"namespace {exportSet.nameSpace}");
-            sb.AppendLine("{");
-            sb.AppendLine($"\tpublic sealed class {exportSet.name} : IDatableTemplete<{exportSet.name}>");
-            sb.AppendLine("\t{");
-
+            CodeGener codeGen = new CodeGener(exportSet.name);
+            codeGen.AddReferenceNameSpace("System", "System.Linq", "System.Collections", "System.Collections.Generic", "UnityEngine", "ZGame");
+            codeGen.SetNameSpace(exportSet.nameSpace);
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
                 string name = header.ItemArray[i].ToString();
@@ -239,38 +223,21 @@ namespace ZGame.Editor.ExcelExprot
                     continue;
                 }
 
-                // codeGen.SetProperty(header[i].ToString(), typeRow[i].ToString(), CodeGen.ACL.PUBLIC);
-
-                sb.AppendLine($"\t\t\tpublic {GetDataType(typeRow[i].ToString())} {header[i]} {{ get; private set; }}");
+                codeGen.SetProperty(header[i].ToString(), typeRow[i].ToString(), CodeGen.ACL.Public);
             }
 
-            // codeGen.BeginOverrideMethod("Equals", string.Empty, CodeGen.ACL.PUBLIC, new CodeGen.ParamsList(new CodeGen.Params("object", "value")));
-            // codeGen.BeginConditional("if (value is null)");
-            // codeGen.Return("false");
-            // codeGen.EndConditional();
-            // codeGen.Return("id == (int)value");
+            codeGen.BeginMethod("Equals", false, true, "bool", ACL.Public, new ParamsList(new CodeGen.Params("object", "value")));
+            codeGen.BeginCodeScope("if (value is null)");
+            codeGen.WriteLine("return false;");
+            codeGen.EndCodeScope();
+            codeGen.BeginCodeScope($"if(value is {exportSet.name} temp)");
+            codeGen.WriteLine($"return this.{header[0].ToString()}.Equals(temp.{header[0].ToString()});");
+            codeGen.EndCodeScope();
+            codeGen.WriteLine($"return {header[0].ToString()} == ({typeRow[0].ToString()})value;");
+            codeGen.EndMethod();
 
-            sb.AppendLine($"\t\tpublic override bool Equals(object obj)");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\t\tif (obj is null)");
-            sb.AppendLine($"\t\t\t{{");
-            sb.AppendLine($"\t\t\t\treturn false;");
-            sb.AppendLine($"\t\t\t}}");
-            sb.AppendLine("");
-            sb.AppendLine($"\t\t\tif (obj is  {exportSet.name} temp)");
-            sb.AppendLine("\t\t\t{");
-            sb.AppendLine($"\t\t\t\treturn this.{header.ItemArray[0].ToString()}.Equals(temp.{header.ItemArray[0].ToString()});");
-            sb.AppendLine("\t\t\t}");
-            sb.AppendLine("");
-            sb.AppendLine($"\t\t\treturn {header.ItemArray[0].ToString()}.Equals(obj);");
-            sb.AppendLine($"\t\t}}");
-            // codeGen.BeginOverrideMethod("Equals", String.Empty, CodeGen.ACL.PUBLIC, new CodeGen.ParamsList(new CodeGen.Params("string", "field"), new CodeGen.Params("object", "value")));
-            // codeGen.BeginSwitch("field");
-
-            sb.AppendLine($"\t\tpublic bool Equals(string field, object value)");
-            sb.AppendLine($"\t\t{{");
-            sb.AppendLine($"\t\t\tswitch (field)");
-            sb.AppendLine($"\t\t\t{{");
+            codeGen.BeginMethod("Equals", false, false, "bool", ACL.Public, new ParamsList(new CodeGen.Params("string", "field"), new CodeGen.Params("object", "value")));
+            codeGen.BeginCodeScope("switch(field)");
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
                 string name = header.ItemArray[i].ToString();
@@ -279,19 +246,16 @@ namespace ZGame.Editor.ExcelExprot
                     continue;
                 }
 
-                // codeGen.Case(header[i].ToString());
-                // codeGen.Return($"{header[i]}.Equals(value)");
-                sb.AppendLine($"\t\t\t\tcase \"{header[i]}\":");
-                sb.AppendLine($"\t\t\t\t\treturn {header[i]}.Equals(value);");
+                codeGen.BeginCodeScope($"case \"{header[i].ToString()}\":");
+                codeGen.WriteLine($"return {header[i]}.Equals(value);");
+                codeGen.EndCodeScope();
             }
 
-            sb.AppendLine($"\t\t\t}}");
-            // codeGen.Return("false");
-            sb.AppendLine($"\t\t\treturn false;");
-            sb.AppendLine($"\t\t}}");
-            // codeGen.BeginMethod("Dispose", String.Empty, CodeGen.ACL.PUBLIC);
-            sb.AppendLine($"\t\tpublic void Dispose()");
-            sb.AppendLine($"\t\t{{");
+            codeGen.EndCodeScope();
+            codeGen.WriteLine("return false;");
+            codeGen.EndMethod();
+
+            codeGen.BeginMethod("Dispose", false, false, String.Empty, ACL.Public);
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
                 string name = header.ItemArray[i].ToString();
@@ -300,34 +264,21 @@ namespace ZGame.Editor.ExcelExprot
                     continue;
                 }
 
-                // codeGen.Code($"{header[i]} = default");
-                sb.AppendLine($"\t\t\t{header[i]} = default;");
+                codeGen.WriteLine($"{header[i]} = default;");
             }
 
-            // codeGen.Code("GC.SuppressFinalize(this)");
-            // codeGen.EndMethod();
-            sb.AppendLine($"\t\t\tGC.SuppressFinalize(this);");
-            sb.AppendLine($"\t\t}}");
-            // codeGen.BeginStaticMethod("InitConfig", $"List<{exportSet.name}>", CodeGen.ACL.PRIVATE);
-            sb.AppendLine($"\t\tprivate static List<{exportSet.name}> InitConfig()");
-            sb.AppendLine("\t\t{");
-            // codeGen.BeginListInstance(exportSet.name, "temp");
-            sb.AppendLine($"\t\t\t return new () {{");
+            codeGen.WriteLine("GC.SuppressFinalize(this);");
+            codeGen.EndMethod();
+            codeGen.BeginMethod("InitConfig", true, false, $"List<{exportSet.name}>", ACL.Private);
+            codeGen.BeginCodeScope("return new () ");
             for (int rowIndex = exportSet.dataRow; rowIndex < exportSet.dataTable.Rows.Count; rowIndex++)
             {
                 var row = exportSet.dataTable.Rows[rowIndex];
-                sb.AppendLine(GetStructData(row, header, typeRow, rowIndex));
-                // codeGen.Code(GetStructData(row, header, typeRow, rowIndex));
+                codeGen.WriteLine(GetStructData(row, header, typeRow, rowIndex));
             }
 
-            // codeGen.EndListInstance();
-            // codeGen.Return(codeGen.GetLastValueName());
-            // codeGen.EndStaticMethod();
-            sb.AppendLine("\t\t\t};");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("\t}");
-            sb.AppendLine("}");
-
+            codeGen.EndCodeScope(";");
+            codeGen.EndMethod();
             string path = Path.Combine(AssetDatabase.GetAssetPath(exportSet.code), exportSet.name + ".cs");
             if (File.Exists(path))
             {
@@ -335,7 +286,7 @@ namespace ZGame.Editor.ExcelExprot
             }
 
             Debug.Log("write code:" + path);
-            File.WriteAllText(path, sb.ToString());
+            File.WriteAllText(path, codeGen.ToString().ToString());
         }
 
         private void ExportJson(ExportOptions exportSet)
