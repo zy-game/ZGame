@@ -25,6 +25,7 @@ namespace ZGame.Editor.CodeGen
     interface IClassCodeGen : ICodeGen
     {
         IClassCodeGen parent { get; }
+        void SetInherit(params string[] args);
         IClassCodeGen AddClass(string className, ACL acl);
         IMethodCodeGen AddConstructor(ParamsList args);
         IClassCodeGen SwitchClass(string className);
@@ -41,8 +42,10 @@ namespace ZGame.Editor.CodeGen
         private ACL access;
         private ParamsList paramsList;
         private StringBuilder sb;
+        private List<string> tab;
         public string name { get; }
         public IClassCodeGen owner { get; }
+
 
         public MethodGener(IClassCodeGen parent, string methodName, bool isStatic, bool isOverride, string returnType = "", ACL acl = ACL.Public, ParamsList paramsList = null)
         {
@@ -54,6 +57,16 @@ namespace ZGame.Editor.CodeGen
             this.access = acl;
             this.paramsList = paramsList;
             this.sb = new StringBuilder();
+            this.tab = new List<string>();
+            IClassCodeGen temp = parent;
+            while (temp is not null)
+            {
+                this.tab.Add("\t");
+                temp = temp.parent;
+            }
+
+            this.tab.Add("\t");
+
             string header = access switch
             {
                 ACL.Public => "public ",
@@ -81,29 +94,35 @@ namespace ZGame.Editor.CodeGen
             header += name + "(";
             header += paramsList is null ? "" : paramsList.ToString();
             header += ")";
-            sb.AppendLine(header);
-            sb.AppendLine("{");
+            sb.AppendLine(string.Join("", this.tab) + header);
+            sb.AppendLine(string.Join("", this.tab) + "{");
+            this.tab.Add("\t");
         }
 
         public void BeginCodeScope(string code)
         {
-            sb.AppendLine(code);
-            sb.AppendLine("{");
+            sb.AppendLine(string.Join("", this.tab) + code);
+            sb.AppendLine(string.Join("", this.tab) + "{");
+            this.tab.Add("\t");
         }
 
         public void EndCodeScope(string code = "")
         {
-            sb.AppendLine("}" + code);
+            this.tab.Remove(this.tab.LastOrDefault());
+            sb.AppendLine(string.Join("", this.tab) + "}" + code);
+            sb.AppendLine("");
         }
 
         public void WriterLine(string code)
         {
-            sb.AppendLine(code);
+            sb.AppendLine(string.Join("", this.tab) + code);
         }
 
         public override string ToString()
         {
-            sb.AppendLine("}");
+            this.tab.Remove(this.tab.LastOrDefault());
+            sb.AppendLine(string.Join("", this.tab) + "}");
+            sb.AppendLine("");
             return sb.ToString();
         }
     }
@@ -111,6 +130,7 @@ namespace ZGame.Editor.CodeGen
     class ConstructorMethodGener : IMethodCodeGen
     {
         private StringBuilder sb;
+        private List<string> tab;
         private ParamsList paramsList;
         public string name { get; }
         public IClassCodeGen owner { get; }
@@ -121,37 +141,53 @@ namespace ZGame.Editor.CodeGen
             this.owner = parent;
             this.paramsList = paramsList;
             this.sb = new StringBuilder();
-            this.sb.AppendLine("public " + parent.name + "(" + paramsList is null ? ")" : paramsList?.ToString() + ")");
-            this.sb.AppendLine("{");
+            this.tab = new List<string>();
+            IClassCodeGen temp = parent;
+            while (temp is not null)
+            {
+                this.tab.Add("\t");
+                temp = temp.parent;
+            }
+
+            this.tab.Add("\t");
+            this.sb.AppendLine(string.Join("", this.tab) + "public " + parent.name + "(" + paramsList is null ? ")" : paramsList?.ToString() + ")");
+            this.sb.AppendLine(string.Join("", this.tab) + "{");
+            this.tab.Add("\t");
         }
 
         public void BeginCodeScope(string code)
         {
-            sb.AppendLine(code);
-            sb.AppendLine("{");
+            sb.AppendLine(string.Join("", this.tab) + code);
+            sb.AppendLine(string.Join("", this.tab) + "{");
+            this.tab.Add("\t");
         }
 
         public void EndCodeScope(string code = "")
         {
-            sb.AppendLine("}" + code);
+            this.tab.Remove(this.tab.LastOrDefault());
+            sb.AppendLine(string.Join("", this.tab) + "}" + code);
+            sb.AppendLine("");
         }
 
         public void WriterLine(string code)
         {
-            sb.AppendLine(code);
+            sb.AppendLine(string.Join("", this.tab) + code);
         }
 
         public override string ToString()
         {
-            this.sb.AppendLine("}");
+            this.tab.Remove(this.tab.LastOrDefault());
+            sb.AppendLine(string.Join("", this.tab) + "}");
+            sb.AppendLine("");
             return this.sb.ToString();
         }
     }
 
     class PropertyGener : IPropertyCodeGen
     {
-        private string type;
         private ACL acces;
+        private string type;
+        private List<string> tab;
         public string name { get; }
         public IClassCodeGen owner { get; }
 
@@ -167,22 +203,34 @@ namespace ZGame.Editor.CodeGen
         {
         }
 
-        public PropertyGener(string propertyName, string propertyType, ACL acl)
+        public PropertyGener(IClassCodeGen parent, string propertyName, string propertyType, ACL acl)
         {
             this.name = propertyName;
             this.type = propertyType;
             this.acces = acl;
+            this.owner = parent;
+            this.tab = new List<string>();
+            IClassCodeGen temp = parent;
+            while (temp is not null)
+            {
+                this.tab.Add("\t");
+                temp = temp.parent;
+            }
+
+            this.tab.Add("\t");
         }
 
         public override string ToString()
         {
-            return $"{acces.ToString().ToLower()} {type} {name} {{ get; set; }}";
+            return $"{string.Join("", this.tab)}{acces.ToString().ToLower()} {type} {name} {{ get; set; }}\n";
         }
     }
 
     class ClassGener : IClassCodeGen
     {
         private ACL access;
+        private List<string> tab;
+        private string[] inheritList;
         private List<IMethodCodeGen> methods;
         private List<IClassCodeGen> subClassList;
         private List<IPropertyCodeGen> propertyList;
@@ -200,13 +248,28 @@ namespace ZGame.Editor.CodeGen
             this.methods = new List<IMethodCodeGen>();
             this.subClassList = new List<IClassCodeGen>();
             this.propertyList = new List<IPropertyCodeGen>();
+            this.tab = new List<string>();
+            IClassCodeGen temp = parent;
+            while (temp is not null)
+            {
+                this.tab.Add("\t");
+                temp = temp.parent;
+            }
+
+            this.tab.Add("\t");
+        }
+
+        public void SetInherit(params string[] args)
+        {
+            inheritList = args;
         }
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"{(access == ACL.Private ? "" : access.ToString().ToLower())} class {name}");
-            sb.AppendLine("{");
+            string inherit = inheritList is null ? "" : $" : {string.Join(", ", inheritList)}";
+            sb.AppendLine($"{string.Join("", this.tab)}{(access == ACL.Private ? "" : access.ToString().ToLower())} class {name} {inherit}");
+            sb.AppendLine($"{string.Join("", this.tab)}{{");
             foreach (var VARIABLE in subClassList)
             {
                 sb.AppendLine(VARIABLE.ToString());
@@ -222,9 +285,11 @@ namespace ZGame.Editor.CodeGen
                 sb.AppendLine(VARIABLE.ToString());
             }
 
-            sb.AppendLine("}");
+            sb.AppendLine(string.Join("", this.tab) + "}");
+            sb.AppendLine("");
             return sb.ToString();
         }
+
 
         public IClassCodeGen AddClass(string className, ACL acl)
         {
@@ -242,7 +307,7 @@ namespace ZGame.Editor.CodeGen
 
         public void AddProperty(string propertyName, string propertyType, ACL acl = ACL.Public)
         {
-            this.propertyList.Add(new PropertyGener(propertyName, propertyType, acl));
+            this.propertyList.Add(new PropertyGener(this, propertyName, propertyType, acl));
         }
 
         public IClassCodeGen SwitchClass(string className)

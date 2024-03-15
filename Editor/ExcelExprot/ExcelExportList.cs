@@ -101,22 +101,6 @@ namespace ZGame.Editor.ExcelExprot
             AssetDatabase.Refresh();
         }
 
-        private string GetDataType(string t)
-        {
-            return t switch
-            {
-                "int" => "int",
-                "float" => "float",
-                "bool" => "bool",
-                "string" => "string",
-                "int[]" => "int[]",
-                "float[]" => "float[]",
-                "bool[]" => "bool[]",
-                "string[]" => "string[]",
-                _ => "string"
-            };
-        }
-
         private string GetDefaultValue(string t, string name, string v)
         {
             string temp = $"{name} = ";
@@ -175,7 +159,7 @@ namespace ZGame.Editor.ExcelExprot
 
         private string GetStructData(DataRow row, DataRow header, DataRow typeRow, int rowIndex)
         {
-            string templete = "\t\t\tnew () {";
+            string templete = "new () {";
             for (int columnIndex = 0; columnIndex < row.ItemArray.Length; columnIndex++)
             {
                 string data = row.ItemArray[columnIndex].ToString();
@@ -214,6 +198,7 @@ namespace ZGame.Editor.ExcelExprot
 
             CodeGener codeGen = new CodeGener(exportSet.name);
             codeGen.AddReferenceNameSpace("System", "System.Linq", "System.Collections", "System.Collections.Generic", "UnityEngine", "ZGame");
+            codeGen.SetInherit("IDatable");
             codeGen.SetNameSpace(exportSet.nameSpace);
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
@@ -235,7 +220,6 @@ namespace ZGame.Editor.ExcelExprot
             codeGen.EndCodeScope();
             codeGen.WriteLine($"return {header[0].ToString()} == ({typeRow[0].ToString()})value;");
             codeGen.EndMethod();
-
             codeGen.BeginMethod("Equals", false, false, "bool", ACL.Public, new ParamsList(new CodeGen.Params("string", "field"), new CodeGen.Params("object", "value")));
             codeGen.BeginCodeScope("switch(field)");
             for (int i = 0; i < header.ItemArray.Length; i++)
@@ -254,7 +238,6 @@ namespace ZGame.Editor.ExcelExprot
             codeGen.EndCodeScope();
             codeGen.WriteLine("return false;");
             codeGen.EndMethod();
-
             codeGen.BeginMethod("Dispose", false, false, String.Empty, ACL.Public);
             for (int i = 0; i < header.ItemArray.Length; i++)
             {

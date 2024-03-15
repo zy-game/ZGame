@@ -37,7 +37,7 @@ namespace ZGame.Game
             string aotZipPath = WorkApi.Resource.PackageManifest.GetAssetFullPath(config.module, $"{config.entryName.ToLower()}_aot.bytes");
             string hotfixZipPath = WorkApi.Resource.PackageManifest.GetAssetFullPath(config.module, $"{config.entryName.ToLower()}_hotfix.bytes");
             Debug.Log("补元数据：" + aotZipPath);
-            using (ResObject resObject = await WorkApi.Resource.LoadAssetAsync(aotZipPath))
+            using (ResObject resObject = WorkApi.Resource.LoadAsset(aotZipPath))
             {
                 if (resObject == null || resObject.IsSuccess() is false)
                 {

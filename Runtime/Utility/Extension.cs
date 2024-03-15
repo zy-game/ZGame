@@ -14,6 +14,16 @@ using Debug = UnityEngine.Debug;
 
 namespace ZGame
 {
+    public enum ResultStatus : byte
+    {
+        Success,
+        Fail,
+        Timeout,
+        NetworkError,
+        ParseError,
+        NotSupport,
+    }
+
     public static partial class Extension
     {
         private static Stopwatch sw = new Stopwatch();

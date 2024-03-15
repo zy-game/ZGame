@@ -8,6 +8,7 @@ namespace ZGame.Editor.CodeGen
     {
         private ICodeGen current;
         private string nameSpace;
+
         private IClassCodeGen classCodeGen;
         private List<string> referenceNameSpace = new();
 
@@ -27,6 +28,16 @@ namespace ZGame.Editor.CodeGen
             sb.AppendLine(classCodeGen.ToString());
             sb.AppendLine("}");
             return sb.ToString();
+        }
+
+        public void SetInherit(params string[] args)
+        {
+            if (current is not IClassCodeGen classCodeGen)
+            {
+                return;
+            }
+
+            classCodeGen.SetInherit(args);
         }
 
         public void SetNameSpace(string value)

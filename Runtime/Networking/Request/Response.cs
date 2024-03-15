@@ -1,10 +1,5 @@
 namespace ZGame.Networking
 {
-    public class Response<T> : Response
-    {
-        public T data;
-    }
-
     public class Response
     {
         public int code;
@@ -15,5 +10,10 @@ namespace ZGame.Networking
         {
             return (code == 0 || code == 200) && error.IsNullOrEmpty();
         }
+    }
+
+    public class Response<T> : Response
+    {
+        public T data;
     }
 }

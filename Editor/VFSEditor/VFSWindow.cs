@@ -10,6 +10,7 @@ namespace ZGame.Editor
 
         public override void OnGUI()
         {
+            BasicConfig.instance.vfsConfig.enable = EditorGUILayout.Toggle("是否开启虚拟文件系统", BasicConfig.instance.vfsConfig.enable);
             BasicConfig.instance.vfsConfig.chunkSize = EditorGUILayout.IntField("分片大小", BasicConfig.instance.vfsConfig.chunkSize);
             BasicConfig.instance.vfsConfig.chunkCount = EditorGUILayout.IntField("单个文件最大分片数", BasicConfig.instance.vfsConfig.chunkCount);
             if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)

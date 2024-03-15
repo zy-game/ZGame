@@ -5,6 +5,7 @@ using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -18,20 +19,20 @@ namespace ZGame.Networking
 {
     public class WebNet : IModule
     {
-        public void Dispose()
-        {
-        }
-
-        public void OnAwake()
-        {
-        }
-
         public class CertificateController : CertificateHandler
         {
             protected override bool ValidateCertificate(byte[] certificateData)
             {
                 return true;
             }
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public void OnAwake()
+        {
         }
 
         /// <summary>
@@ -161,7 +162,7 @@ namespace ZGame.Networking
                 }
 
                 await request.SendWebRequest().ToUniTask();
-                Debug.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                Debug.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()} data: {request.downloadHandler?.text}");
                 if (request.result is UnityWebRequest.Result.Success)
                 {
                     _data = GetResultData<T>(request);
@@ -202,99 +203,6 @@ namespace ZGame.Networking
             return result;
         }
 
-        /// <summary>
-        /// 获取网络资源数据
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="callback"></param>
-        /// <returns></returns>
-        public async UniTask<Object> GetStreamingAsset(string url, string extension, IProgress<float> callback = null)
-        {
-            Extension.StartSample();
-            Object result = default;
-            Debug.Log($"GET STRWAMING:{url}");
-            using (UnityWebRequest request = CreateStreamingAssetObjectRequest(url, extension))
-            {
-                request.certificateHandler = new CertificateController();
-                await request.SendWebRequest().ToUniTask(callback);
-                Debug.Log($"GET STRWAMING ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()}");
-                if (request.GetResponseHeader("Content-Type") == "application/json")
-                {
-                    Debug.Log(request.downloadHandler.text);
-                }
-
-                if (request.result is UnityWebRequest.Result.Success)
-                {
-                    result = GetStreamingAssetObject(extension, request);
-                }
-
-                request.downloadHandler?.Dispose();
-                request.uploadHandler?.Dispose();
-                return result;
-            }
-        }
-
-        /// <summary>
-        /// 获取资源对象
-        /// </summary>
-        /// <param name="extension"></param>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
-        private Object GetStreamingAssetObject(string extension, UnityWebRequest request)
-        {
-            switch (extension)
-            {
-                case ".png":
-                case ".jpg":
-                case ".jpeg":
-                case ".bmp":
-                case ".tga":
-                    return DownloadHandlerTexture.GetContent(request);
-                    break;
-                case ".mp3":
-                case ".wav":
-                case ".ogg":
-                    return DownloadHandlerAudioClip.GetContent(request);
-                    break;
-                case ".assetbundle":
-                    return DownloadHandlerAssetBundle.GetContent(request);
-                    break;
-                default:
-                    throw new NotSupportedException("不支持的资源类型");
-            }
-        }
-
-        /// <summary>
-        /// 创建资源对象请求
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="extension"></param>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
-        private UnityWebRequest CreateStreamingAssetObjectRequest(string path, string extension)
-        {
-            switch (extension)
-            {
-                case ".png":
-                case ".jpg":
-                case ".jpeg":
-                case ".bmp":
-                case ".tga":
-                    return UnityWebRequestTexture.GetTexture(path);
-                case ".mp3":
-                    return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.MPEG);
-                case ".wav":
-                    return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV);
-                case ".ogg":
-                    return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.OGGVORBIS);
-                case ".assetbundle":
-                    return UnityWebRequestAssetBundle.GetAssetBundle(path);
-                default:
-                    throw new NotSupportedException("不支持的资源类型");
-            }
-        }
-
         private T GetResultData<T>(UnityWebRequest request)
         {
             object _data = default;
@@ -316,6 +224,30 @@ namespace ZGame.Networking
             }
 
             return (T)_data;
+        }
+
+        /// <summary>
+        /// 获取网络资源数据
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        [Obsolete("这个接口已经转移到 Download.GetStreamingAsset")]
+        public async UniTask<Object> GetStreamingAsset(string url, string extension, IProgress<float> callback = null)
+        {
+            return await WorkApi.Download.GetStreamingAsset(url, extension, callback);
+        }
+
+        /// <summary>
+        /// 下载网络文件的二进制数据
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        [Obsolete("这个接口已经转移到 Download.GetStreamingAssetBinary")]
+        public async UniTask<byte[]> GetStreamingAssetBinary(string url, IProgress<float> callback = null)
+        {
+            return await WorkApi.Download.GetStreamingAssetBinary(url, callback);
         }
     }
 }

@@ -5,6 +5,9 @@
   "unity": "2021.2",
   "displayName": "ZGame",
   "dependencies": {
-
+    "com.code-philosophy.hybridclr": "https://gitee.com/focus-creative-games/hybridclr_unity.git",
+    "com.unity.2d.psdimporter": "6.0.9",
+    "com.unity.editorcoroutines": "1.0.0",
+    "com.unity.jobs": "0.70.0-preview.7"
   }
 }

@@ -47,6 +47,7 @@ namespace ZGame.Editor
             BasicConfig.instance.companyName = EditorGUILayout.TextField("公司名称", BasicConfig.instance.companyName);
             BasicConfig.instance.apkUrl = EditorGUILayout.TextField("安装包下载地址", BasicConfig.instance.apkUrl);
             NativeLeakDetection.Mode = (NativeLeakDetectionMode)EditorGUILayout.EnumPopup("Enable Stack Trace", NativeLeakDetection.Mode);
+            BasicConfig.instance.isDebug = EditorGUILayout.Toggle("Enable Debug", BasicConfig.instance.isDebug);
             GUILayout.BeginHorizontal();
             last = BasicConfig.instance.address.FindIndex(x => x.title == BasicConfig.instance.curAddressName);
             curIndex = EditorGUILayout.Popup("服务器地址", last, BasicConfig.instance.address.Select(x => x.title).ToArray());
@@ -88,12 +89,12 @@ namespace ZGame.Editor
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Build Hotfix Assets"), false, () => SubGameBuildCommand.Executer(BasicConfig.instance.curGame, null));
+                    menu.AddItem(new GUIContent("Build Hotfix Assets"), false, () => BuildGameChannelCommand.Executer(null));
                     if (BasicConfig.instance.curGame.channels != null && BasicConfig.instance.curGame.channels.Count > 0)
                     {
                         foreach (var VARIABLE in BasicConfig.instance.curGame.channels)
                         {
-                            menu.AddItem(new GUIContent("Build Install Package/" + VARIABLE.title), false, () => { SubGameBuildCommand.Executer(BasicConfig.instance.curGame, VARIABLE); });
+                            menu.AddItem(new GUIContent("Build Install Package/" + VARIABLE.title), false, () => { BuildGameChannelCommand.Executer(VARIABLE); });
                         }
                     }
 
@@ -148,7 +149,7 @@ namespace ZGame.Editor
             if (curIndex >= 0 && curIndex < BasicConfig.instance.curGame.channels.Count && last != curIndex)
             {
                 BasicConfig.instance.curGame.currentChannel = BasicConfig.instance.curGame.channels[curIndex].title;
-                SubGameBuildCommand.SetPlayerSetting(BasicConfig.instance.curGame.currentChannelOptions, BasicConfig.instance.curGame.version);
+                BuildGameChannelCommand.SetPlayerSetting(BasicConfig.instance.curGame.currentChannelOptions, BasicConfig.instance.curGame.version);
             }
 
             // GUILayout.BeginVertical(EditorStyles.helpBox);

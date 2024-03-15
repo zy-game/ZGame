@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -12,9 +13,9 @@ namespace ZGame.FileSystem
 {
     public class VFSManager : IModule
     {
+        private string vfsFileName;
         private List<VFSChunk> chunkList = new List<VFSChunk>();
         private List<VFStream> vfStreamList = new List<VFStream>();
-
 
         public void Dispose()
         {
@@ -24,13 +25,13 @@ namespace ZGame.FileSystem
 
         public void OnAwake()
         {
-            string filePath = Application.persistentDataPath + "/vfs.ini";
-            if (!File.Exists(filePath))
+            vfsFileName = $"{Application.persistentDataPath}/{MDFive.MD5Encrypt16("vfs.ini")}";
+            if (!File.Exists(vfsFileName))
             {
                 return;
             }
 
-            chunkList = JsonConvert.DeserializeObject<List<VFSChunk>>(File.ReadAllText(filePath));
+            chunkList = JsonConvert.DeserializeObject<List<VFSChunk>>(File.ReadAllText(vfsFileName));
         }
 
         /// <summary>
@@ -38,8 +39,7 @@ namespace ZGame.FileSystem
         /// </summary>
         private void Saved()
         {
-            string filePath = Application.persistentDataPath + "/vfs.ini";
-            File.WriteAllText(filePath, JsonConvert.SerializeObject(chunkList));
+            File.WriteAllText(vfsFileName, JsonConvert.SerializeObject(chunkList));
         }
 
         private VFStream GetStream(string vfs)
@@ -77,6 +77,16 @@ namespace ZGame.FileSystem
         }
 
         /// <summary>
+        /// 获取文件占用的VFS数据块
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public VFSChunk[] FindFileChunkList(string fileName)
+        {
+            return chunkList.Where(x => x.name == fileName).ToArray();
+        }
+
+        /// <summary>
         /// 删除文件
         /// </summary>
         /// <param name="fileName"></param>
@@ -85,6 +95,11 @@ namespace ZGame.FileSystem
             IEnumerable<VFSChunk> fileData = chunkList.Where(x => x.name == fileName);
             foreach (var file in fileData)
             {
+                if (WorkApi.IsEnableVirtualFileSystem is false)
+                {
+                    File.Delete(WorkApi.GetApplicationFilePath(fileName));
+                }
+
                 file.Free();
             }
 
@@ -120,13 +135,71 @@ namespace ZGame.FileSystem
 
 
         /// <summary>
-        /// 获取文件占用的VFS数据块
+        /// 写入文件数据
         /// </summary>
         /// <param name="fileName"></param>
-        /// <returns></returns>
-        public VFSChunk[] FindFileChunkList(string fileName)
+        /// <param name="bytes"></param>
+        /// <param name="version"></param>
+        public ResultStatus Write(string fileName, byte[] bytes, uint version)
         {
-            return chunkList.Where(x => x.name == fileName).ToArray();
+            Delete(fileName);
+            ResultStatus resultStatus = ResultStatus.Success;
+            if (WorkApi.IsEnableVirtualFileSystem is false)
+            {
+                try
+                {
+                    VFSChunk chunk = GetFreeChunk();
+                    File.WriteAllBytes(WorkApi.GetApplicationFilePath(fileName), bytes);
+                    chunk.Use(fileName, bytes.Length, 0, version);
+                }
+                catch (Exception e)
+                {
+                    WorkApi.Logger.LogError(e);
+                }
+
+                resultStatus = ResultStatus.Fail;
+            }
+            else
+            {
+                List<VFSChunk> useChunkList = new List<VFSChunk>();
+                int chunkSize = BasicConfig.instance.vfsConfig.chunkSize;
+                int maxCount = MathEx.MaxSharinCount(bytes.Length, chunkSize);
+                for (int i = 0; i < maxCount; i++)
+                {
+                    VFSChunk chunk = GetFreeChunk();
+                    if (chunk is null)
+                    {
+                        WorkApi.Logger.LogError("没有可用的VFS数据块");
+                        break;
+                    }
+
+                    VFStream stream = GetStream(chunk.vfs);
+                    if (stream is null)
+                    {
+                        WorkApi.Logger.LogError(new FileNotFoundException(chunk.vfs));
+                        break;
+                    }
+
+                    int length = bytes.Length - i * chunkSize > chunk.length ? chunk.length : bytes.Length - i * chunkSize;
+                    resultStatus = stream.Write(chunk.offset, bytes, i * chunkSize, length);
+                    if (resultStatus != ResultStatus.Success)
+                    {
+                        WorkApi.Logger.LogError("写入文件数据失败");
+                        break;
+                    }
+
+                    useChunkList.Add(chunk);
+                    chunk.Use(fileName, length, i, version);
+                }
+
+                if (resultStatus is not ResultStatus.Success)
+                {
+                    chunkList.ForEach(x => x.Free());
+                }
+            }
+
+            Saved();
+            return resultStatus;
         }
 
         /// <summary>
@@ -135,69 +208,65 @@ namespace ZGame.FileSystem
         /// <param name="fileName"></param>
         /// <param name="bytes"></param>
         /// <param name="version"></param>
-        public void Write(string fileName, byte[] bytes, uint version)
+        public async UniTask<ResultStatus> WriteAsync(string fileName, byte[] bytes, uint version, CancellationTokenSource cancellationTokenSource = null)
         {
             Delete(fileName);
-            int offset = 0;
-            int index = 0;
-            while (offset < bytes.Length)
+            ResultStatus resultStatus = ResultStatus.Success;
+            using (CancellationTokenSourceGroup cancellationTokenSourceGroup = new CancellationTokenSourceGroup(cancellationTokenSource))
             {
-                VFSChunk chunk = GetFreeChunk();
-                if (chunk is null)
+                if (WorkApi.IsEnableVirtualFileSystem is false)
                 {
-                    throw new Exception("没有可用的VFS数据块");
+                    try
+                    {
+                        VFSChunk chunk = GetFreeChunk();
+                        await File.WriteAllBytesAsync(WorkApi.GetApplicationFilePath(fileName), bytes, cancellationTokenSourceGroup.GetToken());
+                        chunk.Use(fileName, bytes.Length, 0, version);
+                    }
+                    catch (Exception e)
+                    {
+                        WorkApi.Logger.LogError(e);
+                        resultStatus = ResultStatus.Fail;
+                    }
+                }
+                else
+                {
+                    int chunkSize = BasicConfig.instance.vfsConfig.chunkSize;
+                    int maxCount = MathEx.MaxSharinCount(bytes.Length, chunkSize);
+                    UniTask<ResultStatus>[] writeTasks = new UniTask<ResultStatus>[maxCount];
+                    List<VFSChunk> chunkList = new List<VFSChunk>();
+                    for (int i = 0; i < maxCount; i++)
+                    {
+                        VFSChunk chunk = GetFreeChunk();
+                        if (chunk is null)
+                        {
+                            throw new Exception("没有可用的VFS数据块");
+                        }
+
+                        VFStream stream = GetStream(chunk.vfs);
+                        if (stream is null)
+                        {
+                            throw new FileNotFoundException(chunk.vfs);
+                        }
+
+                        int length = bytes.Length - i * chunkSize > chunk.length ? chunk.length : bytes.Length - i * chunkSize;
+                        writeTasks[i] = stream.WriteAsync(chunk.offset, bytes, i * chunkSize, length, cancellationTokenSourceGroup.GetToken());
+                        chunk.Use(fileName, length, i, version);
+                        chunkList.Add(chunk);
+                    }
+
+                    ResultStatus[] writeResult = await UniTask.WhenAll(writeTasks);
+                    if (writeResult.All(x => x == ResultStatus.Success) is false)
+                    {
+                        Debug.LogError("写入文件失败：" + fileName);
+                        resultStatus = ResultStatus.Fail;
+                        chunkList.ForEach(x => x.Free());
+                    }
                 }
 
-                VFStream stream = GetStream(chunk.vfs);
-                if (stream is null)
-                {
-                    throw new FileNotFoundException(chunk.vfs);
-                }
-
-                int length = bytes.Length - offset > chunk.length ? chunk.length : bytes.Length - offset;
-                stream.Write(chunk.offset, bytes, offset, length);
-                chunk.Use(fileName, length, index, version);
-                offset += length;
-                index++;
+                Saved();
             }
 
-            Saved();
-        }
-
-        /// <summary>
-        /// 写入文件数据
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <param name="bytes"></param>
-        /// <param name="version"></param>
-        public async UniTask WriteAsync(string fileName, byte[] bytes, uint version)
-        {
-            Delete(fileName);
-            int offset = 0;
-            int index = 0;
-            while (offset < bytes.Length)
-            {
-                VFSChunk chunk = GetFreeChunk();
-                if (chunk is null)
-                {
-                    throw new Exception("没有可用的VFS数据块");
-                }
-
-                VFStream stream = GetStream(chunk.vfs);
-                if (stream is null)
-                {
-                    throw new FileNotFoundException(chunk.vfs);
-                }
-
-                int lenght = bytes.Length - offset > chunk.length ? chunk.length : bytes.Length - offset;
-                chunk.Use(fileName, lenght, index, version);
-                await stream.WriteAsync(chunk.offset, bytes, offset, chunk.useLenght);
-                offset += chunk.useLenght;
-                index++;
-            }
-
-            Debug.Log("write file: " + fileName + " Lenght:" + bytes.Length + " ChunkCount:" + index);
-            Saved();
+            return resultStatus;
         }
 
         /// <summary>
@@ -212,27 +281,33 @@ namespace ZGame.FileSystem
                 return Array.Empty<byte>();
             }
 
-            VFSChunk[] vfsDatas = FindFileChunkList(fileName);
-            if (vfsDatas is null || vfsDatas.Length is 0)
+            if (WorkApi.IsEnableVirtualFileSystem is false)
             {
-                return Array.Empty<byte>();
+                return File.ReadAllBytes(WorkApi.GetApplicationFilePath(fileName));
             }
-
-            int offset = 0;
-            byte[] bytes = new byte[vfsDatas.Sum(x => x.useLenght)];
-            foreach (var VARIABLE in vfsDatas)
+            else
             {
-                VFStream handle = GetStream(VARIABLE.vfs);
-                if (handle is null)
+                VFSChunk[] vfsDatas = FindFileChunkList(fileName);
+                if (vfsDatas is null || vfsDatas.Length is 0)
                 {
-                    throw new FileNotFoundException(VARIABLE.vfs);
+                    return Array.Empty<byte>();
                 }
 
-                handle.Read(VARIABLE.offset, bytes, offset, VARIABLE.useLenght);
-                offset += VARIABLE.useLenght;
-            }
+                byte[] bytes = new byte[vfsDatas.Sum(x => x.useLenght)];
+                foreach (var VARIABLE in vfsDatas)
+                {
+                    VFStream handle = GetStream(VARIABLE.vfs);
+                    if (handle is null)
+                    {
+                        throw new FileNotFoundException(VARIABLE.vfs);
+                    }
 
-            return bytes;
+                    int offset = VARIABLE.sort * BasicConfig.instance.vfsConfig.chunkSize;
+                    handle.Read(VARIABLE.offset, bytes, VARIABLE.sort * BasicConfig.instance.vfsConfig.chunkSize, VARIABLE.useLenght);
+                }
+
+                return bytes;
+            }
         }
 
         /// <summary>
@@ -240,34 +315,51 @@ namespace ZGame.FileSystem
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public async UniTask<byte[]> ReadAsync(string fileName)
+        public async UniTask<byte[]> ReadAsync(string fileName, CancellationTokenSource cancellationTokenSource = null)
         {
             if (Exsit(fileName) is false)
             {
                 return Array.Empty<byte>();
             }
 
-            VFSChunk[] vfsDatas = FindFileChunkList(fileName);
-            if (vfsDatas is null || vfsDatas.Length is 0)
+            using (CancellationTokenSourceGroup cancellationTokenSourceGroup = new CancellationTokenSourceGroup(cancellationTokenSource))
             {
-                return Array.Empty<byte>();
-            }
-
-            int offset = 0;
-            byte[] bytes = new byte[vfsDatas.Sum(x => x.useLenght)];
-            foreach (var VARIABLE in vfsDatas)
-            {
-                VFStream handle = GetStream(VARIABLE.vfs);
-                if (handle is null)
+                if (WorkApi.IsEnableVirtualFileSystem is false)
                 {
-                    throw new FileNotFoundException(VARIABLE.vfs);
+                    return await File.ReadAllBytesAsync(WorkApi.GetApplicationFilePath(fileName), cancellationTokenSourceGroup.GetToken());
                 }
 
-                await handle.ReadAsync(VARIABLE.offset, bytes, offset, VARIABLE.useLenght);
-                offset += VARIABLE.useLenght;
-            }
+                VFSChunk[] chunkList = FindFileChunkList(fileName);
+                if (chunkList is null || chunkList.Length is 0)
+                {
+                    return Array.Empty<byte>();
+                }
 
-            return bytes;
+                byte[] bytes = new byte[chunkList.Sum(x => x.useLenght)];
+                UniTask<ResultStatus>[] readTasks = new UniTask<ResultStatus>[chunkList.Length];
+                for (int i = 0; i < chunkList.Length; i++)
+                {
+                    VFStream handle = GetStream(chunkList[i].vfs);
+                    if (handle is null)
+                    {
+                        readTasks[i] = UniTask.FromResult(ResultStatus.Fail);
+                        WorkApi.Logger.LogError(new FileNotFoundException(chunkList[i].vfs));
+                        break;
+                    }
+
+                    int offset = chunkList[i].sort * BasicConfig.instance.vfsConfig.chunkSize;
+                    readTasks[i] = handle.ReadAsync(chunkList[i].offset, bytes, offset, chunkList[i].useLenght, cancellationTokenSourceGroup.GetToken());
+                }
+
+                ResultStatus[] readResult = await UniTask.WhenAll(readTasks);
+                if (readResult.All(x => x == ResultStatus.Success) is false)
+                {
+                    WorkApi.Logger.LogError("读取文件数据失败：" + fileName);
+                    return Array.Empty<byte>();
+                }
+
+                return bytes;
+            }
         }
     }
 }

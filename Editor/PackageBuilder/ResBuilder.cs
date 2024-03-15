@@ -44,7 +44,7 @@ namespace ZGame.Editor.ResBuild
 
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    BuildPackageCommand.Executer(VARIABLE);
+                    BuildResourcePackageCommand.Executer(VARIABLE);
                     EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
                 }
 
@@ -56,7 +56,7 @@ namespace ZGame.Editor.ResBuild
             if (GUILayout.Button("构建资源"))
             {
                 PackageSeting[] packageSetings = BuilderConfig.instance.packages.Where(x => x.selection).ToArray();
-                BuildPackageCommand.Executer(packageSetings);
+                BuildResourcePackageCommand.Executer(packageSetings);
                 EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
             }
 

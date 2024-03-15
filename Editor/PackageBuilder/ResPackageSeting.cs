@@ -84,7 +84,7 @@ namespace ZGame.Editor.ResBuild
 
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
-                BuildPackageCommand.Executer(userData);
+                BuildResourcePackageCommand.Executer(userData);
                 EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
                 ToolsWindow.Refresh();
             }

@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using ZGame.Config;
 using ZGame.FileSystem;
 using ZGame.Game;
@@ -27,12 +28,17 @@ namespace ZGame.Resource
 
         public void OnAwake()
         {
+            SceneManager.sceneUnloaded += UnloadScene;
             ResPackageCache = new ResPackageCache();
             ResPackageCache.OnAwake();
             ResObjectCache = new ResObjectCache();
             ResObjectCache.OnAwake();
             PackageManifest = new PackageManifestManager();
             PackageManifest.OnAwake();
+        }
+
+        private void UnloadScene(Scene scene)
+        {
         }
 
         public void Dispose()
@@ -103,12 +109,109 @@ namespace ZGame.Resource
             return true;
         }
 
-        /// <summary>
-        /// 卸载资源包列表
-        /// </summary>
-        /// <param name="packageName"></param>
-        /// <param name="isUnloadDependenecis"></param>
-        public void UnloadPackageList(string packageName, bool isUnloadDependenecis = true)
+        public Scene OpenSceneSync(string path, LoadSceneMode mode = LoadSceneMode.Single)
+        {
+            return default;
+        }
+
+
+        public async UniTask<Scene> OpenSceneAsync(string path, LoadSceneMode mode = LoadSceneMode.Single)
+        {
+            return default;
+        }
+
+
+        public GameObject InstantiateSync(string path)
+        {
+            ResObject resObject = LoadAsset(path);
+            if (resObject is null)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            GameObject gameObject = (GameObject)GameObject.Instantiate(resObject.Asset);
+            return default;
+        }
+
+        public GameObject InstantiateAsync(string path)
+        {
+            return default;
+        }
+
+        public GameObject InstantiateSync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
+        {
+            GameObject gameObject = InstantiateSync(path);
+            if (gameObject != null)
+            {
+                if (parent != null)
+                {
+                    gameObject.transform.SetParent(parent.transform);
+                }
+
+                gameObject.transform.position = pos;
+                gameObject.transform.rotation = Quaternion.Euler(rot);
+                gameObject.transform.localScale = scale;
+            }
+
+            return gameObject;
+        }
+
+        public GameObject InstantiateAsync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
+        {
+            GameObject gameObject = InstantiateAsync(path);
+            if (gameObject != null)
+            {
+                if (parent != null)
+                {
+                    gameObject.transform.SetParent(parent.transform);
+                }
+
+                gameObject.transform.position = pos;
+                gameObject.transform.rotation = Quaternion.Euler(rot);
+                gameObject.transform.localScale = scale;
+            }
+
+            return gameObject;
+        }
+
+        public void SetSpriteSync(Image image, string path)
+        {
+        }
+
+        public void SetSpriteAsync(Image image, string path)
+        {
+        }
+
+        public void SetTexture2DSync(RawImage image, string path)
+        {
+        }
+
+        public void SetTexture2DAsync(RawImage image, string path)
+        {
+        }
+
+        public void SetMaterialTexture2DSync(Material material, string propertyName, GameObject gameObject, string path)
+        {
+        }
+
+        public void SetMaterialTexture2DAsync(Material material, string propertyName, GameObject gameObject, string path)
+        {
+        }
+
+        public void SetRenderMaterialSync(Renderer renderer, string path)
+        {
+        }
+
+        public void SetRenderMaterialAsync(Renderer renderer, string path)
+        {
+        }
+
+        public void SetGraphicMaterialSync(MaskableGraphic graphic, string path)
+        {
+        }
+
+        public void SetGraphicMaterialAsync(MaskableGraphic graphic, string path)
         {
         }
     }

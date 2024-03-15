@@ -13,4 +13,9 @@ public class Startup : MonoBehaviour
     {
         WorkApi.Initialized();
     }
+
+    private void OnApplicationQuit()
+    {
+        WorkApi.Uninitialized();
+    }
 }

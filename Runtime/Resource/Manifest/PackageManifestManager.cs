@@ -72,7 +72,7 @@ namespace ZGame.Resource
                 UIMsgBox.Show(WorkApi.Language.Query("App 版本过低，请重新安装App后在使用"), () =>
                 {
                     Application.OpenURL(BasicConfig.instance.apkUrl);
-                    WorkApi.Uninitialized();
+                    WorkApi.Quit();
                 });
                 throw new Exception("App 版本过低，请重新安装App后在使用");
             }

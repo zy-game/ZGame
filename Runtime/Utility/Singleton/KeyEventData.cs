@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using ZGame.Notify;
 
 namespace ZGame
 {
     /// <summary>
     /// 按键事件数据
     /// </summary>
-    public class KeyEventData : IDisposable
+    public class KeyEventData : INotifyArgs
     {
         public KeyCode keyCode { get; }
         private bool isUsed { get; set; }

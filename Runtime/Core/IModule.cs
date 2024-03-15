@@ -9,4 +9,15 @@ namespace ZGame.Module
     {
         void OnAwake();
     }
+
+    public class GameModule : IModule
+    {
+        public virtual void Dispose()
+        {
+        }
+
+        public virtual void OnAwake()
+        {
+        }
+    }
 }

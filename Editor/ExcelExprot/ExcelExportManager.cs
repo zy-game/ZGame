@@ -74,6 +74,7 @@ namespace ZGame.Editor.ExcelExprot
                 }
 
                 GUILayout.EndHorizontal();
+                GUILayout.Space(2);
             }
 
             GUILayout.EndVertical();
