@@ -70,7 +70,7 @@ namespace ZGame.Editor.PSD2GUI
     }
 
     [ResourceReference("Assets/Settings/UIBindRuler.asset")]
-    public class UIBindRulerConfig : SingletonScriptableObject<UIBindRulerConfig>
+    public class UIBindRulerConfig : BaseConfig<UIBindRulerConfig>
     {
         public List<UIBindRulerItem> rules;
         public List<ReferenceNameSpace> nameSpaces;
@@ -119,7 +119,7 @@ namespace ZGame.Editor.PSD2GUI
                 };
             }
 
-            OnSave();
+            Save();
         }
 
         public UIBindRulerItem GetRule(string fullName)

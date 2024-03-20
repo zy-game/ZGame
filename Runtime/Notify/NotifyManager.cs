@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using ZGame.Module;
 
 namespace ZGame.Notify
 {
     /// <summary>
     /// 事件通知管理器
     /// </summary>
-    public sealed class NotifyManager : GameModule
+    public sealed class NotifyManager : GameFrameworkModule
     {
         private List<EventHandleGroup> _handlers = new();
 
@@ -21,9 +20,9 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="handle"></param>
         /// <typeparam name="T"></typeparam>
-        public void Subscribe<T>(Action<T> handle) where T : INotifyArgs
+        public void Subscribe<T>(Action<T> handle) where T : INotifyDatable
         {
-            Subsceibe(new DefaultActionEventNotifyHandle<T>(typeof(T).Name, handle));
+            Subsceibe(new CommonNotifyHandle<T>(typeof(T).Name, handle));
         }
 
         /// <summary>
@@ -31,9 +30,9 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="type"></param>
         /// <param name="handle"></param>
-        public void Subscribe(Type type, Action<INotifyArgs> handle)
+        public void Subscribe(Type type, Action<INotifyDatable> handle)
         {
-            Subsceibe(new DefaultActionEventNotifyHandle(type.Name, handle));
+            Subsceibe(new CommonNotifyHandle(type.Name, handle));
         }
 
         /// <summary>
@@ -41,16 +40,16 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Subscribe(string eventName, Action<INotifyArgs> handle)
+        public void Subscribe(string eventName, Action<INotifyDatable> handle)
         {
-            Subsceibe(new DefaultActionEventNotifyHandle(eventName, handle));
+            Subsceibe(new CommonNotifyHandle(eventName, handle));
         }
 
         /// <summary>
         /// 注册事件回调
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void Subscribe<T>() where T : IEventNotifyHandler, new()
+        public void Subscribe<T>() where T : INotifyHandler, new()
         {
             Subsceibe(new T());
         }
@@ -59,7 +58,7 @@ namespace ZGame.Notify
         /// 注册事件回调
         /// </summary>
         /// <param name="handle"></param>
-        public void Subsceibe(IEventNotifyHandler handle)
+        public void Subsceibe(INotifyHandler handle)
         {
             if (_handlers.Exists(x => x.Equals(handle)))
             {
@@ -81,7 +80,7 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="handle"></param>
         /// <typeparam name="T"></typeparam>
-        public void Unsubscribe<T>(Action<T> handle) where T : INotifyArgs
+        public void Unsubscribe<T>(Action<T> handle) where T : INotifyDatable
         {
             EventHandleGroup eventHandleGroup = _handlers.Find(x => x.Contains(handle));
             if (eventHandleGroup is null)
@@ -97,7 +96,7 @@ namespace ZGame.Notify
         /// 移除事件通知回调
         /// </summary>
         /// <param name="handle"></param>
-        public void Unsubscribe(Action<INotifyArgs> handle)
+        public void Unsubscribe(Action<INotifyDatable> handle)
         {
             EventHandleGroup eventHandleGroup = _handlers.Find(x => x.Contains(handle));
             if (eventHandleGroup is null)
@@ -113,7 +112,7 @@ namespace ZGame.Notify
         /// 移除事件通知回调
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void Unsubscribe<T>() where T : IEventNotifyHandler
+        public void Unsubscribe<T>() where T : INotifyHandler
         {
             Unsubscribe(typeof(T));
         }
@@ -124,7 +123,7 @@ namespace ZGame.Notify
         /// <param name="type"></param>
         public void Unsubscribe(Type type)
         {
-            if (type.IsSubclassOf(typeof(IEventNotifyHandler)) is false)
+            if (type.IsSubclassOf(typeof(INotifyHandler)) is false)
             {
                 Debug.LogError("类型不是IEventNotifyHandler的子类：" + type.Name);
                 return;
@@ -144,7 +143,7 @@ namespace ZGame.Notify
         /// 移除事件通知回调
         /// </summary>
         /// <param name="handle"></param>
-        public void Unsubscribe(IEventNotifyHandler handle)
+        public void Unsubscribe(INotifyHandler handle)
         {
             EventHandleGroup eventHandleGroup = _handlers.Find(x => x.Contains(handle));
             if (eventHandleGroup is null)
@@ -160,7 +159,7 @@ namespace ZGame.Notify
         /// 清理所有相同类型的事件
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void Clear<T>() where T : INotifyArgs
+        public void Clear<T>() where T : INotifyDatable
         {
             Clear(typeof(T));
         }
@@ -171,7 +170,7 @@ namespace ZGame.Notify
         /// <param name="type"></param>
         public void Clear(Type type)
         {
-            if (type.IsSubclassOf(typeof(INotifyArgs)) is false)
+            if (type.IsSubclassOf(typeof(INotifyDatable)) is false)
             {
                 Debug.LogError("类型不是INotifyArgs的子类：" + type.Name);
                 return;
@@ -200,10 +199,10 @@ namespace ZGame.Notify
         /// <summary>
         /// 通知事件
         /// </summary>
-        /// <param name="args"></param>
-        public void Notify(INotifyArgs args)
+        /// <param name="datable"></param>
+        public void Notify(INotifyDatable datable)
         {
-            string eventName = args.GetType().Name;
+            string eventName = datable.GetType().Name;
             EventHandleGroup eventHandleGroup = _handlers.Find(x => x.eventName == eventName);
             if (eventHandleGroup is null)
             {
@@ -211,7 +210,7 @@ namespace ZGame.Notify
                 return;
             }
 
-            eventHandleGroup.Notify(args);
+            eventHandleGroup.Notify(datable);
         }
 
         public override void Dispose()

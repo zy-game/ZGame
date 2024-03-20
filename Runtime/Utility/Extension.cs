@@ -14,6 +14,21 @@ using Debug = UnityEngine.Debug;
 
 namespace ZGame
 {
+    /// <summary>
+    /// 资源模式
+    /// </summary>
+    public enum ResourceMode : byte
+    {
+        Editor,
+        Simulator,
+    }
+
+    public enum CodeMode
+    {
+        Native,
+        Hotfix,
+    }
+
     public enum ResultStatus : byte
     {
         Success,

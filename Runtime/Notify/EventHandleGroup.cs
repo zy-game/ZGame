@@ -7,24 +7,24 @@ namespace ZGame.Notify
     {
         public string eventName { get; private set; }
 
-        private List<IEventNotifyHandler> _handlers = new();
+        private List<INotifyHandler> _handlers = new();
 
         public EventHandleGroup(string name)
         {
             this.eventName = name;
         }
 
-        public void Add(IEventNotifyHandler handler)
+        public void Add(INotifyHandler handler)
         {
             _handlers.Add(handler);
         }
 
-        public void Remove(IEventNotifyHandler handler)
+        public void Remove(INotifyHandler handler)
         {
             _handlers.RemoveAll(x => x.Equals(handler));
         }
 
-        public void Remove(Action<INotifyArgs> handler)
+        public void Remove(Action<INotifyDatable> handler)
         {
             _handlers.RemoveAll(x => x.Equals(handler));
         }
@@ -39,20 +39,20 @@ namespace ZGame.Notify
             _handlers.RemoveAll(x => x.Equals(type));
         }
 
-        public void Notify(INotifyArgs args)
+        public void Notify(INotifyDatable datable)
         {
             for (int i = _handlers.Count - 1; i >= 0; i--)
             {
-                _handlers[i].Notify(args);
+                _handlers[i].Notify(datable);
             }
         }
 
-        public bool Contains<T>(Action<T> handler) where T : INotifyArgs
+        public bool Contains<T>(Action<T> handler) where T : INotifyDatable
         {
             return _handlers.Exists(x => x.Equals(handler));
         }
 
-        public bool Contains(Action<INotifyArgs> handler)
+        public bool Contains(Action<INotifyDatable> handler)
         {
             return _handlers.Exists(x => x.Equals(handler));
         }
@@ -62,7 +62,7 @@ namespace ZGame.Notify
             return _handlers.Exists(x => x.GetType() == type);
         }
 
-        public bool Contains(IEventNotifyHandler handler)
+        public bool Contains(INotifyHandler handler)
         {
             return _handlers.Exists(x => x.Equals(handler));
         }

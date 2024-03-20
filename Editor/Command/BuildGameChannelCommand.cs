@@ -17,14 +17,11 @@ namespace ZGame.Editor.Command
     {
         public static void Executer(params object[] args)
         {
-            var channel = args is not null && args.Length == 1 ? args[0] as ChannelOptions : default;
-            //todo 编译资源
-            PackageSeting seting = BuilderConfig.instance.packages.Find(x => x.name == WorkApi.CurGame.module);
-            BuildHotfixLibraryCommand.Execute(seting);
-            BuildResourcePackageCommand.Executer(seting);
+            var channel = args is not null && args.Length == 1 ? args[0] as ChannelPackageOptions : default;
+         
             if (channel is null)
             {
-                EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
+                EditorUtility.DisplayDialog("打包失败", "渠道参数错误", "OK");
                 return;
             }
 
@@ -35,9 +32,8 @@ namespace ZGame.Editor.Command
                 options.targetGroup = GetBuildTargetGroup();
                 options.target = EditorUserBuildSettings.activeBuildTarget;
                 options.scenes = new[] { "Assets/Startup.unity" };
-                options.locationPathName = GetBuildLocationPath(channel, WorkApi.CurGame);
-                BasicConfig.OnSave();
-                SetPlayerSetting(channel, WorkApi.CurGame.version);
+                options.locationPathName = GetBuildLocationPath(channel, GameConfig.instance);
+                SetPlayerSetting(channel, GameConfig.instance.version);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 BuildPlayerWindow.DefaultBuildMethods.BuildPlayer(options);
@@ -50,12 +46,12 @@ namespace ZGame.Editor.Command
             EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
         }
 
-        private static string GetBuildLocationPath(ChannelOptions channel, GameConfig config)
+        private static string GetBuildLocationPath(ChannelPackageOptions channel, GameConfig config)
         {
-            string platform = BasicConfig.GetPlatformName();
+            string platform = GameFrameworkEntry.GetPlatformName();
             string packageName = channel.packageName;
             string version = config.version;
-            string path = $"{BuilderConfig.output}build/{platform}/{packageName}/{version}/{DateTime.Now.ToString("yyyyMMddHH")}";
+            string path = $"{GameFrameworkEntry.GetPlatformOutputBaseDir()}/packages/{platform}/{packageName}/{version}/{DateTime.Now.ToString("yyyyMMddHH")}";
             string fileName = string.Empty;
             switch (EditorUserBuildSettings.activeBuildTarget)
             {
@@ -94,7 +90,7 @@ namespace ZGame.Editor.Command
             return targetGroup;
         }
 
-        public static void SetPlayerSetting(ChannelOptions channel, string version)
+        public static void SetPlayerSetting(ChannelPackageOptions channel, string version)
         {
             BuildTargetGroup targetGroup = GetBuildTargetGroup();
             PlayerSettings.SetApplicationIdentifier(targetGroup, channel.packageName);
@@ -114,7 +110,7 @@ namespace ZGame.Editor.Command
             }
 
             PlayerSettings.bundleVersion = version;
-            PlayerSettings.companyName = BasicConfig.instance.companyName;
+            PlayerSettings.companyName = GameConfig.instance.companyName;
             PlayerSettings.productName = channel.appName;
             PlayerSettings.SplashScreen.showUnityLogo = channel.splash != null;
             PlayerSettings.SplashScreen.background = channel.splash;

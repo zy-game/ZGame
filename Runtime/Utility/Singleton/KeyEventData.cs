@@ -9,7 +9,7 @@ namespace ZGame
     /// <summary>
     /// 按键事件数据
     /// </summary>
-    public class KeyEventData : INotifyArgs
+    public class KeyEventData : INotifyDatable
     {
         public KeyCode keyCode { get; }
         private bool isUsed { get; set; }

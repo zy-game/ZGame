@@ -7,8 +7,8 @@ using UnityEngine;
 
 namespace ZGame.Editor.ExcelExprot
 {
-    [PageConfig("Excel导出", null, false, typeof(ExcelExportList))]
-    public class ExcelExportManager : ToolbarScene
+    [GameSubEditorWindowOptions("Excel导出", null, false, typeof(ExcelConfigList))]
+    public class ExcelExportManager : GameSubEditorWindow
     {
         public override void OnGUI()
         {
@@ -27,18 +27,18 @@ namespace ZGame.Editor.ExcelExprot
                         return;
                     }
 
-                    ExcelExportList.instance.AddExporter(new ExcelExporter(path));
+                    ExcelConfigList.instance.AddExporter(new ExcelFileObject(path));
                     EditorPrefs.SetString("ExcelPath", Path.GetDirectoryName(path));
                 });
                 menu.AddItem(new GUIContent("导出所有配置"), false, () =>
                 {
-                    List<ExportOptions> list = new List<ExportOptions>();
-                    for (int i = 0; i < ExcelExportList.instance.exporters.Count; i++)
+                    List<ExcelTable> list = new List<ExcelTable>();
+                    for (int i = 0; i < ExcelConfigList.instance.exporters.Count; i++)
                     {
-                        list.AddRange(ExcelExportList.instance.exporters[i].options);
+                        list.AddRange(ExcelConfigList.instance.exporters[i].options);
                     }
 
-                    ExcelExportList.instance.Generic(list.ToArray());
+                    ExcelConfigList.instance.Generic(list.ToArray());
                 });
                 menu.ShowAsContext();
             }
@@ -47,30 +47,30 @@ namespace ZGame.Editor.ExcelExprot
 
 
             GUILayout.Space(5);
-            for (int i = ExcelExportList.instance.exporters.Count - 1; i >= 0; i--)
+            for (int i = ExcelConfigList.instance.exporters.Count - 1; i >= 0; i--)
             {
-                ExcelExporter exporter = ExcelExportList.instance.exporters[i];
-                if (exporter is null)
+                ExcelFileObject fileObject = ExcelConfigList.instance.exporters[i];
+                if (fileObject is null)
                 {
                     continue;
                 }
 
                 GUILayout.BeginHorizontal(ZStyle.ITEM_BACKGROUND_STYLE);
-                GUILayout.Label(exporter.path);
+                GUILayout.Label(fileObject.path);
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    ToolsWindow.SwitchScene<ExportEditorWindow>(exporter);
+                    GameBaseEditorWindow.SwitchScene<ExportEditorWindow>(fileObject);
                 }
 
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    ExcelExportList.instance.RemoveExporter(exporter);
+                    ExcelConfigList.instance.RemoveExporter(fileObject);
                 }
 
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    ExcelExportList.instance.Generic(exporter.options.ToArray());
+                    ExcelConfigList.instance.Generic(fileObject.options.ToArray());
                 }
 
                 GUILayout.EndHorizontal();
@@ -78,6 +78,11 @@ namespace ZGame.Editor.ExcelExprot
             }
 
             GUILayout.EndVertical();
+        }
+
+        public override void SaveChanges()
+        {
+            ExcelConfigList.Save();
         }
     }
 }

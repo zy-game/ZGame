@@ -8,15 +8,16 @@ using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.LinkerEditor;
 using ZGame.Editor.ResBuild.Config;
+using ZGame.Resource.Config;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.Command
 {
     public class BuildHotfixLibraryCommand
     {
-        public static void Execute(PackageSeting seting)
+        public static void Execute()
         {
-            if (WorkApi.CurGame.mode is not CodeMode.Hotfix)
+            if (GameConfig.instance.mode is not CodeMode.Hotfix)
             {
                 return;
             }
@@ -32,31 +33,26 @@ namespace ZGame.Editor.Command
                 return;
             }
 
+            string fileName = Path.GetFileNameWithoutExtension(GameConfig.instance.path).ToLower();
+            string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
+            byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
+            File.WriteAllBytes(GameFrameworkEntry.GetPlatformOutputPath($"{fileName}_aot.bytes"), bytes);
+            bytes = Zip.Compress("*.dll", SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget));
+            File.WriteAllBytes(GameFrameworkEntry.GetPlatformOutputPath($"{fileName}_hotfix.bytes"), bytes);
+            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath($"{fileName}_aot.bytes"));
+            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath($"{fileName}_hotfix.bytes"));
+            // string hotfixPacageDir = GetHotfixPackagePath(seting);
             // string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
+            //
+            //
             // byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
-            // File.WriteAllBytes(WorkApi.GetPlatformOutputPath($"{WorkApi.CurGame.entryName.ToLower()}_aot.bytes"), bytes);
-            // bytes = Zip.Compress("*.dll", SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget));
-            // File.WriteAllBytes(WorkApi.GetPlatformOutputPath($"{WorkApi.CurGame.entryName.ToLower()}_hotfix.bytes"), bytes);
+            // File.WriteAllBytes($"{hotfixPacageDir}/{GameConfig.instance.entryName.ToLower()}_aot.bytes", bytes);
+            //
+            // string hotfixDir = SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget);
+            // bytes = Zip.Compress("*.dll", hotfixDir);
+            // File.WriteAllBytes($"{hotfixPacageDir}/{GameConfig.instance.entryName.ToLower()}_hotfix.bytes", bytes);
             // AssetDatabase.SaveAssets();
             // AssetDatabase.Refresh();
-
-            string hotfixPacageDir = GetHotfixPackagePath(seting);
-            string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
-            // IReadOnlyList<string> aotList = AppDomain.CurrentDomain.GetStaticFieldValue<IReadOnlyList<string>>("AOTGenericReferences", "PatchedAOTAssemblyList");
-            // if (aotList is null || aotList.Count == 0)
-            // {
-            //     EditorUtility.DisplayDialog("提示", "AOT 资源编译失败！", "OK");
-            //     return;
-            // }
-
-            byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
-            File.WriteAllBytes($"{hotfixPacageDir}/{WorkApi.CurGame.entryName.ToLower()}_aot.bytes", bytes);
-
-            string hotfixDir = SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget);
-            bytes = Zip.Compress("*.dll", hotfixDir);
-            File.WriteAllBytes($"{hotfixPacageDir}/{WorkApi.CurGame.entryName.ToLower()}_hotfix.bytes", bytes);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
         }
 
         private static string GetHotfixPackagePath(PackageSeting seting)
@@ -93,7 +89,7 @@ namespace ZGame.Editor.Command
                 buildType = BuildType.Once,
                 selector = new Selector(".bytes")
             });
-            BuilderConfig.OnSave();
+            BuilderConfig.Save();
             return hotfixPacageDir;
         }
     }

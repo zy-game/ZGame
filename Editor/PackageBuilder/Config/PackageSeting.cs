@@ -33,11 +33,10 @@ namespace ZGame.Editor.ResBuild.Config
     [Serializable]
     public class PackageSeting
     {
-        public string name;
+        public string title;
         public string describe;
         public OSSType oss;
         public List<RulerData> items;
-        public Selector service;
         public Selector dependcies;
 
         [NonSerialized] public bool selection;
@@ -47,7 +46,7 @@ namespace ZGame.Editor.ResBuild.Config
         {
             return new PackageSeting()
             {
-                name = name,
+                title = name,
                 describe = describe,
                 items = new List<RulerData>()
             };

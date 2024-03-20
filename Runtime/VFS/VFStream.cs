@@ -24,7 +24,7 @@ namespace ZGame.FileSystem
 
         public bool CheckIsTimeout()
         {
-            return Time.realtimeSinceStartup - time < BasicConfig.instance.resTimeout;
+            return Time.realtimeSinceStartup - time < VFSConfig.instance.timeout;
         }
 
         public void Dispose()
@@ -43,13 +43,13 @@ namespace ZGame.FileSystem
             {
                 fileStream.Seek(scrOffset, SeekOrigin.Begin);
                 fileStream.Write(bytes, offset, lenght);
-                time = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
+                time = Time.realtimeSinceStartup + VFSConfig.instance.timeout;
                 fileStream.Flush();
                 return ResultStatus.Success;
             }
             catch (Exception e)
             {
-                WorkApi.Logger.LogError(e);
+                GameFrameworkEntry.Logger.LogError(e);
                 return ResultStatus.Fail;
             }
         }
@@ -60,13 +60,13 @@ namespace ZGame.FileSystem
             {
                 fileStream.Seek(scrOffset, SeekOrigin.Begin);
                 await fileStream.WriteAsync(bytes, offset, lenght, cancellationToken);
-                time = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
+                time = Time.realtimeSinceStartup + VFSConfig.instance.timeout;
                 await fileStream.FlushAsync();
                 return ResultStatus.Success;
             }
             catch (Exception e)
             {
-                WorkApi.Logger.LogError(e);
+                GameFrameworkEntry.Logger.LogError(e);
                 return ResultStatus.Fail;
             }
         }
@@ -81,7 +81,7 @@ namespace ZGame.FileSystem
 
             fileStream.Seek(scrOffset, SeekOrigin.Begin);
             fileStream.Read(bytes, offset, lenght);
-            time = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
+            time = Time.realtimeSinceStartup + VFSConfig.instance.timeout;
         }
 
         public async UniTask<ResultStatus> ReadAsync(int scrOffset, byte[] bytes, int offset, int lenght, CancellationToken cancellationToken)
@@ -97,12 +97,12 @@ namespace ZGame.FileSystem
             {
                 fileStream.Seek(scrOffset, SeekOrigin.Begin);
                 await fileStream.ReadAsync(bytes, offset, lenght, cancellationToken);
-                time = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
+                time = Time.realtimeSinceStartup + VFSConfig.instance.timeout;
                 return ResultStatus.Success;
             }
             catch (Exception e)
             {
-                WorkApi.Logger.LogError(e);
+                GameFrameworkEntry.Logger.LogError(e);
                 return ResultStatus.Fail;
             }
         }

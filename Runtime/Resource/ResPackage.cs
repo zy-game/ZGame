@@ -81,12 +81,12 @@ namespace ZGame.Resource
 
         private void RefreshCheckTime()
         {
-            nextCheckTime = Time.realtimeSinceStartup + BasicConfig.instance.resTimeout;
+            nextCheckTime = Time.realtimeSinceStartup + ResConfig.instance.timeout;
         }
 
         public void Dispose()
         {
-            WorkApi.Resource.ResObjectCache.RemovePackage(this);
+            GameFrameworkEntry.Resource.ResObjectCache.RemovePackage(this);
             bundle?.Unload(true);
             Resources.UnloadUnusedAssets();
             Debug.Log("释放资源包:" + name);

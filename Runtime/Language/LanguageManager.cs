@@ -11,13 +11,12 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Game;
-using ZGame.Module;
 using ZGame.Networking;
 using ZGame.Resource;
 
-namespace ZGame.Config
+namespace ZGame.Language
 {
-    public sealed class LanguageManager : IModule
+    public sealed class LanguageManager : GameFrameworkModule
     {
         class LanguageData : IDatable
         {
@@ -99,7 +98,7 @@ namespace ZGame.Config
             GC.SuppressFinalize(this);
         }
 
-        public void OnAwake()
+        public override void OnAwake()
         {
             _map = new List<LanguageData>();
             Setup(-1, cn: "是否退出？", en: "Are you sure to quit?");

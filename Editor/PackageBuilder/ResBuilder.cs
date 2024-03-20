@@ -15,8 +15,8 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    [PageConfig("资源", null, false, typeof(BuilderConfig))]
-    public class ResBuilder : ToolbarScene
+    [GameSubEditorWindowOptions("资源", null, false, typeof(BuilderConfig))]
+    public class ResBuilder : GameSubEditorWindow
     {
         private const string key = "__build config__";
 
@@ -27,19 +27,19 @@ namespace ZGame.Editor.ResBuild
             GUILayout.Space(5);
             foreach (var VARIABLE in BuilderConfig.instance.packages)
             {
-                if (VARIABLE.items == null || (search.IsNullOrEmpty() is false && VARIABLE.name.StartsWith(search) is false))
+                if (VARIABLE.items == null || (search.IsNullOrEmpty() is false && VARIABLE.title.StartsWith(search) is false))
                 {
                     continue;
                 }
 
                 GUILayout.BeginHorizontal(ZStyle.ITEM_BACKGROUND_STYLE);
-                VARIABLE.selection = GUILayout.Toggle(VARIABLE.selection, VARIABLE.name, GUILayout.Width(300));
+                VARIABLE.selection = GUILayout.Toggle(VARIABLE.selection, VARIABLE.title, GUILayout.Width(300));
                 GUILayout.Space(40);
                 GUILayout.Label(VARIABLE.describe);
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.SETTING_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    ToolsWindow.SwitchScene<ResPackageSetting>();
+                    GameBaseEditorWindow.SwitchScene<ResPackageSetting>();
                 }
 
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
@@ -59,11 +59,11 @@ namespace ZGame.Editor.ResBuild
                 BuildResourcePackageCommand.Executer(packageSetings);
                 EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
             }
+        }
 
-            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
-            {
-                BuilderConfig.OnSave();
-            }
+        public override void SaveChanges()
+        {
+            BuilderConfig.Save();
         }
     }
 }

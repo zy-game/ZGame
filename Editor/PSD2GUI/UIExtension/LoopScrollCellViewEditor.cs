@@ -4,7 +4,7 @@ using ZGame.UI;
 namespace ZGame.Editor.PSD2GUI
 {
     [CustomEditor(typeof(LoopScrollCellView))]
-    public class LoopScrollCellViewEditor : BasicWindow
+    public class LoopScrollCellViewEditor : GameInspectorEditorWindow
     {
         private LoopScrollCellView _target;
 

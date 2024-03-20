@@ -36,6 +36,11 @@ namespace ZGame.Resource
             return packages.FirstOrDefault(x => x.name == name) is not null;
         }
 
+        public bool HasAsset(string assetName)
+        {
+            return packages.Any(x => x.Contains(assetName));
+        }
+
         public string GetAssetFullPath(string assetName)
         {
             string fullPath = String.Empty;

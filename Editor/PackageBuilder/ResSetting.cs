@@ -7,8 +7,8 @@ using ZGame.Resource.Config;
 
 namespace ZGame.Editor.ResBuild
 {
-    [PageConfig("设置", typeof(ResBuilder), false, typeof(OSSConfig))]
-    public class ResSetting : ToolbarScene
+    [GameSubEditorWindowOptions("设置", typeof(ResBuilder), false, typeof(OSSConfig))]
+    public class ResSetting : GameSubEditorWindow
     {
         private bool outputIsOn = false;
         private bool resIsOn = false;
@@ -24,10 +24,9 @@ namespace ZGame.Editor.ResBuild
             {
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    ossList.Add(new OSSOptions());
-                    BuilderConfig.OnSave();
-                    OSSConfig.OnSave();
-                    ToolsWindow.Refresh();
+                    OSSConfig.instance.Add(new OSSOptions());
+                    OSSConfig.Save();
+                    GameBaseEditorWindow.Refresh();
                 }
             }
 
@@ -35,10 +34,10 @@ namespace ZGame.Editor.ResBuild
             {
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
-                    OSSConfig.instance.ossList.Remove(options);
-                    BuilderConfig.OnSave();
-                    OSSConfig.OnSave();
-                    ToolsWindow.Refresh();
+                    OSSConfig.instance.Remove(options);
+                    OSSConfig.Save();
+
+                    GameBaseEditorWindow.Refresh();
                 }
             }
         }
@@ -80,12 +79,12 @@ namespace ZGame.Editor.ResBuild
 
                 GUILayout.EndVertical();
             }
+        }
 
-            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
-            {
-                BuilderConfig.OnSave();
-                OSSConfig.OnSave();
-            }
+        public override void SaveChanges()
+        {
+            BuilderConfig.Save();
+            OSSConfig.Save();
         }
 
         // public string title;
@@ -101,27 +100,11 @@ namespace ZGame.Editor.ResBuild
         {
             options.title = EditorGUILayout.TextField("名称", options.title);
             options.type = (OSSType)EditorGUILayout.EnumPopup("类型", options.type);
-            if (options.type == OSSType.Streaming)
-            {
-                if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
-                {
-                    BuilderConfig.OnSave();
-                    OSSConfig.OnSave();
-                }
-
-                return;
-            }
-
             options.region = EditorGUILayout.TextField("Region", options.region);
             options.bucket = EditorGUILayout.TextField("Bucket", options.bucket);
             options.key = EditorGUILayout.TextField("SecretId", options.key);
             options.password = EditorGUILayout.TextField("SecretKey", options.password);
             options.enableAccelerate = EditorGUILayout.Toggle("启用全球加速", options.enableAccelerate);
-            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
-            {
-                BuilderConfig.OnSave();
-                OSSConfig.OnSave();
-            }
         }
     }
 }

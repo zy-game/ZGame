@@ -59,12 +59,12 @@ namespace ZGame.UI
 
         public static void Show(string s, float timeout = 0)
         {
-            WorkApi.UI.Active<UIWait>(new object[] { s, timeout });
+            GameFrameworkEntry.UI.Active<UIWait>(new object[] { s, timeout });
         }
 
         public static void Hide()
         {
-            WorkApi.UI.Inactive<UIWait>();
+            GameFrameworkEntry.UI.Inactive<UIWait>();
         }
     }
 }

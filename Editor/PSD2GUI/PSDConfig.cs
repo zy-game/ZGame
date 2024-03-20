@@ -13,22 +13,21 @@ using Object = UnityEngine.Object;
 namespace ZGame.Editor.PSD2GUI
 {
     [ResourceReference("Assets/Settings/PSDConfig.asset")]
-    public sealed class PSDConfig : SingletonScriptableObject<PSDConfig>
+    public sealed class PSDConfig : BaseConfig<PSDConfig>
     {
-        public List<PSDImport> imports;
+        public List<PSDOptions> options;
 
         public override void OnAwake()
         {
-            if (imports is null)
+            if (options is null)
             {
-                imports = new List<PSDImport>();
+                options = new List<PSDOptions>();
             }
         }
     }
 
-
     [Serializable]
-    public sealed class PSDImport
+    public sealed class PSDOptions
     {
         public Object psd;
         public List<PSDLayer> layers;

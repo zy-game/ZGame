@@ -11,6 +11,7 @@ namespace ZGame.Networking
         public ISerialize serialize { get; }
         private WebSocket _webSocket;
         private UniTaskCompletionSource _taskCompletionSource;
+        private Action<IMessage> _recveCallback;
 
         public UniTask Connect(string address)
         {
@@ -39,7 +40,13 @@ namespace ZGame.Networking
                 return;
             }
 
-            //ModuleManager.OnAction(opcode.ToString(), message);
+            if (_recveCallback is not null)
+            {
+                _recveCallback(message);
+                return;
+            }
+
+            GameFrameworkEntry.Notify.Notify(message);
         }
 
         private void OnHandleErrorEvent(object s, ErrorEventArgs e)
@@ -72,7 +79,10 @@ namespace ZGame.Networking
 
         public UniTask<T1> WriteAndFlushAsync<T1>(IMessage message) where T1 : IMessage
         {
-            return default;
+            UniTaskCompletionSource<T1> taskCompletionSource2 = new UniTaskCompletionSource<T1>();
+            _recveCallback = new Action<IMessage>(args => { taskCompletionSource2.TrySetResult((T1)args); });
+            _webSocket.SendAsync(serialize.Serialize(message));
+            return taskCompletionSource2.Task;
         }
 
         public void Dispose()

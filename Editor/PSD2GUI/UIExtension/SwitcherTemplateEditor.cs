@@ -6,7 +6,7 @@ using ZGame.UI;
 namespace ZGame.Editor.PSD2GUI
 {
     [CustomEditor(typeof(UISwitcherTemplate))]
-    public class SwitcherTemplateEditor : BasicWindow
+    public class SwitcherTemplateEditor : GameInspectorEditorWindow
     {
         private UISwitcherTemplate template;
 

@@ -9,11 +9,11 @@ using UnityEngine;
 
 namespace ZGame.Editor.ExcelExprot
 {
-    [PageConfig("Excel Editor", typeof(ExcelExportManager), true)]
-    public class ExportEditorWindow : ToolbarScene
+    [GameSubEditorWindowOptions("Excel Editor", typeof(ExcelExportManager), true)]
+    public class ExportEditorWindow : GameSubEditorWindow
     {
-        private ExcelExporter exporter;
-        private ExportOptions options;
+        private ExcelFileObject _fileObject;
+        private ExcelTable options;
         private int index = 0;
         private GUIContent[] tableNames;
 
@@ -24,31 +24,31 @@ namespace ZGame.Editor.ExcelExprot
                 return;
             }
 
-            exporter = args[0] as ExcelExporter;
-            if (exporter is null)
+            _fileObject = args[0] as ExcelFileObject;
+            if (_fileObject is null)
             {
                 return;
             }
 
-            exporter.LoadFile();
-            options = exporter.options.First();
-            tableNames = exporter.options.Select(x => new GUIContent(x.table)).ToArray();
+            _fileObject.LoadFile();
+            options = _fileObject.options.First();
+            tableNames = _fileObject.options.Select(x => new GUIContent(x.table)).ToArray();
         }
 
         public override void OnGUI()
         {
-            if (exporter is null || exporter.options is null || exporter.options.Count == 0 || options is null)
+            if (_fileObject is null || _fileObject.options is null || _fileObject.options.Count == 0 || options is null)
             {
                 return;
             }
 
             index = GUILayout.Toolbar(index, tableNames, EditorStyles.toolbarButton);
-            if (index < 0 || index >= exporter.options.Count)
+            if (index < 0 || index >= _fileObject.options.Count)
             {
                 return;
             }
 
-            options = exporter.options[index];
+            options = _fileObject.options[index];
             GUILayout.BeginVertical();
             
             options.nameSpace = EditorGUILayout.TextField("命名空间", options.nameSpace);
@@ -65,7 +65,7 @@ namespace ZGame.Editor.ExcelExprot
 
             if (GUILayout.Button("Generic"))
             {
-                ExcelExportList.instance.Generic(options);
+                ExcelConfigList.instance.Generic(options);
             }
 
             GUILayout.EndVertical();
@@ -139,10 +139,11 @@ namespace ZGame.Editor.ExcelExprot
             }
 
             GUILayout.EndVertical();
-            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
-            {
-                ExcelExportList.OnSave();
-            }
+        }
+
+        public override void SaveChanges()
+        {
+            ExcelConfigList.Save();
         }
     }
 }

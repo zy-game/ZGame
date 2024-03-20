@@ -79,14 +79,14 @@ namespace ZGame.UI
                 return default;
             }
 
-            ResObject resObject = WorkApi.Resource.LoadAsset(reference.path);
-            if (resObject.IsSuccess() is false)
+            GameObject gameObject = GameFrameworkEntry.Resource.LoadGameObjectSync(reference.path);
+            if (gameObject == null)
             {
                 Debug.Log("加载资源失败：" + reference.path);
                 return default;
             }
 
-            uiBase = (UIBase)Activator.CreateInstance(type, new object[] { resObject.Instantiate() });
+            uiBase = (UIBase)Activator.CreateInstance(type, new object[] { gameObject });
             uiBase.gameObject.transform.SetParent(canvas.transform);
             uiBase.gameObject.transform.position = Vector3.zero;
             uiBase.gameObject.transform.rotation = Quaternion.Euler(Vector3.zero);

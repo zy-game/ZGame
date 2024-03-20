@@ -11,8 +11,8 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.ResBuild
 {
-    [PageConfig("资源包管理", typeof(ResBuilder), false, typeof(PackageSeting))]
-    public class ResPackageSetting : ToolbarScene
+    [GameSubEditorWindowOptions("资源包管理", typeof(ResBuilder), false, typeof(PackageSeting))]
+    public class ResPackageSetting : GameSubEditorWindow
     {
         public override void OnEnable(params object[] args)
         {
@@ -79,14 +79,14 @@ namespace ZGame.Editor.ResBuild
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
                 BuilderConfig.instance.packages.Remove((PackageSeting)userData);
-                ToolsWindow.Refresh();
+                GameBaseEditorWindow.Refresh();
             }
 
             if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
                 BuildResourcePackageCommand.Executer(userData);
                 EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
-                ToolsWindow.Refresh();
+                GameBaseEditorWindow.Refresh();
             }
         }
 
@@ -94,13 +94,13 @@ namespace ZGame.Editor.ResBuild
         {
             for (int i = BuilderConfig.instance.packages.Count - 1; i >= 0; i--)
             {
-                if (search.IsNullOrEmpty() is false && BuilderConfig.instance.packages[i].name.Contains(search) is false)
+                if (search.IsNullOrEmpty() is false && BuilderConfig.instance.packages[i].title.Contains(search) is false)
                 {
                     continue;
                 }
 
                 PackageSeting package = BuilderConfig.instance.packages[i];
-                package.isOn = OnBeginHeader(package.name, package.isOn, package);
+                package.isOn = OnBeginHeader(package.title, package.isOn, package);
                 if (package.isOn)
                 {
                     GUILayout.BeginVertical(ZStyle.BOX_BACKGROUND);
@@ -114,40 +114,23 @@ namespace ZGame.Editor.ResBuild
 
         private void DrawingRuleInfo(PackageSeting package)
         {
-            package.name = EditorGUILayout.TextField("规则名称", package.name);
+            package.title = EditorGUILayout.TextField("规则名称", package.title);
             package.describe = EditorGUILayout.TextField("描述", package.describe);
-            if (package.service == null || package.service.items == null || package.service.Count == 0)
-            {
-                package.service = new Selector();
-            }
-
-            package.service.Add(OSSConfig.instance.ossList.Select(x => x.title).ToArray());
             if (package.dependcies is null || package.dependcies is null || package.dependcies.Count == 0)
             {
                 package.dependcies = new Selector();
             }
 
-            package.dependcies.Add(BuilderConfig.instance.packages.Where(x => x.name != package.name).Select(x => x.name).ToArray());
+            package.dependcies.Add(BuilderConfig.instance.packages.Where(x => x.title != package.title).Select(x => x.title).ToArray());
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("依赖包", GUILayout.Width(150));
             if (EditorGUILayout.DropdownButton(new GUIContent(package.dependcies.ToString()), FocusType.Passive))
             {
-                package.dependcies.ShowContext(BuilderConfig.OnSave);
+                package.dependcies.ShowContext(BuilderConfig.Save);
             }
 
             GUILayout.EndHorizontal();
-
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("资源服", GUILayout.Width(150));
-            if (EditorGUILayout.DropdownButton(new GUIContent(package.service.ToString()), FocusType.Passive))
-            {
-                package.service.ShowContext(BuilderConfig.OnSave);
-            }
-
-            GUILayout.EndHorizontal();
-
 
             if (package.items == null)
             {
@@ -178,11 +161,12 @@ namespace ZGame.Editor.ResBuild
 
             // GUILayout.EndVertical();
             GUILayout.EndVertical();
-            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
-            {
-                OnEnable();
-                BuilderConfig.OnSave();
-            }
+        }
+
+        public override void SaveChanges()
+        {
+            OnEnable();
+            BuilderConfig.Save();
         }
 
         private void OnDrawingRuleItem(RulerData rulerData, PackageSeting package)
@@ -216,7 +200,7 @@ namespace ZGame.Editor.ResBuild
                 if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                 {
                     package.items.Remove(rulerData);
-                    ToolsWindow.Refresh();
+                    GameBaseEditorWindow.Refresh();
                 }
 
                 GUILayout.EndHorizontal();

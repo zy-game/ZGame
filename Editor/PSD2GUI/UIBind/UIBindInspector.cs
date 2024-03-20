@@ -15,7 +15,7 @@ using Object = UnityEngine.Object;
 namespace ZGame.Editor.PSD2GUI
 {
     [CustomEditor(typeof(UIBind))]
-    public class UIBindInspector : BasicWindow
+    public class UIBindInspector : GameInspectorEditorWindow
     {
         private UIBind setting;
         private bool isSetLanguage = false;
@@ -31,7 +31,7 @@ namespace ZGame.Editor.PSD2GUI
             OnDrawingInspectorGUI(setting, this);
         }
 
-        public static void OnDrawingInspectorGUI(UIBind setting, BasicWindow window)
+        public static void OnDrawingInspectorGUI(UIBind setting, GameInspectorEditorWindow window)
         {
             EditorGUI.BeginChangeCheck();
             setting.NameSpace = EditorGUILayout.TextField(setting.templetee ? "Template Name" : "NameSpace", setting.NameSpace);

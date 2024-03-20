@@ -7,27 +7,13 @@ using UnityEngine.Serialization;
 namespace ZGame.Editor.ResBuild.Config
 {
     [ResourceReference("Assets/Settings/BuilderConfig.asset")]
-    public class BuilderConfig : SingletonScriptableObject<BuilderConfig>
+    public class BuilderConfig : BaseConfig<BuilderConfig>
     {
         public BuildTarget target;
         public string fileExtension;
         public bool useActiveTarget = true;
         public List<PackageSeting> packages;
         public BuildAssetBundleOptions comperss;
-
-        public static string output
-        {
-            get
-            {
-                string path = Application.dataPath + "/../output/";
-                if (Directory.Exists(path) == false)
-                {
-                    Directory.CreateDirectory(path);
-                }
-
-                return path;
-            }
-        }
 
         public override void OnAwake()
         {

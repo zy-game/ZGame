@@ -41,13 +41,13 @@ namespace ZGame.Editor
             GUI.color = _color;
         }
 
-        public static void BeginColor(this ToolbarScene window, Color color)
+        public static void BeginColor(this GameSubEditorWindow window, Color color)
         {
             _color = GUI.color;
             GUI.color = color;
         }
 
-        public static void EndColor(this ToolbarScene window)
+        public static void EndColor(this GameSubEditorWindow window)
         {
             GUI.color = _color;
         }
@@ -65,7 +65,7 @@ namespace ZGame.Editor
             }
         }
 
-        public static bool OnMouseLeftButtonDown(this ToolbarScene window, Rect contains)
+        public static bool OnMouseLeftButtonDown(this GameSubEditorWindow window, Rect contains)
         {
             if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 0)
             {
@@ -75,7 +75,7 @@ namespace ZGame.Editor
             return false;
         }
 
-        public static bool OnMouseRightButtomDown(this ToolbarScene window, Rect contains)
+        public static bool OnMouseRightButtomDown(this GameSubEditorWindow window, Rect contains)
         {
             if (Event.current.type == EventType.MouseDown && contains.Contains(Event.current.mousePosition) && Event.current.button == 1)
             {

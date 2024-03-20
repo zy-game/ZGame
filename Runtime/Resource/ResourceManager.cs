@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Cysharp.Threading.Tasks;
+using HybridCLR;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
@@ -10,23 +12,23 @@ using UnityEngine.UI;
 using ZGame.Config;
 using ZGame.FileSystem;
 using ZGame.Game;
-using ZGame.Module;
 using ZGame.Networking;
 using ZGame.Resource.Config;
 using ZGame.UI;
+using Object = UnityEngine.Object;
 
 namespace ZGame.Resource
 {
     /// <summary>
     /// 资源管理器
     /// </summary>
-    public sealed class ResourceManager : IModule
+    public sealed class ResourceManager : GameFrameworkModule
     {
         internal ResPackageCache ResPackageCache { get; set; }
         internal ResObjectCache ResObjectCache { get; set; }
         internal PackageManifestManager PackageManifest { get; set; }
 
-        public void OnAwake()
+        public override void OnAwake()
         {
             SceneManager.sceneUnloaded += UnloadScene;
             ResPackageCache = new ResPackageCache();
@@ -41,7 +43,7 @@ namespace ZGame.Resource
         {
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             ResPackageCache.Dispose();
             ResObjectCache.Dispose();
@@ -78,27 +80,27 @@ namespace ZGame.Resource
         /// <param name="progressCallback"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async UniTask<bool> PreloadingResourcePackageList(GameConfig config)
+        public async UniTask<bool> PreloadingResourcePackageList(string packageName)
         {
-            if (config is null)
+            if (packageName.IsNullOrEmpty())
             {
                 throw new ArgumentNullException("config");
             }
 
             Extension.StartSample();
-            await PackageManifest.SetupPackageManifest(BasicConfig.instance.curGame.module);
-            bool state = await ResPackageCache.UpdateResourcePackageList(config);
+            await PackageManifest.SetupPackageManifest(packageName);
+            bool state = await ResPackageCache.UpdateResourcePackageList(packageName);
             if (state is false)
             {
                 return false;
             }
 
-            UILoading.SetTitle(WorkApi.Language.Query("正在加载资源信息..."));
+            UILoading.SetTitle(GameFrameworkEntry.Language.Query("正在加载资源信息..."));
             UILoading.SetProgress(0);
-            List<ResourcePackageManifest> manifests = PackageManifest.GetResourcePackageAndDependencyList(config.module);
+            List<ResourcePackageManifest> manifests = PackageManifest.GetResourcePackageAndDependencyList(packageName);
             if (manifests is null || manifests.Count == 0)
             {
-                UILoading.SetTitle(WorkApi.Language.Query("资源加载完成..."));
+                UILoading.SetTitle(GameFrameworkEntry.Language.Query("资源加载完成..."));
                 UILoading.SetProgress(1);
                 return true;
             }
@@ -109,110 +111,433 @@ namespace ZGame.Resource
             return true;
         }
 
-        public Scene OpenSceneSync(string path, LoadSceneMode mode = LoadSceneMode.Single)
+        /// <summary>
+        /// 加载场景
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="mode"></param>
+        /// <returns></returns>
+        public Scene LoadSceneSync(string path, LoadSceneMode mode = LoadSceneMode.Single)
         {
-            return default;
+            ResObject obj = LoadAsset(path);
+            Scene scene = obj.GetAsset<Scene>();
+
+            if (obj != null && scene.isLoaded)
+            {
+                return scene;
+            }
+
+            LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
+#if UNITY_EDITOR
+            if (ResConfig.instance.resMode == ResourceMode.Editor)
+            {
+                scene = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(path, parameters);
+            }
+#endif
+            if (scene == null)
+            {
+                scene = SceneManager.LoadScene(Path.GetFileNameWithoutExtension(path), parameters);
+            }
+
+            return scene;
         }
 
-
-        public async UniTask<Scene> OpenSceneAsync(string path, LoadSceneMode mode = LoadSceneMode.Single)
+        /// <summary>
+        /// 加载场景
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="mode"></param>
+        /// <returns></returns>
+        public async UniTask<Scene> LoadSceneAsync(string path, LoadSceneMode mode = LoadSceneMode.Single)
         {
-            return default;
+            ResObject obj = await LoadAssetAsync(path);
+            Scene scene = obj.GetAsset<Scene>();
+            if (obj != null && scene.isLoaded)
+            {
+                return scene;
+            }
+
+            AsyncOperation operation = default;
+            LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
+#if UNITY_EDITOR
+            if (ResConfig.instance.resMode == ResourceMode.Editor)
+            {
+                operation = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, parameters);
+            }
+#endif
+            if (operation == null)
+            {
+                operation = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path), parameters);
+            }
+
+            await operation.ToUniTask(UILoading.Show());
+            scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
+            UILoading.Hide();
+            return scene;
         }
 
-
-        public GameObject InstantiateSync(string path)
+        /// <summary>
+        /// 加载预制体
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public GameObject LoadGameObjectSync(string path)
         {
             ResObject resObject = LoadAsset(path);
-            if (resObject is null)
+            if (resObject.IsSuccess() is false)
             {
                 Debug.LogError("加载资源失败：" + path);
                 return default;
             }
 
-            GameObject gameObject = (GameObject)GameObject.Instantiate(resObject.Asset);
-            return default;
+            GameObject gameObject = (GameObject)GameObject.Instantiate(resObject.GetAsset<Object>());
+            gameObject.RegisterGameObjectDestroyEvent(() => { resObject.Release(); });
+            return gameObject;
         }
 
-        public GameObject InstantiateAsync(string path)
+        /// <summary>
+        /// 加载预制体
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="parent"></param>
+        /// <param name="pos"></param>
+        /// <param name="rot"></param>
+        /// <param name="scale"></param>
+        /// <returns></returns>
+        public GameObject LoadGameObjectSync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
         {
-            return default;
-        }
-
-        public GameObject InstantiateSync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
-        {
-            GameObject gameObject = InstantiateSync(path);
+            GameObject gameObject = LoadGameObjectSync(path);
             if (gameObject != null)
             {
                 if (parent != null)
                 {
-                    gameObject.transform.SetParent(parent.transform);
+                    gameObject.SetParent(parent.transform, pos, rot, scale);
                 }
-
-                gameObject.transform.position = pos;
-                gameObject.transform.rotation = Quaternion.Euler(rot);
-                gameObject.transform.localScale = scale;
+                else
+                {
+                    gameObject.SetParent(null, pos, rot, scale);
+                }
             }
 
             return gameObject;
         }
 
-        public GameObject InstantiateAsync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
+        /// <summary>
+        /// 加载预制体
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async UniTask<GameObject> LoadGameObjectAsync(string path)
         {
-            GameObject gameObject = InstantiateAsync(path);
+            ResObject resObject = await LoadAssetAsync(path);
+            if (resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            GameObject gameObject = (GameObject)GameObject.Instantiate(resObject.GetAsset<Object>());
+            gameObject.RegisterGameObjectDestroyEvent(() => { resObject.Release(); });
+            return gameObject;
+        }
+
+        /// <summary>
+        /// 加载预制体
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="parent"></param>
+        /// <param name="pos"></param>
+        /// <param name="rot"></param>
+        /// <param name="scale"></param>
+        /// <returns></returns>
+        public async UniTask<GameObject> LoadGameObjectAsync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
+        {
+            GameObject gameObject = await LoadGameObjectAsync(path);
             if (gameObject != null)
             {
                 if (parent != null)
                 {
-                    gameObject.transform.SetParent(parent.transform);
+                    gameObject.SetParent(parent.transform, pos, rot, scale);
                 }
-
-                gameObject.transform.position = pos;
-                gameObject.transform.rotation = Quaternion.Euler(rot);
-                gameObject.transform.localScale = scale;
+                else
+                {
+                    gameObject.SetParent(null, pos, rot, scale);
+                }
             }
 
             return gameObject;
         }
 
-        public void SetSpriteSync(Image image, string path)
+        /// <summary>
+        /// 加载精灵图片
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="path"></param>
+        public void LoadSpriteSync(Image image, string path)
         {
+            if (image == null)
+            {
+                return;
+            }
+
+            ResObject resObject = LoadAsset(path);
+            if (resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            image.sprite = resObject.GetAsset<Sprite>();
         }
 
-        public void SetSpriteAsync(Image image, string path)
+        /// <summary>
+        /// 加载精灵图片
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="path"></param>
+        public async void LoadSpriteAsync(Image image, string path)
         {
+            if (image == null)
+            {
+                return;
+            }
+
+            ResObject resObject = await LoadAssetAsync(path);
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            image.sprite = resObject.GetAsset<Sprite>();
         }
 
-        public void SetTexture2DSync(RawImage image, string path)
+        /// <summary>
+        /// 加载图片
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="path"></param>
+        public void LoadTexture2DSync(RawImage image, string path)
         {
+            if (image == null)
+            {
+                return;
+            }
+
+            ResObject resObject = LoadAsset(path);
+            if (resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            image.texture = resObject.GetAsset<Texture2D>();
         }
 
-        public void SetTexture2DAsync(RawImage image, string path)
+        /// <summary>
+        /// 加载图片
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="path"></param>
+        public async void LoadTexture2DAsync(RawImage image, string path)
         {
+            if (image == null)
+            {
+                return;
+            }
+
+            ResObject resObject = await LoadAssetAsync(path);
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            image.texture = resObject.GetAsset<Texture2D>();
         }
 
-        public void SetMaterialTexture2DSync(Material material, string propertyName, GameObject gameObject, string path)
+        /// <summary>
+        /// 设置材质球图片
+        /// </summary>
+        /// <param name="material"></param>
+        /// <param name="propertyName"></param>
+        /// <param name="gameObject"></param>
+        /// <param name="path"></param>
+        public void LoadMaterialTexture2DSync(Material material, string propertyName, GameObject gameObject, string path)
         {
+            if (material == null || gameObject == null)
+            {
+                return;
+            }
+
+            ResObject resObject = LoadAsset(path);
+            if (resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            material.mainTexture = resObject.GetAsset<Texture2D>();
         }
 
-        public void SetMaterialTexture2DAsync(Material material, string propertyName, GameObject gameObject, string path)
+        /// <summary>
+        /// 设置材质球图片
+        /// </summary>
+        /// <param name="material"></param>
+        /// <param name="propertyName"></param>
+        /// <param name="gameObject"></param>
+        /// <param name="path"></param>
+        public async void LoadMaterialTexture2DAsync(Material material, string propertyName, GameObject gameObject, string path)
         {
+            if (material == null || gameObject == null)
+            {
+                return;
+            }
+
+            ResObject resObject = await LoadAssetAsync(path);
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            material.mainTexture = resObject.GetAsset<Texture2D>();
         }
 
-        public void SetRenderMaterialSync(Renderer renderer, string path)
+        /// <summary>
+        /// 设置材质球
+        /// </summary>
+        /// <param name="renderer"></param>
+        /// <param name="path"></param>
+        public void LoadRenderMaterialSync(Renderer renderer, string path)
         {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            ResObject resObject = LoadAsset(path);
+            if (resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            renderer.sharedMaterial = resObject.GetAsset<Material>();
         }
 
-        public void SetRenderMaterialAsync(Renderer renderer, string path)
+        /// <summary>
+        /// 设置材质球
+        /// </summary>
+        /// <param name="renderer"></param>
+        /// <param name="path"></param>
+        public async void LoadRenderMaterialAsync(Renderer renderer, string path)
         {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            ResObject resObject = await LoadAssetAsync(path);
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            renderer.sharedMaterial = resObject.GetAsset<Material>();
         }
 
-        public void SetGraphicMaterialSync(MaskableGraphic graphic, string path)
+        public async UniTask LoadGameAssembly(GameConfig config)
         {
-        }
+            Assembly assembly = default;
+            string dllName = Path.GetFileNameWithoutExtension(config.path);
+            if (config.mode is CodeMode.Native || (ResConfig.instance.resMode == ResourceMode.Editor && Application.isEditor))
+            {
+                Debug.Log("原生代码：" + dllName);
+                if (dllName.IsNullOrEmpty())
+                {
+                    throw new NullReferenceException(nameof(dllName));
+                }
 
-        public void SetGraphicMaterialAsync(MaskableGraphic graphic, string path)
-        {
+                assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
+            }
+            else
+            {
+                string aotZipPath = GameFrameworkEntry.Resource.PackageManifest.GetAssetFullPath($"{dllName.ToLower()}_aot.bytes");
+                string hotfixZipPath = GameFrameworkEntry.Resource.PackageManifest.GetAssetFullPath($"{dllName.ToLower()}_hotfix.bytes");
+                Debug.Log("补元数据：" + aotZipPath);
+                using (ResObject resObject = GameFrameworkEntry.Resource.LoadAsset(aotZipPath))
+                {
+                    if (resObject == null || resObject.IsSuccess() is false)
+                    {
+                        return;
+                    }
+
+                    Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(resObject.GetAsset<TextAsset>().bytes);
+                    foreach (var VARIABLE in aotZipDict)
+                    {
+                        if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
+                        {
+                            Debug.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
+                            continue;
+                        }
+
+                        Debug.Log("加载补充元数据成功：" + VARIABLE.Key);
+                    }
+                }
+
+                Debug.Log("热更代码：" + hotfixZipPath);
+                using (ResObject resObject = await GameFrameworkEntry.Resource.LoadAssetAsync(hotfixZipPath))
+                {
+                    if (resObject == null || resObject.IsSuccess() is false)
+                    {
+                        return;
+                    }
+
+                    Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(resObject.GetAsset<TextAsset>().bytes);
+                    byte[] dllBytes = default;
+                    foreach (var VARIABLE in config.references)
+                    {
+                        if (dllZipDict.TryGetValue(VARIABLE + ".dll", out dllBytes) is false)
+                        {
+                            throw new NullReferenceException(dllName);
+                        }
+
+                        Assembly.Load(dllBytes);
+                        Debug.Log("Load Reference DLL:" + VARIABLE);
+                    }
+
+                    if (dllZipDict.TryGetValue(dllName + ".dll", out dllBytes) is false)
+                    {
+                        throw new NullReferenceException(dllName);
+                    }
+
+                    Debug.Log("Load Game Dll:" + dllName + ".dll Lenght:" + dllBytes.Length);
+                    assembly = Assembly.Load(dllBytes);
+                }
+            }
+
+            if (assembly is null)
+            {
+                GameFrameworkEntry.Logger.LogError("加载DLL失败");
+                return;
+            }
+
+            Type entryType = assembly.GetAllSubClasses<SubGameStartup>().FirstOrDefault();
+            if (entryType is null)
+            {
+                throw new EntryPointNotFoundException();
+            }
+
+            SubGameStartup startup = Activator.CreateInstance(entryType) as SubGameStartup;
+            if (startup is null)
+            {
+                Debug.LogError("加载入口失败");
+                return;
+            }
+
+            Debug.Log("Entry SubGame:" + startup);
+            ResultStatus status = await startup.OnEntry();
+            if (status is not ResultStatus.Success)
+            {
+                Debug.LogError("进入游戏失败");
+                return;
+            }
+
+            UILoading.Hide();
         }
     }
 }

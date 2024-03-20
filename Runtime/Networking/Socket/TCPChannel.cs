@@ -14,6 +14,7 @@ namespace ZGame.Networking
     {
         private Socket _socket;
         private bool isSendWork = false;
+        private Action<IMessage> _onMessageCallback;
         private byte[] _recBytes = new byte[1024 * 1024];
         public string address { get; set; }
         public bool connected => _socket == null ? false : _socket.Connected;
@@ -57,9 +58,12 @@ namespace ZGame.Networking
             }
         }
 
-        public async UniTask<T> WriteAndFlushAsync<T>(IMessage message) where T : IMessage
+        public UniTask<T1> WriteAndFlushAsync<T1>(IMessage message) where T1 : IMessage
         {
-            return default;
+            UniTaskCompletionSource<T1> tcs = new UniTaskCompletionSource<T1>();
+            WriteAndFlush(message);
+            _onMessageCallback = new Action<IMessage>(args => { tcs.TrySetResult((T1)args); });
+            return tcs.Task;
         }
 
         void OnStartReceiver()
@@ -83,7 +87,13 @@ namespace ZGame.Networking
                     return;
                 }
 
-                //ModuleManager.OnAction(opcode.ToString(), message);
+                if (_onMessageCallback is not null)
+                {
+                    _onMessageCallback(message);
+                    continue;
+                }
+
+                GameFrameworkEntry.Notify.Notify(message);
             }
         }
 

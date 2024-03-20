@@ -370,7 +370,7 @@ namespace ZGame
 
         private void Awake()
         {
-            SetupKeyDownEvent(KeyCode.Escape, keyEvent => { UIMsgBox.Show(WorkApi.Language.Query("是否退出"), WorkApi.Quit); });
+            SetupKeyDownEvent(KeyCode.Escape, keyEvent => { UIMsgBox.Show(GameFrameworkEntry.Language.Query("是否退出"), GameFrameworkEntry.Quit); });
         }
 
         private void Update()

@@ -35,7 +35,12 @@ namespace ZGame
             }
         }
 
-        public static void OnListenDestroyEvent(this GameObject gameObject, UnityAction action)
+        /// <summary>
+        /// 注册有事物体删除事件
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="action"></param>
+        public static void RegisterGameObjectDestroyEvent(this GameObject gameObject, UnityAction action)
         {
             if (gameObject == null)
             {
@@ -49,6 +54,27 @@ namespace ZGame
             }
 
             bevaviour.SetupGameObjectDestroyEvent(action);
+        }
+
+        /// <summary>
+        /// 取消游戏物体删除事件
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="action"></param>
+        public static void UnregisterGameObjectDestroyEvent(this GameObject gameObject, UnityAction action)
+        {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            BehaviourScriptable bevaviour = gameObject.GetComponent<BehaviourScriptable>();
+            if (bevaviour == null)
+            {
+                return;
+            }
+
+            bevaviour.UnsetupGameObjectDestroyEvent(action);
         }
 
         public static void SetParent(this GameObject gameObject, Transform parent)

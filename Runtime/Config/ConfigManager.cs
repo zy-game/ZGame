@@ -1,38 +1,27 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 using UnityEngine;
-using ZGame.Module;
 
 namespace ZGame.Config
 {
-    public class ConfigManager : IModule
+    public class ConfigManager : GameFrameworkModule
     {
-        private Dictionary<Type, List<IDatable>> cfgMap;
+        private Dictionary<Type, IDisposable> cfgDict;
 
-        public void OnAwake()
+        public override void OnAwake()
         {
-            cfgMap = new Dictionary<Type, List<IDatable>>();
+            cfgDict = new Dictionary<Type, IDisposable>();
         }
 
-        private void InitConfig<T>()
+        private CfgMap<T> GetMap<T>() where T : IDatable
         {
-            Type cfgType = typeof(T);
-            MethodInfo method = cfgType.GetMethod("InitConfig", BindingFlags.Static | BindingFlags.NonPublic);
-            if (method is null)
+            if (cfgDict.TryGetValue(typeof(T), out IDisposable cfg) is false)
             {
-                throw new NotImplementedException("InitConfig");
+                cfgDict.Add(typeof(T), cfg = new CfgMap<T>());
             }
 
-            IList cfgList = (IList)method.Invoke(null, new object[0]);
-            List<IDatable> templetes = new List<IDatable>(cfgList.Count);
-            for (int i = 0; i < cfgList.Count; i++)
-            {
-                templetes.Add((IDatable)cfgList[i]);
-            }
-
-            cfgMap.Add(typeof(T), templetes);
+            return (CfgMap<T>)cfg;
         }
 
         /// <summary>
@@ -42,13 +31,7 @@ namespace ZGame.Config
         /// <returns></returns>
         public int Count<T>() where T : IDatable
         {
-            if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes))
-            {
-                return datableTempletes.Count;
-            }
-
-            InitConfig<T>();
-            return Count<T>();
+            return GetMap<T>().Count();
         }
 
         /// <summary>
@@ -57,9 +40,9 @@ namespace ZGame.Config
         /// <param name="value"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public bool Contains<T>(object value) where T : IDatable
+        public bool Contains<T>(T value) where T : IDatable
         {
-            return GetConfig<T>(value) is not null;
+            return GetMap<T>().Contains(value);
         }
 
         /// <summary>
@@ -70,13 +53,7 @@ namespace ZGame.Config
         /// <returns></returns>
         public T GetConfig<T>(object value) where T : IDatable
         {
-            if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes))
-            {
-                return (T)datableTempletes.Find(x => x.Equals(value));
-            }
-
-            InitConfig<T>();
-            return GetConfig<T>(value);
+            return GetMap<T>().GetConfig(value);
         }
 
         /// <summary>
@@ -87,13 +64,7 @@ namespace ZGame.Config
         /// <returns></returns>
         public T GetConfig<T>(Predicate<T> match) where T : IDatable
         {
-            if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datables))
-            {
-                return (T)datables.Find(x => match((T)x));
-            }
-
-            InitConfig<T>();
-            return GetConfig<T>(match);
+            return GetMap<T>().GetConfig(match);
         }
 
         /// <summary>
@@ -101,21 +72,14 @@ namespace ZGame.Config
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public List<T> All<T>() where T : IDatable
+        public T[] All<T>() where T : IDatable
         {
-            List<T> templeteList = new List<T>();
-            if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes))
-            {
-                foreach (var VARIABLE in datableTempletes)
-                {
-                    templeteList.Add((T)VARIABLE);
-                }
+            return GetMap<T>().All();
+        }
 
-                return templeteList;
-            }
-
-            InitConfig<T>();
-            return All<T>();
+        public T[] GetRange<T>(int start, int end) where T : IDatable
+        {
+            return GetMap<T>().GetRange(start, end);
         }
 
         /// <summary>
@@ -124,24 +88,9 @@ namespace ZGame.Config
         /// <param name="match"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public List<T> Where<T>(Predicate<T> match) where T : IDatable
+        public T[] Where<T>(Predicate<T> match) where T : IDatable
         {
-            List<T> templeteList = new List<T>();
-            if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes) is false)
-            {
-                foreach (var VARIABLE in datableTempletes)
-                {
-                    if (match((T)VARIABLE))
-                    {
-                        templeteList.Add((T)VARIABLE);
-                    }
-                }
-
-                return templeteList;
-            }
-
-            InitConfig<T>();
-            return Where<T>(match);
+            return GetMap<T>().Where(match);
         }
 
         /// <summary>
@@ -152,24 +101,17 @@ namespace ZGame.Config
         /// <returns></returns>
         public T GetConfigWithIndex<T>(int index) where T : IDatable
         {
-            if (cfgMap.TryGetValue(typeof(T), out List<IDatable> datableTempletes))
-            {
-                return (T)datableTempletes[index];
-            }
-
-            InitConfig<T>();
-            return GetConfigWithIndex<T>(index);
+            return GetMap<T>().GetRange(index, 1).FirstOrDefault();
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
-            foreach (var VARIABLE in cfgMap.Values)
+            foreach (var VARIABLE in cfgDict.Values)
             {
-                VARIABLE.ForEach(x => x.Dispose());
-                VARIABLE.Clear();
+                VARIABLE.Dispose();
             }
 
-            cfgMap.Clear();
+            cfgDict.Clear();
             GC.SuppressFinalize(this);
         }
     }

@@ -5,7 +5,7 @@ using ZGame.Notify;
 
 namespace ZGame
 {
-    public sealed class AppQuitEventArgs : INotifyArgs
+    public sealed class AppQuitEventDatable : INotifyDatable
     {
         public void Dispose()
         {
@@ -18,7 +18,7 @@ namespace ZGame
 
         public CancellationTokenSourceGroup(CancellationTokenSource cancellationTokenSource)
         {
-            WorkApi.Notify.Subscribe<AppQuitEventArgs>(OnHandleAppQuitEvent);
+            GameFrameworkEntry.Notify.Subscribe<AppQuitEventDatable>(OnHandleAppQuitEvent);
             if (cancellationTokenSource is null)
             {
                 return;
@@ -27,7 +27,7 @@ namespace ZGame
             cancellationTokenSource.Token.Register(this.Cancel);
         }
 
-        private void OnHandleAppQuitEvent(AppQuitEventArgs args)
+        private void OnHandleAppQuitEvent(AppQuitEventDatable datable)
         {
             Cancel();
         }
@@ -51,7 +51,7 @@ namespace ZGame
 
         public void Dispose()
         {
-            WorkApi.Notify.Unsubscribe<AppQuitEventArgs>(OnHandleAppQuitEvent);
+            GameFrameworkEntry.Notify.Unsubscribe<AppQuitEventDatable>(OnHandleAppQuitEvent);
             foreach (var token in tokens)
             {
                 token.Dispose();

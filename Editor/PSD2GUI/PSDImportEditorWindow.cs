@@ -6,10 +6,10 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.PSD2GUI
 {
-    [PageConfig("PSD Editor", typeof(PSD2GUIWindow), true)]
-    public sealed class PSDImportEditorWindow : ToolbarScene
+    [GameSubEditorWindowOptions("PSD Editor", typeof(PSD2GUIWindow), true)]
+    public sealed class PSDImportEditorWindow : GameSubEditorWindow
     {
-        private PSDImport import;
+        private PSDOptions import;
         private Vector2 hierarchyScrollPosition;
         private Vector2 inspectorScrollPosition;
         private Vector2 scaleOffset;
@@ -28,7 +28,7 @@ namespace ZGame.Editor.PSD2GUI
                 return;
             }
 
-            import = args[0] as PSDImport;
+            import = args[0] as PSDOptions;
             if (import.layers is null)
             {
                 import.layers = new();
@@ -122,7 +122,7 @@ namespace ZGame.Editor.PSD2GUI
                 curLayer = layer;
                 drect = layer.rectDraw;
                 offset = layer.rectDraw.position - Event.current.mousePosition;
-                ToolsWindow.Refresh();
+                GameBaseEditorWindow.Refresh();
             }
 
             GUILayout.EndHorizontal();
@@ -179,7 +179,7 @@ namespace ZGame.Editor.PSD2GUI
 
                         curLayer.parent = to;
                         import.layers.Remove(curLayer);
-                        ToolsWindow.Refresh();
+                        GameBaseEditorWindow.Refresh();
                     }
                     else if (rectDraw.Contains(drect.position))
                     {

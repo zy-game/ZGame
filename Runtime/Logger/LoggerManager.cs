@@ -1,22 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ZGame.Module;
 
-namespace ZGame
+namespace ZGame.Logger
 {
-    public class LoggerManager : IModule
+    public class LoggerManager : GameFrameworkModule
     {
-        private bool _isDebug;
-
-        public void Dispose()
-        {
-        }
-
-        public void OnAwake()
-        {
-            _isDebug = BasicConfig.instance.isDebug;
-        }
+        private bool _isDebug = GameConfig.instance.isDebug;
 
         /// <summary>
         /// 输出普通日志

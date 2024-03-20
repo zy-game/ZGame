@@ -5,8 +5,8 @@ using ZGame.Editor.PSD2GUI;
 
 namespace ZGame.Editor.PSD2GUI
 {
-    [PageConfig("UIBind Rule", typeof(PSD2GUIWindow), false, typeof(UIBindRulerConfig))]
-    public class UIBindRulerEditor : ToolbarScene
+    [GameSubEditorWindowOptions("UIBind Rule", typeof(PSD2GUIWindow), false, typeof(UIBindRulerConfig))]
+    public class UIBindRulerEditor : GameSubEditorWindow
     {
         private bool nameSpaceFoldout = true;
         private bool typeFoldout = true;
@@ -27,16 +27,16 @@ namespace ZGame.Editor.PSD2GUI
                 {
                     case 1:
                         UIBindRulerConfig.instance.rules.Add(new UIBindRulerItem());
-                        ToolsWindow.Refresh();
+                        GameBaseEditorWindow.Refresh();
                         break;
                     case 2:
                         UIBindRulerConfig.instance.nameSpaces.Add(new ReferenceNameSpace());
-                        ToolsWindow.Refresh();
+                        GameBaseEditorWindow.Refresh();
                         break;
                 }
 
                 UIBindRulerConfig.instance.AddNameSpace(string.Empty);
-                ToolsWindow.Refresh();
+                GameBaseEditorWindow.Refresh();
             }
         }
 
@@ -55,7 +55,7 @@ namespace ZGame.Editor.PSD2GUI
                     if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                     {
                         UIBindRulerConfig.instance.nameSpaces.Remove(item);
-                        ToolsWindow.Refresh();
+                        GameBaseEditorWindow.Refresh();
                     }
 
                     GUILayout.EndHorizontal();
@@ -84,7 +84,7 @@ namespace ZGame.Editor.PSD2GUI
                     if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.DELETE_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
                     {
                         UIBindRulerConfig.instance.rules.Remove(item);
-                        ToolsWindow.Refresh();
+                        GameBaseEditorWindow.Refresh();
                     }
 
                     GUILayout.EndHorizontal();
@@ -93,12 +93,12 @@ namespace ZGame.Editor.PSD2GUI
                     GUILayout.Space(2);
                 }
             }
+        }
 
-            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.S)
-            {
-                UIBindRulerConfig.OnSave();
-                ToolsWindow.Refresh();
-            }
+        public override void SaveChanges()
+        {
+            UIBindRulerConfig.Save();
+            GameBaseEditorWindow.Refresh();
         }
     }
 }

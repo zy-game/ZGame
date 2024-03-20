@@ -9,7 +9,6 @@ using UnityEngine;
 using ZGame.Config;
 using ZGame.FileSystem;
 using ZGame.Game;
-using ZGame.Module;
 using ZGame.Networking;
 using ZGame.Resource.Config;
 using ZGame.UI;
@@ -19,7 +18,7 @@ namespace ZGame.Resource
     /// <summary>
     /// 资源包信息管理
     /// </summary>
-    internal class PackageManifestManager : IModule
+    internal class PackageManifestManager : GameFrameworkModule
     {
         private List<ResourcePackageListManifest> _packageListManifests = new List<ResourcePackageListManifest>();
 
@@ -39,7 +38,7 @@ namespace ZGame.Resource
         public async UniTask<bool> SetupPackageManifest(string packageName)
         {
 #if UNITY_EDITOR
-            if (BasicConfig.instance.resMode == ResourceMode.Editor)
+            if (ResConfig.instance.resMode == ResourceMode.Editor)
             {
                 return true;
             }
@@ -57,30 +56,29 @@ namespace ZGame.Resource
             }
             else
             {
-                resourcePackageListManifest = await WorkApi.Web.GetData<ResourcePackageListManifest>(iniFilePath);
+                resourcePackageListManifest = await GameFrameworkEntry.Web.GetData<ResourcePackageListManifest>(iniFilePath);
             }
 
-        
+
             if (resourcePackageListManifest is null)
             {
                 Debug.LogError("没有找到资源包列表配置文件：" + iniFilePath);
                 return false;
             }
 
-            if (resourcePackageListManifest.appVersion.Equals(BasicConfig.instance.curGame.version) is false)
+            if (resourcePackageListManifest.appVersion.Equals(GameConfig.instance.version) is false)
             {
-                UIMsgBox.Show(WorkApi.Language.Query("App 版本过低，请重新安装App后在使用"), () =>
+                UIMsgBox.Show(GameFrameworkEntry.Language.Query("App 版本过低，请重新安装App后在使用"), () =>
                 {
-                    Application.OpenURL(BasicConfig.instance.apkUrl);
-                    WorkApi.Quit();
+                    Application.OpenURL(GameConfig.instance.apkUrl);
+                    GameFrameworkEntry.Quit();
                 });
                 throw new Exception("App 版本过低，请重新安装App后在使用");
             }
- 
+
             _packageListManifests.Add(resourcePackageListManifest);
             if (resourcePackageListManifest.dependencies is not null && resourcePackageListManifest.dependencies.Count > 0)
             {
-        
                 foreach (var VARIABLE in resourcePackageListManifest.dependencies)
                 {
                     await SetupPackageManifest(VARIABLE);
@@ -126,12 +124,11 @@ namespace ZGame.Resource
         /// <summary>
         /// 获取资源的全路径
         /// </summary>
-        /// <param name="moduleName"></param>
         /// <param name="assetName"></param>
         /// <returns></returns>
-        public string GetAssetFullPath(string moduleName, string assetName)
+        public string GetAssetFullPath(string assetName)
         {
-            ResourcePackageListManifest resourcePackageManifest = _packageListManifests.Find(x => x.name == moduleName);
+            ResourcePackageListManifest resourcePackageManifest = _packageListManifests.Find(x => x.HasAsset(assetName));
             if (resourcePackageManifest is null)
             {
                 return null;
@@ -149,7 +146,7 @@ namespace ZGame.Resource
         {
             List<ResourcePackageManifest> needUpdatePackages = new List<ResourcePackageManifest>();
 #if UNITY_EDITOR
-            if (BasicConfig.instance.resMode == ResourceMode.Editor)
+            if (ResConfig.instance.resMode == ResourceMode.Editor)
             {
                 return needUpdatePackages;
             }
@@ -164,7 +161,7 @@ namespace ZGame.Resource
 
             foreach (var package in resourcePackageListManifest.packages)
             {
-                if (WorkApi.VFS.Exist(package.name, package.version) || needUpdatePackages.Contains(package))
+                if (GameFrameworkEntry.VFS.Exist(package.name, package.version) || needUpdatePackages.Contains(package))
                 {
                     continue;
                 }
@@ -192,7 +189,7 @@ namespace ZGame.Resource
         {
             List<ResourcePackageManifest> result = new List<ResourcePackageManifest>();
 #if UNITY_EDITOR
-            if (BasicConfig.instance.resMode == ResourceMode.Editor)
+            if (ResConfig.instance.resMode == ResourceMode.Editor)
             {
                 return result;
             }

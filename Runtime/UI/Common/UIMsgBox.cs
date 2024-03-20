@@ -43,12 +43,12 @@ namespace ZGame.UI
 
                 if (VARIABLE.name.Equals("text_yes"))
                 {
-                    VARIABLE.SetText(WorkApi.Language.Query("确定"));
+                    VARIABLE.SetText(GameFrameworkEntry.Language.Query("确定"));
                 }
 
                 if (VARIABLE.name.Equals("text_no"))
                 {
-                    VARIABLE.SetText(WorkApi.Language.Query("取消"));
+                    VARIABLE.SetText(GameFrameworkEntry.Language.Query("取消"));
                 }
             }
 
@@ -76,7 +76,7 @@ namespace ZGame.UI
         private void Switch(bool state)
         {
             BehaviourScriptable.instance.UnsetupKeyDownEvent(KeyCode.Escape, OnBackup);
-            WorkApi.UI?.Inactive(this);
+            GameFrameworkEntry.UI?.Inactive(this);
             switch (state)
             {
                 case true:
@@ -90,22 +90,22 @@ namespace ZGame.UI
 
         public static void Show(string title, string content, Action onYes, Action onNo)
         {
-            WorkApi.UI.Active<UIMsgBox>(new object[] { title, content, onYes, onNo });
+            GameFrameworkEntry.UI.Active<UIMsgBox>(new object[] { title, content, onYes, onNo });
         }
 
         public static void Show(string content, Action onYes, Action onNo)
         {
-            Show(WorkApi.Language.Query("提示"), content, onYes, onNo);
+            Show(GameFrameworkEntry.Language.Query("提示"), content, onYes, onNo);
         }
 
         public static void Show(string content, Action onYes)
         {
-            Show(WorkApi.Language.Query("提示"), content, onYes, null);
+            Show(GameFrameworkEntry.Language.Query("提示"), content, onYes, null);
         }
 
         public static void Show(string content)
         {
-            Show(WorkApi.Language.Query("提示"), content, null, null);
+            Show(GameFrameworkEntry.Language.Query("提示"), content, null, null);
         }
     }
 }

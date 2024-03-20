@@ -7,8 +7,8 @@ using UnityEngine;
 
 namespace ZGame.Editor.Helpme
 {
-    [PageConfig("详细", typeof(ThinktanksWindow), true)]
-    public class ReaderWindow : ToolbarScene
+    [GameSubEditorWindowOptions("详细", typeof(ThinktanksWindow), true)]
+    public class ReaderWindow : GameSubEditorWindow
     {
         private HelpData helpmeData;
         private MarkdownDocument document;
