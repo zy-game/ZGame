@@ -6,7 +6,7 @@ using ZGame.Resource;
 
 namespace ZGame.Sound
 {
-    public class SoundSourcePlayerHandle : IDisposable
+    public class AudioSourceHandler : IDisposable
     {
         private AudioSource _source;
         private ResObject resObject;
@@ -52,13 +52,13 @@ namespace ZGame.Sound
             }
         }
 
-        public SoundSourcePlayerHandle(GameObject gameObject, string name, bool isLoop)
+        public AudioSourceHandler(GameObject gameObject, string name, bool isLoop)
         {
             if (gameObject == null)
             {
                 gameObject = new GameObject(name);
-                _source.transform.parent = BehaviourScriptable.instance.transform;
-                _source.transform.localPosition = Vector3.zero;
+                gameObject.SetParent(null, Vector3.zero, Vector3.zero, Vector3.one);
+                GameObject.DontDestroyOnLoad(gameObject);
             }
 
             if (gameObject.TryGetComponent<AudioSource>(out _source) is false)

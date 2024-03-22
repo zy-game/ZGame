@@ -23,6 +23,11 @@ namespace ZGame.Resource
         public string owner;
 
         /// <summary>
+        /// 是否资源包
+        /// </summary>
+        public bool isBundle;
+
+        /// <summary>
         /// 资源包文件列表
         /// </summary>
         public string[] files;

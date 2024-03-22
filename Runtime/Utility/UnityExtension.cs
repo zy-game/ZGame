@@ -7,6 +7,26 @@ namespace ZGame
 {
     public static partial class Extension
     {
+        class GameObjectHandle : MonoBehaviour
+        {
+            private UnityEvent _destroy = new UnityEvent();
+
+            public void OnSetup(UnityAction destroy)
+            {
+                _destroy.AddListener(destroy);
+            }
+
+            public void OnUnsetup(UnityAction destroy)
+            {
+                _destroy.RemoveListener(destroy);
+            }
+
+            void OnDestroy()
+            {
+                _destroy?.Invoke();
+            }
+        }
+
         public static void Active(params GameObject[] gameObjects)
         {
             for (int i = 0; i < gameObjects.Length; i++)
@@ -47,13 +67,13 @@ namespace ZGame
                 return;
             }
 
-            BehaviourScriptable bevaviour = gameObject.GetComponent<BehaviourScriptable>();
+            GameObjectHandle bevaviour = gameObject.GetComponent<GameObjectHandle>();
             if (bevaviour == null)
             {
-                bevaviour = gameObject.AddComponent<BehaviourScriptable>();
+                bevaviour = gameObject.AddComponent<GameObjectHandle>();
             }
 
-            bevaviour.SetupGameObjectDestroyEvent(action);
+            bevaviour.OnSetup(action);
         }
 
         /// <summary>
@@ -68,13 +88,13 @@ namespace ZGame
                 return;
             }
 
-            BehaviourScriptable bevaviour = gameObject.GetComponent<BehaviourScriptable>();
+            GameObjectHandle bevaviour = gameObject.GetComponent<GameObjectHandle>();
             if (bevaviour == null)
             {
                 return;
             }
 
-            bevaviour.UnsetupGameObjectDestroyEvent(action);
+            bevaviour.OnUnsetup(action);
         }
 
         public static void SetParent(this GameObject gameObject, Transform parent)

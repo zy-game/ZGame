@@ -1,4 +1,5 @@
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using ZGame;
@@ -9,13 +10,11 @@ namespace ZGame.UI
     [UIOptions(UILayer.Notification, SceneType.Addition, CacheType.Permanent)]
     public sealed class UIWait : UIBase
     {
-        private Coroutine _coroutine;
-
         public UIWait(GameObject gameObject) : base(gameObject)
         {
         }
 
-        public override void Enable(params object[] args)
+        public override async void Enable(params object[] args)
         {
             base.Enable();
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
@@ -30,32 +29,14 @@ namespace ZGame.UI
             }
 
             float time = (float)args[1];
-            if (time <= 0)
+            if (time == 0)
             {
                 return;
             }
 
-            _coroutine = BehaviourScriptable.instance.StartCoroutine(CheckTimeout(time));
-        }
-
-        private IEnumerator CheckTimeout(float time)
-        {
-            yield return new WaitForSeconds(time);
-            _coroutine = null;
+            await UniTask.Delay((int)(time * 1000));
             Hide();
         }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            if (_coroutine == null)
-            {
-                return;
-            }
-
-            BehaviourScriptable.instance.StopCoroutine(_coroutine);
-        }
-
 
         public static void Show(string s, float timeout = 0)
         {

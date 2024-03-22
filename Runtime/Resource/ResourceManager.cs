@@ -456,58 +456,26 @@ namespace ZGame.Resource
             }
             else
             {
-                string aotZipPath = GameFrameworkEntry.Resource.PackageManifest.GetAssetFullPath($"{dllName.ToLower()}_aot.bytes");
-                string hotfixZipPath = GameFrameworkEntry.Resource.PackageManifest.GetAssetFullPath($"{dllName.ToLower()}_hotfix.bytes");
-                Debug.Log("补元数据：" + aotZipPath);
-                using (ResObject resObject = GameFrameworkEntry.Resource.LoadAsset(aotZipPath))
+                Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(GameFrameworkEntry.VFS.Read($"{dllName.ToLower()}_aot.bytes"));
+                foreach (var VARIABLE in aotZipDict)
                 {
-                    if (resObject == null || resObject.IsSuccess() is false)
+                    if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
                     {
-                        return;
+                        Debug.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
+                        continue;
                     }
 
-                    Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(resObject.GetAsset<TextAsset>().bytes);
-                    foreach (var VARIABLE in aotZipDict)
-                    {
-                        if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
-                        {
-                            Debug.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
-                            continue;
-                        }
-
-                        Debug.Log("加载补充元数据成功：" + VARIABLE.Key);
-                    }
+                    Debug.Log("加载补充元数据成功：" + VARIABLE.Key);
                 }
 
-                Debug.Log("热更代码：" + hotfixZipPath);
-                using (ResObject resObject = await GameFrameworkEntry.Resource.LoadAssetAsync(hotfixZipPath))
+                Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(GameFrameworkEntry.VFS.Read($"{dllName.ToLower()}_hotfix.bytes"));
+                if (dllZipDict.TryGetValue(dllName + ".dll", out byte[] dllBytes) is false)
                 {
-                    if (resObject == null || resObject.IsSuccess() is false)
-                    {
-                        return;
-                    }
-
-                    Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(resObject.GetAsset<TextAsset>().bytes);
-                    byte[] dllBytes = default;
-                    foreach (var VARIABLE in config.references)
-                    {
-                        if (dllZipDict.TryGetValue(VARIABLE + ".dll", out dllBytes) is false)
-                        {
-                            throw new NullReferenceException(dllName);
-                        }
-
-                        Assembly.Load(dllBytes);
-                        Debug.Log("Load Reference DLL:" + VARIABLE);
-                    }
-
-                    if (dllZipDict.TryGetValue(dllName + ".dll", out dllBytes) is false)
-                    {
-                        throw new NullReferenceException(dllName);
-                    }
-
-                    Debug.Log("Load Game Dll:" + dllName + ".dll Lenght:" + dllBytes.Length);
-                    assembly = Assembly.Load(dllBytes);
+                    throw new NullReferenceException(dllName);
                 }
+
+                Debug.Log("加载热更代码:" + dllName + ".dll Lenght:" + dllBytes.Length);
+                assembly = Assembly.Load(dllBytes);
             }
 
             if (assembly is null)

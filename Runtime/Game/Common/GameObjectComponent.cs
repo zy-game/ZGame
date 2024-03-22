@@ -11,7 +11,7 @@ namespace ZGame.Game.Common
         public Transform transform => _gameObject.transform;
 
 
-        public override async void OnAwake(params object[] args)
+        public override void OnAwake(params object[] args)
         {
             if (args is null || args.Length == 0)
             {
@@ -19,7 +19,7 @@ namespace ZGame.Game.Common
             }
 
             string prefabName = args[0] as string;
-            _gameObject = await GameFrameworkEntry.Resource.LoadGameObjectAsync(prefabName);
+            _gameObject = GameFrameworkEntry.Resource.LoadGameObjectSync(prefabName);
         }
 
         public override void OnEnable()

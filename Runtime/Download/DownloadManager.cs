@@ -87,32 +87,30 @@ namespace ZGame.Download
         public async UniTask<bool> DownloadStreamingAsset(string url, string fileName, uint version, IProgress<float> callback = null)
         {
             Extension.StartSample();
-            byte[] bytes = await GetStreamingAssetBinary(url, callback);
-            ResultStatus status = GameFrameworkEntry.VFS.Write(fileName, bytes, version);
-            Debug.Log($"GET STRWAMING ASSETS:{url} state:{status} time:{Extension.GetSampleTime()} Lenght:{bytes.Length}");
-            return status == ResultStatus.Success;
-            // bool state = false;
-            // using (UnityWebRequest request = DownloadHelper.CreateStreamingAssetObjectRequest(url, ".byte"))
-            // {
-            //     request.certificateHandler = new HttpClient.CertificateController();
-            //     await request.SendWebRequest().ToUniTask(callback);
-            //     if (request.GetResponseHeader("Content-Type") == "application/json")
-            //     {
-            //         Debug.Log(request.downloadHandler.text);
-            //     }
-            //
-            //     if (request.result is UnityWebRequest.Result.Success)
-            //     {
-            //         GameFrameworkEntry.VFS.Write(fileName, request.downloadHandler.data, version);
-            //         state = true;
-            //     }
-            //
-            //     Debug.Log($"GET STRWAMING ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()} Lenght:{request.downloadHandler.data.Length}");
-            //     request.downloadHandler?.Dispose();
-            //     request.uploadHandler?.Dispose();
-            // }
-            //
-            // return state;
+            // byte[] bytes = await GetStreamingAssetBinary(url, callback);
+            // ResultStatus status = GameFrameworkEntry.VFS.Write(fileName, bytes, version);
+            // Debug.Log($"GET STRWAMING ASSETS:{url} state:{status} time:{Extension.GetSampleTime()} Lenght:{bytes.Length}");
+            // return status == ResultStatus.Success;
+            bool state = false;
+            using (UnityWebRequest request = DownloadHelper.CreateStreamingAssetObjectRequest(url, ""))
+            {
+                request.certificateHandler = new HttpClient.CertificateController();
+                await request.SendWebRequest().ToUniTask(callback);
+                if (request.GetResponseHeader("Content-Type") == "application/json")
+                {
+                    Debug.Log(request.downloadHandler.text);
+                }
+
+                if (request.result is UnityWebRequest.Result.Success)
+                {
+                    GameFrameworkEntry.VFS.Write(fileName, request.downloadHandler.data, version);
+                    state = true;
+                }
+
+                Debug.Log($"DOWNLOAD ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()} Lenght:{request.downloadHandler.data.Length}");
+            }
+
+            return state;
         }
     }
 }

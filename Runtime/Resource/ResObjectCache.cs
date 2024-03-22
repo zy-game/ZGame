@@ -10,90 +10,6 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Resource
 {
-    class ResourcePackageLoadHelper : IDisposable
-    {
-        public void Dispose()
-        {
-        }
-    }
-
-    class ResourceObjectLoadHelper : IDisposable
-    {
-//         public async UniTask<ResObject> LoadAsync(string path)
-//         {
-//             if (GameFrameworkEntry.Resource.ResObjectCache.TryGetValue(path, out ResObject handle))
-//             {
-//                 return handle;
-//             }
-//
-//             Debug.Log("Load Assets:" + path);
-//             Object asset = default;
-//             if (path.StartsWith("Resources"))
-//             {
-//                 asset = await Resources.LoadAsync(path.Substring(10)).ToUniTask();
-//                 if (asset == null)
-//                 {
-//                     return EMPTY_OBJECT;
-//                 }
-//
-//                 return Add(INTERNAL_RES_PACKAGE, asset, path);
-//             }
-//
-//             if (path.StartsWith("http"))
-//             {
-//                 asset = await GameFrameworkEntry.Download.GetStreamingAsset(path, extension);
-//                 if (asset == null)
-//                 {
-//                     return EMPTY_OBJECT;
-//                 }
-//
-//                 return Add(NETWORK_RES_PACKAGE, asset, path);
-//             }
-// #if UNITY_EDITOR
-//             if (ResConfig.instance.resMode == ResourceMode.Editor)
-//             {
-//                 if (path.EndsWith(".unity") is false)
-//                 {
-//                     asset = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(UnityEngine.Object));
-//                     if (asset == null)
-//                     {
-//                         return EMPTY_OBJECT;
-//                     }
-//                 }
-//
-//                 return Add(EDITOR_RES_PACKAGE, asset, path);
-//             }
-// #endif
-//             ResourcePackageManifest manifest = GameFrameworkEntry.Resource.PackageManifest.GetResourcePackageManifestWithAssetName(path);
-//             if (manifest is null)
-//             {
-//                 Debug.Log("没有找到资源信息配置:" + path);
-//                 return EMPTY_OBJECT;
-//             }
-//
-//             if (GameFrameworkEntry.Resource.ResPackageCache.TryGetValue(manifest.name, out var _handle) is false)
-//             {
-//                 await GameFrameworkEntry.Resource.ResPackageCache.LoadingResourcePackageListAsync(manifest);
-//                 return await LoadAsync(path);
-//             }
-//
-//             if (path.EndsWith(".unity") is false)
-//             {
-//                 asset = await _handle.bundle.LoadAssetAsync(path).ToUniTask();
-//                 if (asset == null)
-//                 {
-//                     return EMPTY_OBJECT;
-//                 }
-//             }
-//
-//             return Add(_handle, asset, path);
-//         }
-
-        public void Dispose()
-        {
-        }
-    }
-
     internal class ResObjectCache : GameFrameworkModule
     {
         private List<ResObject> cacheList = new List<ResObject>();
@@ -172,17 +88,11 @@ namespace ZGame.Resource
             Object asset = default;
             if (path.StartsWith("http"))
             {
-                return EMPTY_OBJECT;
+                throw new NotImplementedException("网络资源加载");
             }
-
-            if (path.StartsWith("Resources"))
+            else if (path.StartsWith("Resources"))
             {
                 asset = Resources.Load(path.Substring(10));
-                if (asset == null)
-                {
-                    return EMPTY_OBJECT;
-                }
-
                 return Add(INTERNAL_RES_PACKAGE, asset, path);
             }
 #if UNITY_EDITOR
@@ -191,10 +101,6 @@ namespace ZGame.Resource
                 if (path.EndsWith(".unity") is false)
                 {
                     asset = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
-                    if (asset == null)
-                    {
-                        return EMPTY_OBJECT;
-                    }
                 }
 
                 return Add(EDITOR_RES_PACKAGE, asset, path);
@@ -231,70 +137,59 @@ namespace ZGame.Resource
         {
             if (TryGetValue(path, out ResObject handle))
             {
+                GameFrameworkEntry.Logger.Log("从缓存中读取资源：" + path);
                 return handle;
             }
 
-            Debug.Log("Load Assets:" + path);
+            Debug.Log("加载资源:" + path);
             Object asset = default;
             if (path.StartsWith("Resources"))
             {
                 asset = await Resources.LoadAsync(path.Substring(10)).ToUniTask();
-                if (asset == null)
-                {
-                    return EMPTY_OBJECT;
-                }
-
                 return Add(INTERNAL_RES_PACKAGE, asset, path);
             }
-
-            if (path.StartsWith("http"))
+            else if (path.StartsWith("http"))
             {
                 asset = await GameFrameworkEntry.Download.GetStreamingAsset(path, extension);
-                if (asset == null)
+                return Add(NETWORK_RES_PACKAGE, asset, path);
+            }
+            else
+            {
+#if UNITY_EDITOR
+                if (ResConfig.instance.resMode == ResourceMode.Editor)
                 {
+                    if (path.EndsWith(".unity") is false)
+                    {
+                        asset = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(UnityEngine.Object));
+                    }
+
+                    return Add(EDITOR_RES_PACKAGE, asset, path);
+                }
+#endif
+                ResourcePackageManifest manifest = GameFrameworkEntry.Resource.PackageManifest.GetResourcePackageManifestWithAssetName(path);
+                if (manifest is null)
+                {
+                    Debug.Log("没有找到资源信息配置:" + path);
                     return EMPTY_OBJECT;
                 }
 
-                return Add(NETWORK_RES_PACKAGE, asset, path);
-            }
-#if UNITY_EDITOR
-            if (ResConfig.instance.resMode == ResourceMode.Editor)
-            {
+                if (GameFrameworkEntry.Resource.ResPackageCache.TryGetValue(manifest.name, out var _handle) is false)
+                {
+                    await GameFrameworkEntry.Resource.ResPackageCache.LoadingResourcePackageListAsync(manifest);
+                    return await LoadAsync(path);
+                }
+
                 if (path.EndsWith(".unity") is false)
                 {
-                    asset = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(UnityEngine.Object));
+                    asset = await _handle.bundle.LoadAssetAsync(Path.GetFileNameWithoutExtension(path)).ToUniTask();
                     if (asset == null)
                     {
-                        return EMPTY_OBJECT;
+                        GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
                     }
                 }
 
-                return Add(EDITOR_RES_PACKAGE, asset, path);
+                return Add(_handle, asset, path);
             }
-#endif
-            ResourcePackageManifest manifest = GameFrameworkEntry.Resource.PackageManifest.GetResourcePackageManifestWithAssetName(path);
-            if (manifest is null)
-            {
-                Debug.Log("没有找到资源信息配置:" + path);
-                return EMPTY_OBJECT;
-            }
-
-            if (GameFrameworkEntry.Resource.ResPackageCache.TryGetValue(manifest.name, out var _handle) is false)
-            {
-                await GameFrameworkEntry.Resource.ResPackageCache.LoadingResourcePackageListAsync(manifest);
-                return await LoadAsync(path);
-            }
-
-            if (path.EndsWith(".unity") is false)
-            {
-                asset = await _handle.bundle.LoadAssetAsync(path).ToUniTask();
-                if (asset == null)
-                {
-                    return EMPTY_OBJECT;
-                }
-            }
-
-            return Add(_handle, asset, path);
         }
     }
 }

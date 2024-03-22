@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
+using UnityEngine;
 
 namespace ZGame.Resource
 {
@@ -29,7 +32,7 @@ namespace ZGame.Resource
         /// <summary>
         /// 资源包列表
         /// </summary>
-        public ResourcePackageManifest[] packages;
+        public List<ResourcePackageManifest> packages;
 
         public bool Contains(string name)
         {
@@ -54,6 +57,55 @@ namespace ZGame.Resource
             }
 
             return fullPath;
+        }
+
+        public void CreateOrUpdatePackageManifest(string name, bool isBundle, uint version, string[] files, string[] dependencies)
+        {
+            ResourcePackageManifest packageManifest = packages.Find(x => x.name == name);
+            if (packageManifest is null)
+            {
+                packages.Add(packageManifest = new ResourcePackageManifest());
+            }
+
+            packageManifest.name = name;
+            packageManifest.version = version;
+            packageManifest.files = files;
+            packageManifest.dependencies = dependencies;
+            packageManifest.owner = this.name;
+            packageManifest.isBundle = isBundle;
+            Debug.Log("更新包信息：" + JsonConvert.SerializeObject(packageManifest));
+        }
+
+        public static ResourcePackageListManifest LoadOrCreate(string name)
+        {
+            ResourcePackageListManifest packageListManifest = null;
+            string fileName = name + ".ini";
+            if (File.Exists(GameFrameworkEntry.GetPlatformOutputPath(fileName)) is false)
+            {
+                packageListManifest = new ResourcePackageListManifest()
+                {
+                    name = name,
+                    version = 0,
+                    dependencies = new List<string>(),
+                    packages = new List<ResourcePackageManifest>(),
+                    appVersion = GameConfig.instance.version
+                };
+            }
+            else
+            {
+                string json = File.ReadAllText(GameFrameworkEntry.GetPlatformOutputPath(fileName));
+                packageListManifest = JsonConvert.DeserializeObject<ResourcePackageListManifest>(json);
+            }
+
+            return packageListManifest;
+        }
+
+        public static void Save(params ResourcePackageListManifest[] packageListManifest)
+        {
+            foreach (var VARIABLE in packageListManifest)
+            {
+                File.WriteAllText(GameFrameworkEntry.GetPlatformOutputPath(VARIABLE.name + ".ini"), JsonConvert.SerializeObject(VARIABLE));
+            }
         }
     }
 }

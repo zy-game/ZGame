@@ -68,11 +68,12 @@ namespace ZGame.Resource
 
             if (resourcePackageListManifest.appVersion.Equals(GameConfig.instance.version) is false)
             {
-                UIMsgBox.Show(GameFrameworkEntry.Language.Query("App 版本过低，请重新安装App后在使用"), () =>
+                if (await UIMsgBox.ShowAsync(GameFrameworkEntry.Language.Query("App 版本过低，请重新安装App后在使用")))
                 {
                     Application.OpenURL(GameConfig.instance.apkUrl);
-                    GameFrameworkEntry.Quit();
-                });
+                    GameFrameworkStartup.Quit();
+                }
+
                 throw new Exception("App 版本过低，请重新安装App后在使用");
             }
 
@@ -201,7 +202,7 @@ namespace ZGame.Resource
                 return result;
             }
 
-            result.AddRange(resourcePackageListManifest.packages);
+            result.AddRange(resourcePackageListManifest.packages.Where(x => x.isBundle));
             if (resourcePackageListManifest.dependencies is not null && resourcePackageListManifest.dependencies.Count > 0)
             {
                 foreach (string dependency in resourcePackageListManifest.dependencies)

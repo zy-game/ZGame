@@ -14,11 +14,15 @@ namespace ZGame.UI
     public sealed class UIManager : GameFrameworkModule
     {
         private List<UIRoot> rootList;
+        private GameObject eventSystem;
 
         public override void OnAwake()
         {
-            BehaviourScriptable.instance.gameObject.AddComponent<EventSystem>();
-            BehaviourScriptable.instance.gameObject.AddComponent<StandaloneInputModule>();
+            eventSystem = new GameObject("EventSystem");
+            GameObject.DontDestroyOnLoad(eventSystem);
+            eventSystem.AddComponent<EventSystem>();
+            eventSystem.AddComponent<StandaloneInputModule>();
+
             rootList = new List<UIRoot>()
             {
                 new UIRoot(UILayer.Background),
@@ -65,11 +69,6 @@ namespace ZGame.UI
             if (root is null)
             {
                 rootList.Add(root = new UIRoot(options.layer));
-            }
-
-            if (options.sceneType == SceneType.Overlap)
-            {
-                rootList.ForEach(x => x.Disable());
             }
 
             return root.Active(options, type, args);

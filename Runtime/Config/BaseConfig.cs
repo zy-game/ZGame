@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using UnityEditor;
 using UnityEngine;
 
 namespace ZGame
@@ -40,7 +39,7 @@ namespace ZGame
             {
 #if UNITY_EDITOR
                 _path = resourceReference.path;
-                result = AssetDatabase.LoadAssetAtPath<T>(resourceReference.path);
+                result = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(resourceReference.path);
 #endif
             }
 
@@ -48,9 +47,11 @@ namespace ZGame
             {
                 Debug.Log("创建新的配置文件:" + typeof(T).Name);
                 result = Activator.CreateInstance<T>();
-                PathHelper.TryExistsDirectory(_path);
-                AssetDatabase.CreateAsset(result, _path);
-                AssetDatabase.Refresh();
+#if UNITY_EDITOR
+                GameFileSystemHelper.TryCreateDirectory(_path);
+                UnityEditor.AssetDatabase.CreateAsset(result, _path);
+                UnityEditor.AssetDatabase.Refresh();
+#endif
             }
 
 
@@ -60,9 +61,11 @@ namespace ZGame
         public static void Save()
         {
             Debug.Log(_config.GetType().FullName);
-            EditorUtility.SetDirty(_config);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(_config);
+            UnityEditor.AssetDatabase.SaveAssets();
+            UnityEditor.AssetDatabase.Refresh();
+#endif
         }
 
         public virtual void OnAwake()

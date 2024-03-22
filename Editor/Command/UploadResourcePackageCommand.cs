@@ -98,10 +98,6 @@ namespace ZGame.Editor.Command
                 {
                     Debug.Log("上传文件错误：" + filePath);
                 }
-                else
-                {
-                    Debug.Log(putObjectResult.ResponseMetadata);
-                }
             }
             catch (Exception e)
             {

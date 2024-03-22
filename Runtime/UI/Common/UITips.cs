@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -12,11 +14,20 @@ namespace ZGame.UI
         {
         }
 
-        public override void Enable(params object[] args)
+        public override async void Enable(params object[] args)
         {
             base.Enable(args);
-            string content = args[0].ToString();
+            SetText(args[0].ToString());
             float timeout = (float)args[1];
+            Action onFinish = args[2] as Action;
+            float time = (float)args[1];
+            await UniTask.Delay((int)(time * 1000));
+            GameFrameworkEntry.UI.Inactive<UITips>();
+            onFinish?.Invoke();
+        }
+
+        private void SetText(string content)
+        {
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
             foreach (var VARIABLE in texts)
             {
@@ -27,21 +38,24 @@ namespace ZGame.UI
 
                 VARIABLE.SetText(content);
             }
-
-            BehaviourScriptable.instance.StartCoroutine(CheckTimeout(timeout));
         }
 
-        private IEnumerator CheckTimeout(float time)
+        public static void Show(string content, float timeout = 3)
         {
-            yield return new WaitForSeconds(time);
-            GameFrameworkEntry.UI.Inactive<UITips>();
+            Show(content, timeout, null);
         }
 
-
-        public static void Show(string content, float timeout = 5)
+        public static void Show(string content, float timeout, Action onFinish)
         {
             Debug.Log("tips:" + content);
-            GameFrameworkEntry.UI.Active<UITips>(new object[] { content, timeout });
+            GameFrameworkEntry.UI.Active<UITips>(new object[] { content, timeout, onFinish });
+        }
+
+        public static UniTask ShowAsync(string content, float timeout = 3)
+        {
+            UniTaskCompletionSource tcs = new UniTaskCompletionSource();
+            Show(content, timeout, () => { tcs.TrySetResult(); });
+            return tcs.Task;
         }
     }
 }

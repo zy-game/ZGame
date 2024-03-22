@@ -5,7 +5,7 @@ using ZGame.Notify;
 
 namespace ZGame
 {
-    public sealed class AppQuitEventDatable : INotifyDatable
+    public sealed class AppQuitEventDatable : IGameEventArgs
     {
         public void Dispose()
         {

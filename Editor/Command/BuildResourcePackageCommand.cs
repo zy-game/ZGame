@@ -39,40 +39,42 @@ namespace ZGame.Editor.Command
             List<ResourcePackageListManifest> packageListManifests = new List<ResourcePackageListManifest>();
             foreach (var VARIABLE in builds)
             {
-                ResourcePackageListManifest packageListManifest = new ResourcePackageListManifest();
-                packageListManifest.name = VARIABLE.seting.title;
-                packageListManifest.packages = new ResourcePackageManifest[VARIABLE.builds.Length];
+                ResourcePackageListManifest packageListManifest = ResourcePackageListManifest.LoadOrCreate(VARIABLE.seting.title);
                 packageListManifest.version = Crc32.GetCRC32Str(DateTime.Now.ToString("g"));
                 packageListManifest.appVersion = GameConfig.instance.version;
                 for (int i = 0; i < VARIABLE.builds.Length; i++)
                 {
                     string[] dependencies = manifest.GetAllDependencies(VARIABLE.builds[i].assetBundleName);
                     BuildPipeline.GetCRCForAssetBundle(GameFrameworkEntry.GetPlatformOutputPath(VARIABLE.builds[i].assetBundleName), out crc);
-                    packageListManifest.packages[i] = new ResourcePackageManifest()
+                    string[] assetNames = VARIABLE.builds[i].assetNames.Select(x => x.Replace("\\", "/")).ToArray();
+                    packageListManifest.CreateOrUpdatePackageManifest(VARIABLE.builds[i].assetBundleName.ToLower(), true, crc, assetNames, dependencies);
+                }
+
+                if (VARIABLE.seting.title == ResConfig.instance.defaultPackageName)
+                {
+                    string dllName = Path.GetFileNameWithoutExtension(GameConfig.instance.path).ToLower();
+                    List<string> libraryAssets = new List<string>() { $"{dllName}_aot.bytes", $"{dllName}_hotfix.bytes" };
+                    for (int i = 0; i < libraryAssets.Count; i++)
                     {
-                        name = VARIABLE.builds[i].assetBundleName.ToLower(),
-                        version = crc,
-                        owner = packageListManifest.name,
-                        files = VARIABLE.builds[i].assetNames.Select(x => x.Replace("\\", "/")).ToArray(),
-                        dependencies = dependencies,
-                    };
+                        string librayPath = GameFrameworkEntry.GetPlatformOutputPath(libraryAssets[i]);
+                        if (File.Exists(librayPath))
+                        {
+                            packageListManifest.CreateOrUpdatePackageManifest(libraryAssets[i], false, Crc32.GetCRC32File(librayPath), new string[] { libraryAssets[i] }, new string[0]);
+                        }
+                    }
                 }
 
                 packageListManifests.Add(packageListManifest);
             }
 
-            foreach (var VARIABLE in packageListManifests)
-            {
-                File.WriteAllText(GameFrameworkEntry.GetPlatformOutputPath($"{VARIABLE.name.ToLower()}.ini"), JsonConvert.SerializeObject(VARIABLE));
-            }
-
+            ResourcePackageListManifest.Save(packageListManifests.ToArray());
             return packageListManifests;
         }
 
         private static void OnUploadResourcePackageList(List<ResourcePackageListManifest> manifests)
         {
             int count = manifests.Count;
-            int allCount = manifests.Sum(x => x.packages.Length * count);
+            int allCount = manifests.Sum(x => x.packages.Count * count);
             int successCount = 0;
             foreach (var options in manifests)
             {

@@ -46,6 +46,7 @@ namespace ZGame.UI
                 return;
             }
 
+            Debug.Log("Enable:" + gameObject.name);
             gameObject.SetActive(true);
         }
 
@@ -59,6 +60,7 @@ namespace ZGame.UI
                 return;
             }
 
+            Debug.Log("Disable:" + gameObject.name);
             gameObject.SetActive(false);
         }
 
@@ -72,7 +74,7 @@ namespace ZGame.UI
             rect_transform = null;
             foreach (var VARIABLE in _coroutines.Values)
             {
-                StopCoroutine(VARIABLE);
+                GameFrameworkEntry.Coroutine.StopCoroutine(VARIABLE);
             }
 
             _coroutines.Clear();
@@ -97,7 +99,7 @@ namespace ZGame.UI
             }
 
             StopCountDown(tmp_text);
-            _coroutines.Add(tmp_text, this.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
+            _coroutines.Add(tmp_text, GameFrameworkEntry.Coroutine.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
         }
 
         /// <summary>
@@ -137,28 +139,9 @@ namespace ZGame.UI
 
             if (_coroutines.TryGetValue(target, out Coroutine coroutine))
             {
-                StopCoroutine(coroutine);
+                GameFrameworkEntry.Coroutine.StopCoroutine(coroutine);
                 _coroutines.Remove(target);
             }
-        }
-
-        /// <summary>
-        /// 开启一个协程
-        /// </summary>
-        /// <param name="enumerator"></param>
-        /// <returns></returns>
-        public Coroutine StartCoroutine(IEnumerator enumerator)
-        {
-            return BehaviourScriptable.instance.StartCoroutine(enumerator);
-        }
-
-        /// <summary>
-        /// 停止协程
-        /// </summary>
-        /// <param name="coroutine"></param>
-        public void StopCoroutine(Coroutine coroutine)
-        {
-            BehaviourScriptable.instance.StopCoroutine(coroutine);
         }
     }
 }

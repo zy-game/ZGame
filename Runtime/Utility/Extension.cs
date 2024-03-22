@@ -43,6 +43,23 @@ namespace ZGame
     {
         private static Stopwatch sw = new Stopwatch();
 
+        /// <summary>
+        /// 对lenght进行最大均分
+        /// </summary>
+        /// <param name="lenght"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public static int MaxSharinCount(int lenght, int count)
+        {
+            int max = lenght / count;
+            if (max * count < lenght)
+            {
+                max++;
+            }
+
+            return max;
+        }
+
         public static void StartSample()
         {
             sw.Restart();

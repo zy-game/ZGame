@@ -162,7 +162,7 @@ namespace ZGame.FileSystem
             {
                 List<VFSChunk> useChunkList = new List<VFSChunk>();
                 int chunkSize = VFSConfig.instance.chunkSize;
-                int maxCount = MathEx.MaxSharinCount(bytes.Length, chunkSize);
+                int maxCount = Extension.MaxSharinCount(bytes.Length, chunkSize);
                 for (int i = 0; i < maxCount; i++)
                 {
                     VFSChunk chunk = GetFreeChunk();
@@ -181,7 +181,7 @@ namespace ZGame.FileSystem
 
                     int length = bytes.Length - i * chunkSize > chunk.length ? chunk.length : bytes.Length - i * chunkSize;
                     resultStatus = stream.Write(chunk.offset, bytes, i * chunkSize, length);
-                    if (resultStatus != ResultStatus.Success)
+                    if (resultStatus is not ResultStatus.Success)
                     {
                         GameFrameworkEntry.Logger.LogError("写入文件数据失败");
                         break;
@@ -230,7 +230,7 @@ namespace ZGame.FileSystem
                 else
                 {
                     int chunkSize = VFSConfig.instance.chunkSize;
-                    int maxCount = MathEx.MaxSharinCount(bytes.Length, chunkSize);
+                    int maxCount = Extension.MaxSharinCount(bytes.Length, chunkSize);
                     UniTask<ResultStatus>[] writeTasks = new UniTask<ResultStatus>[maxCount];
                     List<VFSChunk> chunkList = new List<VFSChunk>();
                     for (int i = 0; i < maxCount; i++)
@@ -289,7 +289,7 @@ namespace ZGame.FileSystem
                 VFSChunk[] vfsDatas = FindFileChunkList(fileName);
                 if (vfsDatas is null || vfsDatas.Length is 0)
                 {
-                    return Array.Empty<byte>();
+                    throw new FileNotFoundException(fileName);
                 }
 
                 byte[] bytes = new byte[vfsDatas.Sum(x => x.useLenght)];
@@ -298,7 +298,7 @@ namespace ZGame.FileSystem
                     VFStream handle = GetStream(VARIABLE.vfs);
                     if (handle is null)
                     {
-                        throw new FileNotFoundException(VARIABLE.vfs);
+                        return Array.Empty<byte>();
                     }
 
                     int offset = VARIABLE.sort * VFSConfig.instance.chunkSize;

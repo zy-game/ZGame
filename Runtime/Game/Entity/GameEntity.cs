@@ -44,6 +44,22 @@ namespace ZGame.Game
         }
 
         /// <summary>
+        /// 添加组件
+        /// </summary>
+        /// <param name="types"></param>
+        /// <returns></returns>
+        public EntityComponent[] AddComponents(params Type[] types)
+        {
+            EntityComponent[] components = new EntityComponent[types.Length];
+            for (int i = 0; i < types.Length; i++)
+            {
+                components[i] = AddComponent(types[i]);
+            }
+
+            return components;
+        }
+
+        /// <summary>
         /// 获取组件
         /// </summary>
         /// <typeparam name="T"></typeparam>

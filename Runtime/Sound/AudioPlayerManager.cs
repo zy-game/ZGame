@@ -20,15 +20,13 @@ namespace ZGame.Sound
     /// <summary>
     /// 音效管理器
     /// </summary>
-    public class SoundManager : GameFrameworkModule
+    public class AudioPlayerManager : GameFrameworkModule
     {
-        private List<SoundSourcePlayerHandle> _handles = new List<SoundSourcePlayerHandle>();
+        private List<AudioSourceHandler> _handles = new List<AudioSourceHandler>();
 
 
         public override void OnAwake()
         {
-            BehaviourScriptable.instance.SetupGameObjectDestroyEvent(Clear);
-            BehaviourScriptable.instance.gameObject.AddComponent<AudioListener>();
         }
 
 
@@ -51,10 +49,10 @@ namespace ZGame.Sound
         /// <param name="playCallback"></param>
         public void PlaySound(string clipName, bool isLoop = false, Action<PlayState> playCallback = null)
         {
-            SoundSourcePlayerHandle handle = _handles.Find(x => x.isPlaying is false);
+            AudioSourceHandler handle = _handles.Find(x => x.isPlaying is false);
             if (handle is null)
             {
-                _handles.Add(handle = new SoundSourcePlayerHandle(null, "Audio Player " + _handles.Count, isLoop));
+                _handles.Add(handle = new AudioSourceHandler(null, "Audio Player " + _handles.Count, isLoop));
             }
 
             handle.Play(clipName, playCallback);
@@ -69,10 +67,10 @@ namespace ZGame.Sound
         /// <param name="playCallback"></param>
         public void PlaySound(AudioClip clip, bool isLoop = false, Action<PlayState> playCallback = null)
         {
-            SoundSourcePlayerHandle handle = _handles.Find(x => x.isPlaying is false);
+            AudioSourceHandler handle = _handles.Find(x => x.isPlaying is false);
             if (handle is null)
             {
-                _handles.Add(handle = new SoundSourcePlayerHandle(null, "Audio Player " + _handles.Count, isLoop));
+                _handles.Add(handle = new AudioSourceHandler(null, "Audio Player " + _handles.Count, isLoop));
             }
 
             handle.Play(clip, playCallback);
@@ -129,7 +127,7 @@ namespace ZGame.Sound
         /// <param name="clipName"></param>
         public void Pause(string clipName)
         {
-            SoundSourcePlayerHandle handle = _handles.Find(x => x.clipName == clipName);
+            AudioSourceHandler handle = _handles.Find(x => x.clipName == clipName);
             if (handle is null)
             {
                 return;
@@ -143,7 +141,7 @@ namespace ZGame.Sound
         /// </summary>
         public void PauseAll()
         {
-            foreach (SoundSourcePlayerHandle soundPlayer in _handles)
+            foreach (AudioSourceHandler soundPlayer in _handles)
             {
                 soundPlayer.Pause();
             }
@@ -155,7 +153,7 @@ namespace ZGame.Sound
         /// <param name="clipName"></param>
         public void Stop(string clipName)
         {
-            SoundSourcePlayerHandle handle = _handles.Find(x => x.clipName == clipName);
+            AudioSourceHandler handle = _handles.Find(x => x.clipName == clipName);
             if (handle is null)
             {
                 return;
@@ -169,7 +167,7 @@ namespace ZGame.Sound
         /// </summary>
         public void StopAll()
         {
-            foreach (SoundSourcePlayerHandle soundPlayer in _handles)
+            foreach (AudioSourceHandler soundPlayer in _handles)
             {
                 soundPlayer.Stop();
             }
@@ -181,7 +179,7 @@ namespace ZGame.Sound
         /// <param name="clipName"></param>
         public void Resume(string clipName)
         {
-            SoundSourcePlayerHandle handle = _handles.Find(x => x.clipName == clipName);
+            AudioSourceHandler handle = _handles.Find(x => x.clipName == clipName);
             if (handle is null)
             {
                 return;
@@ -195,7 +193,7 @@ namespace ZGame.Sound
         /// </summary>
         public void Resume()
         {
-            foreach (SoundSourcePlayerHandle soundPlayer in _handles)
+            foreach (AudioSourceHandler soundPlayer in _handles)
             {
                 soundPlayer.Resume();
             }
@@ -207,7 +205,7 @@ namespace ZGame.Sound
         /// <param name="volume"></param>
         public void SetVolume(float volume)
         {
-            foreach (SoundSourcePlayerHandle soundPlayer in _handles)
+            foreach (AudioSourceHandler soundPlayer in _handles)
             {
                 soundPlayer.SetVolume(volume);
             }

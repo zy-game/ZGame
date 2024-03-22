@@ -39,18 +39,6 @@ namespace ZGame.UI
             GameObject.DontDestroyOnLoad(canvas.gameObject);
         }
 
-        public void Dispose()
-        {
-            foreach (var VARIABLE in uiList)
-            {
-                VARIABLE.Dispose();
-            }
-
-            uiList.Clear();
-            GameObject.DestroyImmediate(canvas.gameObject);
-            canvas = null;
-            GC.SuppressFinalize(this);
-        }
 
         public bool Contains(Type type)
         {
@@ -60,41 +48,35 @@ namespace ZGame.UI
         public UIBase Active(UIOptions options, Type type, params object[] args)
         {
             UIBase uiBase = uiList.Find(x => x.GetType() == type);
-            if (uiBase is not null)
+            if (uiBase is null)
             {
-                if (options.sceneType == SceneType.Overlap)
+                ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
+                if (reference is null || reference.path.IsNullOrEmpty())
                 {
-                    uiList.ForEach(x => x.Disable());
+                    Debug.LogError("没找到资源引用:" + type.Name);
+                    return default;
                 }
 
-                uiBase.Enable(args);
-                uiBase.gameObject.transform.SetAsLastSibling();
-                return uiBase;
-            }
+                GameObject gameObject = GameFrameworkEntry.Resource.LoadGameObjectSync(reference.path);
+                if (gameObject == null)
+                {
+                    Debug.Log("加载资源失败：" + reference.path);
+                    return default;
+                }
 
-            ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
-            if (reference is null || reference.path.IsNullOrEmpty())
-            {
-                Debug.LogError("没找到资源引用:" + type.Name);
-                return default;
-            }
+                uiBase = (UIBase)Activator.CreateInstance(type, new object[] { gameObject });
+                uiBase.gameObject.transform.SetParent(canvas.transform);
+                uiBase.gameObject.transform.position = Vector3.zero;
+                uiBase.gameObject.transform.rotation = Quaternion.Euler(Vector3.zero);
+                uiBase.gameObject.transform.localScale = Vector3.one;
+                if (uiBase.gameObject.TryGetComponent<RectTransform>(out RectTransform rectTransform))
+                {
+                    rectTransform.sizeDelta = Vector2.zero;
+                    rectTransform.anchoredPosition = Vector2.zero;
+                }
 
-            GameObject gameObject = GameFrameworkEntry.Resource.LoadGameObjectSync(reference.path);
-            if (gameObject == null)
-            {
-                Debug.Log("加载资源失败：" + reference.path);
-                return default;
-            }
-
-            uiBase = (UIBase)Activator.CreateInstance(type, new object[] { gameObject });
-            uiBase.gameObject.transform.SetParent(canvas.transform);
-            uiBase.gameObject.transform.position = Vector3.zero;
-            uiBase.gameObject.transform.rotation = Quaternion.Euler(Vector3.zero);
-            uiBase.gameObject.transform.localScale = Vector3.one;
-            if (uiBase.gameObject.TryGetComponent<RectTransform>(out RectTransform rectTransform))
-            {
-                rectTransform.sizeDelta = Vector2.zero;
-                rectTransform.anchoredPosition = Vector2.zero;
+                uiList.Add(uiBase);
+                uiBase.Awake();
             }
 
             if (options.sceneType == SceneType.Overlap)
@@ -102,10 +84,8 @@ namespace ZGame.UI
                 uiList.ForEach(x => x.Disable());
             }
 
-            uiList.Add(uiBase);
-            uiBase.Awake();
-            uiBase.gameObject.transform.SetAsLastSibling();
             uiBase.Enable(args);
+            uiBase.gameObject.transform.SetAsLastSibling();
             return uiBase;
         }
 
@@ -140,6 +120,19 @@ namespace ZGame.UI
             {
                 uiList[i].Disable();
             }
+        }
+
+        public void Dispose()
+        {
+            foreach (var VARIABLE in uiList)
+            {
+                VARIABLE.Dispose();
+            }
+
+            uiList.Clear();
+            GameObject.DestroyImmediate(canvas.gameObject);
+            canvas = null;
+            GC.SuppressFinalize(this);
         }
     }
 }

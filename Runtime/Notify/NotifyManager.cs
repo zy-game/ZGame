@@ -9,30 +9,16 @@ namespace ZGame.Notify
     /// </summary>
     public sealed class NotifyManager : GameFrameworkModule
     {
-        private List<EventHandleGroup> _handlers = new();
-
-        public override void OnAwake()
-        {
-        }
+        private Dictionary<string, GameEventGroup> _handlers = new();
 
         /// <summary>
         /// 注册事件回调
         /// </summary>
+        /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        /// <typeparam name="T"></typeparam>
-        public void Subscribe<T>(Action<T> handle) where T : INotifyDatable
+        public void Subscribe(string eventName, Action<IGameEventArgs> handle)
         {
-            Subsceibe(new CommonNotifyHandle<T>(typeof(T).Name, handle));
-        }
-
-        /// <summary>
-        /// 注册事件回调
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="handle"></param>
-        public void Subscribe(Type type, Action<INotifyDatable> handle)
-        {
-            Subsceibe(new CommonNotifyHandle(type.Name, handle));
+            Subscribe(eventName, new GameEventHandle(handle));
         }
 
         /// <summary>
@@ -40,126 +26,115 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Subscribe(string eventName, Action<INotifyDatable> handle)
+        public void Subscribe<T>(Action<T> handle) where T : IGameEventArgs
         {
-            Subsceibe(new CommonNotifyHandle(eventName, handle));
+            Subscribe(typeof(T).Name, new GameEventHandle<T>(handle));
         }
 
         /// <summary>
         /// 注册事件回调
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public void Subscribe<T>() where T : INotifyHandler, new()
+        /// <param name="eventName"></param>
+        /// <param name="handle"></param>
+        public void Subscribe<T>(string eventName, Action<T> handle) where T : IGameEventArgs
         {
-            Subsceibe(new T());
+            Subscribe(eventName, new GameEventHandle<T>(handle));
         }
 
         /// <summary>
         /// 注册事件回调
         /// </summary>
         /// <param name="handle"></param>
-        public void Subsceibe(INotifyHandler handle)
+        /// <typeparam name="T"></typeparam>
+        public void Subscribe<T>(string eventName, IGameEventHandle<T> handle) where T : IGameEventArgs
         {
-            if (_handlers.Exists(x => x.Equals(handle)))
-            {
-                Debug.LogError("重复注册事件：" + handle.eventName);
-                return;
-            }
-
-            EventHandleGroup eventHandleGroup = _handlers.Find(x => x.eventName == handle.eventName);
-            if (eventHandleGroup is null)
-            {
-                _handlers.Add(eventHandleGroup = new EventHandleGroup(handle.eventName));
-            }
-
-            eventHandleGroup.Add(handle);
+            Subscribe(eventName, (IGameEventHandle)handle);
         }
 
         /// <summary>
-        /// 移除事件通知回调
+        /// 注册事件回调
         /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="handle"></param>
+        public void Subscribe(string eventName, IGameEventHandle handle)
+        {
+            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
+            {
+                _handlers.Add(eventName, group = new GameEventGroup());
+            }
+
+            group.Subscribe(handle);
+        }
+
+
+        /// <summary>
+        /// 取消事件回调
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="handle"></param>
+        public void Unsubscribe(string eventName, Action<IGameEventArgs> handle)
+        {
+            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
+            {
+                return;
+            }
+
+            group.Unsubscribe(handle);
+        }
+
+        /// <summary>
+        /// 取消事件回调
+        /// </summary>
+        /// <param name="eventName"></param>
         /// <param name="handle"></param>
         /// <typeparam name="T"></typeparam>
-        public void Unsubscribe<T>(Action<T> handle) where T : INotifyDatable
+        public void Unsubscribe<T>(Action<T> handle) where T : IGameEventArgs
         {
-            EventHandleGroup eventHandleGroup = _handlers.Find(x => x.Contains(handle));
-            if (eventHandleGroup is null)
+            if (_handlers.TryGetValue(typeof(T).Name, out GameEventGroup group) is false)
             {
-                Debug.LogError("没有找到已注册的事件：" + handle.Method.Name);
                 return;
             }
 
-            eventHandleGroup.Remove(handle);
+            group.Unsubscribe(handle);
         }
 
         /// <summary>
-        /// 移除事件通知回调
+        /// 取消事件回调
         /// </summary>
+        /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Unsubscribe(Action<INotifyDatable> handle)
-        {
-            EventHandleGroup eventHandleGroup = _handlers.Find(x => x.Contains(handle));
-            if (eventHandleGroup is null)
-            {
-                Debug.LogError("没有找到已注册的事件：" + handle.Method.Name);
-                return;
-            }
-
-            eventHandleGroup.Remove(handle);
-        }
-
-        /// <summary>
-        /// 移除事件通知回调
-        /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void Unsubscribe<T>() where T : INotifyHandler
+        public void Unsubscribe<T>(string eventName, Action<T> handle) where T : IGameEventArgs
         {
-            Unsubscribe(typeof(T));
-        }
-
-        /// <summary>
-        /// 移除事件通知回调
-        /// </summary>
-        /// <param name="type"></param>
-        public void Unsubscribe(Type type)
-        {
-            if (type.IsSubclassOf(typeof(INotifyHandler)) is false)
+            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
             {
-                Debug.LogError("类型不是IEventNotifyHandler的子类：" + type.Name);
                 return;
             }
 
-            EventHandleGroup eventHandleGroup = _handlers.Find(x => x.Contains(type));
-            if (eventHandleGroup is null)
-            {
-                Debug.LogError("没有找到已注册的事件：" + type.Name);
-                return;
-            }
-
-            eventHandleGroup.Remove(type);
+            group.Unsubscribe(handle);
         }
 
         /// <summary>
-        /// 移除事件通知回调
+        /// 取消事件回调
         /// </summary>
+        /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Unsubscribe(INotifyHandler handle)
+        public void Unsubscribe(string eventName, IGameEventHandle handle)
         {
-            EventHandleGroup eventHandleGroup = _handlers.Find(x => x.Contains(handle));
-            if (eventHandleGroup is null)
+            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
             {
-                Debug.LogError("没有找到已注册的事件：" + handle.eventName);
                 return;
             }
 
-            eventHandleGroup.Remove(handle);
+            group.Unsubscribe(handle);
         }
+
 
         /// <summary>
         /// 清理所有相同类型的事件
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void Clear<T>() where T : INotifyDatable
+        public void Clear<T>() where T : IGameEventArgs
         {
             Clear(typeof(T));
         }
@@ -170,7 +145,7 @@ namespace ZGame.Notify
         /// <param name="type"></param>
         public void Clear(Type type)
         {
-            if (type.IsSubclassOf(typeof(INotifyDatable)) is false)
+            if (type.IsSubclassOf(typeof(IGameEventArgs)) is false)
             {
                 Debug.LogError("类型不是INotifyArgs的子类：" + type.Name);
                 return;
@@ -185,38 +160,44 @@ namespace ZGame.Notify
         /// <param name="eventName"></param>
         public void Clear(string eventName)
         {
-            EventHandleGroup eventHandleGroup = _handlers.Find(x => x.eventName == eventName);
-            if (eventHandleGroup is null)
+            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
             {
-                Debug.LogError("没有找到事件列表：" + eventName);
                 return;
             }
 
-            eventHandleGroup.Dispose();
-            _handlers.Remove(eventHandleGroup);
+            group.Dispose();
+            _handlers.Remove(eventName);
         }
 
         /// <summary>
         /// 通知事件
         /// </summary>
-        /// <param name="datable"></param>
-        public void Notify(INotifyDatable datable)
+        /// <param name="eventArgs"></param>
+        public void Notify(IGameEventArgs eventArgs)
         {
-            string eventName = datable.GetType().Name;
-            EventHandleGroup eventHandleGroup = _handlers.Find(x => x.eventName == eventName);
-            if (eventHandleGroup is null)
+            Notify(eventArgs.GetType().Name, eventArgs);
+        }
+
+        public void Notify(string eventName, IGameEventArgs data)
+        {
+            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
             {
                 Debug.LogError("没有找到事件列表：" + eventName);
                 return;
             }
 
-            eventHandleGroup.Notify(datable);
+            group.Notify(data);
         }
 
         public override void Dispose()
         {
-            _handlers.ForEach(x => x.Dispose());
+            foreach (var VARIABLE in _handlers.Values)
+            {
+                VARIABLE.Dispose();
+            }
+
             _handlers.Clear();
+            GC.SuppressFinalize(this);
         }
     }
 }

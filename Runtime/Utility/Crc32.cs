@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace ZGame
 {
     public class Crc32
@@ -23,6 +25,16 @@ namespace ZGame
 
                 Crc32Table[i] = Crc;
             }
+        }
+
+        public static uint GetCRC32File(string filePath)
+        {
+            if (File.Exists(filePath) is false)
+            {
+                return 0;
+            }
+
+            return GetCRC32Str(File.ReadAllText(filePath));
         }
 
         public static uint GetCRC32Str(string sInputString, uint crc = 0)

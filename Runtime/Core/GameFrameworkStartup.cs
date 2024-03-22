@@ -9,7 +9,12 @@ using ZGame.UI;
 
 public class GameFrameworkStartup : MonoBehaviour
 {
-    private async UniTaskVoid Start()
+    private void Awake()
+    {
+        GameObject.DontDestroyOnLoad(this.gameObject);
+    }
+
+    private void Start()
     {
         GameFrameworkEntry.Initialized();
     }
@@ -27,5 +32,19 @@ public class GameFrameworkStartup : MonoBehaviour
     private void Update()
     {
         GameFrameworkEntry.Update();
+    }
+
+    private void LateUpdate()
+    {
+        GameFrameworkEntry.LateUpdate();
+    }
+
+    public static void Quit()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
     }
 }

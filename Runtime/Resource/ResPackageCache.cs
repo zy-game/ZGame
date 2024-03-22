@@ -23,11 +23,9 @@ namespace ZGame.Resource
 
         public override void OnAwake()
         {
-            BehaviourScriptable.instance.SetupUpdateEvent(OnUpdate);
         }
 
-
-        private void OnUpdate()
+        public override void Update()
         {
             if (Time.realtimeSinceStartup < nextCheckTime)
             {
@@ -38,6 +36,7 @@ namespace ZGame.Resource
             CheckCanUnloadPackage();
             UnloadPackage();
         }
+
 
         private void CheckCanUnloadPackage()
         {
@@ -150,7 +149,7 @@ namespace ZGame.Resource
                 bool updateState = await DownloadUpdateResourceList(manifests.ToArray());
                 if (updateState is false)
                 {
-                    UIMsgBox.Show("更新资源失败", GameFrameworkEntry.Quit);
+                    UIMsgBox.Show("更新资源失败", GameFrameworkStartup.Quit);
                     return false;
                 }
             }
@@ -248,7 +247,7 @@ namespace ZGame.Resource
             {
                 throw new ArgumentNullException("manifests");
             }
-    
+
             for (int i = 0; i < manifests.Length; i++)
             {
                 UILoading.SetProgress(i / (float)manifests.Length);

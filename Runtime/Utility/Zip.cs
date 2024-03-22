@@ -10,6 +10,12 @@ namespace ZGame
 {
     public class Zip
     {
+        public static void ComperssToPath(string fileName, string ext, params string[] args)
+        {
+            byte[] bytes = Zip.Compress(ext, args);
+            File.WriteAllBytes(GameFrameworkEntry.GetPlatformOutputPath(fileName), bytes);
+        }
+
         /// <summary>
         /// 压缩字节数组
         /// </summary>

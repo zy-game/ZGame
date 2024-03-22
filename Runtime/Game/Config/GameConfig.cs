@@ -20,13 +20,6 @@ namespace ZGame
         /// </summary>
         public CodeMode mode;
 
-
-
-        /// <summary>
-        /// 引用DLL
-        /// </summary>
-        public List<string> references;
-
         /// <summary>
         /// APP版本
         /// </summary>

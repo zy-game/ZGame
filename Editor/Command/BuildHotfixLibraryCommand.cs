@@ -4,10 +4,12 @@ using System.IO;
 using System.Linq;
 using HybridCLR.Editor;
 using HybridCLR.Editor.Commands;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.LinkerEditor;
 using ZGame.Editor.ResBuild.Config;
+using ZGame.Resource;
 using ZGame.Resource.Config;
 using Object = UnityEngine.Object;
 
@@ -33,64 +35,20 @@ namespace ZGame.Editor.Command
                 return;
             }
 
-            string fileName = Path.GetFileNameWithoutExtension(GameConfig.instance.path).ToLower();
+            PackageSeting packageSeting = BuilderConfig.instance.packages.Find(x => x.title == ResConfig.instance.defaultPackageName);
+            string aotFileName = $"{Path.GetFileNameWithoutExtension(GameConfig.instance.path).ToLower()}_aot.bytes";
+            string hotfixFileName = $"{Path.GetFileNameWithoutExtension(GameConfig.instance.path).ToLower()}_hotfix.bytes";
             string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
-            byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
-            File.WriteAllBytes(GameFrameworkEntry.GetPlatformOutputPath($"{fileName}_aot.bytes"), bytes);
-            bytes = Zip.Compress("*.dll", SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget));
-            File.WriteAllBytes(GameFrameworkEntry.GetPlatformOutputPath($"{fileName}_hotfix.bytes"), bytes);
-            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath($"{fileName}_aot.bytes"));
-            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath($"{fileName}_hotfix.bytes"));
-            // string hotfixPacageDir = GetHotfixPackagePath(seting);
-            // string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
-            //
-            //
-            // byte[] bytes = Zip.Compress("*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
-            // File.WriteAllBytes($"{hotfixPacageDir}/{GameConfig.instance.entryName.ToLower()}_aot.bytes", bytes);
-            //
-            // string hotfixDir = SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget);
-            // bytes = Zip.Compress("*.dll", hotfixDir);
-            // File.WriteAllBytes($"{hotfixPacageDir}/{GameConfig.instance.entryName.ToLower()}_hotfix.bytes", bytes);
-            // AssetDatabase.SaveAssets();
-            // AssetDatabase.Refresh();
-        }
+            Zip.ComperssToPath(aotFileName, "*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
+            Zip.ComperssToPath(hotfixFileName, "*.dll", SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget));
+            ResourcePackageListManifest packageListManifest = ResourcePackageListManifest.LoadOrCreate(packageSeting.title);
+            packageListManifest.CreateOrUpdatePackageManifest(aotFileName, false, Crc32.GetCRC32File(GameFrameworkEntry.GetPlatformOutputPath(aotFileName)), new string[] { aotFileName }, new string[0]);
+            packageListManifest.CreateOrUpdatePackageManifest(hotfixFileName, false, Crc32.GetCRC32File(GameFrameworkEntry.GetPlatformOutputPath(hotfixFileName)), new string[] { hotfixFileName }, new string[0]);
+            ResourcePackageListManifest.Save(packageListManifest);
 
-        private static string GetHotfixPackagePath(PackageSeting seting)
-        {
-            string hotfixPacageDir = string.Empty;
-            RulerData rulerData = seting.items.Find(x => x.folder.name == "Hotfix");
-            if (rulerData is not null)
-            {
-                return AssetDatabase.GetAssetPath(rulerData.folder);
-            }
-
-            rulerData = seting.items.Where(x => x.folder != null).FirstOrDefault();
-            if (rulerData is null || rulerData.folder == null)
-            {
-                hotfixPacageDir = EditorUtility.OpenFolderPanel("选择文件夹", Application.dataPath, "Hotfix");
-            }
-            else
-            {
-                string pacagePath = AssetDatabase.GetAssetPath(rulerData.folder);
-                string parent = pacagePath.Substring(0, pacagePath.LastIndexOf("/") + 1);
-                hotfixPacageDir = Path.Combine(parent, "Hotfix");
-            }
-
-            if (Directory.Exists(hotfixPacageDir) is false)
-            {
-                Directory.CreateDirectory(hotfixPacageDir);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-            }
-
-            seting.items.Add(new RulerData()
-            {
-                folder = AssetDatabase.LoadAssetAtPath<Object>(hotfixPacageDir),
-                buildType = BuildType.Once,
-                selector = new Selector(".bytes")
-            });
-            BuilderConfig.Save();
-            return hotfixPacageDir;
+            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(aotFileName));
+            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(hotfixFileName));
+            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath($"{packageSeting.title}.ini"));
         }
     }
 }

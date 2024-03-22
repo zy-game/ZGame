@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,7 +28,7 @@ namespace ZGame.UI
             this.onYes = (Action)(args[2]);
             this.onNo = (Action)(args[3]);
 
-            BehaviourScriptable.instance.SetupKeyDownEvent(KeyCode.Escape, OnBackup);
+            GameFrameworkEntry.Keyboard.SubscribeKeyDown(KeyCode.Escape, OnBackup);
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>(true);
             foreach (var VARIABLE in texts)
             {
@@ -67,15 +68,14 @@ namespace ZGame.UI
             }
         }
 
-        private void OnBackup(KeyEventData e)
+        private void OnBackup()
         {
-            e.Use();
             Switch(false);
         }
 
         private void Switch(bool state)
         {
-            BehaviourScriptable.instance.UnsetupKeyDownEvent(KeyCode.Escape, OnBackup);
+            GameFrameworkEntry.Keyboard.UnsubscribeKeyDown(KeyCode.Escape, OnBackup);
             GameFrameworkEntry.UI?.Inactive(this);
             switch (state)
             {
@@ -100,12 +100,26 @@ namespace ZGame.UI
 
         public static void Show(string content, Action onYes)
         {
-            Show(GameFrameworkEntry.Language.Query("提示"), content, onYes, null);
+            Show(content, onYes, null);
         }
 
         public static void Show(string content)
         {
-            Show(GameFrameworkEntry.Language.Query("提示"), content, null, null);
+            Show(content, null);
+        }
+
+        public static UniTask<bool> ShowAsync(string content)
+        {
+            return ShowAsync(GameFrameworkEntry.Language.Query("提示"), content);
+        }
+
+        public static UniTask<bool> ShowAsync(string title, string content, bool isNo = false)
+        {
+            UniTaskCompletionSource<bool> tcs = new UniTaskCompletionSource<bool>();
+            Action onYes = () => tcs.TrySetResult(true);
+            Action onNo = isNo ? () => tcs.TrySetResult(false) : null;
+            Show(title, content, onYes, onNo);
+            return tcs.Task;
         }
     }
 }

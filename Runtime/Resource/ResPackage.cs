@@ -35,7 +35,7 @@ namespace ZGame.Resource
         internal void SetDependencies(params ResPackage[] dependencies)
         {
             this.dependencies = dependencies;
-            Debug.Log("设置引用资源包：" + string.Join(",", dependencies.Select(x => x.name).ToArray()));
+            Debug.Log(name + " 设置引用资源包：" + string.Join(",", dependencies.Select(x => x.name).ToArray()));
         }
 
         internal void Required()

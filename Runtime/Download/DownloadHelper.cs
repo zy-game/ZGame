@@ -60,10 +60,8 @@ namespace ZGame.Download
                     return UnityWebRequestMultimedia.GetAudioClip(path, AudioType.OGGVORBIS);
                 case ".assetbundle":
                     return UnityWebRequestAssetBundle.GetAssetBundle(path);
-                case ".byte":
-                    return UnityWebRequest.Get(path);
                 default:
-                    throw new NotSupportedException("不支持的资源类型");
+                    return UnityWebRequest.Get(path);
             }
         }
     }
