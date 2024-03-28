@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace ZGame.Networking
 {
-    public class TcpChannel<T> : IChannel where T : ISerialize
+    public class TcpChannel<T> : IChannel where T : ISerialize, new()
     {
         private Socket _socket;
         private bool isSendWork = false;
@@ -33,7 +33,7 @@ namespace ZGame.Networking
                 return;
             }
 
-            serialize = Activator.CreateInstance<T>();
+            serialize = GameFrameworkFactory.Spawner<T>();
             Task.Factory.StartNew(OnStartReceiver);
         }
 

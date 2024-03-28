@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using ZGame.VFS;
 
 namespace ZGame.Editor
 {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 namespace ZGame
 {
@@ -25,6 +26,28 @@ namespace ZGame
             {
                 _destroy?.Invoke();
             }
+        }
+
+        public static BoxCollider AttachBoxCollider(this GameObject gameObject, Vector3 size, Vector3 center, bool isTrigger)
+        {
+            BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
+            boxCollider.size = size;
+            boxCollider.center = center;
+            boxCollider.isTrigger = isTrigger;
+            return boxCollider;
+        }
+
+        public static bool IsPointerOverGameObject()
+        {
+#if UNITY_EDITOR
+            return EventSystem.current.IsPointerOverGameObject();
+#else
+            if (Input.touchCount == 0)
+            {
+                return EventSystem.current.IsPointerOverGameObject();
+            }
+            return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+#endif
         }
 
         public static void Active(params GameObject[] gameObjects)

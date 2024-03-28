@@ -29,8 +29,8 @@ namespace ZGame
         private static T Load()
         {
             T result = default;
-            ResourceReference resourceReference = typeof(T).GetCustomAttribute<ResourceReference>();
-            if (resourceReference is null)
+            RefPath refPath = typeof(T).GetCustomAttribute<RefPath>();
+            if (refPath is null)
             {
                 _path = "Assets/Resources/" + typeof(T).Name + ".asset";
                 result = Resources.Load<T>(typeof(T).Name);
@@ -38,8 +38,8 @@ namespace ZGame
             else
             {
 #if UNITY_EDITOR
-                _path = resourceReference.path;
-                result = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(resourceReference.path);
+                _path = refPath.path;
+                result = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(refPath.path);
 #endif
             }
 

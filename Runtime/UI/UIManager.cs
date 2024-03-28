@@ -16,7 +16,7 @@ namespace ZGame.UI
         private List<UIRoot> rootList;
         private GameObject eventSystem;
 
-        public override void OnAwake()
+        public override void OnAwake(params object[] args)
         {
             eventSystem = new GameObject("EventSystem");
             GameObject.DontDestroyOnLoad(eventSystem);
@@ -47,10 +47,15 @@ namespace ZGame.UI
         /// <param name="type"></param>
         public UIBase Active(Type type, params object[] args)
         {
-            if (type is null || type.IsInterface || type.IsAbstract || type.IsSubclassOf(typeof(UIBase)) is false)
+            if (type is null || type.IsInterface || type.IsAbstract)
             {
                 Debug.LogError("创建UI失败");
                 return default;
+            }
+
+            if (typeof(UIBase).IsAssignableFrom(type) is false)
+            {
+                throw new NotImplementedException(nameof(type));
             }
 
             UIOptions options = type.GetCustomAttribute<UIOptions>();
@@ -110,6 +115,11 @@ namespace ZGame.UI
                 return;
             }
 
+            if (typeof(UIBase).IsAssignableFrom(type) is false)
+            {
+                throw new NotImplementedException(nameof(type));
+            }
+
             UIRoot root = rootList.Find(x => x.Contains(type));
             if (root is null)
             {
@@ -120,6 +130,27 @@ namespace ZGame.UI
             root.Inactive(type);
         }
 
+        public T GetWindow<T>() where T : UIBase
+        {
+            return (T)GetWindow(typeof(T));
+        }
+
+        public UIBase GetWindow(Type type)
+        {
+            if (typeof(UIBase).IsAssignableFrom(type) is false)
+            {
+                throw new NotImplementedException(nameof(type));
+            }
+
+            UIRoot root = rootList.Find(x => x.Contains(type));
+            if (root is null)
+            {
+                Debug.LogError("没有找到父节点：" + type.Name);
+                return default;
+            }
+
+            return root.GetWindow(type);
+        }
 
         /// <summary>
         /// 清理所有UI
@@ -128,13 +159,13 @@ namespace ZGame.UI
         {
             for (int i = 0; i < rootList.Count; i++)
             {
-                rootList[i].Dispose();
+                GameFrameworkFactory.Release(rootList[i]);
             }
 
             rootList.Clear();
         }
 
-        public override void Dispose()
+        public override void Release()
         {
             Clear();
             GC.SuppressFinalize(this);

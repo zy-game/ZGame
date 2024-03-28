@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 
 namespace ZGame.Editor.ResBuild.Config
 {
-    [ResourceReference("Assets/Settings/BuilderConfig.asset")]
+    [RefPath("Assets/Settings/BuilderConfig.asset")]
     public class BuilderConfig : BaseConfig<BuilderConfig>
     {
         public BuildTarget target;

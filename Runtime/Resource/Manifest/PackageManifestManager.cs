@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 using ZGame.Config;
-using ZGame.FileSystem;
+using ZGame.VFS;
 using ZGame.Game;
 using ZGame.Networking;
 using ZGame.Resource.Config;
@@ -22,11 +22,11 @@ namespace ZGame.Resource
     {
         private List<ResourcePackageListManifest> _packageListManifests = new List<ResourcePackageListManifest>();
 
-        public void OnAwake()
+        public override void OnAwake(params object[] args)
         {
         }
 
-        public void Dispose()
+        public override void Release()
         {
             _packageListManifests.Clear();
         }
@@ -56,7 +56,7 @@ namespace ZGame.Resource
             }
             else
             {
-                resourcePackageListManifest = await GameFrameworkEntry.Web.GetData<ResourcePackageListManifest>(iniFilePath);
+                resourcePackageListManifest = await GameFrameworkEntry.Network.GetData<ResourcePackageListManifest>(iniFilePath);
             }
 
 
@@ -146,13 +146,6 @@ namespace ZGame.Resource
         public List<ResourcePackageManifest> CheckNeedUpdatePackageList(string packageName)
         {
             List<ResourcePackageManifest> needUpdatePackages = new List<ResourcePackageManifest>();
-#if UNITY_EDITOR
-            if (ResConfig.instance.resMode == ResourceMode.Editor)
-            {
-                return needUpdatePackages;
-            }
-#endif
-
             ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is null)
             {
@@ -189,13 +182,6 @@ namespace ZGame.Resource
         public List<ResourcePackageManifest> GetResourcePackageAndDependencyList(string packageName)
         {
             List<ResourcePackageManifest> result = new List<ResourcePackageManifest>();
-#if UNITY_EDITOR
-            if (ResConfig.instance.resMode == ResourceMode.Editor)
-            {
-                return result;
-            }
-#endif
-
             ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is null)
             {

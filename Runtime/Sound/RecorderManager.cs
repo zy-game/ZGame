@@ -2,6 +2,13 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using Microphone =
+#if !UNITY_EDITOR && UNITY_WEBGL
+    UnityEngine.MicrophoneWebGl;
+#else
+    UnityEngine.Microphone;
+#endif
+
 
 namespace ZGame.Sound
 {
@@ -70,13 +77,15 @@ namespace ZGame.Sound
             get { return _isRecording; }
         }
 
-        public override void OnAwake()
+        public override void OnAwake(params object[] args)
         {
             _rate = 16000;
             _limit_time = 60;
             m_BufferSize = m_BufferSeconds * _rate;
             m_FloatBuffer = new float[m_BufferSize * 1];
+
             _divName = Microphone.devices.FirstOrDefault();
+
             m_ByteBuffer = new byte[m_BufferSize * 1 * k_SizeofInt16];
         }
 
@@ -126,7 +135,6 @@ namespace ZGame.Sound
         protected int GetAudioData()
         {
             int nSize = 0;
-#if !UNITY_WEBGL
             int nPosition = Microphone.GetPosition(_divName);
             if (nPosition < _position)
                 nPosition = m_BufferSize;
@@ -136,7 +144,6 @@ namespace ZGame.Sound
             if (!_recordClip.GetData(m_FloatBuffer, _position))
                 return -1;
             _position = nPosition % m_BufferSize;
-#endif
             return nSize;
         }
 
@@ -226,7 +233,7 @@ namespace ZGame.Sound
             Debug.Log("End Recording:" + _divName + " :" + Microphone.IsRecording(_divName) + " isCancel:" + isCancel);
         }
 
-        public override void Dispose()
+        public override void Release()
         {
             StopRecordingSound(true);
         }

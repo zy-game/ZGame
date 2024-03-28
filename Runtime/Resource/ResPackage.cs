@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace ZGame.Resource
 {
-    public class ResPackage : IDisposable
+    public class ResPackage : IGameCacheObject
     {
         public string name { get; }
         public AssetBundle bundle { get; }
@@ -21,7 +21,6 @@ namespace ZGame.Resource
         {
             this.name = title;
             this.isDefault = true;
-            RefreshCheckTime();
         }
 
         internal ResPackage(AssetBundle bundle)
@@ -29,7 +28,6 @@ namespace ZGame.Resource
             this.bundle = bundle;
             this.isDefault = false;
             this.name = bundle.name;
-            RefreshCheckTime();
         }
 
         internal void SetDependencies(params ResPackage[] dependencies)
@@ -38,10 +36,9 @@ namespace ZGame.Resource
             Debug.Log(name + " 设置引用资源包：" + string.Join(",", dependencies.Select(x => x.name).ToArray()));
         }
 
-        internal void Required()
+        public void Ref()
         {
             refCount++;
-            RefreshCheckTime();
             if (dependencies is null || dependencies.Length == 0)
             {
                 return;
@@ -49,14 +46,13 @@ namespace ZGame.Resource
 
             foreach (var VARIABLE in dependencies)
             {
-                VARIABLE.Required();
+                VARIABLE.Ref();
             }
         }
 
-        internal void Unrequire()
+        public void Unref()
         {
             refCount--;
-            RefreshCheckTime();
             if (dependencies is null || dependencies.Length == 0)
             {
                 return;
@@ -64,29 +60,12 @@ namespace ZGame.Resource
 
             foreach (var VARIABLE in dependencies)
             {
-                VARIABLE.Unrequire();
+                VARIABLE.Unref();
             }
         }
 
-        internal bool CanUnloadPackage()
+        public void Release()
         {
-            if (isDefault || refCount > 0 || Time.realtimeSinceStartup < nextCheckTime)
-            {
-                return false;
-            }
-
-            RefreshCheckTime();
-            return true;
-        }
-
-        private void RefreshCheckTime()
-        {
-            nextCheckTime = Time.realtimeSinceStartup + ResConfig.instance.timeout;
-        }
-
-        public void Dispose()
-        {
-            GameFrameworkEntry.Resource.ResObjectCache.RemovePackage(this);
             bundle?.Unload(true);
             Resources.UnloadUnusedAssets();
             Debug.Log("释放资源包:" + name);

@@ -7,21 +7,21 @@ namespace ZGame.Config
 {
     public class ConfigManager : GameFrameworkModule
     {
-        private Dictionary<Type, IDisposable> cfgDict;
+        private Dictionary<Type, ConfigHandler> cfgDict;
 
-        public override void OnAwake()
+        public override void OnAwake(params object[] args)
         {
-            cfgDict = new Dictionary<Type, IDisposable>();
+            cfgDict = new Dictionary<Type, ConfigHandler>();
         }
 
-        private CfgMap<T> GetMap<T>() where T : IDatable
+        private ConfigHandler GetMap<T>() where T : IConfigDatable
         {
-            if (cfgDict.TryGetValue(typeof(T), out IDisposable cfg) is false)
+            if (cfgDict.TryGetValue(typeof(T), out ConfigHandler cfg) is false)
             {
-                cfgDict.Add(typeof(T), cfg = new CfgMap<T>());
+                cfgDict.Add(typeof(T), cfg = new ConfigHandler());
             }
 
-            return (CfgMap<T>)cfg;
+            return cfg;
         }
 
         /// <summary>
@@ -29,9 +29,9 @@ namespace ZGame.Config
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public int Count<T>() where T : IDatable
+        public int Count<T>() where T : IConfigDatable
         {
-            return GetMap<T>().Count();
+            return GetMap<T>().Count<T>();
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace ZGame.Config
         /// <param name="value"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public bool Contains<T>(T value) where T : IDatable
+        public bool Contains<T>(T value) where T : IConfigDatable
         {
             return GetMap<T>().Contains(value);
         }
@@ -51,9 +51,9 @@ namespace ZGame.Config
         /// <param name="value"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T GetConfig<T>(object value) where T : IDatable
+        public T GetConfig<T>(object value) where T : IConfigDatable
         {
-            return GetMap<T>().GetConfig(value);
+            return GetMap<T>().GetConfig<T>(value);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace ZGame.Config
         /// <param name="match"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T GetConfig<T>(Predicate<T> match) where T : IDatable
+        public T GetConfig<T>(Predicate<T> match) where T : IConfigDatable
         {
             return GetMap<T>().GetConfig(match);
         }
@@ -72,14 +72,14 @@ namespace ZGame.Config
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T[] All<T>() where T : IDatable
+        public T[] All<T>() where T : IConfigDatable
         {
-            return GetMap<T>().All();
+            return GetMap<T>().All<T>();
         }
 
-        public T[] GetRange<T>(int start, int end) where T : IDatable
+        public T[] GetRange<T>(int start, int end) where T : IConfigDatable
         {
-            return GetMap<T>().GetRange(start, end);
+            return GetMap<T>().GetRange<T>(start, end);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace ZGame.Config
         /// <param name="match"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T[] Where<T>(Predicate<T> match) where T : IDatable
+        public T[] Where<T>(Predicate<T> match) where T : IConfigDatable
         {
             return GetMap<T>().Where(match);
         }
@@ -99,20 +99,19 @@ namespace ZGame.Config
         /// <param name="index"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T GetConfigWithIndex<T>(int index) where T : IDatable
+        public T GetConfigWithIndex<T>(int index) where T : IConfigDatable
         {
-            return GetMap<T>().GetRange(index, 1).FirstOrDefault();
+            return GetMap<T>().GetRange<T>(index, 1).FirstOrDefault();
         }
 
-        public override void Dispose()
+        public override void Release()
         {
             foreach (var VARIABLE in cfgDict.Values)
             {
-                VARIABLE.Dispose();
+                GameFrameworkFactory.Release(VARIABLE);
             }
 
             cfgDict.Clear();
-            GC.SuppressFinalize(this);
         }
     }
 }

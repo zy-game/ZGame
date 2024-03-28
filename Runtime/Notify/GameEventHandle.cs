@@ -2,46 +2,18 @@ using System;
 
 namespace ZGame.Notify
 {
-    class GameEventHandle : IGameEventHandle
-    {
-        private Action<IGameEventArgs> _handle;
-
-        public GameEventHandle(Action<IGameEventArgs> handle)
-        {
-            _handle = handle;
-        }
-
-        public void Notify(IGameEventArgs args)
-        {
-            this._handle(args);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is Action<IGameEventArgs> eventHandle)
-            {
-                return _handle.Equals(eventHandle);
-            }
-
-            return base.Equals(obj);
-        }
-
-        public virtual void Dispose()
-        {
-            _handle = null;
-        }
-    }
-
     class GameEventHandle<T> : IGameEventHandle<T> where T : IGameEventArgs
     {
         private Action<T> _handle;
 
-        public GameEventHandle(Action<T> handle)
+        public static GameEventHandle<T2> Create<T2>(Action<T2> action) where T2 : IGameEventArgs
         {
-            _handle = handle;
+            GameEventHandle<T2> handle = GameFrameworkFactory.Spawner<GameEventHandle<T2>>();
+            handle._handle = action;
+            return handle;
         }
 
-        public void Dispose()
+        public void Release()
         {
             _handle = null;
         }

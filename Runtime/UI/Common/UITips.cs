@@ -6,14 +6,13 @@ using UnityEngine;
 
 namespace ZGame.UI
 {
-    [ResourceReference("Resources/Tips")]
+    /// <summary>
+    /// 消息提示框
+    /// </summary>
+    [RefPath("Resources/Tips")]
     [UIOptions(UILayer.Notification, SceneType.Addition, CacheType.Permanent)]
     public sealed class UITips : UIBase
     {
-        public UITips(GameObject gameObject) : base(gameObject)
-        {
-        }
-
         public override async void Enable(params object[] args)
         {
             base.Enable(args);
@@ -40,17 +39,34 @@ namespace ZGame.UI
             }
         }
 
+        /// <summary>
+        /// 显示消息提示框
+        /// </summary>
+        /// <param name="content">消息内容</param>
+        /// <param name="timeout">提示框显示时长</param>
         public static void Show(string content, float timeout = 3)
         {
             Show(content, timeout, null);
         }
 
+        /// <summary>
+        /// 显示消息提示框
+        /// </summary>
+        /// <param name="content">消息内容</param>
+        /// <param name="timeout">提示框显示时长</param>
+        /// <param name="onFinish">提示框关闭回调</param>
         public static void Show(string content, float timeout, Action onFinish)
         {
             Debug.Log("tips:" + content);
             GameFrameworkEntry.UI.Active<UITips>(new object[] { content, timeout, onFinish });
         }
 
+        /// <summary>
+        /// 显示消息提示框
+        /// </summary>
+        /// <param name="content">消息内容</param>
+        /// <param name="timeout">提示框显示时长</param>
+        /// <returns></returns>
         public static UniTask ShowAsync(string content, float timeout = 3)
         {
             UniTaskCompletionSource tcs = new UniTaskCompletionSource();

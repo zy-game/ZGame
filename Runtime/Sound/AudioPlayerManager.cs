@@ -25,8 +25,9 @@ namespace ZGame.Sound
         private List<AudioSourceHandler> _handles = new List<AudioSourceHandler>();
 
 
-        public override void OnAwake()
+        public override void OnAwake(params object[] args)
         {
+            new GameObject("AUDIO PLAYER MANAGER").AddComponent<AudioListener>();
         }
 
 
@@ -83,7 +84,7 @@ namespace ZGame.Sound
         /// <param name="clipName"></param>
         /// <param name="isLoop"></param>
         /// <param name="playCallback"></param>
-        public UniTask PlaySoundAsync(string clipName, bool isLoop = false, Action<PlayState> playCallback = null)
+        public UniTask PlaySoundAsync(string clipName, bool isLoop = false)
         {
             UniTaskCompletionSource tcs = new UniTaskCompletionSource();
             PlaySound(clipName, isLoop, state =>
@@ -105,7 +106,7 @@ namespace ZGame.Sound
         /// <param name="clip"></param>
         /// <param name="isLoop"></param>
         /// <param name="playCallback"></param>
-        public UniTask PlaySoundAsync(AudioClip clip, bool isLoop = false, Action<PlayState> playCallback = null)
+        public UniTask PlaySoundAsync(AudioClip clip, bool isLoop = false)
         {
             UniTaskCompletionSource tcs = new UniTaskCompletionSource();
             PlaySound(clip, isLoop, state =>
@@ -211,18 +212,17 @@ namespace ZGame.Sound
             }
         }
 
-        public override void Dispose()
+        public override void Release()
         {
             StopAll();
             Clear();
-            GC.SuppressFinalize(this);
         }
 
         public void Clear()
         {
             foreach (var handle in _handles)
             {
-                handle.Dispose();
+                GameFrameworkFactory.Release(handle);
             }
 
             _handles.Clear();

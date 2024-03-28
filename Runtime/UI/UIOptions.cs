@@ -12,6 +12,8 @@ namespace ZGame.UI
         public SceneType sceneType;
         public CacheType cacheType;
 
+        public static UIOptions Default => new UIOptions(UILayer.Middle, SceneType.Overlap, CacheType.Permanent);
+
         public UIOptions(int layer, SceneType sceneType, CacheType cacheType)
         {
             this.layer = layer;

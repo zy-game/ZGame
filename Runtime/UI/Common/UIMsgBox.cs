@@ -9,16 +9,16 @@ using ZGame.Config;
 
 namespace ZGame.UI
 {
-    [ResourceReference("Resources/MsgBox")]
+    /// <summary>
+    /// 消息弹窗
+    /// </summary>
+    [RefPath("Resources/MsgBox")]
     [UIOptions(UILayer.Notification, SceneType.Addition, CacheType.Permanent)]
     public class UIMsgBox : UIBase
     {
         private Action onYes;
         private Action onNo;
 
-        public UIMsgBox(GameObject gameObject) : base(gameObject)
-        {
-        }
 
         public override void Enable(params object[] args)
         {
@@ -88,31 +88,65 @@ namespace ZGame.UI
             }
         }
 
+        /// <summary>
+        /// 异步显示消息弹窗
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="content">弹窗类容</param>
+        /// <param name="onYes">点击确定按钮回调</param>
+        /// <param name="onNo">点击取消按钮回调</param>
         public static void Show(string title, string content, Action onYes, Action onNo)
         {
             GameFrameworkEntry.UI.Active<UIMsgBox>(new object[] { title, content, onYes, onNo });
         }
 
+        /// <summary>
+        /// 异步显示消息弹窗
+        /// </summary>
+        /// <param name="content">弹窗类容</param>
+        /// <param name="onYes">点击确定按钮回调</param>
+        /// <param name="onNo">点击取消按钮回调</param>
         public static void Show(string content, Action onYes, Action onNo)
         {
             Show(GameFrameworkEntry.Language.Query("提示"), content, onYes, onNo);
         }
 
+        /// <summary>
+        /// 异步显示消息弹窗
+        /// </summary>
+        /// <param name="content">弹窗类容</param>
+        /// <param name="onYes">点击确定按钮回调</param>
         public static void Show(string content, Action onYes)
         {
             Show(content, onYes, null);
         }
 
+        /// <summary>
+        /// 异步显示消息弹窗
+        /// </summary>
+        /// <param name="content">弹窗类容</param>
         public static void Show(string content)
         {
             Show(content, null);
         }
 
-        public static UniTask<bool> ShowAsync(string content)
+        /// <summary>
+        /// 异步显示消息弹窗
+        /// </summary>
+        /// <param name="content">弹窗类容</param>
+        /// <returns>点击的是确定还是取消按钮</returns>
+        public static UniTask<bool> ShowAsync(string content, bool isNo = false)
         {
-            return ShowAsync(GameFrameworkEntry.Language.Query("提示"), content);
+            return ShowAsync(GameFrameworkEntry.Language.Query("提示"), content, isNo);
         }
 
+        /// <summary>
+        /// 异步显示消息弹窗
+        /// </summary>
+        /// <param name="title">弹窗标题</param>
+        /// <param name="content">弹窗类容</param>
+        /// <param name="isNo">是否显示取消按钮</param>
+        /// <returns>点击的是确定还是取消按钮</returns>
         public static UniTask<bool> ShowAsync(string title, string content, bool isNo = false)
         {
             UniTaskCompletionSource<bool> tcs = new UniTaskCompletionSource<bool>();

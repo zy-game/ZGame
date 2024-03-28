@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
+using Cinemachine;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -20,6 +22,7 @@ namespace ZGame.Game
         private Skybox skybox;
         private Gradient sunshineGradient;
         private List<Tuple<int, Camera>> subCameras = new();
+        
         private UniversalAdditionalCameraData universalAdditionalCameraData;
 
 
@@ -79,6 +82,7 @@ namespace ZGame.Game
             universalAdditionalCameraData.volumeLayerMask = 0;
             main.allowMSAA = false;
             skybox = main.gameObject.AddComponent<Skybox>();
+
         }
 
         private void OnFixedUpdate()
@@ -253,6 +257,21 @@ namespace ZGame.Game
             }
         }
 
+        public Camera GetSubCamera(int index)
+        {
+            return subCameras[index].Item2;
+        }
+
+        public Camera GetSubCamera(string name)
+        {
+            Tuple<int, Camera> item = subCameras.FirstOrDefault(x => x.Item2.name == name);
+            if (item is null || item.Item2 is null)
+            {
+                return default;
+            }
+
+            return item.Item2;
+        }
 
         public void Dispose()
         {

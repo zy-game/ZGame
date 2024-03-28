@@ -9,30 +9,6 @@ namespace ZGame.Game
     {
         private List<GameEntity> _entities = new();
 
-        public override void Update()
-        {
-            for (int i = _entities.Count - 1; i >= 0; i--)
-            {
-                _entities[i].OnUpdate();
-            }
-        }
-
-        public override void FixedUpdate()
-        {
-            for (int i = _entities.Count - 1; i >= 0; i--)
-            {
-                _entities[i].OnFixedUpdate();
-            }
-        }
-
-        public override void LateUpdate()
-        {
-            for (int i = _entities.Count - 1; i >= 0; i--)
-            {
-                _entities[i].OnLateUpdate();
-            }
-        }
-
         public GameEntity CreateEntity(string tag = "")
         {
             GameEntity entity = new GameEntity();
@@ -43,7 +19,6 @@ namespace ZGame.Game
 
         public GameEntity[] FindByTag(string tag)
         {
-            Debug.Log(string.Join(",", _entities.Select(x => x.tag)));
             return _entities.FindAll(x => x.tag == tag).ToArray();
         }
 
@@ -62,23 +37,22 @@ namespace ZGame.Game
             }
 
             _entities.Remove(gameEntity);
-            gameEntity.Dispose();
+            GameFrameworkFactory.Release(gameEntity);
         }
 
         public void ClearEntitys()
         {
             for (var i = 0; i < _entities.Count; i++)
             {
-                _entities[i].Dispose();
+                GameFrameworkFactory.Release(_entities[i]);
             }
 
             _entities.Clear();
         }
 
-        public override void Dispose()
+        public override void Release()
         {
             ClearEntitys();
-            GC.SuppressFinalize(this);
         }
     }
 }

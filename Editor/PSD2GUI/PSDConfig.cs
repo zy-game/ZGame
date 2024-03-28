@@ -12,7 +12,7 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.PSD2GUI
 {
-    [ResourceReference("Assets/Settings/PSDConfig.asset")]
+    [RefPath("Assets/Settings/PSDConfig.asset")]
     public sealed class PSDConfig : BaseConfig<PSDConfig>
     {
         public List<PSDOptions> options;

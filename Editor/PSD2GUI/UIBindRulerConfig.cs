@@ -69,7 +69,7 @@ namespace ZGame.Editor.PSD2GUI
         public bool isDefault;
     }
 
-    [ResourceReference("Assets/Settings/UIBindRuler.asset")]
+    [RefPath("Assets/Settings/UIBindRuler.asset")]
     public class UIBindRulerConfig : BaseConfig<UIBindRulerConfig>
     {
         public List<UIBindRulerItem> rules;

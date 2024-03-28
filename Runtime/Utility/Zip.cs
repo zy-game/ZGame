@@ -8,11 +8,14 @@ using UnityEngine;
 
 namespace ZGame
 {
+    /// <summary>
+    /// 压缩器
+    /// </summary>
     public class Zip
     {
-        public static void ComperssToPath(string fileName, string ext, params string[] args)
+        public static void CompressToPath(string fileName, string ext, params string[] args)
         {
-            byte[] bytes = Zip.Compress(ext, args);
+            byte[] bytes = Compress(ext, args);
             File.WriteAllBytes(GameFrameworkEntry.GetPlatformOutputPath(fileName), bytes);
         }
 

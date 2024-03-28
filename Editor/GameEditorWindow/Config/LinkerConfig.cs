@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace ZGame.Editor.LinkerEditor
 {
-    [ResourceReference("Assets/Settings/LinkerConfig.asset")]
+    [RefPath("Assets/Settings/LinkerConfig.asset")]
     public class LinkerConfig : BaseConfig<LinkerConfig>
     {
         public List<Linker> assemblies;

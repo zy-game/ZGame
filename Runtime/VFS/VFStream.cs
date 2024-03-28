@@ -4,7 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace ZGame.FileSystem
+namespace ZGame.VFS
 {
     /// <summary>
     /// 文件流
@@ -37,7 +37,7 @@ namespace ZGame.FileSystem
             fileStream.Dispose();
         }
 
-        public ResultStatus Write(int scrOffset, byte[] bytes, int offset, int lenght)
+        public Status Write(int scrOffset, byte[] bytes, int offset, int lenght)
         {
             try
             {
@@ -45,16 +45,16 @@ namespace ZGame.FileSystem
                 fileStream.Write(bytes, offset, lenght);
                 time = Time.realtimeSinceStartup + VFSConfig.instance.timeout;
                 fileStream.Flush();
-                return ResultStatus.Success;
+                return Status.Success;
             }
             catch (Exception e)
             {
                 GameFrameworkEntry.Logger.LogError(e);
-                return ResultStatus.Fail;
+                return Status.Fail;
             }
         }
 
-        public async UniTask<ResultStatus> WriteAsync(int scrOffset, byte[] bytes, int offset, int lenght, CancellationToken cancellationToken)
+        public async UniTask<Status> WriteAsync(int scrOffset, byte[] bytes, int offset, int lenght, CancellationToken cancellationToken)
         {
             try
             {
@@ -62,12 +62,12 @@ namespace ZGame.FileSystem
                 await fileStream.WriteAsync(bytes, offset, lenght, cancellationToken);
                 time = Time.realtimeSinceStartup + VFSConfig.instance.timeout;
                 await fileStream.FlushAsync();
-                return ResultStatus.Success;
+                return Status.Success;
             }
             catch (Exception e)
             {
                 GameFrameworkEntry.Logger.LogError(e);
-                return ResultStatus.Fail;
+                return Status.Fail;
             }
         }
 
@@ -84,13 +84,13 @@ namespace ZGame.FileSystem
             time = Time.realtimeSinceStartup + VFSConfig.instance.timeout;
         }
 
-        public async UniTask<ResultStatus> ReadAsync(int scrOffset, byte[] bytes, int offset, int lenght, CancellationToken cancellationToken)
+        public async UniTask<Status> ReadAsync(int scrOffset, byte[] bytes, int offset, int lenght, CancellationToken cancellationToken)
         {
             // WorkApi.Logger.Log("chunk offset:" + scrOffset + " scr offset:" + offset + " chunk size:" + lenght);
             if (bytes.Length < offset + lenght)
             {
                 Debug.LogError(new IndexOutOfRangeException());
-                return ResultStatus.Fail;
+                return Status.Fail;
             }
 
             try
@@ -98,12 +98,12 @@ namespace ZGame.FileSystem
                 fileStream.Seek(scrOffset, SeekOrigin.Begin);
                 await fileStream.ReadAsync(bytes, offset, lenght, cancellationToken);
                 time = Time.realtimeSinceStartup + VFSConfig.instance.timeout;
-                return ResultStatus.Success;
+                return Status.Success;
             }
             catch (Exception e)
             {
                 GameFrameworkEntry.Logger.LogError(e);
-                return ResultStatus.Fail;
+                return Status.Fail;
             }
         }
     }

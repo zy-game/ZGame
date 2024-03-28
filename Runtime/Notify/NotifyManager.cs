@@ -18,7 +18,7 @@ namespace ZGame.Notify
         /// <param name="handle"></param>
         public void Subscribe(string eventName, Action<IGameEventArgs> handle)
         {
-            Subscribe(eventName, new GameEventHandle(handle));
+            Subscribe(eventName, GameEventHandle<IGameEventArgs>.Create<IGameEventArgs>(handle));
         }
 
         /// <summary>
@@ -26,9 +26,9 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Subscribe<T>(Action<T> handle) where T : IGameEventArgs
+        public void Subscribe<T>(Action<T> handle) where T : IGameEventArgs, new()
         {
-            Subscribe(typeof(T).Name, new GameEventHandle<T>(handle));
+            Subscribe(typeof(T).Name, GameEventHandle<T>.Create(handle));
         }
 
         /// <summary>
@@ -36,9 +36,9 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Subscribe<T>(string eventName, Action<T> handle) where T : IGameEventArgs
+        public void Subscribe<T>(string eventName, Action<T> handle) where T : IGameEventArgs, new()
         {
-            Subscribe(eventName, new GameEventHandle<T>(handle));
+            Subscribe(eventName, GameEventHandle<T>.Create(handle));
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="handle"></param>
         /// <typeparam name="T"></typeparam>
-        public void Subscribe<T>(string eventName, IGameEventHandle<T> handle) where T : IGameEventArgs
+        public void Subscribe<T>(string eventName, IGameEventHandle<T> handle) where T : IGameEventArgs, new()
         {
             Subscribe(eventName, (IGameEventHandle)handle);
         }
@@ -60,7 +60,7 @@ namespace ZGame.Notify
         {
             if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
             {
-                _handlers.Add(eventName, group = new GameEventGroup());
+                _handlers.Add(eventName, group = GameFrameworkFactory.Spawner<GameEventGroup>());
             }
 
             group.Subscribe(handle);
@@ -165,7 +165,7 @@ namespace ZGame.Notify
                 return;
             }
 
-            group.Dispose();
+            GameFrameworkFactory.Release(group);
             _handlers.Remove(eventName);
         }
 
@@ -189,15 +189,14 @@ namespace ZGame.Notify
             group.Notify(data);
         }
 
-        public override void Dispose()
+        public override void Release()
         {
             foreach (var VARIABLE in _handlers.Values)
             {
-                VARIABLE.Dispose();
+                GameFrameworkFactory.Release(VARIABLE);
             }
 
             _handlers.Clear();
-            GC.SuppressFinalize(this);
         }
     }
 }

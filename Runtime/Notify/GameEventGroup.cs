@@ -6,7 +6,7 @@ namespace ZGame.Notify
     /// <summary>
     /// 游戏事件分组
     /// </summary>
-    class GameEventGroup : IDisposable
+    class GameEventGroup : IReferenceObject
     {
         private List<IGameEventHandle> _handles = new();
 
@@ -41,11 +41,10 @@ namespace ZGame.Notify
             _handles.RemoveAll(x => x.Equals(handle));
         }
 
-        public void Dispose()
+        public void Release()
         {
             _handles.ForEach(x => x.Dispose());
             _handles.Clear();
-            GC.SuppressFinalize(this);
         }
     }
 }

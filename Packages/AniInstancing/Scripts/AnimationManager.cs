@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
 THIS FILE IS PART OF Animation Instancing PROJECT
 AnimationInstancing.cs - The core part of the Animation Instancing library
 
@@ -16,17 +15,19 @@ namespace AnimationInstancing
     public class AnimationManager : Singleton<AnimationManager>
     {
         // A request to create animation info, because we use async method
-        struct CreateAnimationRequest 
+        struct CreateAnimationRequest
         {
             public GameObject prefab;
             public AnimationInstancing instance;
         }
+
         // A container to storage all animations info within game object
-        public class InstanceAnimationInfo 
+        public class InstanceAnimationInfo
         {
             public List<AnimationInfo> listAniInfo;
             public ExtraBoneInfo extraBoneInfo;
         }
+
         private List<CreateAnimationRequest> m_requestList;
         private Dictionary<GameObject, InstanceAnimationInfo> m_animationInfo;
 
@@ -54,6 +55,7 @@ namespace AnimationInstancing
                 CreateAnimationRequest request = m_requestList[i];
                 StartCoroutine(LoadAnimationInfoFromAssetBundle(request));
             }
+
             m_requestList.Clear();
         }
 
@@ -84,6 +86,7 @@ namespace AnimationInstancing
                 {
                     m_requestList.Add(request);
                 }
+
                 return null;
             }
             else
@@ -96,7 +99,7 @@ namespace AnimationInstancing
             AssetBundleCreateRequest request = AssetBundle.LoadFromFileAsync(path);
             yield return request;
 
-			if (request.assetBundle != null)
+            if (request.assetBundle != null)
             {
                 Debug.LogFormat("Load the AB {0} successed.", path);
                 m_mainBundle = request.assetBundle;
@@ -125,7 +128,7 @@ namespace AnimationInstancing
                 request.instance.Prepare(info.listAniInfo, info.extraBoneInfo);
             }
 
-			if (abRequest != null && !find)
+            if (abRequest != null && !find)
             {
                 TextAsset asset = abRequest.asset as TextAsset;
                 BinaryReader reader = new BinaryReader(new MemoryStream(asset.bytes));
@@ -142,6 +145,7 @@ namespace AnimationInstancing
         {
             Debug.Assert(prefab != null);
             string path;
+            InstanceAnimationInfo info = default;
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
             path = Application.dataPath + "/AnimationTexture/";
 #elif UNITY_STANDALONE_OSX
@@ -152,7 +156,7 @@ namespace AnimationInstancing
             //Debug.Log("This is the data path:" + path);
             FileStream file = File.Open(path + prefab.name + ".bytes", FileMode.Open);
             Debug.Assert(file.CanRead);
-            InstanceAnimationInfo info = new InstanceAnimationInfo();
+            info = new InstanceAnimationInfo();
             BinaryReader reader = new BinaryReader(file);
             info.listAniInfo = ReadAnimationInfo(reader);
             info.extraBoneInfo = ReadExtraBoneInfo(reader);
@@ -194,7 +198,7 @@ namespace AnimationInstancing
         private List<AnimationInfo> ReadAnimationInfo(BinaryReader reader)
         {
             int count = reader.ReadInt32();
-            List<AnimationInfo>  listInfo = new List<AnimationInfo>();
+            List<AnimationInfo> listInfo = new List<AnimationInfo>();
             for (int i = 0; i != count; ++i)
             {
                 AnimationInfo info = new AnimationInfo();
@@ -222,6 +226,7 @@ namespace AnimationInstancing
                         info.angularVelocity[j].z = reader.ReadSingle();
                     }
                 }
+
                 int evtCount = reader.ReadInt32();
                 info.eventList = new List<AnimationEvent>();
                 for (int j = 0; j != evtCount; ++j)
@@ -235,8 +240,10 @@ namespace AnimationInstancing
                     evt.objectParameter = reader.ReadString();
                     info.eventList.Add(evt);
                 }
+
                 listInfo.Add(info);
             }
+
             listInfo.Sort(new ComparerHash());
             return listInfo;
         }
@@ -254,6 +261,7 @@ namespace AnimationInstancing
                 {
                     info.extraBone[i] = reader.ReadString();
                 }
+
                 for (int i = 0; i != info.extraBindPose.Length; ++i)
                 {
                     for (int j = 0; j != 16; ++j)
@@ -262,6 +270,7 @@ namespace AnimationInstancing
                     }
                 }
             }
+
             return info;
         }
     }

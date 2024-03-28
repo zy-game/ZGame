@@ -39,8 +39,8 @@ namespace ZGame.Editor.Command
             string aotFileName = $"{Path.GetFileNameWithoutExtension(GameConfig.instance.path).ToLower()}_aot.bytes";
             string hotfixFileName = $"{Path.GetFileNameWithoutExtension(GameConfig.instance.path).ToLower()}_hotfix.bytes";
             string aotDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(EditorUserBuildSettings.activeBuildTarget);
-            Zip.ComperssToPath(aotFileName, "*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
-            Zip.ComperssToPath(hotfixFileName, "*.dll", SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget));
+            Zip.CompressToPath(aotFileName, "*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
+            Zip.CompressToPath(hotfixFileName, "*.dll", SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget));
             ResourcePackageListManifest packageListManifest = ResourcePackageListManifest.LoadOrCreate(packageSeting.title);
             packageListManifest.CreateOrUpdatePackageManifest(aotFileName, false, Crc32.GetCRC32File(GameFrameworkEntry.GetPlatformOutputPath(aotFileName)), new string[] { aotFileName }, new string[0]);
             packageListManifest.CreateOrUpdatePackageManifest(hotfixFileName, false, Crc32.GetCRC32File(GameFrameworkEntry.GetPlatformOutputPath(hotfixFileName)), new string[] { hotfixFileName }, new string[0]);

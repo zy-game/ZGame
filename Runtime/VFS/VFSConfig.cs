@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace ZGame
+namespace ZGame.VFS
 {
     public class VFSConfig : BaseConfig<VFSConfig>
     {

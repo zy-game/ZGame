@@ -4,11 +4,11 @@ using UnityWebSocket;
 
 namespace ZGame.Networking
 {
-    class WebChannel<T> : IChannel where T : ISerialize
+    class WebChannel<T> : IChannel where T : ISerialize, new()
     {
         public string address { get; }
         public bool connected { get; set; }
-        public ISerialize serialize { get; }
+        public ISerialize serialize { get; private set; }
         private WebSocket _webSocket;
         private UniTaskCompletionSource _taskCompletionSource;
         private Action<IMessage> _recveCallback;
@@ -16,6 +16,7 @@ namespace ZGame.Networking
         public UniTask Connect(string address)
         {
             _taskCompletionSource = new UniTaskCompletionSource();
+            serialize = GameFrameworkFactory.Spawner<T>();
             _webSocket = new WebSocket(address);
             _webSocket.OnClose += OnHandleCloseEvent;
             _webSocket.OnError += OnHandleErrorEvent;

@@ -13,32 +13,18 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Resource
 {
-    public sealed class ResObject : IDisposable
+    public sealed class ResObject : IGameCacheObject
     {
         private object obj;
-        private string _path;
-        private int _refCount;
         private ResPackage parent;
 
-        public string path
-        {
-            get { return _path; }
-        }
+        public string name { get; private set; }
 
-        public int refCount
-        {
-            get { return _refCount; }
-        }
+        public int refCount { get; private set; }
 
-        public Object Asset
-        {
-            get { return (Object)obj; }
-        }
+        public Object Asset => (Object)obj;
 
-        public ResPackage Parent
-        {
-            get { return parent; }
-        }
+        public ResPackage Parent => parent;
 
         public bool IsSuccess()
         {
@@ -50,49 +36,55 @@ namespace ZGame.Resource
             return false;
         }
 
-        public T GetAsset<T>()
+        public T GetAsset<T>(GameObject gameObject)
         {
-            if (obj == null)
+            if (obj == null || obj is not Object)
             {
                 return default;
             }
 
-            parent?.Required();
+            Ref();
+            gameObject?.RegisterGameObjectDestroyEvent(() => { Unref(); });
             return (T)obj;
         }
 
         public void Release()
         {
-            _refCount--;
-            parent?.Unrequire();
-        }
-
-        public void Dispose()
-        {
-            Debug.Log("Dispose ResObject:" + path);
+            Debug.Log("Dispose ResObject:" + name);
             obj = null;
-            for (int i = 0; i < _refCount; i++)
+            for (int i = 0; i < refCount; i++)
             {
-                parent?.Unrequire();
+                parent?.Unref();
             }
 
-            _refCount = 0;
+            refCount = 0;
             parent = null;
-            _path = String.Empty;
-            GC.SuppressFinalize(this);
+            name = String.Empty;
+        }
+
+        public void Ref()
+        {
+            refCount++;
+            parent?.Ref();
+        }
+
+        public void Unref()
+        {
+            refCount--;
+            parent?.Unref();
         }
 
         internal static ResObject Create(ResPackage parent, object obj, string path)
         {
-            ResObject resObject = new ResObject();
+            ResObject resObject = GameFrameworkFactory.Spawner<ResObject>();
             resObject.obj = obj;
-            resObject._path = path;
+            resObject.name = path;
             resObject.parent = parent;
-            resObject._refCount = 0;
+            resObject.refCount = 0;
             return resObject;
         }
 
-        public static ResObject Create(Object obj, string path)
+        public static ResObject Create(object obj, string path)
         {
             return Create(null, obj, path);
         }

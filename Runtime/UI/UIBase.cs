@@ -12,21 +12,48 @@ namespace ZGame.UI
     /// <summary>
     /// UI界面
     /// </summary>
-    public class UIBase : IDisposable
+    public class UIBase : IReferenceObject
     {
-        public string name { get; private set; }
-        public Transform transform { get; private set; }
-        public GameObject gameObject { get; private set; }
-        public RectTransform rect_transform { get; private set; }
-
+        private RectTransform _rectTransform;
         private Dictionary<object, Coroutine> _coroutines = new Dictionary<object, Coroutine>();
 
-        public UIBase(GameObject gameObject)
+        public string name { get; private set; }
+        public Transform transform => gameObject.transform;
+        public GameObject gameObject { get; set; }
+
+        public RectTransform rect_transform
         {
-            this.name = gameObject.name;
-            this.gameObject = gameObject;
-            this.transform = gameObject.transform;
-            this.rect_transform = gameObject.GetComponent<RectTransform>();
+            get
+            {
+                if (_rectTransform == null)
+                {
+                    _rectTransform = gameObject.GetComponent<RectTransform>();
+                }
+
+                return _rectTransform;
+            }
+        }
+
+
+        internal static UIBase Create(string path, Type type, Canvas canvas)
+        {
+            GameObject gameObject = GameFrameworkEntry.Resource.LoadGameObjectSync(path);
+            if (gameObject == null)
+            {
+                Debug.Log("加载资源失败：" + path);
+                return default;
+            }
+
+            UIBase uiBase = (UIBase)GameFrameworkFactory.Spawner(type);
+            uiBase.gameObject = gameObject;
+            uiBase.gameObject.transform.SetParent(canvas.transform);
+            uiBase.gameObject.transform.position = Vector3.zero;
+            uiBase.gameObject.transform.rotation = Quaternion.Euler(Vector3.zero);
+            uiBase.gameObject.transform.localScale = Vector3.one;
+            uiBase.name = gameObject.name;
+            uiBase.rect_transform.sizeDelta = Vector2.zero;
+            uiBase.rect_transform.anchoredPosition = Vector2.zero;
+            return uiBase;
         }
 
         /// <summary>
@@ -64,23 +91,21 @@ namespace ZGame.UI
             gameObject.SetActive(false);
         }
 
+        
         /// <summary>
         /// 释放UI界面
         /// </summary>
-        public virtual void Dispose()
+        public virtual void Release()
         {
-            transform = null;
             name = String.Empty;
-            rect_transform = null;
             foreach (var VARIABLE in _coroutines.Values)
             {
-                GameFrameworkEntry.Coroutine.StopCoroutine(VARIABLE);
+                GameFrameworkEntry.StopCoroutine(VARIABLE);
             }
 
             _coroutines.Clear();
             GameObject.DestroyImmediate(gameObject);
             gameObject = null;
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -99,7 +124,7 @@ namespace ZGame.UI
             }
 
             StopCountDown(tmp_text);
-            _coroutines.Add(tmp_text, GameFrameworkEntry.Coroutine.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
+            _coroutines.Add(tmp_text, GameFrameworkEntry.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
         }
 
         /// <summary>
@@ -139,7 +164,7 @@ namespace ZGame.UI
 
             if (_coroutines.TryGetValue(target, out Coroutine coroutine))
             {
-                GameFrameworkEntry.Coroutine.StopCoroutine(coroutine);
+                GameFrameworkEntry.StopCoroutine(coroutine);
                 _coroutines.Remove(target);
             }
         }

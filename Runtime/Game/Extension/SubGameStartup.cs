@@ -10,14 +10,14 @@ using ZGame.Resource;
 
 namespace ZGame.Game
 {
-    public class SubGameStartup : IDisposable
+    public class SubGameStartup : IReferenceObject
     {
-        public virtual UniTask<ResultStatus> OnEntry()
+        public virtual UniTask<Status> OnEntry()
         {
-            return UniTask.FromResult(ResultStatus.Success);
+            return UniTask.FromResult(Status.Success);
         }
 
-        public virtual void Dispose()
+        public virtual void Release()
         {
         }
     }

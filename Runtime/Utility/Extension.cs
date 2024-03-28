@@ -29,7 +29,7 @@ namespace ZGame
         Hotfix,
     }
 
-    public enum ResultStatus : byte
+    public enum Status : byte
     {
         Success,
         Fail,

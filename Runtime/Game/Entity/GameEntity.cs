@@ -8,11 +8,11 @@ namespace ZGame.Game
     /// <summary>
     /// 游戏实体对象
     /// </summary>
-    public sealed class GameEntity : IDisposable
+    public sealed class GameEntity : IReferenceObject
     {
         private string _id;
         private string _tag;
-        private List<EntityComponent> _components = new List<EntityComponent>();
+        private List<IComponent> _components = new List<IComponent>();
 
         /// <summary>
         /// 实体id
@@ -38,7 +38,7 @@ namespace ZGame.Game
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T AddComponent<T>(params object[] args) where T : EntityComponent
+        public T AddComponent<T>(params object[] args) where T : IComponent
         {
             return (T)AddComponent(typeof(T), args);
         }
@@ -46,17 +46,21 @@ namespace ZGame.Game
         /// <summary>
         /// 添加组件
         /// </summary>
-        /// <param name="types"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public EntityComponent[] AddComponents(params Type[] types)
+        /// <exception cref="NotImplementedException"></exception>
+        public IComponent AddComponent(Type type, params object[] args)
         {
-            EntityComponent[] components = new EntityComponent[types.Length];
-            for (int i = 0; i < types.Length; i++)
+            if (type.IsSubclassOf(typeof(IComponent)) is false)
             {
-                components[i] = AddComponent(types[i]);
+                throw new NotImplementedException("类型必须是IComponent的子类");
             }
 
-            return components;
+            IComponent component = (IComponent)GameFrameworkFactory.Spawner(type);
+            component.entity = this;
+            _components.Add(component);
+            component.OnAwake(args);
+            return component;
         }
 
         /// <summary>
@@ -64,7 +68,7 @@ namespace ZGame.Game
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T GetComponent<T>() where T : EntityComponent
+        public T GetComponent<T>() where T : IComponent
         {
             return (T)GetComponent(typeof(T));
         }
@@ -73,30 +77,9 @@ namespace ZGame.Game
         /// 移除组件
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void RemoveComponent<T>() where T : EntityComponent
+        public void RemoveComponent<T>() where T : IComponent
         {
             RemoveComponent(typeof(T));
-        }
-
-        /// <summary>
-        /// 添加组件
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public EntityComponent AddComponent(Type type, params object[] args)
-        {
-            if (type.IsSubclassOf(typeof(EntityComponent)) is false)
-            {
-                throw new NotImplementedException("类型必须是IComponent的子类");
-            }
-
-            EntityComponent component = (EntityComponent)Activator.CreateInstance(type);
-            component.SetEntity(this);
-            _components.Add(component);
-            component.OnAwake(args);
-            component.OnEnable();
-            return component;
         }
 
         /// <summary>
@@ -105,9 +88,9 @@ namespace ZGame.Game
         /// <param name="type"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public EntityComponent GetComponent(Type type)
+        public IComponent GetComponent(Type type)
         {
-            if (type.IsSubclassOf(typeof(EntityComponent)) is false)
+            if (type.IsSubclassOf(typeof(IComponent)) is false)
             {
                 throw new NotImplementedException("类型必须是IComponent的子类");
             }
@@ -122,7 +105,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public void RemoveComponent(Type type)
         {
-            if (type.IsSubclassOf(typeof(EntityComponent)) is false)
+            if (type.IsSubclassOf(typeof(IComponent)) is false)
             {
                 throw new NotImplementedException("类型必须是IComponent的子类");
             }
@@ -131,44 +114,14 @@ namespace ZGame.Game
             {
                 if (_components[i].GetType() == type)
                 {
-                    _components[i].OnDisable();
-                    _components[i].Dispose();
                     _components.RemoveAt(i);
                 }
             }
         }
 
-        internal void OnUpdate()
+        public void Release()
         {
-            for (int i = 0; i < _components.Count; i++)
-            {
-                _components[i].OnUpdate();
-            }
-        }
-
-        internal void OnFixedUpdate()
-        {
-            for (int i = 0; i < _components.Count; i++)
-            {
-                _components[i].OnFixedUpdate();
-            }
-        }
-
-        internal void OnLateUpdate()
-        {
-            for (int i = 0; i < _components.Count; i++)
-            {
-                _components[i].OnLateUpdate();
-            }
-        }
-
-        public void Dispose()
-        {
-            for (int i = 0; i < _components.Count; i++)
-            {
-                _components[i].Dispose();
-            }
-
+            _components.ForEach(GameFrameworkFactory.Release);
             _components.Clear();
             GC.SuppressFinalize(this);
         }

@@ -4,7 +4,7 @@ using UnityEngine.Serialization;
 
 namespace ZGame.Editor
 {
-    [ResourceReference("Assets/Settings/Language.asset")]
+    [RefPath("Assets/Settings/Language.asset")]
     public class LanguageConfig : BaseConfig<LanguageConfig>
     {
         public List<LanguageOptions> lanList;

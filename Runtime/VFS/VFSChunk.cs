@@ -3,7 +3,7 @@ using System.IO;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace ZGame.FileSystem
+namespace ZGame.VFS
 {
     /// <summary>
     /// 文件数据块

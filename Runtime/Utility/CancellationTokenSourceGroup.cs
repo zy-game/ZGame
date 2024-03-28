@@ -7,7 +7,7 @@ namespace ZGame
 {
     public sealed class AppQuitEventDatable : IGameEventArgs
     {
-        public void Dispose()
+        public void Release()
         {
         }
     }

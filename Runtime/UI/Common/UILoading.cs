@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace ZGame.UI
 {
-    [ResourceReference("Resources/Loading")]
+    [RefPath("Resources/Loading")]
     [UIOptions(UILayer.Notification, SceneType.Overlap, CacheType.Permanent)]
     public class UILoading : UIBase, IProgress<float>
     {
@@ -15,9 +15,6 @@ namespace ZGame.UI
         private TMP_Text progres;
         private TMP_Text title;
 
-        public UILoading(GameObject gameObject) : base(gameObject)
-        {
-        }
 
         public override void Awake()
         {
@@ -51,6 +48,11 @@ namespace ZGame.UI
 
         private static UILoading _instance;
 
+
+        /// <summary>
+        /// 设置加载界面信息，如果加载界面未加载则会加载UI并显示
+        /// </summary>
+        /// <param name="progress"></param>
         public static void SetProgress(float progress)
         {
             if (_instance is null)
@@ -61,6 +63,10 @@ namespace ZGame.UI
             _instance?.Report(progress);
         }
 
+        /// <summary>
+        /// 设置加载界面信息，如果加载界面未加载则会加载UI并显示
+        /// </summary>
+        /// <param name="title"></param>
         public static void SetTitle(string title)
         {
             if (_instance is null)
@@ -71,6 +77,10 @@ namespace ZGame.UI
             _instance?.SetText(title);
         }
 
+        /// <summary>
+        /// 显示加载界面
+        /// </summary>
+        /// <returns></returns>
         public static UILoading Show()
         {
             if (_instance is not null)
@@ -81,6 +91,9 @@ namespace ZGame.UI
             return _instance = GameFrameworkEntry.UI.Active<UILoading>();
         }
 
+        /// <summary>
+        /// 隐藏加载界面
+        /// </summary>
         public static void Hide()
         {
             if (_instance is null)

@@ -6,14 +6,13 @@ using ZGame;
 
 namespace ZGame.UI
 {
-    [ResourceReference("Resources/Waiting")]
+    /// <summary>
+    /// 等待界面
+    /// </summary>
+    [RefPath("Resources/Waiting")]
     [UIOptions(UILayer.Notification, SceneType.Addition, CacheType.Permanent)]
     public sealed class UIWait : UIBase
     {
-        public UIWait(GameObject gameObject) : base(gameObject)
-        {
-        }
-
         public override async void Enable(params object[] args)
         {
             base.Enable();
@@ -38,11 +37,19 @@ namespace ZGame.UI
             Hide();
         }
 
+        /// <summary>
+        /// 显示等待界面
+        /// </summary>
+        /// <param name="s">显示内容</param>
+        /// <param name="timeout">超时时长，如果超时为0，则一直显示，直到调用<see cref="Hide"/></param>
         public static void Show(string s, float timeout = 0)
         {
             GameFrameworkEntry.UI.Active<UIWait>(new object[] { s, timeout });
         }
 
+        /// <summary>
+        /// 隐藏等待窗口
+        /// </summary>
         public static void Hide()
         {
             GameFrameworkEntry.UI.Inactive<UIWait>();

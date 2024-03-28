@@ -7,7 +7,7 @@ using ZGame.Resource;
 
 namespace ZGame.UI
 {
-    class UIRoot : IDisposable
+    class UIRoot : IReferenceObject
     {
         public int layer;
         private Canvas canvas;
@@ -39,6 +39,31 @@ namespace ZGame.UI
             GameObject.DontDestroyOnLoad(canvas.gameObject);
         }
 
+        /// <summary>
+        /// 获取UI窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetWindow<T>() where T : UIBase
+        {
+            return (T)GetWindow(typeof(T));
+        }
+
+        /// <summary>
+        /// 获取UI窗口
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public UIBase GetWindow(Type type)
+        {
+            if (typeof(UIBase).IsAssignableFrom(type) is false)
+            {
+                throw new NotImplementedException(nameof(type));
+            }
+
+            return uiList.Find(x => x.GetType() == type);
+        }
 
         public bool Contains(Type type)
         {
@@ -50,31 +75,15 @@ namespace ZGame.UI
             UIBase uiBase = uiList.Find(x => x.GetType() == type);
             if (uiBase is null)
             {
-                ResourceReference reference = type.GetCustomAttribute<ResourceReference>();
+                RefPath reference = type.GetCustomAttribute<RefPath>();
                 if (reference is null || reference.path.IsNullOrEmpty())
                 {
                     Debug.LogError("没找到资源引用:" + type.Name);
                     return default;
                 }
 
-                GameObject gameObject = GameFrameworkEntry.Resource.LoadGameObjectSync(reference.path);
-                if (gameObject == null)
-                {
-                    Debug.Log("加载资源失败：" + reference.path);
-                    return default;
-                }
 
-                uiBase = (UIBase)Activator.CreateInstance(type, new object[] { gameObject });
-                uiBase.gameObject.transform.SetParent(canvas.transform);
-                uiBase.gameObject.transform.position = Vector3.zero;
-                uiBase.gameObject.transform.rotation = Quaternion.Euler(Vector3.zero);
-                uiBase.gameObject.transform.localScale = Vector3.one;
-                if (uiBase.gameObject.TryGetComponent<RectTransform>(out RectTransform rectTransform))
-                {
-                    rectTransform.sizeDelta = Vector2.zero;
-                    rectTransform.anchoredPosition = Vector2.zero;
-                }
-
+                uiBase = UIBase.Create(reference.path, type, canvas);
                 uiList.Add(uiBase);
                 uiBase.Awake();
             }
@@ -109,7 +118,7 @@ namespace ZGame.UI
             uiBase.gameObject.transform.SetAsFirstSibling();
             if (options.cacheType == CacheType.Temp)
             {
-                uiBase.Dispose();
+                GameFrameworkFactory.Release(uiBase);
                 uiList.Remove(uiBase);
             }
         }
@@ -122,17 +131,16 @@ namespace ZGame.UI
             }
         }
 
-        public void Dispose()
+        public void Release()
         {
             foreach (var VARIABLE in uiList)
             {
-                VARIABLE.Dispose();
+                GameFrameworkFactory.Release(VARIABLE);
             }
 
             uiList.Clear();
             GameObject.DestroyImmediate(canvas.gameObject);
             canvas = null;
-            GC.SuppressFinalize(this);
         }
     }
 }

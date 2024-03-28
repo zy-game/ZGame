@@ -2,28 +2,119 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 using ZGame.Config;
 
-namespace ZGame.FileSystem
+namespace ZGame.VFS
 {
+    /// <summary>
+    /// 虚拟磁盘
+    /// </summary>
+    class VFSDisk : IReferenceObject
+    {
+        class DirtOpt
+        {
+            public string name;
+            public List<FileOpt> files;
+        }
+
+        class FileOpt
+        {
+            /// <summary>
+            /// 文件名
+            /// </summary>
+            public string name;
+
+            /// <summary>
+            /// 数据长度
+            /// </summary>
+            public int length;
+
+            /// <summary>
+            /// 数去读取起始偏移
+            /// </summary>
+            public int offset;
+        }
+
+        private List<VFSDirctory> _files;
+        private List<DirtOpt> _dirtOpts;
+
+        public void Release()
+        {
+        }
+
+        public static VFSDisk OpenOrCreateDisk(string name)
+        {
+            VFSDisk disk = GameFrameworkFactory.Spawner<VFSDisk>();
+            string path = GameFrameworkEntry.GetApplicationFilePath(name);
+            if (File.Exists(path) is false)
+            {
+                disk._dirtOpts = JsonConvert.DeserializeObject<List<DirtOpt>>(path + ".ini");
+            }
+
+            return default;
+        }
+    }
+
+    class VFSDirctory : IReferenceObject
+    {
+        private List<VFSFile> _files;
+
+        public void Release()
+        {
+        }
+    }
+
+    /// <summary>
+    /// 虚拟文件对象
+    /// </summary>
+    class VFSFile : IReferenceObject
+    {
+        public string name;
+        public uint version;
+
+        public void Release()
+        {
+        }
+
+        public static byte[] ReadAllBytes(string path)
+        {
+            return default;
+        }
+
+        public static string ReadAllText(string path)
+        {
+            return default;
+        }
+
+        public static void WriteAllBytes(string path, byte[] bytes, uint version)
+        {
+        }
+
+        public static void WriteAllText(string path, string text, uint version)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 虚拟文件系统
+    /// </summary>
     public class VFSManager : GameFrameworkModule
     {
+        private VFSDisk _disk;
         private string vfsFileName;
         private List<VFSChunk> chunkList = new List<VFSChunk>();
         private List<VFStream> vfStreamList = new List<VFStream>();
 
-        public override void Dispose()
-        {
-            vfStreamList.ForEach(x => x.Dispose());
-            Saved();
-        }
+        //todo  将所有文件或文件的操封装到这里
 
-        public override void OnAwake()
+        public override void OnAwake(params object[] args)
         {
+            _disk = VFSDisk.OpenOrCreateDisk(GameConfig.instance.title + " virtual data.disk");
             vfsFileName = $"{Application.persistentDataPath}/{MDFive.MD5Encrypt16("vfs.ini")}";
             if (!File.Exists(vfsFileName))
             {
@@ -31,6 +122,12 @@ namespace ZGame.FileSystem
             }
 
             chunkList = JsonConvert.DeserializeObject<List<VFSChunk>>(File.ReadAllText(vfsFileName));
+        }
+
+        public override void Release()
+        {
+            vfStreamList.ForEach(x => x.Dispose());
+            Saved();
         }
 
         /// <summary>
@@ -139,10 +236,10 @@ namespace ZGame.FileSystem
         /// <param name="fileName"></param>
         /// <param name="bytes"></param>
         /// <param name="version"></param>
-        public ResultStatus Write(string fileName, byte[] bytes, uint version)
+        public Status Write(string fileName, byte[] bytes, uint version)
         {
             Delete(fileName);
-            ResultStatus resultStatus = ResultStatus.Success;
+            Status status = Status.Success;
             if (VFSConfig.instance.enable is false)
             {
                 try
@@ -156,7 +253,7 @@ namespace ZGame.FileSystem
                     GameFrameworkEntry.Logger.LogError(e);
                 }
 
-                resultStatus = ResultStatus.Fail;
+                status = Status.Fail;
             }
             else
             {
@@ -180,8 +277,8 @@ namespace ZGame.FileSystem
                     }
 
                     int length = bytes.Length - i * chunkSize > chunk.length ? chunk.length : bytes.Length - i * chunkSize;
-                    resultStatus = stream.Write(chunk.offset, bytes, i * chunkSize, length);
-                    if (resultStatus is not ResultStatus.Success)
+                    status = stream.Write(chunk.offset, bytes, i * chunkSize, length);
+                    if (status is not Status.Success)
                     {
                         GameFrameworkEntry.Logger.LogError("写入文件数据失败");
                         break;
@@ -191,14 +288,14 @@ namespace ZGame.FileSystem
                     chunk.Use(fileName, length, i, version);
                 }
 
-                if (resultStatus is not ResultStatus.Success)
+                if (status is not Status.Success)
                 {
                     chunkList.ForEach(x => x.Free());
                 }
             }
 
             Saved();
-            return resultStatus;
+            return status;
         }
 
         /// <summary>
@@ -207,10 +304,10 @@ namespace ZGame.FileSystem
         /// <param name="fileName"></param>
         /// <param name="bytes"></param>
         /// <param name="version"></param>
-        public async UniTask<ResultStatus> WriteAsync(string fileName, byte[] bytes, uint version, CancellationTokenSource cancellationTokenSource = null)
+        public async UniTask<Status> WriteAsync(string fileName, byte[] bytes, uint version, CancellationTokenSource cancellationTokenSource = null)
         {
             Delete(fileName);
-            ResultStatus resultStatus = ResultStatus.Success;
+            Status status = Status.Success;
             using (CancellationTokenSourceGroup cancellationTokenSourceGroup = new CancellationTokenSourceGroup(cancellationTokenSource))
             {
                 if (VFSConfig.instance.enable is false)
@@ -224,14 +321,14 @@ namespace ZGame.FileSystem
                     catch (Exception e)
                     {
                         GameFrameworkEntry.Logger.LogError(e);
-                        resultStatus = ResultStatus.Fail;
+                        status = Status.Fail;
                     }
                 }
                 else
                 {
                     int chunkSize = VFSConfig.instance.chunkSize;
                     int maxCount = Extension.MaxSharinCount(bytes.Length, chunkSize);
-                    UniTask<ResultStatus>[] writeTasks = new UniTask<ResultStatus>[maxCount];
+                    UniTask<Status>[] writeTasks = new UniTask<Status>[maxCount];
                     List<VFSChunk> chunkList = new List<VFSChunk>();
                     for (int i = 0; i < maxCount; i++)
                     {
@@ -253,11 +350,11 @@ namespace ZGame.FileSystem
                         chunkList.Add(chunk);
                     }
 
-                    ResultStatus[] writeResult = await UniTask.WhenAll(writeTasks);
-                    if (writeResult.All(x => x == ResultStatus.Success) is false)
+                    Status[] writeResult = await UniTask.WhenAll(writeTasks);
+                    if (writeResult.All(x => x == Status.Success) is false)
                     {
                         Debug.LogError("写入文件失败：" + fileName);
-                        resultStatus = ResultStatus.Fail;
+                        status = Status.Fail;
                         chunkList.ForEach(x => x.Free());
                     }
                 }
@@ -265,7 +362,7 @@ namespace ZGame.FileSystem
                 Saved();
             }
 
-            return resultStatus;
+            return status;
         }
 
         /// <summary>
@@ -335,13 +432,13 @@ namespace ZGame.FileSystem
                 }
 
                 byte[] bytes = new byte[chunkList.Sum(x => x.useLenght)];
-                UniTask<ResultStatus>[] readTasks = new UniTask<ResultStatus>[chunkList.Length];
+                UniTask<Status>[] readTasks = new UniTask<Status>[chunkList.Length];
                 for (int i = 0; i < chunkList.Length; i++)
                 {
                     VFStream handle = GetStream(chunkList[i].vfs);
                     if (handle is null)
                     {
-                        readTasks[i] = UniTask.FromResult(ResultStatus.Fail);
+                        readTasks[i] = UniTask.FromResult(Status.Fail);
                         GameFrameworkEntry.Logger.LogError(new FileNotFoundException(chunkList[i].vfs));
                         break;
                     }
@@ -350,8 +447,8 @@ namespace ZGame.FileSystem
                     readTasks[i] = handle.ReadAsync(chunkList[i].offset, bytes, offset, chunkList[i].useLenght, cancellationTokenSourceGroup.GetToken());
                 }
 
-                ResultStatus[] readResult = await UniTask.WhenAll(readTasks);
-                if (readResult.All(x => x == ResultStatus.Success) is false)
+                Status[] readResult = await UniTask.WhenAll(readTasks);
+                if (readResult.All(x => x == Status.Success) is false)
                 {
                     GameFrameworkEntry.Logger.LogError("读取文件数据失败：" + fileName);
                     return Array.Empty<byte>();

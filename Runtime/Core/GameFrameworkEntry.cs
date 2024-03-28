@@ -1,23 +1,27 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Cysharp.Threading.Tasks;
+using HybridCLR;
 using UnityEngine;
+using UnityEngine.Profiling;
 using ZGame.Config;
 using ZGame.Data;
-using ZGame.FileSystem;
+using ZGame.VFS;
 using ZGame.Game;
 using ZGame.Language;
 using ZGame.Logger;
 using ZGame.Networking;
-using ZGame.Download;
 using ZGame.Notify;
 using ZGame.Resource;
+using ZGame.Resource.Config;
 using ZGame.Sound;
-using ZGame.Thread;
 using ZGame.UI;
-using ZGame.Web;
 
 namespace ZGame
 {
@@ -26,6 +30,60 @@ namespace ZGame
     /// </summary>
     public static class GameFrameworkEntry
     {
+        public class GameFrameworkContent : MonoBehaviour
+        {
+            private void OnApplicationQuit()
+            {
+                GameFrameworkEntry.Uninitialized();
+            }
+
+            private void FixedUpdate()
+            {
+                GameFrameworkEntry.FixedUpdate();
+            }
+
+            private void Update()
+            {
+                GameFrameworkEntry.Update();
+            }
+
+            private void LateUpdate()
+            {
+                GameFrameworkEntry.LateUpdate();
+            }
+
+            public static void OnProfile()
+            {
+#if UNITY_EDITOR
+
+                foreach (var VARIABLE in GameFrameworkEntry._modules)
+                {
+                    string title = VARIABLE.GetType().Name;
+                    if (foloutList.ContainsKey(title) is false)
+                    {
+                        foloutList.Add(title, false);
+                    }
+
+                    foloutList[title] = UnityEditor.EditorGUILayout.BeginFoldoutHeaderGroup(foloutList[title], title);
+                    if (foloutList[title])
+                    {
+                        GUILayout.BeginVertical(UnityEditor.EditorStyles.helpBox);
+                        VARIABLE.OnDrawingGUI();
+                        GUILayout.EndVertical();
+                    }
+
+                    UnityEditor.EditorGUILayout.EndFoldoutHeaderGroup();
+                }
+#endif
+            }
+        }
+
+        class GameFrameworkEntryDrawingHandle
+        {
+        }
+
+        private static GameFrameworkContent _handle;
+        private static Dictionary<string, bool> foloutList = new();
         private static List<GameFrameworkModule> _modules = new List<GameFrameworkModule>();
 
         /// <summary>
@@ -41,12 +99,17 @@ namespace ZGame
         /// <summary>
         /// 运行时数据管理
         /// </summary>
-        public static DatableManager Datable { get; private set; }
+        public static RuntimeDatableManager RuntimeDatable { get; private set; }
 
         /// <summary>
         /// 缓存数据管理
         /// </summary>
-        public static CookieManager DataCache { get; private set; }
+        public static LocationDatableManager Location { get; private set; }
+
+        /// <summary>
+        /// 引用对象管理器
+        /// </summary>
+        public static GameCacheObjectManager CacheObject { get; private set; }
 
         /// <summary>
         /// 多语言管理
@@ -57,11 +120,6 @@ namespace ZGame
         /// UI 管理器
         /// </summary>
         public static UIManager UI { get; private set; }
-
-        /// <summary>
-        /// Http 管理器
-        /// </summary>
-        public static HttpClient Web { get; private set; }
 
         /// <summary>
         /// 音效管理器
@@ -94,19 +152,9 @@ namespace ZGame
         public static ConfigManager Config { get; private set; }
 
         /// <summary>
-        /// 下载器
-        /// </summary>
-        public static DownloadManager Download { get; private set; }
-
-        /// <summary>
         /// 日志管理
         /// </summary>
         public static LoggerManager Logger { get; private set; }
-
-        /// <summary>
-        /// 协程管理器
-        /// </summary>
-        public static CoroutineManager Coroutine { get; private set; }
 
         /// <summary>
         /// 键盘输入管理
@@ -114,16 +162,27 @@ namespace ZGame
         public static KeyboardManager Keyboard { get; private set; }
 
         /// <summary>
+        /// 逻辑系统管理
+        /// </summary>
+        public static ScriptbleManager System { get; private set; }
+
+        /// <summary>
+        /// 网络管理
+        /// </summary>
+        public static NetworkManager Network { get; private set; }
+
+
+        /// <summary>
         /// 初始化框架
         /// </summary>
         public static async void Initialized()
         {
             VFS = GetOrCreateModule<VFSManager>();
-            Datable = GetOrCreateModule<DatableManager>();
-            DataCache = GetOrCreateModule<CookieManager>();
+            RuntimeDatable = GetOrCreateModule<RuntimeDatableManager>();
+            Location = GetOrCreateModule<LocationDatableManager>();
+            CacheObject = GetOrCreateModule<GameCacheObjectManager>();
             Language = GetOrCreateModule<LanguageManager>();
             UI = GetOrCreateModule<UIManager>();
-            Web = GetOrCreateModule<HttpClient>();
             Audio = GetOrCreateModule<AudioPlayerManager>();
             Recorder = GetOrCreateModule<RecorderManager>();
             Resource = GetOrCreateModule<ResourceManager>();
@@ -131,26 +190,110 @@ namespace ZGame
             Entity = GetOrCreateModule<EntityManager>();
             Notify = GetOrCreateModule<NotifyManager>();
             Config = GetOrCreateModule<ConfigManager>();
-            Download = GetOrCreateModule<DownloadManager>();
             Logger = GetOrCreateModule<LoggerManager>();
-            Coroutine = GetOrCreateModule<CoroutineManager>();
             Keyboard = GetOrCreateModule<KeyboardManager>();
+            System = GetOrCreateModule<ScriptbleManager>();
+            Network = GetOrCreateModule<NetworkManager>();
+
+            _handle = new GameObject("GAME FRAMEWORK ENTRY").AddComponent<GameFrameworkContent>();
+            _handle.gameObject.SetParent(null, Vector3.zero, Vector3.zero, Vector3.one);
+            GameObject.DontDestroyOnLoad(_handle.gameObject);
+
+            Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            GameFrameworkEntry.Language.Switch(ChannelConfigList.instance.current.language);
             UILoading.SetTitle(GameFrameworkEntry.Language.Query("正在获取配置信息..."));
             UILoading.SetProgress(0);
-            if (GameConfig.instance is null)
-            {
-                Debug.LogError(new EntryPointNotFoundException());
-                return;
-            }
 
-            if (await GameFrameworkEntry.Resource.PreloadingResourcePackageList(ResConfig.instance.defaultPackageName) is false)
+            if (await GameFrameworkEntry.Resource.PreloadingResourcePackageList(ResConfig.instance.defaultPackageName) is not Status.Success)
             {
                 return;
             }
 
-            await GameFrameworkEntry.Resource.LoadGameAssembly(GameConfig.instance);
+            Assembly assembly = await LoadGameAssembly(GameConfig.instance);
+            if (assembly is null)
+            {
+                GameFrameworkEntry.Logger.LogError("加载DLL失败");
+                return;
+            }
+
+            Type entryType = assembly.GetAllSubClasses<SubGameStartup>().FirstOrDefault();
+            if (entryType is null)
+            {
+                throw new EntryPointNotFoundException();
+            }
+
+            SubGameStartup startup = (SubGameStartup)GameFrameworkFactory.Spawner(entryType);
+            if (startup is null)
+            {
+                Debug.LogError("加载入口失败");
+                return;
+            }
+
+            Debug.Log("Entry SubGame:" + startup);
+            Status status = await startup.OnEntry();
+            if (status is not Status.Success)
+            {
+                Debug.LogError("进入游戏失败");
+                return;
+            }
+
+            UILoading.Hide();
+        }
+
+        public static async UniTask<Assembly> LoadGameAssembly(GameConfig config)
+        {
+            Assembly assembly = default;
+            string dllName = Path.GetFileNameWithoutExtension(config.path);
+            if (config.mode is CodeMode.Native || (ResConfig.instance.resMode == ResourceMode.Editor && Application.isEditor))
+            {
+                Debug.Log("原生代码：" + dllName);
+                if (dllName.IsNullOrEmpty())
+                {
+                    throw new NullReferenceException(nameof(dllName));
+                }
+
+                assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
+            }
+            else
+            {
+                string fileName = $"{dllName.ToLower()}_aot.bytes";
+                byte[] bytes = default;
+#if UNITY_WEBGL
+                bytes = await GameFrameworkEntry.Network.GetStreamingAssetBinary(OSSConfig.instance.current.GetFilePath(fileName));
+#else
+                bytes = GameFrameworkEntry.VFS.Read(fileName);
+#endif
+                Logger.Log("开始解压aot dll");
+                Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(bytes);
+                Logger.Log("开始加载aot dll");
+                foreach (var VARIABLE in aotZipDict)
+                {
+                    if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
+                    {
+                        Debug.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
+                        continue;
+                    }
+
+                    Debug.Log("加载补充元数据成功：" + VARIABLE.Key);
+                }
+
+                fileName = $"{dllName.ToLower()}_hotfix.bytes";
+#if UNITY_WEBGL
+                bytes = await GameFrameworkEntry.Network.GetStreamingAssetBinary(OSSConfig.instance.current.GetFilePath(fileName));
+#else
+                bytes = GameFrameworkEntry.VFS.Read(fileName);
+#endif
+                Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(bytes);
+                if (dllZipDict.TryGetValue(dllName + ".dll", out byte[] dllBytes) is false)
+                {
+                    throw new NullReferenceException(dllName);
+                }
+
+                Debug.Log("加载热更代码:" + dllName + ".dll Lenght:" + dllBytes.Length);
+                assembly = Assembly.Load(dllBytes);
+            }
+
+            return assembly;
         }
 
         /// <summary>
@@ -161,52 +304,61 @@ namespace ZGame
             Notify.Notify(new AppQuitEventDatable());
             for (int i = 0; i < _modules.Count; i++)
             {
-                _modules[i].Dispose();
+                GameFrameworkFactory.Release(_modules[i]);
             }
 
             _modules.Clear();
             Recorder = null;
             Resource = null;
             VFS = null;
-            Datable = null;
-            DataCache = null;
+            RuntimeDatable = null;
+            Location = null;
             Language = null;
             UI = null;
-            Web = null;
             Audio = null;
             Notify = null;
             World = null;
             Entity = null;
             Config = null;
-            Download = null;
             Logger = null;
-            Coroutine = null;
             Keyboard = null;
+            System = null;
+            Network = null;
+            CacheObject = null;
         }
 
 
-        internal static void FixedUpdate()
+        static void FixedUpdate()
         {
+            Profiler.BeginSample("GAME FRAMEWORK FIXED UPDATE");
             for (int i = 0; i < _modules.Count; i++)
             {
                 _modules[i].FixedUpdate();
             }
+
+            Profiler.EndSample();
         }
 
-        internal static void Update()
+        static void Update()
         {
+            Profiler.BeginSample("GAME FRAMEWORK UPDATE");
             for (int i = 0; i < _modules.Count; i++)
             {
                 _modules[i].Update();
             }
+
+            Profiler.EndSample();
         }
 
-        internal static void LateUpdate()
+        static void LateUpdate()
         {
+            Profiler.BeginSample("GAME FRAMEWORK LATE UPDATE");
             for (int i = 0; i < _modules.Count; i++)
             {
                 _modules[i].LateUpdate();
             }
+
+            Profiler.EndSample();
         }
 
         /// <summary>
@@ -229,7 +381,7 @@ namespace ZGame
             GameFrameworkModule frameworkModule = _modules.Find(m => m.GetType() == type);
             if (frameworkModule is null)
             {
-                frameworkModule = (GameFrameworkModule)Activator.CreateInstance(type);
+                frameworkModule = (GameFrameworkModule)GameFrameworkFactory.Spawner(type);
                 frameworkModule.OnAwake();
                 _modules.Add(frameworkModule);
             }
@@ -258,7 +410,7 @@ namespace ZGame
                 return;
             }
 
-            frameworkModule.Dispose();
+            GameFrameworkFactory.Release(frameworkModule);
             _modules.Remove(frameworkModule);
         }
 
@@ -344,6 +496,25 @@ namespace ZGame
         public static string GetApiUrl(string path)
         {
             return $"{IPConfig.instance.GetUrl(path)}";
+        }
+
+        /// <summary>
+        /// 启动一个携程
+        /// </summary>
+        /// <param name="enumerator"></param>
+        /// <returns></returns>
+        public static Coroutine StartCoroutine(IEnumerator enumerator)
+        {
+            return _handle.StartCoroutine(enumerator);
+        }
+
+        /// <summary>
+        /// 停止一个携程
+        /// </summary>
+        /// <param name="coroutine"></param>
+        public static void StopCoroutine(Coroutine coroutine)
+        {
+            _handle.StopCoroutine(coroutine);
         }
     }
 }

@@ -10,37 +10,36 @@ namespace ZGame.Editor.ExcelExprot
     [GameSubEditorWindowOptions("Excel导出", null, false, typeof(ExcelConfigList))]
     public class ExcelExportManager : GameSubEditorWindow
     {
+        public override void SearchRightDrawing()
+        {
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
+            {
+                List<ExcelTable> list = new List<ExcelTable>();
+                for (int i = 0; i < ExcelConfigList.instance.exporters.Count; i++)
+                {
+                    list.AddRange(ExcelConfigList.instance.exporters[i].options);
+                }
+
+                ExcelConfigList.instance.Generic(list.ToArray());
+            }
+        }
+
         public override void OnGUI()
         {
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("导出列表", EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.MORE_BUTTON_ICON), "FoldoutHeaderIcon"))
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.ADD_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE))
             {
-                GenericMenu menu = new GenericMenu();
-                menu.AddItem(new GUIContent("导入配置文件"), false, () =>
+                string path = EditorUtility.OpenFilePanel("选择文件", EditorPrefs.GetString("ExcelPath", Application.dataPath), "xlsx");
+                if (path.IsNullOrEmpty())
                 {
-                    string path = EditorUtility.OpenFilePanel("选择文件", EditorPrefs.GetString("ExcelPath", Application.dataPath), "xlsx");
-                    if (path.IsNullOrEmpty())
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    ExcelConfigList.instance.AddExporter(new ExcelFileObject(path));
-                    EditorPrefs.SetString("ExcelPath", Path.GetDirectoryName(path));
-                });
-                menu.AddItem(new GUIContent("导出所有配置"), false, () =>
-                {
-                    List<ExcelTable> list = new List<ExcelTable>();
-                    for (int i = 0; i < ExcelConfigList.instance.exporters.Count; i++)
-                    {
-                        list.AddRange(ExcelConfigList.instance.exporters[i].options);
-                    }
-
-                    ExcelConfigList.instance.Generic(list.ToArray());
-                });
-                menu.ShowAsContext();
+                ExcelConfigList.instance.AddExporter(new ExcelFileObject(path));
+                EditorPrefs.SetString("ExcelPath", Path.GetDirectoryName(path));
             }
 
             GUILayout.EndHorizontal();

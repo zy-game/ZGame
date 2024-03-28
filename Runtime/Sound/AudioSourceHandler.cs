@@ -6,7 +6,7 @@ using ZGame.Resource;
 
 namespace ZGame.Sound
 {
-    public class AudioSourceHandler : IDisposable
+    public class AudioSourceHandler : IReferenceObject
     {
         private AudioSource _source;
         private ResObject resObject;
@@ -78,7 +78,7 @@ namespace ZGame.Sound
                 return;
             }
 
-            Play(resObject.GetAsset<AudioClip>(), x =>
+            Play(resObject.GetAsset<AudioClip>(null), x =>
             {
                 callback?.Invoke(x);
                 if (x == PlayState.Complete)
@@ -122,7 +122,7 @@ namespace ZGame.Sound
             _source.volume = volume;
         }
 
-        public void Dispose()
+        public void Release()
         {
             Stop();
             GameObject.DestroyImmediate(_source.gameObject);

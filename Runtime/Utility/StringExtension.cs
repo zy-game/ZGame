@@ -11,6 +11,12 @@ namespace ZGame
     {
         public const string SPLIT = "%s";
 
+        public static bool IsEnglish(string input)
+        {
+            // 英文字符的Unicode范围是 U+0041 到 U+005A（大写）和 U+0061 到 U+007A（小写）  
+            return input.All(ch => (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
+        }
+
         public static string RemoveNonEnglishCharacters(this string input)
         {
             // 正则表达式，匹配任何非英文字符并将其替换为空字符串  

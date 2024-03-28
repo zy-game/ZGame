@@ -15,7 +15,7 @@ using ZGame.Editor.CodeGen;
 
 namespace ZGame.Editor.ExcelExprot
 {
-    [ResourceReference("Assets/Settings/ExcelConfig.asset")]
+    [RefPath("Assets/Settings/ExcelConfig.asset")]
     public class ExcelConfigList : BaseConfig<ExcelConfigList>
     {
         public List<ExcelFileObject> exporters;
@@ -198,7 +198,7 @@ namespace ZGame.Editor.ExcelExprot
 
             CodeGener codeGen = new CodeGener(exportSet.name);
             codeGen.AddReferenceNameSpace("System", "System.Linq", "System.Collections", "System.Collections.Generic", "UnityEngine", "ZGame");
-            codeGen.SetInherit("IDatable");
+            codeGen.SetInherit(nameof(IConfigDatable));
             codeGen.SetNameSpace(exportSet.nameSpace);
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
@@ -238,7 +238,7 @@ namespace ZGame.Editor.ExcelExprot
             codeGen.EndCodeScope();
             codeGen.WriteLine("return false;");
             codeGen.EndMethod();
-            codeGen.BeginMethod("Dispose", false, false, String.Empty, ACL.Public);
+            codeGen.BeginMethod("Release", false, true, String.Empty, ACL.Public);
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
                 string name = header.ItemArray[i].ToString();
@@ -250,7 +250,6 @@ namespace ZGame.Editor.ExcelExprot
                 codeGen.WriteLine($"{header[i]} = default;");
             }
 
-            codeGen.WriteLine("GC.SuppressFinalize(this);");
             codeGen.EndMethod();
             codeGen.BeginMethod("InitConfig", true, false, $"List<{exportSet.name}>", ACL.Private);
             codeGen.BeginCodeScope("return new () ");
