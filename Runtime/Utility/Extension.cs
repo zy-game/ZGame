@@ -31,12 +31,10 @@ namespace ZGame
 
     public enum Status : byte
     {
+        None,
         Success,
         Fail,
-        Timeout,
-        NetworkError,
-        ParseError,
-        NotSupport,
+        Runing,
     }
 
     public static partial class Extension
@@ -256,6 +254,23 @@ namespace ZGame
             }
 
             return (T)fieldInfo.GetValue(target);
+        }
+
+        public static T CreateInstance<T>(this Assembly assembly)
+        {
+            Type entryType = assembly.GetAllSubClasses<T>().FirstOrDefault();
+            if (entryType is null)
+            {
+                throw new EntryPointNotFoundException();
+            }
+
+            T startup = (T)GameFrameworkFactory.Spawner(entryType);
+            if (startup is null)
+            {
+                throw new EntryPointNotFoundException();
+            }
+
+            return startup;
         }
     }
 }

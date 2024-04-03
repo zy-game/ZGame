@@ -38,13 +38,13 @@ namespace ZGame
                     return false;
                 }
 
-                return items.Exists(x => x.isOn == false) is false;
+                return items.Any(x => x.isOn);
             }
         }
 
         public bool isNone
         {
-            get { return Count == 0 || items.Where(x => x.isOn).Count() == 0; }
+            get { return Count == 0 || items.Any(x => x.isOn is false); }
         }
 
         public string[] Selected

@@ -70,8 +70,8 @@ namespace AnimationInstancing
 
 #if UNITY_IPHONE || UNITY_ANDROID
             Debug.Assert(m_useBundle);
-			if (m_mainBundle == null)
-            	Debug.LogError("You should call LoadAnimationAssetBundle first.");
+            if (m_mainBundle == null)
+                Debug.LogError("You should call LoadAnimationAssetBundle first.");
 #endif
             if (m_useBundle)
             {
@@ -172,7 +172,7 @@ namespace AnimationInstancing
 		    Debug.Log("This is the data path:" + path);
 		    Debug.Log(w.error);
             BinaryReader reader = new BinaryReader(new MemoryStream(w.bytes));	
-            InstanceAnimationInfo info = new InstanceAnimationInfo();
+             info = new InstanceAnimationInfo();
             info.listAniInfo = ReadAnimationInfo(reader);
             info.extraBoneInfo = ReadExtraBoneInfo(reader);
             m_animationInfo.Add(prefab, info);
@@ -186,7 +186,7 @@ namespace AnimationInstancing
 //             List<AnimationInfo> listInfo = ReadAnimationInfo(reader);
 //             m_animationInfo.Add(prefab, listInfo);
             BinaryReader reader = new BinaryReader(new MemoryStream(w.bytes));	
-            InstanceAnimationInfo info = new InstanceAnimationInfo();
+             info = new InstanceAnimationInfo();
             info.listAniInfo = ReadAnimationInfo(reader);
             info.extraBoneInfo = ReadExtraBoneInfo(reader);
             m_animationInfo.Add(prefab, info);

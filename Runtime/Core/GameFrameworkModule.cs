@@ -35,6 +35,11 @@ namespace ZGame
         {
         }
 
+        public virtual void OnDarwGizom()
+        {
+            
+        }
+
         internal protected virtual void OnDrawingGUI()
         {
         }

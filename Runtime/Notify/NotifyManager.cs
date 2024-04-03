@@ -4,21 +4,78 @@ using UnityEngine;
 
 namespace ZGame.Notify
 {
+    public class KeyEventArgs : IGameEventArgs
+    {
+        public KeyCode keyCode;
+        public KeyEventType type;
+
+        public void Release()
+        {
+        }
+
+        public static KeyEventArgs Create(KeyCode keyCode, KeyEventType type)
+        {
+            KeyEventArgs args = GameFrameworkFactory.Spawner<KeyEventArgs>();
+            args.keyCode = keyCode;
+            args.type = type;
+            return args;
+        }
+    }
+
+    public enum KeyEventType : byte
+    {
+        Down,
+        Up,
+        Press
+    }
+
     /// <summary>
     /// 事件通知管理器
     /// </summary>
     public sealed class NotifyManager : GameFrameworkModule
     {
-        private Dictionary<string, GameEventGroup> _handlers = new();
+        private bool isTouch = false;
+        private List<KeyCode> keyDownEvent = new();
+        private Dictionary<object, GameEventGroup> _handlers = new();
 
-        /// <summary>
-        /// 注册事件回调
-        /// </summary>
-        /// <param name="eventName"></param>
-        /// <param name="handle"></param>
-        public void Subscribe(string eventName, Action<IGameEventArgs> handle)
+        public override void Update()
         {
-            Subscribe(eventName, GameEventHandle<IGameEventArgs>.Create<IGameEventArgs>(handle));
+            CheckKeyDown();
+            CheckKeyUp();
+            CheckPressKey();
+        }
+
+        private void CheckKeyDown()
+        {
+            for (int i = 0; i < keyDownEvent.Count; i++)
+            {
+                if (Input.GetKeyDown(keyDownEvent[i]))
+                {
+                    Notify(keyDownEvent[i], KeyEventArgs.Create(keyDownEvent[i], KeyEventType.Down));
+                }
+            }
+        }
+
+        private void CheckKeyUp()
+        {
+            for (int i = 0; i < keyDownEvent.Count; i++)
+            {
+                if (Input.GetKeyUp(keyDownEvent[i]))
+                {
+                    Notify(keyDownEvent[i], KeyEventArgs.Create(keyDownEvent[i], KeyEventType.Up));
+                }                                                                
+            }
+        }
+
+        private void CheckPressKey()
+        {
+            for (var i = 0; i < keyDownEvent.Count; i++)
+            {
+                if (Input.GetKey(keyDownEvent[i]) || Input.touchCount > 0)
+                {
+                    Notify(keyDownEvent[i], KeyEventArgs.Create(keyDownEvent[i], KeyEventType.Press));
+                }
+            }
         }
 
         /// <summary>
@@ -36,7 +93,7 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Subscribe<T>(string eventName, Action<T> handle) where T : IGameEventArgs, new()
+        public void Subscribe<T>(object eventName, Action<T> handle) where T : IGameEventArgs, new()
         {
             Subscribe(eventName, GameEventHandle<T>.Create(handle));
         }
@@ -46,7 +103,7 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="handle"></param>
         /// <typeparam name="T"></typeparam>
-        public void Subscribe<T>(string eventName, IGameEventHandle<T> handle) where T : IGameEventArgs, new()
+        public void Subscribe<T>(object eventName, IGameEventHandle<T> handle) where T : IGameEventArgs, new()
         {
             Subscribe(eventName, (IGameEventHandle)handle);
         }
@@ -56,8 +113,23 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Subscribe(string eventName, IGameEventHandle handle)
+        public void Subscribe(object eventName, Action<IGameEventArgs> handle)
         {
+            Subscribe(eventName, GameEventHandle<IGameEventArgs>.Create<IGameEventArgs>(handle));
+        }
+
+        /// <summary>
+        /// 注册事件回调
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="handle"></param>
+        public void Subscribe(object eventName, IGameEventHandle handle)
+        {
+            if (eventName is KeyCode keyCode)
+            {
+                keyDownEvent.Add(keyCode);
+            }
+
             if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
             {
                 _handlers.Add(eventName, group = GameFrameworkFactory.Spawner<GameEventGroup>());
@@ -66,45 +138,13 @@ namespace ZGame.Notify
             group.Subscribe(handle);
         }
 
-
-        /// <summary>
-        /// 取消事件回调
-        /// </summary>
-        /// <param name="eventName"></param>
-        /// <param name="handle"></param>
-        public void Unsubscribe(string eventName, Action<IGameEventArgs> handle)
-        {
-            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
-            {
-                return;
-            }
-
-            group.Unsubscribe(handle);
-        }
-
         /// <summary>
         /// 取消事件回调
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
         /// <typeparam name="T"></typeparam>
-        public void Unsubscribe<T>(Action<T> handle) where T : IGameEventArgs
-        {
-            if (_handlers.TryGetValue(typeof(T).Name, out GameEventGroup group) is false)
-            {
-                return;
-            }
-
-            group.Unsubscribe(handle);
-        }
-
-        /// <summary>
-        /// 取消事件回调
-        /// </summary>
-        /// <param name="eventName"></param>
-        /// <param name="handle"></param>
-        /// <typeparam name="T"></typeparam>
-        public void Unsubscribe<T>(string eventName, Action<T> handle) where T : IGameEventArgs
+        public void Unsubscribe<T>(object eventName, Action<T> handle) where T : IGameEventArgs
         {
             if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
             {
@@ -119,8 +159,13 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Unsubscribe(string eventName, IGameEventHandle handle)
+        public void Unsubscribe(object eventName, Action<IGameEventArgs> handle)
         {
+            if (eventName is KeyCode keyCode)
+            {
+                keyDownEvent.Remove(keyCode);
+            }
+
             if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
             {
                 return;
@@ -129,6 +174,25 @@ namespace ZGame.Notify
             group.Unsubscribe(handle);
         }
 
+        /// <summary>
+        /// 取消事件回调
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="handle"></param>
+        public void Unsubscribe(object eventName, IGameEventHandle handle)
+        {
+            if (eventName is KeyCode keyCode)
+            {
+                keyDownEvent.Add(keyCode);
+            }
+
+            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
+            {
+                return;
+            }
+
+            group.Unsubscribe(handle);
+        }
 
         /// <summary>
         /// 清理所有相同类型的事件
@@ -145,12 +209,6 @@ namespace ZGame.Notify
         /// <param name="type"></param>
         public void Clear(Type type)
         {
-            if (type.IsSubclassOf(typeof(IGameEventArgs)) is false)
-            {
-                Debug.LogError("类型不是INotifyArgs的子类：" + type.Name);
-                return;
-            }
-
             Clear(type.Name);
         }
 
@@ -158,7 +216,7 @@ namespace ZGame.Notify
         /// 清理所有相同类型的事件
         /// </summary>
         /// <param name="eventName"></param>
-        public void Clear(string eventName)
+        public void Clear(object eventName)
         {
             if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
             {
@@ -175,14 +233,14 @@ namespace ZGame.Notify
         /// <param name="eventArgs"></param>
         public void Notify(IGameEventArgs eventArgs)
         {
-            Notify(eventArgs.GetType().Name, eventArgs);
+            Notify(eventArgs.GetType(), eventArgs);
         }
 
-        public void Notify(string eventName, IGameEventArgs data)
+        public void Notify(object eventKey, IGameEventArgs data)
         {
-            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
+            if (_handlers.TryGetValue(eventKey, out GameEventGroup group) is false)
             {
-                Debug.LogError("没有找到事件列表：" + eventName);
+                Debug.LogError("没有找到事件列表：" + eventKey);
                 return;
             }
 

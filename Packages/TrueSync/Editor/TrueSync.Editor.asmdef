@@ -1,0 +1,16 @@
+{
+    "name": "TrueSync.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b049acfb01ba4e14e9de3283511bae70"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

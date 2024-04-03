@@ -48,15 +48,19 @@ namespace ZGame.Sound
         /// <param name="clipName"></param>
         /// <param name="isLoop"></param>
         /// <param name="playCallback"></param>
-        public void PlaySound(string clipName, bool isLoop = false, Action<PlayState> playCallback = null)
+        public async void PlaySound(string clipName, bool isLoop = false, Action<PlayState> playCallback = null)
         {
-            AudioSourceHandler handle = _handles.Find(x => x.isPlaying is false);
-            if (handle is null)
+            AudioClip clip = GameFrameworkEntry.VFS.GetAudioClipSync(clipName, null);
+            PlaySound(clip, isLoop, (x) =>
             {
-                _handles.Add(handle = new AudioSourceHandler(null, "Audio Player " + _handles.Count, isLoop));
-            }
+                if (x is not PlayState.Complete)
+                {
+                    return;
+                }
 
-            handle.Play(clipName, playCallback);
+                playCallback?.Invoke(x);
+                GameFrameworkEntry.VFS.UnloadResource(clip);
+            });
         }
 
         /// <summary>
@@ -87,14 +91,16 @@ namespace ZGame.Sound
         public UniTask PlaySoundAsync(string clipName, bool isLoop = false)
         {
             UniTaskCompletionSource tcs = new UniTaskCompletionSource();
-            PlaySound(clipName, isLoop, state =>
+            AudioClip clip = GameFrameworkEntry.VFS.GetAudioClipSync(clipName, null);
+            PlaySound(clip, isLoop, (x) =>
             {
-                if (state is not PlayState.Complete)
+                if (x is not PlayState.Complete)
                 {
                     return;
                 }
 
                 tcs.TrySetResult();
+                GameFrameworkEntry.VFS.UnloadResource(clip);
             });
             return tcs.Task;
         }

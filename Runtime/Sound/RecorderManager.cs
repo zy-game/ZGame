@@ -221,6 +221,7 @@ namespace ZGame.Sound
         /// </summary>
         public void StopRecordingSound(bool isCancel)
         {
+            GameFrameworkEntry.Logger.Log("Stop Recording");
             _isRecording = false;
             if (isCancel is false)
             {
@@ -230,7 +231,7 @@ namespace ZGame.Sound
 
             Microphone.End(_divName);
             _recordClip = null;
-            Debug.Log("End Recording:" + _divName + " :" + Microphone.IsRecording(_divName) + " isCancel:" + isCancel);
+            Debug.Log("Stop Record Complete:" + _divName + " :" + Microphone.IsRecording(_divName) + " isCancel:" + isCancel);
         }
 
         public override void Release()

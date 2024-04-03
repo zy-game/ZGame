@@ -13,18 +13,15 @@ namespace ZGame.Data
     {
         private Dictionary<string, string> cacheDic = new Dictionary<string, string>();
 
-        public override void OnAwake(params object[] args)
+        public override async void OnAwake(params object[] args)
         {
-            byte[] bytes = GameFrameworkEntry.VFS.Read("dataCache.ini");
-            if (bytes is null || bytes.Length == 0)
+            TextAsset textAsset = await GameFrameworkEntry.VFS.GetTextAssetAsync("dataCache.ini", null);
+            if (textAsset == null)
             {
                 return;
             }
-            
 
-            string json = System.Text.Encoding.UTF8.GetString(bytes);
-            Debug.Log(json);
-            cacheDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            cacheDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(textAsset.text);
         }
 
         /// <summary>

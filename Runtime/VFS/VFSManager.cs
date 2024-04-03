@@ -2,185 +2,61 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using HybridCLR;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using ZGame.Config;
+using ZGame.Networking;
+using ZGame.Resource;
+using ZGame.Resource.Config;
+using ZGame.UI;
+using Object = UnityEngine.Object;
 
 namespace ZGame.VFS
 {
-    /// <summary>
-    /// 虚拟磁盘
-    /// </summary>
-    class VFSDisk : IReferenceObject
-    {
-        class DirtOpt
-        {
-            public string name;
-            public List<FileOpt> files;
-        }
-
-        class FileOpt
-        {
-            /// <summary>
-            /// 文件名
-            /// </summary>
-            public string name;
-
-            /// <summary>
-            /// 数据长度
-            /// </summary>
-            public int length;
-
-            /// <summary>
-            /// 数去读取起始偏移
-            /// </summary>
-            public int offset;
-        }
-
-        private List<VFSDirctory> _files;
-        private List<DirtOpt> _dirtOpts;
-
-        public void Release()
-        {
-        }
-
-        public static VFSDisk OpenOrCreateDisk(string name)
-        {
-            VFSDisk disk = GameFrameworkFactory.Spawner<VFSDisk>();
-            string path = GameFrameworkEntry.GetApplicationFilePath(name);
-            if (File.Exists(path) is false)
-            {
-                disk._dirtOpts = JsonConvert.DeserializeObject<List<DirtOpt>>(path + ".ini");
-            }
-
-            return default;
-        }
-    }
-
-    class VFSDirctory : IReferenceObject
-    {
-        private List<VFSFile> _files;
-
-        public void Release()
-        {
-        }
-    }
-
-    /// <summary>
-    /// 虚拟文件对象
-    /// </summary>
-    class VFSFile : IReferenceObject
-    {
-        public string name;
-        public uint version;
-
-        public void Release()
-        {
-        }
-
-        public static byte[] ReadAllBytes(string path)
-        {
-            return default;
-        }
-
-        public static string ReadAllText(string path)
-        {
-            return default;
-        }
-
-        public static void WriteAllBytes(string path, byte[] bytes, uint version)
-        {
-        }
-
-        public static void WriteAllText(string path, string text, uint version)
-        {
-        }
-    }
-
     /// <summary>
     /// 虚拟文件系统
     /// </summary>
     public class VFSManager : GameFrameworkModule
     {
-        private VFSDisk _disk;
-        private string vfsFileName;
-        private List<VFSChunk> chunkList = new List<VFSChunk>();
-        private List<VFStream> vfStreamList = new List<VFStream>();
+        private NFSManager _disk;
+        private const string EDITOR_RESOURCES_PACKAGE = "EDITOR_RESOURCES_PACKAGE";
+        private const string NETWORK_RESOURCES_PACKAGE = "NETWORK_RESOURCES_PACKAGE";
+        private const string INTERNAL_RESOURCES_PACKAGE = "INTERNAL_RESOURCES_PACKAGE";
 
-        //todo  将所有文件或文件的操封装到这里
+        private ResourcePackageManifestManager manifestManager;
 
         public override void OnAwake(params object[] args)
         {
-            _disk = VFSDisk.OpenOrCreateDisk(GameConfig.instance.title + " virtual data.disk");
-            vfsFileName = $"{Application.persistentDataPath}/{MDFive.MD5Encrypt16("vfs.ini")}";
-            if (!File.Exists(vfsFileName))
-            {
-                return;
-            }
-
-            chunkList = JsonConvert.DeserializeObject<List<VFSChunk>>(File.ReadAllText(vfsFileName));
+            manifestManager = new ResourcePackageManifestManager();
+            _disk = NFSManager.OpenOrCreateDisk(GameConfig.instance.title + " virtual data.disk");
         }
 
         public override void Release()
         {
-            vfStreamList.ForEach(x => x.Dispose());
-            Saved();
+            GameFrameworkFactory.Release(manifestManager);
+            GameFrameworkFactory.Release(_disk);
         }
 
         /// <summary>
-        /// 保存VFS数据
+        /// 获取资源所在包的清单
         /// </summary>
-        private void Saved()
-        {
-            File.WriteAllText(vfsFileName, JsonConvert.SerializeObject(chunkList));
-        }
-
-        private VFStream GetStream(string vfs)
-        {
-            VFStream handle = vfStreamList.Find(x => x.name == vfs);
-            if (handle is null)
-            {
-                if (File.Exists(Application.persistentDataPath + "/" + vfs) is false)
-                {
-                    return default;
-                }
-
-                vfStreamList.Add(handle = new VFStream(Application.persistentDataPath + "/" + vfs));
-            }
-
-            return handle;
-        }
-
-        private VFSChunk GetFreeChunk()
-        {
-            VFSChunk freeChunk = chunkList.Find(x => x.use == false);
-            if (freeChunk is null)
-            {
-                string vfs = Guid.NewGuid().ToString().Replace("-", String.Empty);
-                vfStreamList.Add(new VFStream(Application.persistentDataPath + "/" + vfs));
-                for (int i = 0; i < VFSConfig.instance.chunkCount; i++)
-                {
-                    chunkList.Add(new VFSChunk(vfs, VFSConfig.instance.chunkSize, i * VFSConfig.instance.chunkSize));
-                }
-
-                freeChunk = GetFreeChunk();
-            }
-
-            return freeChunk;
-        }
-
-        /// <summary>
-        /// 获取文件占用的VFS数据块
-        /// </summary>
-        /// <param name="fileName"></param>
+        /// <param name="assetName"></param>
+        /// <param name="manifest"></param>
         /// <returns></returns>
-        public VFSChunk[] FindFileChunkList(string fileName)
+        public bool TryGetPackageManifestWithAssetName(string assetName, out ResourcePackageManifest manifest)
         {
-            return chunkList.Where(x => x.name == fileName).ToArray();
+            return manifestManager.TryGetPackageManifestWithAssetName(assetName, out manifest);
         }
+
 
         /// <summary>
         /// 删除文件
@@ -188,18 +64,7 @@ namespace ZGame.VFS
         /// <param name="fileName"></param>
         public void Delete(string fileName)
         {
-            IEnumerable<VFSChunk> fileData = chunkList.Where(x => x.name == fileName);
-            foreach (var file in fileData)
-            {
-                if (VFSConfig.instance.enable is false)
-                {
-                    File.Delete(GameFrameworkEntry.GetApplicationFilePath(fileName));
-                }
-
-                file.Free();
-            }
-
-            Saved();
+            _disk.Delete(fileName);
         }
 
         /// <summary>
@@ -210,13 +75,7 @@ namespace ZGame.VFS
         /// <returns></returns>
         public bool Exist(string fileName, uint version)
         {
-            VFSChunk vfsChunk = chunkList.Find(x => x.name == fileName);
-            if (vfsChunk is null)
-            {
-                return false;
-            }
-
-            return vfsChunk.version == version;
+            return _disk.Exists(fileName, version);
         }
 
         /// <summary>
@@ -224,11 +83,10 @@ namespace ZGame.VFS
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public bool Exsit(string fileName)
+        public bool Exist(string fileName)
         {
-            return chunkList.Find(x => x.name == fileName) is not null;
+            return _disk.Exists(fileName);
         }
-
 
         /// <summary>
         /// 写入文件数据
@@ -238,64 +96,7 @@ namespace ZGame.VFS
         /// <param name="version"></param>
         public Status Write(string fileName, byte[] bytes, uint version)
         {
-            Delete(fileName);
-            Status status = Status.Success;
-            if (VFSConfig.instance.enable is false)
-            {
-                try
-                {
-                    VFSChunk chunk = GetFreeChunk();
-                    File.WriteAllBytes(GameFrameworkEntry.GetApplicationFilePath(fileName), bytes);
-                    chunk.Use(fileName, bytes.Length, 0, version);
-                }
-                catch (Exception e)
-                {
-                    GameFrameworkEntry.Logger.LogError(e);
-                }
-
-                status = Status.Fail;
-            }
-            else
-            {
-                List<VFSChunk> useChunkList = new List<VFSChunk>();
-                int chunkSize = VFSConfig.instance.chunkSize;
-                int maxCount = Extension.MaxSharinCount(bytes.Length, chunkSize);
-                for (int i = 0; i < maxCount; i++)
-                {
-                    VFSChunk chunk = GetFreeChunk();
-                    if (chunk is null)
-                    {
-                        GameFrameworkEntry.Logger.LogError("没有可用的VFS数据块");
-                        break;
-                    }
-
-                    VFStream stream = GetStream(chunk.vfs);
-                    if (stream is null)
-                    {
-                        GameFrameworkEntry.Logger.LogError(new FileNotFoundException(chunk.vfs));
-                        break;
-                    }
-
-                    int length = bytes.Length - i * chunkSize > chunk.length ? chunk.length : bytes.Length - i * chunkSize;
-                    status = stream.Write(chunk.offset, bytes, i * chunkSize, length);
-                    if (status is not Status.Success)
-                    {
-                        GameFrameworkEntry.Logger.LogError("写入文件数据失败");
-                        break;
-                    }
-
-                    useChunkList.Add(chunk);
-                    chunk.Use(fileName, length, i, version);
-                }
-
-                if (status is not Status.Success)
-                {
-                    chunkList.ForEach(x => x.Free());
-                }
-            }
-
-            Saved();
-            return status;
+            return _disk.Write(fileName, bytes, version);
         }
 
         /// <summary>
@@ -304,158 +105,620 @@ namespace ZGame.VFS
         /// <param name="fileName"></param>
         /// <param name="bytes"></param>
         /// <param name="version"></param>
-        public async UniTask<Status> WriteAsync(string fileName, byte[] bytes, uint version, CancellationTokenSource cancellationTokenSource = null)
+        public UniTask<Status> WriteAsync(string fileName, byte[] bytes, uint version)
         {
-            Delete(fileName);
-            Status status = Status.Success;
-            using (CancellationTokenSourceGroup cancellationTokenSourceGroup = new CancellationTokenSourceGroup(cancellationTokenSource))
+            return _disk.WriteAsync(fileName, bytes, version);
+        }
+
+        /// <summary>
+        /// 读取文件数据
+        /// </summary>
+        /// <param name="fileName">文件名</param>
+        /// <param name="version">文件版本，当为0时，忽略版本控制</param>
+        /// <returns>文件数据</returns>
+        public byte[] Read(string fileName, uint version = 0)
+        {
+            return _disk.Read(fileName);
+        }
+
+        /// <summary>
+        /// 读取文件数据
+        /// </summary>
+        /// <param name="fileName">文件名</param>
+        /// <param name="version">文件版本，当为0时，忽略版本控制</param>
+        /// <returns>文件数据</returns>
+        public UniTask<byte[]> ReadAsync(string fileName, uint version = 0)
+        {
+            return _disk.ReadAsync(fileName);
+        }
+
+        /// <summary>
+        /// 加载资源包
+        /// </summary>
+        /// <param name="packageName"></param>
+        /// <returns></returns>
+        public async UniTask<Status> LoadingResourcePackageAsync(string packageName)
+        {
+            if (await manifestManager.LoadingPackageManifestData(packageName) is not Status.Success)
             {
-                if (VFSConfig.instance.enable is false)
+                return Status.Fail;
+            }
+
+            if (await ResPackage.UpdateResourcePackageList(manifestManager.GetUpdateResourcePackageList(packageName).ToArray()) is not Status.Success)
+            {
+                return Status.Fail;
+            }
+
+            if (await ResPackage.LoadingResourcePackageListAsync(manifestManager.GetResourcePackageAndDependencyList(packageName).ToArray()) is not Status.Success)
+            {
+                return Status.Fail;
+            }
+
+            return Status.Success;
+        }
+
+        /// <summary>
+        /// 卸载资源包
+        /// </summary>
+        /// <param name="packageNameList"></param>
+        public void UnloadPackages(params string[] packageNameList)
+        {
+            if (packageNameList is null || packageNameList.Length == 0)
+            {
+                return;
+            }
+        }
+
+        public void UnloadResource(Object obj)
+        {
+        }
+
+
+        /// <summary>
+        /// 加载场景
+        /// </summary>
+        /// <param name="path">场景路径</param>
+        /// <param name="callback">场景加载进度回调</param>
+        /// <param name="mode">场景加载模式</param>
+        /// <returns></returns>
+        public async UniTask<ResObject> GetSceneAsync(string path, IProgress<float> callback, LoadSceneMode mode = LoadSceneMode.Single)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                return ResObject.Empty;
+            }
+
+            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject sceneObject))
+            {
+                return sceneObject;
+            }
+
+            UILoading.SetTitle(GameFrameworkEntry.Language.Query("加载场景中..."));
+            Scene scene = default;
+            ResPackage package = default;
+            AsyncOperation operation = default;
+            LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
+#if UNITY_EDITOR
+            if (ResConfig.instance.resMode == ResourceMode.Editor)
+            {
+                operation = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, parameters);
+            }
+#endif
+            if (operation == null)
+            {
+                if (manifestManager.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
                 {
-                    try
-                    {
-                        VFSChunk chunk = GetFreeChunk();
-                        await File.WriteAllBytesAsync(GameFrameworkEntry.GetApplicationFilePath(fileName), bytes, cancellationTokenSourceGroup.GetToken());
-                        chunk.Use(fileName, bytes.Length, 0, version);
-                    }
-                    catch (Exception e)
-                    {
-                        GameFrameworkEntry.Logger.LogError(e);
-                        status = Status.Fail;
-                    }
+                    return sceneObject;
+                }
+
+                if (GameFrameworkEntry.Cache.TryGetValue(manifest.name, out package) is false)
+                {
+                    await ResPackage.LoadingResourcePackageListAsync(manifest);
+                    return await GetSceneAsync(path, callback, mode);
                 }
                 else
                 {
-                    int chunkSize = VFSConfig.instance.chunkSize;
-                    int maxCount = Extension.MaxSharinCount(bytes.Length, chunkSize);
-                    UniTask<Status>[] writeTasks = new UniTask<Status>[maxCount];
-                    List<VFSChunk> chunkList = new List<VFSChunk>();
-                    for (int i = 0; i < maxCount; i++)
-                    {
-                        VFSChunk chunk = GetFreeChunk();
-                        if (chunk is null)
-                        {
-                            throw new Exception("没有可用的VFS数据块");
-                        }
-
-                        VFStream stream = GetStream(chunk.vfs);
-                        if (stream is null)
-                        {
-                            throw new FileNotFoundException(chunk.vfs);
-                        }
-
-                        int length = bytes.Length - i * chunkSize > chunk.length ? chunk.length : bytes.Length - i * chunkSize;
-                        writeTasks[i] = stream.WriteAsync(chunk.offset, bytes, i * chunkSize, length, cancellationTokenSourceGroup.GetToken());
-                        chunk.Use(fileName, length, i, version);
-                        chunkList.Add(chunk);
-                    }
-
-                    Status[] writeResult = await UniTask.WhenAll(writeTasks);
-                    if (writeResult.All(x => x == Status.Success) is false)
-                    {
-                        Debug.LogError("写入文件失败：" + fileName);
-                        status = Status.Fail;
-                        chunkList.ForEach(x => x.Free());
-                    }
+                    operation = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path), parameters);
                 }
-
-                Saved();
             }
 
-            return status;
+            await operation.ToUniTask(UILoading.Show());
+            scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
+            GameFrameworkEntry.Cache.SetCacheData(sceneObject = ResObject.Create(package, scene, path));
+            UILoading.Hide();
+            return sceneObject;
         }
 
         /// <summary>
-        /// 读取文件数据
+        /// 加载预制体
         /// </summary>
-        /// <param name="fileName"></param>
+        /// <param name="path">预制体路径</param>
         /// <returns></returns>
-        public byte[] Read(string fileName)
+        public GameObject GetGameObjectSync(string path)
         {
-            if (Exsit(fileName) is false)
+            ResObject resObject = ResObject.Create(path);
+            if (resObject.IsSuccess() is false)
             {
-                return Array.Empty<byte>();
+                Debug.LogError("加载资源失败：" + path);
+                return default;
             }
 
-            if (VFSConfig.instance.enable is false)
+            GameObject gameObject = (GameObject)GameObject.Instantiate(resObject.GetAsset<Object>(null));
+            gameObject.SubscribeDestroyEvent(() => { resObject.Release(); });
+            return gameObject;
+        }
+
+        /// <summary>
+        /// 加载预制体
+        /// </summary>
+        /// <param name="path">预制体路径</param>
+        /// <param name="parent">初始化时的父物体</param>
+        /// <param name="pos">初始化的位置</param>
+        /// <param name="rot">初始化的旋转</param>
+        /// <param name="scale">初始化时的缩放</param>
+        /// <returns></returns>
+        /// <returns></returns>
+        public GameObject GetGameObjectSync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
+        {
+            GameObject gameObject = GetGameObjectSync(path);
+            if (gameObject != null)
             {
-                return File.ReadAllBytes(GameFrameworkEntry.GetApplicationFilePath(fileName));
+                if (parent != null)
+                {
+                    gameObject.SetParent(parent.transform, pos, rot, scale);
+                }
+                else
+                {
+                    gameObject.SetParent(null, pos, rot, scale);
+                }
+            }
+
+            return gameObject;
+        }
+
+        /// <summary>
+        /// 加载预制体
+        /// </summary>
+        /// <param name="path">预制体路径</param>
+        /// <returns></returns>
+        public async UniTask<GameObject> GetGameObjectAsync(string path)
+        {
+            ResObject resObject = await ResObject.CreateAsync(path);
+            if (resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            GameObject gameObject = (GameObject)GameObject.Instantiate(resObject.GetAsset<Object>(null));
+            gameObject.SubscribeDestroyEvent(() => { resObject.Release(); });
+            return gameObject;
+        }
+
+        /// <summary>
+        /// 加载预制体
+        /// </summary>
+        /// <param name="path">预制体路径</param>
+        /// <param name="parent">初始化时的父物体</param>
+        /// <param name="pos">初始化的位置</param>
+        /// <param name="rot">初始化的旋转</param>
+        /// <param name="scale">初始化时的缩放</param>
+        /// <returns></returns>
+        public async UniTask<GameObject> GetGameObjectAsync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
+        {
+            GameObject gameObject = await GetGameObjectAsync(path);
+            if (gameObject != null)
+            {
+                if (parent != null)
+                {
+                    gameObject.SetParent(parent.transform, pos, rot, scale);
+                }
+                else
+                {
+                    gameObject.SetParent(null, pos, rot, scale);
+                }
+            }
+
+            return gameObject;
+        }
+
+        /// <summary>
+        /// 加载音效
+        /// </summary>
+        /// <param name="path">音效路径</param>
+        /// <param name="gameObject">引用持有者</param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="NotSupportedException"></exception>
+        public AudioClip GetAudioClipSync(string path, GameObject gameObject)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(path));
+            }
+
+            if (path.StartsWith("http"))
+            {
+                throw new NotSupportedException();
+            }
+
+            ResObject resObject = ResObject.Create(path);
+            if (resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            return resObject.GetAsset<AudioClip>(gameObject);
+        }
+
+        /// <summary>
+        /// 加载音效
+        /// </summary>
+        /// <param name="path">音效路径</param>
+        /// <param name="gameObject">引用持有者</param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        public async UniTask<AudioClip> GetAudioClipAsync(string path, AudioType audioType, GameObject gameObject)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(path));
+            }
+
+            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject resObject) is false)
+            {
+                if (path.StartsWith("http") is false)
+                {
+                    resObject = await ResObject.CreateAsync(path);
+                }
+                else
+                {
+                    using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(path, audioType))
+                    {
+                        await request.SendWebRequest();
+                        if (request.result is UnityWebRequest.Result.Success)
+                        {
+                            resObject = ResObject.Create(DownloadHandlerAudioClip.GetContent(request), path);
+                            GameFrameworkEntry.Cache.SetCacheData(resObject);
+                        }
+                    }
+                }
+            }
+
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            return resObject.GetAsset<AudioClip>(gameObject);
+        }
+
+        /// <summary>
+        /// 加载图片
+        /// </summary>
+        /// <param name="path">图片路径</param>
+        /// <param name="gameObject">引用持有者</param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="NotSupportedException"></exception>
+        public Texture2D GetTexture2DSync(string path, GameObject gameObject)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(path));
+            }
+
+            if (path.StartsWith("http"))
+            {
+                throw new NotSupportedException();
+            }
+
+            ResObject resObject = ResObject.Create(path);
+            if (resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            return resObject.GetAsset<Texture2D>(gameObject);
+        }
+
+        /// <summary>
+        /// 加载图片
+        /// </summary>
+        /// <param name="path">图片路径</param>
+        /// <param name="gameObject">引用持有者</param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="NotSupportedException"></exception>
+        public async UniTask<Texture2D> GetTexture2DAsync(string path, GameObject gameObject)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(path));
+            }
+
+            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject resObject) is false)
+            {
+                if (path.StartsWith("http") is false)
+                {
+                    resObject = await ResObject.CreateAsync(path);
+                }
+                else
+                {
+                    using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(path))
+                    {
+                        await request.SendWebRequest();
+                        if (request.result is UnityWebRequest.Result.Success)
+                        {
+                            resObject = ResObject.Create(DownloadHandlerTexture.GetContent(request), path);
+                            GameFrameworkEntry.Cache.SetCacheData(resObject);
+                        }
+                    }
+                }
+            }
+
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            return resObject.GetAsset<Texture2D>(gameObject);
+        }
+
+        /// <summary>
+        /// 加载精灵图片
+        /// </summary>
+        /// <param name="path">图片路径</param>
+        /// <param name="gameObject">引用持有者</param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="NotSupportedException"></exception>
+        public Sprite GetSpriteSync(string path, GameObject gameObject)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(path));
+            }
+
+            if (path.StartsWith("http"))
+            {
+                throw new NotSupportedException();
+            }
+
+            ResObject resObject = ResObject.Create(path);
+            if (resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            return resObject.GetAsset<Sprite>(gameObject);
+        }
+
+        /// <summary>
+        /// 加载精灵图片
+        /// </summary>
+        /// <param name="path">图片路径</param>
+        /// <param name="gameObject">引用持有者</param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        public async UniTask<Sprite> GetSpriteAsync(string path, GameObject gameObject)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(path));
+            }
+
+            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject resObject) is false)
+            {
+                if (path.StartsWith("http") is false)
+                {
+                    resObject = await ResObject.CreateAsync(path);
+                }
+                else
+                {
+                    using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(path))
+                    {
+                        await request.SendWebRequest();
+                        if (request.result is UnityWebRequest.Result.Success)
+                        {
+                            Texture2D texture2D = DownloadHandlerTexture.GetContent(request);
+                            Sprite sp = Sprite.Create(texture2D, new Rect(0, 0, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f));
+                            resObject = ResObject.Create(sp, path);
+                            GameFrameworkEntry.Cache.SetCacheData(resObject);
+                        }
+                    }
+                }
+            }
+
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            return resObject.GetAsset<Sprite>(gameObject);
+        }
+
+        /// <summary>
+        /// 加载材质球
+        /// </summary>
+        /// <param name="path">材质球路径</param>
+        /// <param name="gameObject">引用持有者</param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        public Material GetMaterialSync(string path, GameObject gameObject)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(path));
+            }
+
+            ResObject resObject = ResObject.Create(path);
+            if (resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            return resObject.GetAsset<Material>(gameObject);
+        }
+
+        /// <summary>
+        /// 加载材质球
+        /// </summary>
+        /// <param name="path">材质球路径</param>
+        /// <param name="gameObject">引用持有者</param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        public async UniTask<Material> GetMaterialAsync(string path, GameObject gameObject)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(path));
+            }
+
+            ResObject resObject = await ResObject.CreateAsync(path);
+            if (resObject.IsSuccess() is false)
+            {
+                Debug.LogError("加载资源失败：" + path);
+                return default;
+            }
+
+            return resObject.GetAsset<Material>(gameObject);
+        }
+
+        /// <summary>
+        /// 获取文本资源
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="gameObject"></param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        public TextAsset GetTextAssetSync(string url, GameObject gameObject)
+        {
+            if (url.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(url));
+            }
+
+            if (GameFrameworkEntry.Cache.TryGetValue(url, out ResObject resObject))
+            {
+                return resObject.GetAsset<TextAsset>(gameObject);
+            }
+
+            if (manifestManager.TryGetPackageManifestWithAssetName(url, out ResourcePackageManifest manifest))
+            {
+                resObject = ResObject.Create(url);
+            }
+
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                return default;
+            }
+
+            return resObject.GetAsset<TextAsset>(gameObject);
+        }
+
+        /// <summary>
+        /// 获取文本资源
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="gameObject"></param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        public async UniTask<TextAsset> GetTextAssetAsync(string url, GameObject gameObject)
+        {
+            if (url.IsNullOrEmpty())
+            {
+                throw new NullReferenceException(nameof(url));
+            }
+
+            if (GameFrameworkEntry.Cache.TryGetValue(url, out ResObject resObject))
+            {
+                return resObject.GetAsset<TextAsset>(gameObject);
+            }
+
+            if (manifestManager.TryGetPackageManifestWithAssetName(url, out ResourcePackageManifest manifest))
+            {
+                resObject = await ResObject.CreateAsync(url);
             }
             else
             {
-                VFSChunk[] vfsDatas = FindFileChunkList(fileName);
-                if (vfsDatas is null || vfsDatas.Length is 0)
+                if (url.StartsWith("http"))
                 {
-                    throw new FileNotFoundException(fileName);
-                }
-
-                byte[] bytes = new byte[vfsDatas.Sum(x => x.useLenght)];
-                foreach (var VARIABLE in vfsDatas)
-                {
-                    VFStream handle = GetStream(VARIABLE.vfs);
-                    if (handle is null)
+                    using (UnityWebRequest request = UnityWebRequest.Get(url))
                     {
-                        return Array.Empty<byte>();
+                        await request.SendWebRequest();
+                        if (request.result is UnityWebRequest.Result.Success)
+                        {
+                            resObject = ResObject.Create(new TextAsset(request.downloadHandler.text), url);
+                            GameFrameworkEntry.Cache.SetCacheData(resObject);
+                        }
                     }
-
-                    int offset = VARIABLE.sort * VFSConfig.instance.chunkSize;
-                    handle.Read(VARIABLE.offset, bytes, VARIABLE.sort * VFSConfig.instance.chunkSize, VARIABLE.useLenght);
                 }
-
-                return bytes;
             }
+
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                return default;
+            }
+
+            return resObject.GetAsset<TextAsset>(gameObject);
         }
 
         /// <summary>
-        /// 读取文件数据
+        /// 加载热更新代码
         /// </summary>
-        /// <param name="fileName"></param>
+        /// <param name="dllName"></param>
+        /// <param name="mode"></param>
         /// <returns></returns>
-        public async UniTask<byte[]> ReadAsync(string fileName, CancellationTokenSource cancellationTokenSource = null)
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
+        public async UniTask<Assembly> LoadGameAssembly(string dllName, CodeMode mode)
         {
-            if (Exsit(fileName) is false)
+            if (mode is CodeMode.Native || (ResConfig.instance.resMode == ResourceMode.Editor && Application.isEditor))
             {
-                return Array.Empty<byte>();
+                if (dllName.IsNullOrEmpty())
+                {
+                    throw new NullReferenceException(nameof(dllName));
+                }
+
+                Debug.Log("原生代码：" + dllName);
+                return AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             }
 
-            using (CancellationTokenSourceGroup cancellationTokenSourceGroup = new CancellationTokenSourceGroup(cancellationTokenSource))
+            string aotFileName = $"{dllName.ToLower()}_aot.bytes";
+            string hotfixFile = $"{dllName.ToLower()}_hotfix.bytes";
+            if (manifestManager.TryGetPackageVersion(aotFileName, out uint crc) is false || manifestManager.TryGetPackageVersion(hotfixFile, out crc) is false)
             {
-                if (VFSConfig.instance.enable is false)
-                {
-                    return await File.ReadAllBytesAsync(GameFrameworkEntry.GetApplicationFilePath(fileName), cancellationTokenSourceGroup.GetToken());
-                }
-
-                VFSChunk[] chunkList = FindFileChunkList(fileName);
-                if (chunkList is null || chunkList.Length is 0)
-                {
-                    return Array.Empty<byte>();
-                }
-
-                byte[] bytes = new byte[chunkList.Sum(x => x.useLenght)];
-                UniTask<Status>[] readTasks = new UniTask<Status>[chunkList.Length];
-                for (int i = 0; i < chunkList.Length; i++)
-                {
-                    VFStream handle = GetStream(chunkList[i].vfs);
-                    if (handle is null)
-                    {
-                        readTasks[i] = UniTask.FromResult(Status.Fail);
-                        GameFrameworkEntry.Logger.LogError(new FileNotFoundException(chunkList[i].vfs));
-                        break;
-                    }
-
-                    int offset = chunkList[i].sort * VFSConfig.instance.chunkSize;
-                    readTasks[i] = handle.ReadAsync(chunkList[i].offset, bytes, offset, chunkList[i].useLenght, cancellationTokenSourceGroup.GetToken());
-                }
-
-                Status[] readResult = await UniTask.WhenAll(readTasks);
-                if (readResult.All(x => x == Status.Success) is false)
-                {
-                    GameFrameworkEntry.Logger.LogError("读取文件数据失败：" + fileName);
-                    return Array.Empty<byte>();
-                }
-
-                return bytes;
+                throw new FileNotFoundException();
             }
+
+            byte[] bytes = await _disk.ReadAsync(aotFileName);
+            Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(bytes);
+            foreach (var VARIABLE in aotZipDict)
+            {
+                if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
+                {
+                    Debug.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
+                    continue;
+                }
+            }
+
+            bytes = await _disk.ReadAsync(hotfixFile);
+            Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(bytes);
+            if (dllZipDict.TryGetValue(dllName + ".dll", out byte[] dllBytes) is false)
+            {
+                throw new NullReferenceException(dllName);
+            }
+
+            Debug.Log("加载热更代码:" + dllName + ".dll");
+            return Assembly.Load(dllBytes);
         }
     }
 }

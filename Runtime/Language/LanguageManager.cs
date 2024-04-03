@@ -39,11 +39,15 @@ namespace ZGame.Language
             AddLanguageDatable(-1, cn: "正在获取配置信息...", en: "Getting configuration information...");
             AddLanguageDatable(-1, cn: "更新资源列表中...", en: "Update Resource List...");
             AddLanguageDatable(-1, cn: "资源加载失败...", en: "Resource loading failed...");
+            AddLanguageDatable(-1, cn: "资源更新失败...", en: "Resource updating failed...");
             AddLanguageDatable(-1, cn: "资源加载完成...", en: "Resources loaded successfully...");
             AddLanguageDatable(-1, cn: "正在加载资源信息...", en: "Loading resource information...");
             AddLanguageDatable(-1, cn: "资源更新完成...", en: "Resource update completed...");
             AddLanguageDatable(-1, cn: "确定", en: "Confirm");
+            AddLanguageDatable(-1, cn: "取消", en: "Cancel");
             AddLanguageDatable(-1, cn: "App 版本过低，请重新安装App后在使用", en: "The app version is too low. Please reinstall the app before using it");
+            AddLanguageDatable(-1, cn: "未找到入口配置...", en: "Not Find Entry Point...");
+            AddLanguageDatable(-1, cn: "加载场景中...", en: "Loading Scene...");
             Switch(ChannelConfigList.instance.current.language);
         }
 

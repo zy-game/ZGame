@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using ZGame;
 using ZGame.Config;
+using ZGame.Notify;
 
 namespace ZGame.UI
 {
@@ -28,7 +29,7 @@ namespace ZGame.UI
             this.onYes = (Action)(args[2]);
             this.onNo = (Action)(args[3]);
 
-            GameFrameworkEntry.Keyboard.SubscribeKeyDown(KeyCode.Escape, OnBackup);
+            GameFrameworkEntry.Notify.Subscribe<KeyEventArgs>(KeyCode.Escape, OnBackup);
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>(true);
             foreach (var VARIABLE in texts)
             {
@@ -65,17 +66,24 @@ namespace ZGame.UI
                 {
                     VARIABLE.onClick.AddListener(() => Switch(false));
                 }
+
+                VARIABLE.gameObject.SetActive(onNo != null);
             }
         }
 
-        private void OnBackup()
+        private void OnBackup(KeyEventArgs args)
         {
+            if (args.keyCode is not KeyCode.Escape && args.type is not KeyEventType.Down)
+            {
+                return;
+            }
+
             Switch(false);
         }
 
         private void Switch(bool state)
         {
-            GameFrameworkEntry.Keyboard.UnsubscribeKeyDown(KeyCode.Escape, OnBackup);
+            GameFrameworkEntry.Notify.Unsubscribe<KeyEventArgs>(KeyCode.Escape, OnBackup);
             GameFrameworkEntry.UI?.Inactive(this);
             switch (state)
             {

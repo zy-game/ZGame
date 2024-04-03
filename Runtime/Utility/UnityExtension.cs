@@ -1,41 +1,201 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
+using ZGame.Game;
 
 namespace ZGame
 {
     public static partial class Extension
     {
-        class GameObjectHandle : MonoBehaviour
+        public static void SetIgnoreCertificate(this UnityWebRequest request)
         {
-            private UnityEvent _destroy = new UnityEvent();
-
-            public void OnSetup(UnityAction destroy)
+            if (request == null)
             {
-                _destroy.AddListener(destroy);
+                return;
             }
 
-            public void OnUnsetup(UnityAction destroy)
+            request.certificateHandler = new CertificateController();
+        }
+
+        public static void SetRequestHeaderWithNotCors(this UnityWebRequest request, Dictionary<string, object> headers)
+        {
+            if (request == null)
             {
-                _destroy.RemoveListener(destroy);
+                return;
             }
 
-            void OnDestroy()
+
+            request.useHttpContinue = true;
+            if (headers is null || headers.Count == 0)
             {
-                _destroy?.Invoke();
+                return;
+            }
+
+            foreach (var header in headers)
+            {
+                request.SetRequestHeader(header.Key, header.Value.ToString());
             }
         }
 
-        public static BoxCollider AttachBoxCollider(this GameObject gameObject, Vector3 size, Vector3 center, bool isTrigger)
+        public static void SetRequestHeaderWithCors(this UnityWebRequest request, Dictionary<string, object> headers)
         {
-            BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
-            boxCollider.size = size;
-            boxCollider.center = center;
-            boxCollider.isTrigger = isTrigger;
-            return boxCollider;
+            if (request == null)
+            {
+                return;
+            }
+
+            request.SetRequestHeader("Access-Control-Allow-Headers", "Content-Type");
+            request.SetRequestHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            request.SetRequestHeader("Access-Control-Allow-Origin", "*");
+            SetRequestHeaderWithNotCors(request, headers);
         }
+
+        public static void SetRequestHeaderWithCors(this UnityWebRequest request)
+        {
+            if (request == null)
+            {
+                return;
+            }
+
+            SetRequestHeaderWithCors(request, null);
+        }
+
+        public static T GetResultData<T>(this UnityWebRequest request)
+        {
+            object _data = default;
+            if (typeof(T) == typeof(string))
+            {
+                _data = request.downloadHandler.text;
+            }
+            else if (typeof(T) == typeof(byte[]))
+            {
+                _data = request.downloadHandler.data;
+            }
+            else if (typeof(T) is JObject)
+            {
+                _data = JObject.Parse(request.downloadHandler.text);
+            }
+            else
+            {
+                _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
+            }
+
+            return (T)_data;
+        }
+
+        public static void SetBoxCollider(this GameObject gameObject, Vector3 center, Vector3 size, bool isTrigger)
+        {
+            BoxCollider collider = gameObject.AddComponent<BoxCollider>();
+            collider.isTrigger = isTrigger;
+            collider.center = center;
+            collider.size = size;
+        }
+
+        public static void SetBoxCollider2D(this GameObject gameObject, Vector3 center, Vector3 size, bool isTrigger)
+        {
+            BoxCollider2D collider = gameObject.AddComponent<BoxCollider2D>();
+            collider.isTrigger = isTrigger;
+            collider.size = size;
+        }
+
+        /// <summary>
+        /// 注册物体碰撞进入事件
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="callback"></param>
+        /// <param name="userData"></param>
+        public static void SubscribeColliderEntryEvent(this GameObject gameObject, UnityAction<object> callback, object userData)
+        {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            gameObject.AddComponent<GameObjectHandle>().SubscribeColliderEntryEvent(callback, userData);
+        }
+
+        /// <summary>
+        /// 取消注册物体碰撞进入事件
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="callback"></param>
+        public static void UnsubscribeColliderEntryEvent(this GameObject gameObject, UnityAction<object> callback)
+        {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            gameObject.GetComponent<GameObjectHandle>().UnsubscribeColliderEntryEvent(callback);
+        }
+
+        /// <summary>
+        /// 注册物体碰撞持续事件
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="callback"></param>
+        /// <param name="userData"></param>
+        public static void SubscribeColliderStayEvent(this GameObject gameObject, UnityAction<object> callback, object userData)
+        {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            gameObject.AddComponent<GameObjectHandle>().SubscribeColliderStayEvent(callback, userData);
+        }
+
+        /// <summary>
+        /// 取消注册物体碰撞持续事件
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="callback"></param>
+        public static void UnsubscribeColliderStayEvent(this GameObject gameObject, UnityAction<object> callback)
+        {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            gameObject.GetComponent<GameObjectHandle>().UnsubscribeColliderStayEvent(callback);
+        }
+
+        /// <summary>
+        /// 注册物体碰撞退出事件
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="callback"></param>
+        /// <param name="userData"></param>
+        public static void SubscribeColliderExitEvent(this GameObject gameObject, UnityAction<object> callback, object userData)
+        {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            gameObject.AddComponent<GameObjectHandle>().SubscribeColliderExitEvent(callback, userData);
+        }
+
+        /// <summary>
+        /// 取消注册物体碰撞退出事件
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="callback"></param>
+        public static void UnsubscribeColliderExitEvent(this GameObject gameObject, UnityAction<object> callback)
+        {
+            if (gameObject == null)
+            {
+                return;
+            }
+
+            gameObject.GetComponent<GameObjectHandle>().UnsubscribeColliderExitEvent(callback);
+        }
+
 
         public static bool IsPointerOverGameObject()
         {
@@ -83,7 +243,7 @@ namespace ZGame
         /// </summary>
         /// <param name="gameObject"></param>
         /// <param name="action"></param>
-        public static void RegisterGameObjectDestroyEvent(this GameObject gameObject, UnityAction action)
+        public static void SubscribeDestroyEvent(this GameObject gameObject, UnityAction action)
         {
             if (gameObject == null)
             {
@@ -96,7 +256,7 @@ namespace ZGame
                 bevaviour = gameObject.AddComponent<GameObjectHandle>();
             }
 
-            bevaviour.OnSetup(action);
+            bevaviour.SubscribeDestroyEvent(action);
         }
 
         /// <summary>
@@ -104,7 +264,7 @@ namespace ZGame
         /// </summary>
         /// <param name="gameObject"></param>
         /// <param name="action"></param>
-        public static void UnregisterGameObjectDestroyEvent(this GameObject gameObject, UnityAction action)
+        public static void UnsubscribeDestroyEvent(this GameObject gameObject, UnityAction action)
         {
             if (gameObject == null)
             {
@@ -117,7 +277,7 @@ namespace ZGame
                 return;
             }
 
-            bevaviour.OnUnsetup(action);
+            bevaviour.UnsubscribeDestroyEvent(action);
         }
 
         public static void SetParent(this GameObject gameObject, Transform parent)
@@ -246,6 +406,161 @@ namespace ZGame
             }
 
             return bounds;
+        }
+
+        class GameObjectHandle : MonoBehaviour
+        {
+            private object userData;
+            private UnityEvent<object> entry = new();
+            private UnityEvent<object> stay = new();
+            private UnityEvent<object> exit = new();
+            private UnityEvent _destroy = new();
+
+            public void SubscribeDestroyEvent(UnityAction destroy)
+            {
+                _destroy.AddListener(destroy);
+            }
+
+            public void UnsubscribeDestroyEvent(UnityAction destroy)
+            {
+                _destroy.RemoveListener(destroy);
+            }
+
+            public void SubscribeColliderEntryEvent(UnityAction<object> collision, object userData)
+            {
+                this.entry.AddListener(collision);
+                this.userData = userData;
+            }
+
+            public void UnsubscribeColliderEntryEvent(UnityAction<object> collision)
+            {
+                this.entry.RemoveListener(collision);
+            }
+
+            public void SubscribeColliderStayEvent(UnityAction<object> collision, object userData)
+            {
+                this.stay.AddListener(collision);
+                this.userData = userData;
+            }
+
+            public void UnsubscribeColliderStayEvent(UnityAction<object> collision)
+            {
+                this.stay = null;
+            }
+
+            public void SubscribeColliderExitEvent(UnityAction<object> collision, object userData)
+            {
+                this.exit.AddListener(collision);
+                this.userData = userData;
+            }
+
+            public void UnsubscribeColliderExitEvent(UnityAction<object> collision)
+            {
+                this.exit = null;
+            }
+
+            public void OnTriggerEnter(Collider other)
+            {
+                OnEntry(other.gameObject);
+            }
+
+            private void OnTriggerStay(Collider other)
+            {
+                OnStay(other.gameObject);
+            }
+
+            private void OnTriggerExit(Collider other)
+            {
+                OnExit(other.gameObject);
+            }
+
+            private void OnTriggerEnter2D(Collider2D other)
+            {
+                OnEntry(other.gameObject);
+            }
+
+            private void OnTriggerExit2D(Collider2D other)
+            {
+                OnExit(other.gameObject);
+            }
+
+            private void OnTriggerStay2D(Collider2D other)
+            {
+                OnStay(other.gameObject);
+            }
+
+            private void OnCollisionEnter(Collision other)
+            {
+                OnEntry(other.gameObject);
+            }
+
+            private void OnCollisionExit(Collision other)
+            {
+                OnExit(other.gameObject);
+            }
+
+            private void OnCollisionStay(Collision other)
+            {
+                OnStay(other.gameObject);
+            }
+
+            private void OnCollisionEnter2D(Collision2D other)
+            {
+                OnEntry(other.gameObject);
+            }
+
+            private void OnCollisionExit2D(Collision2D other)
+            {
+                OnExit(other.gameObject);
+            }
+
+            private void OnCollisionStay2D(Collision2D other)
+            {
+                OnStay(other.gameObject);
+            }
+
+            private void OnEntry(GameObject target)
+            {
+                if (target == null)
+                {
+                    return;
+                }
+
+                this.entry?.Invoke(userData);
+            }
+
+            private void OnStay(GameObject target)
+            {
+                if (target == null)
+                {
+                    return;
+                }
+
+                stay?.Invoke(userData);
+            }
+
+            private void OnExit(GameObject target)
+            {
+                if (target == null)
+                {
+                    return;
+                }
+
+                exit?.Invoke(userData);
+            }
+
+            void OnDestroy()
+            {
+                _destroy?.Invoke();
+            }
+        }
+
+        class CertificateController : CertificateHandler
+        {
+            protected override bool ValidateCertificate(byte[] certificateData)
+            {
+                return true;
+            }
         }
     }
 }

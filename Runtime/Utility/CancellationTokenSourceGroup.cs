@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using UnityEngine;
 using ZGame.Notify;
 
 namespace ZGame
@@ -18,7 +19,7 @@ namespace ZGame
 
         public CancellationTokenSourceGroup(CancellationTokenSource cancellationTokenSource)
         {
-            GameFrameworkEntry.Notify.Subscribe<AppQuitEventDatable>(OnHandleAppQuitEvent);
+            GameFrameworkEntry.Notify.Subscribe<AppQuitEventDatable>(KeyCode.Escape, OnHandleAppQuitEvent);
             if (cancellationTokenSource is null)
             {
                 return;
@@ -51,7 +52,7 @@ namespace ZGame
 
         public void Dispose()
         {
-            GameFrameworkEntry.Notify.Unsubscribe<AppQuitEventDatable>(OnHandleAppQuitEvent);
+            GameFrameworkEntry.Notify.Unsubscribe<AppQuitEventDatable>(KeyCode.Escape, OnHandleAppQuitEvent);
             foreach (var token in tokens)
             {
                 token.Dispose();

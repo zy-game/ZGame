@@ -96,32 +96,42 @@ namespace ZGame.Editor
 
         public override void SearchRightDrawing()
         {
-            if (GameConfig.instance is not null && GameConfig.instance.mode == CodeMode.Hotfix)
+            if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
             {
-                if (GUILayout.Button(EditorGUIUtility.IconContent(ZStyle.PLAY_BUTTON_ICON), ZStyle.HEADER_BUTTON_STYLE, GUILayout.ExpandWidth(false)))
+                GenericMenu menu = new GenericMenu();
+                if (GameConfig.instance is not null && GameConfig.instance.mode == CodeMode.Hotfix)
                 {
-                    GenericMenu menu = new GenericMenu();
                     menu.AddItem(new GUIContent("Build Hotfix Library Assets"), false, () =>
                     {
                         PackageSeting seting = BuilderConfig.instance.packages.Find(x => x.title == ResConfig.instance.defaultPackageName);
                         BuildHotfixLibraryCommand.Execute();
                     });
+                }
 
-                    if (ChannelConfigList.instance.pckList != null && ChannelConfigList.instance.pckList.Count > 0)
+
+                if (ChannelConfigList.instance.pckList != null && ChannelConfigList.instance.pckList.Count > 0)
+                {
+                    foreach (var UPPER in BuilderConfig.instance.packages)
                     {
-                        foreach (var UPPER in BuilderConfig.instance.packages)
-                        {
-                            menu.AddItem(new GUIContent("Build Hotfix Package Assets/" + UPPER.title), false, () => { BuildResourcePackageCommand.Executer(UPPER); });
-                        }
-
-                        foreach (var VARIABLE in ChannelConfigList.instance.pckList)
-                        {
-                            menu.AddItem(new GUIContent("Build Channel Package/" + VARIABLE.title), false, () => { BuildGameChannelCommand.Executer(VARIABLE); });
-                        }
+                        menu.AddItem(new GUIContent("Build Hotfix Package Assets/" + UPPER.title), false, () => { BuildResourcePackageCommand.Executer(UPPER); });
                     }
 
-                    menu.ShowAsContext();
+                    if (GameConfig.instance is not null && GameConfig.instance.mode == CodeMode.Hotfix)
+                    {
+                        menu.AddItem(new GUIContent("Build Hotfix Package and Library Assets"), false, () =>
+                        {
+                            BuildHotfixLibraryCommand.Execute();
+                            BuildResourcePackageCommand.Executer(null);
+                        });
+                    }
+
+                    foreach (var VARIABLE in ChannelConfigList.instance.pckList)
+                    {
+                        menu.AddItem(new GUIContent("Build Channel Package/" + VARIABLE.title), false, () => { BuildGameChannelCommand.Executer(VARIABLE); });
+                    }
                 }
+
+                menu.ShowAsContext();
             }
         }
     }

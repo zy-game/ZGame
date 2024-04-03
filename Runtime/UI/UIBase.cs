@@ -37,7 +37,7 @@ namespace ZGame.UI
 
         internal static UIBase Create(string path, Type type, Canvas canvas)
         {
-            GameObject gameObject = GameFrameworkEntry.Resource.LoadGameObjectSync(path);
+            GameObject gameObject = GameFrameworkEntry.VFS.GetGameObjectSync(path);
             if (gameObject == null)
             {
                 Debug.Log("加载资源失败：" + path);
@@ -73,7 +73,6 @@ namespace ZGame.UI
                 return;
             }
 
-            Debug.Log("Enable:" + gameObject.name);
             gameObject.SetActive(true);
         }
 
@@ -87,7 +86,6 @@ namespace ZGame.UI
                 return;
             }
 
-            Debug.Log("Disable:" + gameObject.name);
             gameObject.SetActive(false);
         }
 

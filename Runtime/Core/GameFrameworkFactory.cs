@@ -132,7 +132,7 @@ namespace ZGame
                 throw new ArgumentException("type must be IGameReferenceObject");
             }
 
-            Debug.Log("Spawner Reference Object:" + type);
+            // Debug.Log("Spawner Reference Object:" + type);
             return GetOrCreareReferenceHandle(type).Spawner();
         }
 
@@ -142,7 +142,7 @@ namespace ZGame
         /// <param name="obj"></param>
         public static void Release(IReferenceObject obj)
         {
-            Debug.Log("Release Reference Object:" + obj.GetType() + "  " + obj.GetHashCode());
+            // Debug.Log("Release Reference Object:" + obj.GetType() + "  " + obj.GetHashCode());
             GetOrCreareReferenceHandle(obj.GetType()).Release(obj);
         }
     }

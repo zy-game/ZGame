@@ -69,25 +69,6 @@ namespace ZGame.Sound
             _source.loop = isLoop;
         }
 
-
-        public void Play(string clipName, Action<PlayState> callback)
-        {
-            resObject = GameFrameworkEntry.Resource.LoadAsset(name);
-            if (resObject.IsSuccess() is false)
-            {
-                return;
-            }
-
-            Play(resObject.GetAsset<AudioClip>(null), x =>
-            {
-                callback?.Invoke(x);
-                if (x == PlayState.Complete)
-                {
-                    resObject.Release();
-                }
-            });
-        }
-
         public async void Play(AudioClip clip, Action<PlayState> callback)
         {
             this.callback = callback;

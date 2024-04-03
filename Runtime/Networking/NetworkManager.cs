@@ -129,110 +129,6 @@ namespace ZGame.Networking
         }
 
         /// <summary>
-        /// 获取网络资源数据
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="callback"></param>
-        /// <returns></returns>
-        public async UniTask<Object> GetStreamingAsset(string url, string extension, uint version, IProgress<float> callback = null)
-        {
-            Extension.StartSample();
-            Object result = default;
-
-            using (UnityWebRequest request = UnityWebRequestHelper.CreateStreamingAssetObjectRequest(url, extension, version))
-            {
-                UnityWebRequestHelper.SetRequestHeaderWithCors(request, null);
-                await request.SendWebRequest().ToUniTask(callback);
-                if (request.GetResponseHeader("Content-Type") == "application/json")
-                {
-                    Debug.Log(request.downloadHandler.text);
-                }
-
-                if (request.result is UnityWebRequest.Result.Success)
-                {
-                    result = UnityWebRequestHelper.GetStreamingAssetObject(extension, request);
-                }
-
-                Debug.Log($"GET STRWAMING ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()}");
-                request.downloadHandler?.Dispose();
-                request.uploadHandler?.Dispose();
-            }
-
-            return result;
-        }
-
-
-        public async UniTask<AudioClip> GetStreamingAudioClip(string url, AudioType type)
-        {
-            Extension.StartSample();
-            using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(url, type))
-            {
-                await uwr.SendWebRequest().ToUniTask();
-                Debug.Log($"GET STRWAMING ASSETS:{url} state:{uwr.result} time:{Extension.GetSampleTime()}");
-                if (uwr.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogError(uwr.error);
-                    return default;
-                }
-
-                return DownloadHandlerAudioClip.GetContent(uwr);
-            }
-        }
-
-        /// <summary>
-        /// 下载网络文件的二进制数据
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="callback"></param>
-        /// <returns></returns>
-        public async UniTask<byte[]> GetStreamingAssetBinary(string url, IProgress<float> callback = null)
-        {
-            Extension.StartSample();
-            byte[] result = default;
-            using (UnityWebRequest request = UnityWebRequestHelper.CreateStreamingAssetObjectRequest(url, ".byte", 0))
-            {
-                UnityWebRequestHelper.SetRequestHeaderWithCors(request, null);
-                await request.SendWebRequest().ToUniTask(callback);
-                if (request.GetResponseHeader("Content-Type") == "application/json")
-                {
-                    Debug.Log(request.downloadHandler.text);
-                }
-
-                if (request.result is UnityWebRequest.Result.Success)
-                {
-                    result = new byte[request.downloadHandler.data.Length];
-                    Array.Copy(request.downloadHandler.data, 0, result, 0, result.Length);
-                }
-
-                Debug.Log($"GET STRWAMING ASSETS:{url} state:{request.result} time:{Extension.GetSampleTime()} Lenght:{result.Length}");
-                request.downloadHandler?.Dispose();
-                request.uploadHandler?.Dispose();
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 下载网络文件的二进制数据
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="callback"></param>
-        /// <returns></returns>
-        public async UniTask<Status> DownloadStreamingAsset(string url, string fileName, uint version, IProgress<float> callback = null)
-        {
-            Extension.StartSample();
-            Status state = Status.Success;
-            byte[] bytes = await GetStreamingAssetBinary(url, callback);
-            if (bytes.Length == 0)
-            {
-                return Status.Fail;
-            }
-
-            return await GameFrameworkEntry.VFS.WriteAsync(fileName, bytes, version);
-        }
-
-
-        /// <summary>
         /// 发起一个POST请求
         /// </summary>
         /// <param name="url">请求地址</param>
@@ -265,7 +161,7 @@ namespace ZGame.Networking
             {
                 headers = headers ?? new Dictionary<string, object>();
                 headers.TryAdd("Content-Type", "application/json");
-                UnityWebRequestHelper.SetRequestHeaderWithNotCors(request, headers);
+                request.SetRequestHeaderWithCors(headers);
                 request.uploadHandler.Dispose();
                 request.uploadHandler = null;
                 using (request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(postData)))
@@ -274,7 +170,7 @@ namespace ZGame.Networking
 
                     if (request.result is UnityWebRequest.Result.Success)
                     {
-                        _data = UnityWebRequestHelper.GetResultData<T>(request);
+                        _data = request.GetResultData<T>();
                     }
                 }
 
@@ -302,8 +198,8 @@ namespace ZGame.Networking
             using (UnityWebRequest request = UnityWebRequest.Post(url, form))
             {
                 headers = headers ?? new Dictionary<string, object>();
-                headers.TryAdd("Content-Type", "application/json");
-                UnityWebRequestHelper.SetRequestHeaderWithNotCors(request, headers);
+
+                request.SetRequestHeaderWithCors(headers);
                 request.uploadHandler.Dispose();
                 request.uploadHandler = null;
                 using (request.uploadHandler = new UploadHandlerRaw(form.data))
@@ -312,7 +208,7 @@ namespace ZGame.Networking
 
                     if (request.result is UnityWebRequest.Result.Success)
                     {
-                        _data = UnityWebRequestHelper.GetResultData<T>(request);
+                        _data = request.GetResultData<T>();
                     }
                 }
 
@@ -343,11 +239,11 @@ namespace ZGame.Networking
                     headers.Add("Content-Type", "application/json");
                 }
 
-                UnityWebRequestHelper.SetRequestHeaderWithNotCors(request, headers);
+                request.SetRequestHeaderWithCors(headers);
                 await request.SendWebRequest().ToUniTask();
                 if (request.result is UnityWebRequest.Result.Success)
                 {
-                    _data = UnityWebRequestHelper.GetResultData<T>(request);
+                    _data = request.GetResultData<T>();
                 }
 
                 Debug.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()} data: {request.downloadHandler?.text}");
@@ -370,7 +266,7 @@ namespace ZGame.Networking
             string result = "";
             using (UnityWebRequest request = UnityWebRequest.Head(url))
             {
-                UnityWebRequestHelper.SetRequestHeaderWithNotCors(request, null);
+                request.SetRequestHeaderWithCors(null);
                 await request.SendWebRequest().ToUniTask();
 
                 if (request.result is UnityWebRequest.Result.Success)

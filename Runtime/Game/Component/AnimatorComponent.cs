@@ -7,21 +7,9 @@ namespace ZGame.Game
     {
         public Animator animator;
 
-        public override void OnAwake(params object[] args)
+        public void Release()
         {
-            GameObjectComponent gameObjectComponent = this.entity.GetComponent<GameObjectComponent>();
-            if (gameObjectComponent is null)
-            {
-                return;
-            }
-
-            animator = gameObjectComponent.gameObject.GetComponentInChildren<Animator>();
-            if (animator != null)
-            {
-                return;
-            }
-
-            animator = gameObjectComponent.gameObject.AddComponent<Animator>();
+            animator = null;
         }
     }
 }

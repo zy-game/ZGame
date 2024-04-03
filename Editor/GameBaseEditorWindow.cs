@@ -29,6 +29,11 @@ namespace ZGame.Editor
             EditorSceneManager.OpenScene("Assets/Startup.unity");
         }
 
+        [MenuItem("ZGame/Clear PlayerPrefs")]
+        public static void ClearPlayerPrefs()
+        {
+            PlayerPrefs.DeleteAll();
+        }
 
         [UnityEditor.Callbacks.DidReloadScripts]
         static void OnScriptBuilderComplation()
