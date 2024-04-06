@@ -154,7 +154,7 @@ namespace ZGame
         /// <summary>
         /// 网络管理
         /// </summary>
-        public static NetworkManager Network { get; private set; }
+        public static NetManager Network { get; private set; }
 
         /// <summary>
         /// 实体系统管理
@@ -178,7 +178,7 @@ namespace ZGame
             Recorder = GetOrCreateModule<RecorderManager>();
             Notify = GetOrCreateModule<NotifyManager>();
             Config = GetOrCreateModule<ConfigManager>();
-            Network = GetOrCreateModule<NetworkManager>();
+            Network = GetOrCreateModule<NetManager>();
             ECS = GetOrCreateModule<ECSManager>();
 
             _handle = new GameObject("GAME FRAMEWORK ENTRY").AddComponent<GameFrameworkContent>();

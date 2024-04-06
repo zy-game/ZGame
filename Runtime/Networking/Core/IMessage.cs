@@ -3,7 +3,12 @@ using ZGame.Notify;
 
 namespace ZGame.Networking
 {
-    public interface IMessage : IGameEventArgs
+    public interface IMessage : IReferenceObject
     {
+
+
+
+
+
     }
 }

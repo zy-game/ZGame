@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TrueSync
 {
-    // Ö¡Í¬²½ÍĞ¹ÜĞĞÎªÀà
+    // å¸§åŒæ­¥æ‰˜ç®¡è¡Œä¸ºç±»
 	public class TrueSyncManagedBehaviour : ITrueSyncBehaviourGamePlay, ITrueSyncBehaviour, ITrueSyncBehaviourCallbacks
 	{
 		public ITrueSyncBehaviour trueSyncBehavior;
@@ -22,7 +22,7 @@ namespace TrueSync
 			this.trueSyncBehavior = trueSyncBehavior;
 		}
 
-        #region ITrueSyncBehaviourGamePlay ½Ó¿Ú·½·¨
+        #region ITrueSyncBehaviourGamePlay æ¥å£æ–¹æ³•
         public void OnPreSyncedUpdate()
 		{
 			bool flag = this.trueSyncBehavior is ITrueSyncBehaviourGamePlay;
@@ -49,17 +49,17 @@ namespace TrueSync
 				((ITrueSyncBehaviourGamePlay)this.trueSyncBehavior).OnSyncedUpdate();
 			}
 		}
-        #endregion ITrueSyncBehaviourGamePlay ½Ó¿Ú·½·¨
+        #endregion ITrueSyncBehaviourGamePlay æ¥å£æ–¹æ³•
 
-        #region ITrueSyncBehaviour ½Ó¿Ú·½·¨
+        #region ITrueSyncBehaviour æ¥å£æ–¹æ³•
         public void SetGameInfo(TSPlayerInfo localOwner, int numberOfPlayers)
 		{
 			this.trueSyncBehavior.SetGameInfo(localOwner, numberOfPlayers);
 		}
-        #endregion ITrueSyncBehaviour ½Ó¿Ú·½·¨
+        #endregion ITrueSyncBehaviour æ¥å£æ–¹æ³•
 
-        #region ÉúÃüÖÜÆÚ·½·¨
-        // ¿ªÊ¼Í¬²½
+        #region ç”Ÿå‘½å‘¨æœŸæ–¹æ³•
+        // å¼€å§‹åŒæ­¥
         public static void OnGameStarted(List<TrueSyncManagedBehaviour> generalBehaviours, Dictionary<byte, List<TrueSyncManagedBehaviour>> behaviorsByPlayer)
         {
             int i = 0;
@@ -84,7 +84,7 @@ namespace TrueSync
             }
         }
 
-        // ÓÎÏ·ÔİÍ£
+        // æ¸¸æˆæš‚åœ
         public static void OnGamePaused(List<TrueSyncManagedBehaviour> generalBehaviours, Dictionary<byte, List<TrueSyncManagedBehaviour>> behaviorsByPlayer)
         {
             int i = 0;
@@ -109,7 +109,7 @@ namespace TrueSync
             }
         }
 
-        // È¡ÏûÔİÍ£
+        // å–æ¶ˆæš‚åœ
         public static void OnGameUnPaused(List<TrueSyncManagedBehaviour> generalBehaviours, Dictionary<byte, List<TrueSyncManagedBehaviour>> behaviorsByPlayer)
         {
             int i = 0;
@@ -134,7 +134,7 @@ namespace TrueSync
             }
         }
 
-        // ÓÎÏ·½áÊø
+        // æ¸¸æˆç»“æŸ
         public static void OnGameEnded(List<TrueSyncManagedBehaviour> generalBehaviours, Dictionary<byte, List<TrueSyncManagedBehaviour>> behaviorsByPlayer)
         {
             int i = 0;
@@ -159,7 +159,7 @@ namespace TrueSync
             }
         }
 
-        // Íæ¼Ò¶Ï¿ªÁ¬½Ó
+        // ç©å®¶æ–­å¼€è¿æ¥
         public static void OnPlayerDisconnection(List<TrueSyncManagedBehaviour> generalBehaviours, Dictionary<byte, List<TrueSyncManagedBehaviour>> behaviorsByPlayer, byte playerId)
         {
             int i = 0;
@@ -183,10 +183,10 @@ namespace TrueSync
                 }
             }
         }
-        #endregion ÉúÃüÖÜÆÚ·½·¨
+        #endregion ç”Ÿå‘½å‘¨æœŸæ–¹æ³•
 
-        #region ITrueSyncBehaviourCallbacks ½Ó¿Ú·½·¨
-        // ¿ªÊ¼Í¬²½
+        #region ITrueSyncBehaviourCallbacks æ¥å£æ–¹æ³•
+        // å¼€å§‹åŒæ­¥
         public void OnSyncedStart()
 		{
 			bool flag = this.trueSyncBehavior is ITrueSyncBehaviourCallbacks;
@@ -194,20 +194,20 @@ namespace TrueSync
 			{
 				((ITrueSyncBehaviourCallbacks)this.trueSyncBehavior).OnSyncedStart();
 				bool flag2 = this.localOwner.Id == this.owner.Id;
-				if (flag2) // ±¾µØÍæ¼Ò
+				if (flag2) // æœ¬åœ°ç©å®¶
 				{
 					((ITrueSyncBehaviourCallbacks)this.trueSyncBehavior).OnSyncedStartLocalPlayer();
 				}
 			}
 		}
 
-        // ¿ªÊ¼Í¬²½±¾µØÍæ¼Ò
+        // å¼€å§‹åŒæ­¥æœ¬åœ°ç©å®¶
         public void OnSyncedStartLocalPlayer()
         {
             throw new NotImplementedException();
         }
 
-        // ÓÎÏ·ÔİÍ£
+        // æ¸¸æˆæš‚åœ
 		public void OnGamePaused()
 		{
 			bool flag = this.trueSyncBehavior is ITrueSyncBehaviourCallbacks;
@@ -217,7 +217,7 @@ namespace TrueSync
 			}
 		}
 
-        // È¡ÏûÔİÍ£
+        // å–æ¶ˆæš‚åœ
 		public void OnGameUnPaused()
 		{
 			bool flag = this.trueSyncBehavior is ITrueSyncBehaviourCallbacks;
@@ -227,7 +227,7 @@ namespace TrueSync
 			}
 		}
 
-        // ÓÎÏ·½áÊø
+        // æ¸¸æˆç»“æŸ
 		public void OnGameEnded()
 		{
 			bool flag = this.trueSyncBehavior is ITrueSyncBehaviourCallbacks;
@@ -237,7 +237,7 @@ namespace TrueSync
 			}
 		}
 
-        // Íæ¼Ò¶Ï¿ªÁ¬½Ó
+        // ç©å®¶æ–­å¼€è¿æ¥
 		public void OnPlayerDisconnection(int playerId)
 		{
 			bool flag = this.trueSyncBehavior is ITrueSyncBehaviourCallbacks;
@@ -246,6 +246,6 @@ namespace TrueSync
 				((ITrueSyncBehaviourCallbacks)this.trueSyncBehavior).OnPlayerDisconnection(playerId);
 			}
 		}
-        #endregion ITrueSyncBehaviourCallbacks ½Ó¿Ú·½·¨
+        #endregion ITrueSyncBehaviourCallbacks æ¥å£æ–¹æ³•
     }
 }
