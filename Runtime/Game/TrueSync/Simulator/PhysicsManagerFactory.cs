@@ -22,11 +22,11 @@
          **/
         public static IPhysicsManager New(TrueSyncConfig trueSyncConfig) {
             if (trueSyncConfig.physics3DEnabled) {
-                instance = new PhysicsWorldManager();
+                instance = new Physics3DSimulator();
                 instance.Gravity = trueSyncConfig.gravity3D;
                 instance.SpeculativeContacts = trueSyncConfig.speculativeContacts3D;
             } else if (trueSyncConfig.physics2DEnabled) {
-                instance = new Physics2DWorldManager();
+                instance = new Physics2DSimulator();
                 instance.Gravity = new TSVector(trueSyncConfig.gravity2D.x, trueSyncConfig.gravity2D.y, 0);
                 instance.SpeculativeContacts = trueSyncConfig.speculativeContacts2D;
             }
@@ -38,7 +38,7 @@
          *  @brief Instantiates a 3D physics for tests purpose.
          **/
         internal static void InitTest3D() {
-            instance = new PhysicsWorldManager();
+            instance = new Physics3DSimulator();
             instance.Gravity = new TSVector(0, -10, 0);
             instance.LockedTimeStep = 0.02f;
             instance.Init();
@@ -48,7 +48,7 @@
          *  @brief Instantiates a 2D physics for tests purpose.
          **/
         internal static void InitTest2D() {
-            instance = new Physics2DWorldManager();
+            instance = new Physics2DSimulator();
             instance.Gravity = new TSVector(0, -10, 0);
             instance.LockedTimeStep = 0.02f;
             instance.Init();

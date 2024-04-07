@@ -8,9 +8,9 @@ namespace TrueSync
     /**
      *  @brief Manages the 3D physics simulation.
      **/
-    public class PhysicsWorldManager : IPhysicsManager
+    public class Physics3DSimulator : IPhysicsManager
     {
-        public static PhysicsWorldManager instance;
+        public static Physics3DSimulator instance;
 
         private World world;
 
@@ -270,7 +270,7 @@ namespace TrueSync
             b1.SendMessage(callbackName, GetCollisionInfo(body1, body2, c), SendMessageOptions.DontRequireReceiver);
             b2.SendMessage(callbackName, GetCollisionInfo(body2, body1, c), SendMessageOptions.DontRequireReceiver);
 
-            TrueSyncManager.UpdateCoroutines();
+            TrueSyncSimulator.UpdateCoroutines();
         }
 
         private TSCollision GetCollisionInfo(RigidBody body1, RigidBody body2, Contact c)

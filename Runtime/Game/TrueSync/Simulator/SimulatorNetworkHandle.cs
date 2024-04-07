@@ -5,7 +5,7 @@ namespace TrueSync {
     /// <summary>
     /// Truesync's ICommunicator implementation based on PUN.
     /// </summary>
-    public class PhotonTrueSyncCommunicator : ICommunicator {
+    public class SimulatorNetworkHandle : ICommunicator {
 
         //private LoadBalancingPeer loadBalancingPeer;
 

@@ -14,7 +14,7 @@ namespace TrueSync {
          * @param layerB Layer of the second object
          **/
         public static bool CollisionEnabled(int layerA, int layerB) {
-            TrueSyncConfig tsConfig = TrueSyncManager.Config;
+            TrueSyncConfig tsConfig = TrueSyncSimulator.Config;
             if (tsConfig == null) {
                 return true;
             }

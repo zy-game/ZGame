@@ -97,7 +97,7 @@ namespace TrueSync {
 		public void UpdateAllCoroutines ()
 		{
 			InputDataBase oldInputData = TrueSyncInput.CurrentSimulationData;
-			UpdateAllCoroutines (lockStep.Ticks, TrueSyncManager.Time);
+			UpdateAllCoroutines (lockStep.Ticks, TrueSyncSimulator.Time);
 			TrueSyncInput.CurrentSimulationData = (InputData) oldInputData;
 		}
 

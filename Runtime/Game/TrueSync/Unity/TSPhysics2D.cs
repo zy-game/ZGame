@@ -19,7 +19,7 @@ namespace TrueSync
         private static FP POINT_RADIUS = 0.001f;
 
         private static object OverlapGeneric(Physics2D.Shape shape, TSVector2 position, Physics2D.BodySpecialSensor sensorType, int layerMask) {
-            Physics2D.World world = (Physics2D.World)Physics2DWorldManager.instance.GetWorld();
+            Physics2D.World world = (Physics2D.World)Physics2DSimulator.instance.GetWorld();
 
             Physics2D.Body body = Physics2D.BodyFactory.CreateBody(world);
             body.CreateFixture(shape);
@@ -37,11 +37,11 @@ namespace TrueSync
 
             if (body._specialSensorResults.Count > 0) {
                 if (sensorType == Physics2D.BodySpecialSensor.ActiveOnce) {
-                    return Physics2DWorldManager.instance.GetGameObject(body._specialSensorResults[0]).GetComponent<TSCollider2D>();
+                    return Physics2DSimulator.instance.GetGameObject(body._specialSensorResults[0]).GetComponent<TSCollider2D>();
                 } else {
                     TSCollider2D[] result = new TSCollider2D[body._specialSensorResults.Count];
                     for (int i = 0; i < body._specialSensorResults.Count; i++) {
-                        result[i] = Physics2DWorldManager.instance.GetGameObject(body._specialSensorResults[i]).GetComponent<TSCollider2D>();
+                        result[i] = Physics2DSimulator.instance.GetGameObject(body._specialSensorResults[i]).GetComponent<TSCollider2D>();
                     }
 
                     return result;
@@ -284,11 +284,11 @@ namespace TrueSync
         }
 
         public static TSRaycastHit2D Raycast(TSVector2 origin, TSVector2 direction, FP distance) {
-            return Physics2DWorldManager.instance.Raycast(origin, direction, distance);
+            return Physics2DSimulator.instance.Raycast(origin, direction, distance);
         }
 
         public static TSRaycastHit2D[] RaycastAll(TSVector2 origin, TSVector2 direction, FP distance) {
-            return Physics2DWorldManager.instance.RaycastAll(origin, direction, distance);
+            return Physics2DSimulator.instance.RaycastAll(origin, direction, distance);
         }
 
     }

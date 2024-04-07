@@ -3,15 +3,15 @@ using System.Collections.Generic;
 
 namespace TrueSync
 {
-    // ×ÊÔ´³Ø(³éÏóÀà)
+    // èµ„æºæ± (æŠ½è±¡ç±»)
 	public abstract class ResourcePool
 	{
 		protected bool fresh = true;
 
-        // ÎªÁËÇå¿ÕËùÓĞ×ÊÔ´³Ø¶ø´æÔÚ
+        // ä¸ºäº†æ¸…ç©ºæ‰€æœ‰èµ„æºæ± è€Œå­˜åœ¨
 		protected static List<ResourcePool> resourcePoolReferences = new List<ResourcePool>();
 
-        // È«²¿Çå¿Õ
+        // å…¨éƒ¨æ¸…ç©º
 		public static void CleanUpAll()
 		{
 			int i = 0;
@@ -24,17 +24,17 @@ namespace TrueSync
 			ResourcePool.resourcePoolReferences.Clear();
 		}
 
-        // ÖØÖÃ
+        // é‡ç½®
 		public abstract void ResetResourcePool();
 	}
 
-    // ×ÊÔ´³Ø
+    // èµ„æºæ± 
 	public class ResourcePool<T> : ResourcePool
 	{
 		protected Stack<T> stack = new Stack<T>(10);
 
-        #region ¹«¹²·½·¨
-        // ³ØÖĞÔªËØµÄÊıÁ¿
+        #region å…¬å…±æ–¹æ³•
+        // æ± ä¸­å…ƒç´ çš„æ•°é‡
 		public int Count
 		{
 			get
@@ -43,20 +43,20 @@ namespace TrueSync
 			}
 		}
 
-        // ÖØÖÃ
+        // é‡ç½®
 		public override void ResetResourcePool()
 		{
 			this.stack.Clear();
 			this.fresh = true;
 		}
 
-        // »ØÊÕÔªËØ
+        // å›æ”¶å…ƒç´ 
 		public void GiveBack(T obj)
 		{
 			this.stack.Push(obj);
 		}
 
-        // »ñÈ¡ÔªËØ
+        // è·å–å…ƒç´ 
         public T GetNew()
         {
             bool fresh = this.fresh;
@@ -66,21 +66,21 @@ namespace TrueSync
                 this.fresh = false;
             }
             bool flag = this.stack.Count == 0;
-            if (flag) // ³ØÖĞÃ»ÓĞÔªËØ
+            if (flag) // æ± ä¸­æ²¡æœ‰å…ƒç´ 
             {
                 this.stack.Push(this.NewInstance());
             }
             T t = this.stack.Pop();
             bool flag2 = t is ResourcePoolItem;
-            if (flag2) // Èç¹û¸ÃÔªËØÊÇResourcePoolItemÀàĞÍ£¬ÔòÒªÏÈÖ´ĞĞÇåÀí
+            if (flag2) // å¦‚æœè¯¥å…ƒç´ æ˜¯ResourcePoolItemç±»å‹ï¼Œåˆ™è¦å…ˆæ‰§è¡Œæ¸…ç†
             {
                 ((ResourcePoolItem)((object)t)).CleanUp();
             }
             return t;
         }
-        #endregion ¹«¹²·½·¨
+        #endregion å…¬å…±æ–¹æ³•
 
-        // ´´½¨ÔªËØÊµÀı
+        // åˆ›å»ºå…ƒç´ å®ä¾‹
 		protected virtual T NewInstance()
 		{
 			return Activator.CreateInstance<T>();

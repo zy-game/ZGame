@@ -9,7 +9,7 @@ namespace TrueSync
      * @brief Manages creation of player prefabs and lockstep execution.
      **/
     [AddComponentMenu("")]
-    public class TrueSyncManager : MonoBehaviour
+    public class TrueSyncSimulator : MonoBehaviour
     {
         private const float JitterTimeFactor = 0.001f;
 
@@ -218,7 +218,7 @@ namespace TrueSync
             }
         }
 
-        private static TrueSyncManager instance;
+        private static TrueSyncSimulator instance;
 
         private TrueSyncConfig ActiveConfig
         {
@@ -583,7 +583,7 @@ namespace TrueSync
         {
             Dictionary<int, List<GameObject>> safeMap = instance.gameOjectsSafeMap;
 
-            int currentTick = TrueSyncManager.Ticks + 1;
+            int currentTick = TrueSyncSimulator.Ticks + 1;
             if (!safeMap.ContainsKey(currentTick))
             {
                 safeMap.Add(currentTick, new List<GameObject>());
@@ -596,7 +596,7 @@ namespace TrueSync
         {
             Dictionary<int, List<GameObject>> safeMap = instance.gameOjectsSafeMap;
 
-            int currentTick = TrueSyncManager.Ticks + 1;
+            int currentTick = TrueSyncSimulator.Ticks + 1;
             if (safeMap.ContainsKey(currentTick))
             {
                 List<GameObject> gos = safeMap[currentTick];
@@ -618,7 +618,7 @@ namespace TrueSync
                 gos.Clear();
             }
 
-            safeMap.Remove(TrueSyncManager.LastSafeTick);
+            safeMap.Remove(TrueSyncSimulator.LastSafeTick);
         }
 
         private static void InitializeGameObject(GameObject go, TSVector position, TSQuaternion rotation)

@@ -8,12 +8,12 @@ namespace TrueSync
     /**
      *  @brief Manages the 2D physics simulation.
      **/
-    public class Physics2DWorldManager : IPhysicsManager
+    public class Physics2DSimulator : IPhysicsManager
     {
         /**
          *  @brief Public access to a manager instance.
          **/
-        public static Physics2DWorldManager instance;
+        public static Physics2DSimulator instance;
 
         private Physics2D.World world;
 
@@ -204,7 +204,7 @@ namespace TrueSync
             b1.SendMessage(callbackName, GetCollisionInfo(body1, body2, contact), SendMessageOptions.DontRequireReceiver);
             b2.SendMessage(callbackName, GetCollisionInfo(body2, body1, contact), SendMessageOptions.DontRequireReceiver);
 
-            TrueSyncManager.UpdateCoroutines();
+            TrueSyncSimulator.UpdateCoroutines();
         }
 
         private TSCollision2D GetCollisionInfo(Physics2D.Body body1, Physics2D.Body body2, TrueSync.Physics2D.Contact c)
