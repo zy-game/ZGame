@@ -73,7 +73,6 @@ namespace ZGame.Resource
             packageManifest.dependencies = dependencies;
             packageManifest.owner = this.name;
             packageManifest.isBundle = isBundle;
-            Debug.Log("更新包信息：" + JsonConvert.SerializeObject(packageManifest));
         }
 
         public static ResourcePackageListManifest LoadOrCreate(string name)

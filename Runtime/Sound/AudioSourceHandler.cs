@@ -52,30 +52,23 @@ namespace ZGame.Sound
             }
         }
 
-        public AudioSourceHandler(GameObject gameObject, string name, bool isLoop)
-        {
-            if (gameObject == null)
-            {
-                gameObject = new GameObject(name);
-                gameObject.SetParent(null, Vector3.zero, Vector3.zero, Vector3.one);
-                GameObject.DontDestroyOnLoad(gameObject);
-            }
-
-            if (gameObject.TryGetComponent<AudioSource>(out _source) is false)
-            {
-                _source = gameObject.AddComponent<AudioSource>();
-            }
-
-            _source.loop = isLoop;
-        }
 
         public async void Play(AudioClip clip, Action<PlayState> callback)
         {
+            if (clip == null)
+            {
+                callback?.Invoke(PlayState.Complete);
+                return;
+            }
+
             this.callback = callback;
             _source.clip = clip;
+            string name = clip.name;
             Resume();
-            await UniTask.Delay((int)clip.length * 1000 + 1000);
+            GameFrameworkEntry.Logger.Log("开始播放：" + name);
+            await UniTask.WaitWhile(() => _source.isPlaying);
             Stop();
+            GameFrameworkEntry.Logger.Log("播放结束：" + name);
         }
 
         public void Pause()
@@ -107,6 +100,25 @@ namespace ZGame.Sound
         {
             Stop();
             GameObject.DestroyImmediate(_source.gameObject);
+        }
+
+        public static AudioSourceHandler Create(GameObject gameObject, string name, bool isLoop)
+        {
+            AudioSourceHandler handler = GameFrameworkFactory.Spawner<AudioSourceHandler>();
+            if (gameObject == null)
+            {
+                gameObject = new GameObject(name);
+                gameObject.SetParent(null, Vector3.zero, Vector3.zero, Vector3.one);
+                GameObject.DontDestroyOnLoad(gameObject);
+            }
+
+            if (gameObject.TryGetComponent<AudioSource>(out handler._source) is false)
+            {
+                handler._source = gameObject.AddComponent<AudioSource>();
+            }
+
+            handler._source.loop = isLoop;
+            return handler;
         }
     }
 }

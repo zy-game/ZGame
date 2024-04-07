@@ -40,7 +40,7 @@ namespace ZGame.UI
             GameObject gameObject = GameFrameworkEntry.VFS.GetGameObjectSync(path);
             if (gameObject == null)
             {
-                Debug.Log("加载资源失败：" + path);
+                GameFrameworkEntry.Logger.Log("加载资源失败：" + path);
                 return default;
             }
 

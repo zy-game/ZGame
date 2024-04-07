@@ -99,6 +99,16 @@ namespace ZGame.Data
             map.Add(data);
         }
 
+        public void Clear()
+        {
+            foreach (var VARIABLE in map)
+            {
+                GameFrameworkFactory.Release(VARIABLE);
+            }
+
+            map.Clear();
+        }
+
         /// <summary>
         /// 清理指定数据
         /// </summary>

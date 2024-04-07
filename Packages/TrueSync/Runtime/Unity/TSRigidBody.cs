@@ -22,8 +22,8 @@ namespace TrueSync {
          **/
         public FP mass {
             get {
-                if (tsCollider._body != null) {
-                    return tsCollider._body.Mass;
+                if (tsCollider.body != null) {
+                    return tsCollider.body.Mass;
                 }
 
                 return _mass;
@@ -32,8 +32,8 @@ namespace TrueSync {
             set {
                 _mass = value;
 
-                if (tsCollider._body != null) {
-                    tsCollider._body.Mass = value;
+                if (tsCollider.body != null) {
+                    tsCollider.body.Mass = value;
                 }
             }
         }
@@ -149,7 +149,7 @@ namespace TrueSync {
         public TSRigidBodyConstraints constraints {
             get {
                 if (tsCollider.IsBodyInitialized) {
-                    return tsCollider._body.FreezeConstraints;
+                    return tsCollider.body.FreezeConstraints;
                 }
 
                 return _constraints;
@@ -159,7 +159,7 @@ namespace TrueSync {
                 _constraints = value;
 
                 if (tsCollider.IsBodyInitialized) {
-                    tsCollider._body.FreezeConstraints = value;
+                    tsCollider.body.FreezeConstraints = value;
                 }
             }
         }

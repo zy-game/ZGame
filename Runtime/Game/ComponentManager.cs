@@ -13,8 +13,7 @@ namespace ZGame.Game
 
         public void Release()
         {
-            chunkList.ForEach(GameFrameworkFactory.Release);
-            chunkList.Clear();
+            Clear();
         }
 
         private void EnsureComponentType(Type type)
@@ -106,6 +105,12 @@ namespace ZGame.Game
             {
                 VARIABLE.RemoveComponent(id);
             }
+        }
+
+        public void Clear()
+        {
+            chunkList.ForEach(GameFrameworkFactory.Release);
+            chunkList.Clear();
         }
     }
 }

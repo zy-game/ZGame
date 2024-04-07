@@ -63,7 +63,6 @@ namespace ZGame
                 using (Stream stream = entry.Open())
                 {
                     fs.CopyTo(stream);
-                    Debug.Log("zip file:" + s);
                 }
             }
         }

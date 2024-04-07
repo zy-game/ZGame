@@ -468,10 +468,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\t\tResObject handle = WorkApi.Resource.LoadAsset(path);");
-            AddSetup($"\t\t\tif (handle is null || handle.IsSuccess() == false)");
-            AddSetup($"\t\t\t\treturn;");
-            AddSetup($"\t\t\thandle.SetSprite({fieldName});");
+            AddSetup($"\t\t\t{fieldName}.SetSprite(path);");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
             AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
@@ -499,10 +496,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\t\tResObject handle = WorkApi.Resource.LoadAsset(path);");
-            AddSetup($"\t\t\tif (handle is null || handle.IsSuccess() == false)");
-            AddSetup($"\t\t\t\treturn;");
-            AddSetup($"\t\t\thandle.SetTexture2D({fieldName});");
+            AddSetup($"\t\t\t{fieldName}.SetTexture(path);");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
 
@@ -654,7 +648,7 @@ namespace ZGame.Editor.PSD2GUI
             language.ForEach(x => sb.AppendLine("\t" + x));
             eventList.ForEach(x => sb.AppendLine("\t" + x));
             sb.AppendLine("\t\t\t}");
-            sb.AppendLine("\t\t\tpublic Templete_HUDUnit Instantiate()");
+            sb.AppendLine($"\t\t\tpublic Templete_{setting.NameSpace} Instantiate(params object[] args)");
             sb.AppendLine("\t\t\t{");
             sb.AppendLine($"\t\t\t\tTemplete_{setting.NameSpace} _templete = GameFrameworkFactory.Spawner<Templete_{setting.NameSpace}>();");
             sb.AppendLine("\t\t\t\t_templete.gameObject = GameObject.Instantiate(this.gameObject);");
@@ -663,6 +657,7 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("\t\t\t\t_templete.transform.localRotation = Quaternion.identity;");
             sb.AppendLine("\t\t\t\t_templete.transform.localScale = Vector3.one;");
             sb.AppendLine("\t\t\t\t_templete.Awake();");
+            sb.AppendLine("\t\t\t\t_templete.Enable(args);");
             sb.AppendLine("\t\t\t\treturn _templete;");
             sb.AppendLine("\t\t\t}");
             sb.AppendLine(Environment.NewLine);

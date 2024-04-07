@@ -10,7 +10,6 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
-using Debug = UnityEngine.Debug;
 
 namespace ZGame
 {
@@ -72,7 +71,7 @@ namespace ZGame
         public static void StopSample(string format)
         {
             sw.Stop();
-            Debug.Log(string.Format(format, sw.ElapsedMilliseconds));
+            GameFrameworkEntry.Logger.Log(string.Format(format, sw.ElapsedMilliseconds));
         }
 
         private const int CopyThreshold = 12;

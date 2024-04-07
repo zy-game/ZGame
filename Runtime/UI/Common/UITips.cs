@@ -57,7 +57,7 @@ namespace ZGame.UI
         /// <param name="onFinish">提示框关闭回调</param>
         public static void Show(string content, float timeout, Action onFinish)
         {
-            Debug.Log("tips:" + content);
+            GameFrameworkEntry.Logger.Log("tips:" + content);
             GameFrameworkEntry.UI.Active<UITips>(new object[] { content, timeout, onFinish });
         }
 

@@ -50,17 +50,18 @@ namespace ZGame.Sound
         /// <param name="playCallback"></param>
         public async void PlaySound(string clipName, bool isLoop = false, Action<PlayState> playCallback = null)
         {
-            AudioClip clip = GameFrameworkEntry.VFS.GetAudioClipSync(clipName, null);
-            PlaySound(clip, isLoop, (x) =>
+            using (ResObject resObject = GameFrameworkEntry.VFS.GetAsset(clipName))
             {
-                if (x is not PlayState.Complete)
+                PlaySound(resObject.GetAsset<AudioClip>(null), isLoop, (x) =>
                 {
-                    return;
-                }
+                    if (x is not PlayState.Complete)
+                    {
+                        return;
+                    }
 
-                playCallback?.Invoke(x);
-                GameFrameworkEntry.VFS.UnloadResource(clip);
-            });
+                    playCallback?.Invoke(x);
+                });
+            }
         }
 
         /// <summary>
@@ -75,7 +76,7 @@ namespace ZGame.Sound
             AudioSourceHandler handle = _handles.Find(x => x.isPlaying is false);
             if (handle is null)
             {
-                _handles.Add(handle = new AudioSourceHandler(null, "Audio Player " + _handles.Count, isLoop));
+                _handles.Add(handle = AudioSourceHandler.Create(null, "Audio Player " + _handles.Count, isLoop));
             }
 
             handle.Play(clip, playCallback);
@@ -88,21 +89,22 @@ namespace ZGame.Sound
         /// <param name="clipName"></param>
         /// <param name="isLoop"></param>
         /// <param name="playCallback"></param>
-        public UniTask PlaySoundAsync(string clipName, bool isLoop = false)
+        public async UniTask PlaySoundAsync(string clipName, bool isLoop = false)
         {
-            UniTaskCompletionSource tcs = new UniTaskCompletionSource();
-            AudioClip clip = GameFrameworkEntry.VFS.GetAudioClipSync(clipName, null);
-            PlaySound(clip, isLoop, (x) =>
+            using (ResObject resObject = await GameFrameworkEntry.VFS.GetAssetAsync(clipName))
             {
-                if (x is not PlayState.Complete)
+                UniTaskCompletionSource tcs = new UniTaskCompletionSource();
+                PlaySound(resObject.GetAsset<AudioClip>(null), isLoop, (x) =>
                 {
-                    return;
-                }
+                    if (x is not PlayState.Complete)
+                    {
+                        return;
+                    }
 
-                tcs.TrySetResult();
-                GameFrameworkEntry.VFS.UnloadResource(clip);
-            });
-            return tcs.Task;
+                    tcs.TrySetResult();
+                });
+                await tcs.Task;
+            }
         }
 
         /// <summary>

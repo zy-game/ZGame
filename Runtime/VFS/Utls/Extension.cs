@@ -19,7 +19,13 @@ namespace ZGame
                 return;
             }
 
-            image.sprite = GameFrameworkEntry.VFS.GetSpriteSync(spritePath, image.gameObject);
+            ResObject res = GameFrameworkEntry.VFS.GetAsset(spritePath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            image.sprite = res.GetAsset<Sprite>(image.gameObject);
         }
 
         /// <summary>
@@ -34,7 +40,13 @@ namespace ZGame
                 return;
             }
 
-            image.sprite = await GameFrameworkEntry.VFS.GetSpriteAsync(spritePath, image.gameObject);
+            ResObject res = await GameFrameworkEntry.VFS.GetAssetAsync(spritePath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            image.sprite = res.GetAsset<Sprite>(image.gameObject);
         }
 
         /// <summary>
@@ -49,7 +61,13 @@ namespace ZGame
                 return;
             }
 
-            rawImage.texture = GameFrameworkEntry.VFS.GetTexture2DSync(texturePath, rawImage.gameObject);
+            ResObject res = GameFrameworkEntry.VFS.GetAsset(texturePath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            rawImage.texture = res.GetAsset<Texture2D>(rawImage.gameObject);
         }
 
         /// <summary>
@@ -64,7 +82,13 @@ namespace ZGame
                 return;
             }
 
-            rawImage.texture = await GameFrameworkEntry.VFS.GetTexture2DAsync(texturePath, rawImage.gameObject);
+            ResObject res = await GameFrameworkEntry.VFS.GetAssetAsync(texturePath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            rawImage.texture = res.GetAsset<Texture2D>(rawImage.gameObject);
         }
 
         /// <summary>
@@ -81,7 +105,13 @@ namespace ZGame
                 return;
             }
 
-            material.SetTexture(propertyName, GameFrameworkEntry.VFS.GetTexture2DSync(texturePath, gameObject));
+            ResObject res = GameFrameworkEntry.VFS.GetAsset(texturePath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            material.SetTexture(propertyName, res.GetAsset<Texture2D>(gameObject));
         }
 
         /// <summary>
@@ -98,7 +128,13 @@ namespace ZGame
                 return;
             }
 
-            material.SetTexture(propertyName, await GameFrameworkEntry.VFS.GetTexture2DAsync(texturePath, gameObject));
+            ResObject res = await GameFrameworkEntry.VFS.GetAssetAsync(texturePath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            material.SetTexture(propertyName, res.GetAsset<Texture2D>(gameObject));
         }
 
         /// <summary>
@@ -113,7 +149,13 @@ namespace ZGame
                 return;
             }
 
-            image.material = GameFrameworkEntry.VFS.GetMaterialSync(materialPath, image.gameObject);
+            ResObject res = GameFrameworkEntry.VFS.GetAsset(materialPath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            image.material = res.GetAsset<Material>(image.gameObject);
         }
 
         /// <summary>
@@ -128,7 +170,13 @@ namespace ZGame
                 return;
             }
 
-            image.material = await GameFrameworkEntry.VFS.GetMaterialAsync(materialPath, image.gameObject);
+            ResObject resObject = await GameFrameworkEntry.VFS.GetAssetAsync(materialPath);
+            if (resObject == null || resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            image.material = resObject.GetAsset<Material>(image.gameObject);
         }
 
         /// <summary>
@@ -143,7 +191,13 @@ namespace ZGame
                 return;
             }
 
-            rawImage.material = GameFrameworkEntry.VFS.GetMaterialSync(materialPath, rawImage.gameObject);
+            ResObject res = GameFrameworkEntry.VFS.GetAsset(materialPath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            rawImage.material = res.GetAsset<Material>(rawImage.gameObject);
         }
 
         /// <summary>
@@ -158,7 +212,13 @@ namespace ZGame
                 return;
             }
 
-            rawImage.material = await GameFrameworkEntry.VFS.GetMaterialAsync(materialPath, rawImage.gameObject);
+            ResObject resObject = await GameFrameworkEntry.VFS.GetAssetAsync(materialPath);
+            if (resObject == null || resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            rawImage.material = resObject.GetAsset<Material>(rawImage.gameObject);
         }
 
         /// <summary>
@@ -173,7 +233,13 @@ namespace ZGame
                 return;
             }
 
-            renderer.material = GameFrameworkEntry.VFS.GetMaterialSync(materialPath, renderer.gameObject);
+            ResObject res = GameFrameworkEntry.VFS.GetAsset(materialPath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            renderer.material = res.GetAsset<Material>(renderer.gameObject);
         }
 
         /// <summary>
@@ -188,7 +254,13 @@ namespace ZGame
                 return;
             }
 
-            renderer.material = await GameFrameworkEntry.VFS.GetMaterialAsync(materialPath, renderer.gameObject);
+            ResObject resObject = await GameFrameworkEntry.VFS.GetAssetAsync(materialPath);
+            if (resObject == null || resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            renderer.material = resObject.GetAsset<Material>(renderer.gameObject);
         }
 
         /// <summary>
@@ -203,7 +275,13 @@ namespace ZGame
                 return;
             }
 
-            meshRenderer.sharedMaterial = GameFrameworkEntry.VFS.GetMaterialSync(materialPath, meshRenderer.gameObject);
+            ResObject res = GameFrameworkEntry.VFS.GetAsset(materialPath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            meshRenderer.material = res.GetAsset<Material>(meshRenderer.gameObject);
         }
 
         /// <summary>
@@ -218,7 +296,13 @@ namespace ZGame
                 return;
             }
 
-            meshRenderer.sharedMaterial = await GameFrameworkEntry.VFS.GetMaterialAsync(materialPath, meshRenderer.gameObject);
+            ResObject resObject = await GameFrameworkEntry.VFS.GetAssetAsync(materialPath);
+            if (resObject == null || resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            meshRenderer.material = resObject.GetAsset<Material>(meshRenderer.gameObject);
         }
 
         /// <summary>
@@ -233,7 +317,13 @@ namespace ZGame
                 return;
             }
 
-            skinnedMeshRenderer.sharedMaterial = GameFrameworkEntry.VFS.GetMaterialSync(materialPath, skinnedMeshRenderer.gameObject);
+            ResObject res = GameFrameworkEntry.VFS.GetAsset(materialPath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            skinnedMeshRenderer.material = res.GetAsset<Material>(skinnedMeshRenderer.gameObject);
         }
 
         /// <summary>
@@ -248,7 +338,13 @@ namespace ZGame
                 return;
             }
 
-            skinnedMeshRenderer.sharedMaterial = await GameFrameworkEntry.VFS.GetMaterialAsync(materialPath, skinnedMeshRenderer.gameObject);
+            ResObject resObject = await GameFrameworkEntry.VFS.GetAssetAsync(materialPath);
+            if (resObject == null || resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            skinnedMeshRenderer.material = resObject.GetAsset<Material>(skinnedMeshRenderer.gameObject);
         }
 
         /// <summary>
@@ -265,7 +361,13 @@ namespace ZGame
                 return;
             }
 
-            audioSource.clip = GameFrameworkEntry.VFS.GetAudioClipSync(audioClipPath, audioSource.gameObject);
+            ResObject res = GameFrameworkEntry.VFS.GetAsset(audioClipPath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            audioSource.clip = res.GetAsset<AudioClip>(audioSource.gameObject);
             audioSource.loop = loop;
             audioSource.volume = volume;
             audioSource.Play();
@@ -286,7 +388,13 @@ namespace ZGame
                 return;
             }
 
-            audioSource.clip = await GameFrameworkEntry.VFS.GetAudioClipAsync(audioClipPath, audioType, audioSource.gameObject);
+            ResObject res = await GameFrameworkEntry.VFS.GetAssetAsync(audioClipPath);
+            if (res == null || res.IsSuccess() is false)
+            {
+                return;
+            }
+
+            audioSource.clip = res.GetAsset<AudioClip>(audioSource.gameObject);
             audioSource.loop = loop;
             audioSource.volume = volume;
             audioSource.Play();

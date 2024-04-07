@@ -10,7 +10,7 @@ using ZGame.VFS;
 
 namespace ZGame.Resource
 {
-    class ResPackage : IGameCacheObject
+    partial class ResPackage : IReferenceObject
     {
         public string name { get; private set; }
         public int refCount { get; private set; }
@@ -20,23 +20,6 @@ namespace ZGame.Resource
         private bool isDefault;
         private float nextCheckTime;
 
-
-        internal static ResPackage Create(string title)
-        {
-            ResPackage self = GameFrameworkFactory.Spawner<ResPackage>();
-            self.name = title;
-            self.isDefault = true;
-            return self;
-        }
-
-        internal static ResPackage Create(AssetBundle bundle)
-        {
-            ResPackage self = GameFrameworkFactory.Spawner<ResPackage>();
-            self.bundle = bundle;
-            self.isDefault = false;
-            self.name = bundle.name;
-            return self;
-        }
 
         internal void SetDependencies(params ResPackage[] dependencies)
         {
@@ -83,7 +66,124 @@ namespace ZGame.Resource
             Resources.UnloadUnusedAssets();
             Debug.Log("释放资源包:" + name);
         }
+    }
 
+    partial class ResPackage
+    {
+        /// <summary>
+        /// 引用对象数据
+        /// </summary>
+        private static List<ResPackage> packages = new();
+
+        /// <summary>
+        /// 缓存池
+        /// </summary>
+        private static List<ResPackage> packageCache = new();
+
+        /// <summary>
+        /// 默认资源包
+        /// </summary>
+        public static ResPackage DEFAULT = ResPackage.Create("DEFAULT");
+
+        internal static ResPackage Create(string title)
+        {
+            ResPackage self = GameFrameworkFactory.Spawner<ResPackage>();
+            self.name = title;
+            self.isDefault = true;
+            return self;
+        }
+
+        internal static ResPackage Create(AssetBundle bundle)
+        {
+            ResPackage self = GameFrameworkFactory.Spawner<ResPackage>();
+            self.bundle = bundle;
+            self.isDefault = false;
+            self.name = bundle.name;
+            return self;
+        }
+#if UNITY_EDITOR
+        internal static void OnDrawingGUI()
+        {
+            GUILayout.BeginVertical(UnityEditor.EditorStyles.helpBox);
+            UnityEditor.EditorGUILayout.LabelField("资源包", UnityEditor.EditorStyles.boldLabel);
+            for (int i = 0; i < packages.Count; i++)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(packages[i].name);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(packages[i].refCount.ToString());
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical(UnityEditor.EditorStyles.helpBox);
+            UnityEditor.EditorGUILayout.LabelField("资源包缓存池", UnityEditor.EditorStyles.boldLabel);
+            for (int i = 0; i < packages.Count; i++)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(packages[i].name);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(packages[i].refCount.ToString());
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndVertical();
+        }
+#endif
+        /// <summary>
+        /// 检查未引用的对象
+        /// </summary>
+        internal static void CheckUnusedRefObject()
+        {
+            for (int i = packages.Count - 1; i >= 0; i--)
+            {
+                if (packages[i].refCount > 0)
+                {
+                    continue;
+                }
+
+                packageCache.Add(packages[i]);
+                packages.RemoveAt(i);
+            }
+        }
+
+        /// <summary>
+        /// 清理缓存
+        /// </summary>
+        internal static void ReleaseUnusedRefObject()
+        {
+            for (int i = packageCache.Count - 1; i >= 0; i--)
+            {
+                if (packageCache[i].refCount > 0)
+                {
+                    continue;
+                }
+
+                GameFrameworkFactory.Release(packageCache[i]);
+            }
+
+            packageCache.Clear();
+        }
+
+        internal static bool TryGetValue(string name, out ResPackage package)
+        {
+            package = packages.Find(x => x.name == name);
+            if (package is null)
+            {
+                package = packageCache.Find(x => x.name == name);
+                if (package is not null)
+                {
+                    packageCache.Remove(package);
+                    packages.Add(package);
+                }
+            }
+
+            return package is not null;
+        }
+
+        internal static void UnloadResourcePackage(string name)
+        {
+        }
 
         internal static async UniTask<Status> UpdateResourcePackageList(params ResourcePackageManifest[] manifests)
         {
@@ -144,7 +244,7 @@ namespace ZGame.Resource
             var result = await UniTask.WhenAll(loadAssetBundleTaskList);
             if (result.Where(x => x is Status.Fail).Count() > 0)
             {
-                manifests.Select(x => x.name).ToList().ForEach(x => GameFrameworkEntry.Cache.Remove(x));
+                manifests.Select(x => x.name).ToList().ForEach(x => UnloadResourcePackage(x));
                 return Status.Fail;
             }
 
@@ -167,7 +267,7 @@ namespace ZGame.Resource
             {
                 if (LoadingAssetBundleSync(manifests[i]) is not Status.Success)
                 {
-                    manifests.Select(x => x.name).ToList().ForEach(x => GameFrameworkEntry.Cache.Remove(x));
+                    manifests.Select(x => x.name).ToList().ForEach(x => UnloadResourcePackage(x));
                     return Status.Fail;
                 }
             }
@@ -181,7 +281,7 @@ namespace ZGame.Resource
 
         internal static async UniTask<Status> LoadingAssetBundleAsync(ResourcePackageManifest manifest)
         {
-            if (GameFrameworkEntry.Cache.TryGetValue(manifest.name, out ResPackage _))
+            if (TryGetValue(manifest.name, out ResPackage _))
             {
                 Debug.Log("资源包已加载：" + manifest.name);
                 return Status.Success;
@@ -194,20 +294,21 @@ namespace ZGame.Resource
                 return Status.Fail;
             }
 
+            GameFrameworkEntry.Logger.Log("加载资源包：" + manifest.name);
             ResPackage package = ResPackage.Create(await AssetBundle.LoadFromMemoryAsync(bytes));
             if (package.IsSuccess() is false)
             {
                 return Status.Fail;
             }
 
-            GameFrameworkEntry.Cache.SetCacheData(package);
+            packages.Add(package);
             Debug.Log("资源包加载完成：" + manifest.name + " length:" + bytes.Length);
             return Status.Success;
         }
 
         internal static Status LoadingAssetBundleSync(ResourcePackageManifest manifest)
         {
-            if (GameFrameworkEntry.Cache.TryGetValue(manifest.name, out ResPackage _))
+            if (TryGetValue(manifest.name, out ResPackage _))
             {
                 Debug.Log("资源包已加载：" + manifest.name);
                 return Status.Success;
@@ -226,7 +327,7 @@ namespace ZGame.Resource
             }
 
 
-            GameFrameworkEntry.Cache.SetCacheData(package);
+            packages.Add(package);
             Debug.Log("资源包加载完成：" + manifest.name);
             return Status.Success;
         }
@@ -235,7 +336,7 @@ namespace ZGame.Resource
         {
             for (int i = 0; i < manifests.Length; i++)
             {
-                if (GameFrameworkEntry.Cache.TryGetValue(manifests[i].name, out ResPackage target) is false)
+                if (TryGetValue(manifests[i].name, out ResPackage target) is false)
                 {
                     continue;
                 }
@@ -248,7 +349,7 @@ namespace ZGame.Resource
                 List<ResPackage> dependencies = new List<ResPackage>();
                 foreach (var dependency in manifests[i].dependencies)
                 {
-                    if (GameFrameworkEntry.Cache.TryGetValue(dependency, out ResPackage packageHandle) is false)
+                    if (TryGetValue(dependency, out ResPackage packageHandle) is false)
                     {
                         continue;
                     }

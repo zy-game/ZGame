@@ -98,13 +98,13 @@ namespace ZGame.Networking
             public override void ChannelRead(IChannelHandlerContext context, object message)
             {
                 var packet = message as DatagramPacket;
-                UnityEngine.Debug.LogFormat("Received from server: {0}", packet.Content.ToString(Encoding.UTF8));
+                GameFrameworkEntry.Logger.LogFormat("Received from server: {0}", packet.Content.ToString(Encoding.UTF8));
                 packet.Release();
             }
 
             public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
             {
-                UnityEngine.Debug.LogFormat("Exception: {0}", exception);
+                GameFrameworkEntry.Logger.LogFormat("Exception: {0}", exception);
                 context.CloseAsync();
             }
         }

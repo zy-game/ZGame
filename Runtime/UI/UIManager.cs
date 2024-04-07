@@ -49,7 +49,7 @@ namespace ZGame.UI
         {
             if (type is null || type.IsInterface || type.IsAbstract)
             {
-                Debug.LogError("创建UI失败");
+                GameFrameworkEntry.Logger.LogError("创建UI失败");
                 return default;
             }
 
@@ -61,7 +61,7 @@ namespace ZGame.UI
             UIOptions options = type.GetCustomAttribute<UIOptions>();
             if (options is null)
             {
-                Debug.LogError("没找到UIOptions:" + type.Name);
+                GameFrameworkEntry.Logger.LogError("没找到UIOptions:" + type.Name);
                 return default;
             }
 
@@ -96,7 +96,7 @@ namespace ZGame.UI
         {
             if (uiBase is null)
             {
-                Debug.Log("ui is null");
+                GameFrameworkEntry.Logger.LogError("ui is null");
                 return;
             }
 
@@ -111,7 +111,7 @@ namespace ZGame.UI
         {
             if (type is null)
             {
-                Debug.Log(new NullReferenceException(type.Name));
+                GameFrameworkEntry.Logger.LogError(new NullReferenceException(type.Name));
                 return;
             }
 
@@ -123,7 +123,7 @@ namespace ZGame.UI
             UIRoot root = rootList.Find(x => x.Contains(type));
             if (root is null)
             {
-                Debug.LogError("没有找到父节点：" + type.Name);
+                GameFrameworkEntry.Logger.LogError("没有找到父节点：" + type.Name);
                 return;
             }
 
@@ -145,7 +145,7 @@ namespace ZGame.UI
             UIRoot root = rootList.Find(x => x.Contains(type));
             if (root is null)
             {
-                Debug.LogError("没有找到父节点：" + type.Name);
+                GameFrameworkEntry.Logger.LogError("没有找到父节点：" + type.Name);
                 return default;
             }
 

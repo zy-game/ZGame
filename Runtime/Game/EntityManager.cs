@@ -38,10 +38,15 @@ namespace ZGame.Game
             GameFrameworkFactory.Release(entity);
         }
 
-        public void Release()
+        public void Clear()
         {
             entityList.ForEach(GameFrameworkFactory.Release);
             entityList.Clear();
+        }
+
+        public void Release()
+        {
+            Clear();
         }
     }
 }

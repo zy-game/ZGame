@@ -12,7 +12,6 @@ namespace ZGame.Game
     /// </summary>
     public partial class ECSManager : GameFrameworkModule
     {
-        private Entity singleEntity;
         private ComponentManager _componentManager;
         private EntityManager entityManager;
         private SystemManager systemManager;
@@ -27,7 +26,6 @@ namespace ZGame.Game
             _componentManager = GameFrameworkFactory.Spawner<ComponentManager>();
             entityManager = GameFrameworkFactory.Spawner<EntityManager>();
             systemManager = GameFrameworkFactory.Spawner<SystemManager>();
-            singleEntity = CreateEntity();
             curWorld = World.Create("SYSTEM_DEFAULT_WORLD");
         }
 
@@ -37,7 +35,6 @@ namespace ZGame.Game
             GameFrameworkFactory.Release(systemManager);
             GameFrameworkFactory.Release(entityManager);
             GameFrameworkFactory.Release(curWorld);
-            GameFrameworkFactory.Release(singleEntity);
             curWorld = null;
         }
 
@@ -116,6 +113,15 @@ namespace ZGame.Game
         public void DestroyEntity(Entity entity)
         {
             DestroyEntity(entity.id);
+        }
+
+        /// <summary>
+        /// 清理所有实体对象
+        /// </summary>
+        public void ClearEntity()
+        {
+            entityManager.Clear();
+            _componentManager.Clear();
         }
 
         /// <summary>

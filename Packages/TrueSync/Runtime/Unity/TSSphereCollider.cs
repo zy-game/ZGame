@@ -18,8 +18,8 @@ namespace TrueSync {
          **/
         public FP radius {
             get {
-                if (_body != null) {
-                    return ((SphereShape)_body.Shape).Radius;
+                if (body != null) {
+                    return ((SphereShape)body.Shape).Radius;
                 }
 
                 return _radius;
@@ -28,8 +28,8 @@ namespace TrueSync {
             set {
                 _radius = value.AsFloat();
 
-                if (_body != null) {
-                    ((SphereShape)_body.Shape).Radius = value;
+                if (body != null) {
+                    ((SphereShape)body.Shape).Radius = value;
                 }
             }
         }

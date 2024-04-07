@@ -144,6 +144,7 @@ namespace ZGame.Networking
             {
                 headers = headers ?? new Dictionary<string, object>();
                 headers.TryAdd("Content-Type", "application/json");
+                request.SetIgnoreCertificate();
                 request.SetRequestHeaderWithCors(headers);
                 request.uploadHandler.Dispose();
                 request.uploadHandler = null;
@@ -157,7 +158,7 @@ namespace ZGame.Networking
                     }
                 }
 
-                UnityEngine.Debug.Log($"POST DATA:{url} parmas:{(postData).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
+                GameFrameworkEntry.Logger.Log($"POST DATA:{url} parmas:{(postData).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
             }
@@ -181,7 +182,7 @@ namespace ZGame.Networking
             using (UnityWebRequest request = UnityWebRequest.Post(url, form))
             {
                 headers = headers ?? new Dictionary<string, object>();
-
+                request.SetIgnoreCertificate();
                 request.SetRequestHeaderWithCors(headers);
                 request.uploadHandler.Dispose();
                 request.uploadHandler = null;
@@ -195,7 +196,7 @@ namespace ZGame.Networking
                     }
                 }
 
-                Debug.Log($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                GameFrameworkEntry.Logger.Log($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
             }
@@ -222,6 +223,7 @@ namespace ZGame.Networking
                     headers.Add("Content-Type", "application/json");
                 }
 
+                request.SetIgnoreCertificate();
                 request.SetRequestHeaderWithCors(headers);
                 await request.SendWebRequest().ToUniTask();
                 if (request.result is UnityWebRequest.Result.Success)
@@ -229,7 +231,7 @@ namespace ZGame.Networking
                     _data = request.GetResultData<T>();
                 }
 
-                Debug.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()} data: {request.downloadHandler?.text}");
+                GameFrameworkEntry.Logger.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()} data: {request.downloadHandler?.text}");
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
             }
@@ -249,6 +251,7 @@ namespace ZGame.Networking
             string result = "";
             using (UnityWebRequest request = UnityWebRequest.Head(url))
             {
+                request.SetIgnoreCertificate();
                 request.SetRequestHeaderWithCors(null);
                 await request.SendWebRequest().ToUniTask();
 

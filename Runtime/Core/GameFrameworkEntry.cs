@@ -111,10 +111,6 @@ namespace ZGame
         /// </summary>
         public static LocationDatableManager Location { get; private set; }
 
-        /// <summary>
-        /// 引用对象管理器
-        /// </summary>
-        public static GameCacheObjectManager Cache { get; private set; }
 
         /// <summary>
         /// 多语言管理
@@ -168,7 +164,6 @@ namespace ZGame
         public static async void Initialized()
         {
             Logger = GetOrCreateModule<LoggerManager>();
-            Cache = GetOrCreateModule<GameCacheObjectManager>();
             Language = GetOrCreateModule<LanguageManager>();
             Datable = GetOrCreateModule<RuntimeDatableManager>();
             VFS = GetOrCreateModule<VFSManager>();
@@ -243,7 +238,6 @@ namespace ZGame
             Config = null;
             Logger = null;
             Network = null;
-            Cache = null;
             ECS = null;
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Cysharp.Threading.Tasks;
@@ -13,9 +14,9 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.Resource
 {
-    public sealed class ResObject : IGameCacheObject
+    public partial class ResObject : IReferenceObject
     {
-        public static ResObject Empty => new ResObject();
+        public static ResObject DEFAULT => new ResObject();
         private object obj;
         private ResPackage parent;
 
@@ -74,14 +75,108 @@ namespace ZGame.Resource
             refCount--;
             parent?.Unref();
         }
+    }
 
-        public static ResObject Create(object obj, string path)
+    public partial class ResObject
+    {
+        /// <summary>
+        /// 缓存池列表
+        /// </summary>
+        private static List<ResObject> resObjects = new();
+
+        /// <summary>
+        /// 缓存池
+        /// </summary>
+        private static List<ResObject> resObjectCache = new();
+
+#if UNITY_EDITOR
+        static internal void OnDrawingGUI()
         {
-            return Create(null, obj, path);
+            GUILayout.BeginVertical(UnityEditor.EditorStyles.helpBox);
+            UnityEditor.EditorGUILayout.LabelField("资源对象", UnityEditor.EditorStyles.boldLabel);
+            for (int i = 0; i < resObjects.Count; i++)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(resObjects[i].name);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(resObjects[i].refCount.ToString());
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical(UnityEditor.EditorStyles.helpBox);
+            UnityEditor.EditorGUILayout.LabelField("资源对象池", UnityEditor.EditorStyles.boldLabel);
+            for (int i = 0; i < resObjects.Count; i++)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(resObjects[i].name);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(resObjects[i].refCount.ToString());
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndVertical();
+        }
+#endif
+
+        /// <summary>
+        /// 检查未引用的对象
+        /// </summary>
+        internal static void CheckUnusedRefObject()
+        {
+            for (int i = resObjects.Count - 1; i >= 0; i--)
+            {
+                if (resObjects[i].refCount > 0)
+                {
+                    continue;
+                }
+
+                resObjectCache.Add(resObjects[i]);
+                resObjects.RemoveAt(i);
+            }
+        }
+
+        /// <summary>
+        /// 清理缓存
+        /// </summary>
+        internal static void ReleaseUnusedRefObject()
+        {
+            for (int i = resObjectCache.Count - 1; i >= 0; i--)
+            {
+                if (resObjectCache[i].refCount > 0)
+                {
+                    continue;
+                }
+
+                GameFrameworkFactory.Release(resObjectCache[i]);
+            }
+
+            resObjectCache.Clear();
+        }
+
+        internal static bool TryGetValue(string path, out ResObject resObject)
+        {
+            resObject = resObjects.Find(x => x.name == path);
+            if (resObject is null)
+            {
+                resObject = resObjectCache.Find(x => x.name == path);
+                if (resObject is not null)
+                {
+                    resObjects.Add(resObject);
+                    resObjectCache.Remove(resObject);
+                }
+            }
+
+            return resObject is not null;
         }
 
         internal static ResObject Create(ResPackage parent, object obj, string path)
         {
+            if (obj == null)
+            {
+                return DEFAULT;
+            }
+
             ResObject resObject = GameFrameworkFactory.Spawner<ResObject>();
             resObject.obj = obj;
             resObject.name = path;
@@ -96,27 +191,27 @@ namespace ZGame.Resource
         /// </summary>
         /// <param name="path">资源路径</param>
         /// <returns>资源加载结果</returns>
-        internal static ResObject Create(string path)
+        internal static ResObject LoadResObjectSync(string path)
         {
             if (path.IsNullOrEmpty())
             {
-                return ResObject.Empty;
+                return ResObject.DEFAULT;
             }
 
-            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject resObject))
+            if (TryGetValue(path, out ResObject resObject))
             {
                 return resObject;
             }
 
             if (path.StartsWith("Resources"))
             {
-                resObject = ResObject.Create(Resources.Load(path.Substring(10)), path);
+                resObject = ResObject.Create(ResPackage.DEFAULT, Resources.Load(path.Substring(10)), path);
             }
 
 #if UNITY_EDITOR
             else if (ResConfig.instance.resMode == ResourceMode.Editor && path.StartsWith("Assets"))
             {
-                resObject = ResObject.Create(UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path), path);
+                resObject = ResObject.Create(ResPackage.DEFAULT, UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path), path);
             }
 #endif
             else
@@ -124,13 +219,13 @@ namespace ZGame.Resource
                 if (GameFrameworkEntry.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
                 {
                     GameFrameworkEntry.Logger.LogError("资源未找到：" + path);
-                    return ResObject.Empty;
+                    return ResObject.DEFAULT;
                 }
 
-                if (GameFrameworkEntry.Cache.TryGetValue(manifest.name, out ResPackage package) is false)
+                if (ResPackage.TryGetValue(manifest.name, out ResPackage package) is false)
                 {
                     ResPackage.LoadingAssetBundleSync(manifest);
-                    return Create(path);
+                    return LoadResObjectSync(path);
                 }
 
                 resObject = ResObject.Create(package, package.bundle.LoadAsset(path), path);
@@ -138,7 +233,7 @@ namespace ZGame.Resource
 
             if (resObject is not null && resObject.IsSuccess())
             {
-                GameFrameworkEntry.Cache.SetCacheData(resObject);
+                resObjects.Add(resObject);
             }
 
             return resObject;
@@ -149,26 +244,26 @@ namespace ZGame.Resource
         /// </summary>
         /// <param name="path">资源路径</param>
         /// <returns>资源加载任务</returns>
-        internal static async UniTask<ResObject> CreateAsync(string path)
+        internal static async UniTask<ResObject> LoadResObjectAsync(string path)
         {
             if (path.IsNullOrEmpty())
             {
-                return ResObject.Empty;
+                return ResObject.DEFAULT;
             }
 
-            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject resObject))
+            if (TryGetValue(path, out ResObject resObject))
             {
                 return resObject;
             }
 
             if (path.StartsWith("Resources"))
             {
-                resObject = ResObject.Create(await Resources.LoadAsync(path.Substring(10)), path);
+                resObject = ResObject.Create(ResPackage.DEFAULT, await Resources.LoadAsync(path.Substring(10)), path);
             }
 #if UNITY_EDITOR
             else if (ResConfig.instance.resMode == ResourceMode.Editor)
             {
-                resObject = ResObject.Create(UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path), path);
+                resObject = ResObject.Create(ResPackage.DEFAULT, UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path), path);
             }
 #endif
             else
@@ -176,13 +271,13 @@ namespace ZGame.Resource
                 if (GameFrameworkEntry.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
                 {
                     GameFrameworkEntry.Logger.LogError("资源未找到：" + path);
-                    return ResObject.Empty;
+                    return ResObject.DEFAULT;
                 }
 
-                if (GameFrameworkEntry.Cache.TryGetValue(manifest.name, out ResPackage package) is false)
+                if (ResPackage.TryGetValue(manifest.name, out ResPackage package) is false)
                 {
                     await ResPackage.LoadingAssetBundleAsync(manifest);
-                    return await CreateAsync(path);
+                    return await LoadResObjectAsync(path);
                 }
 
                 resObject = ResObject.Create(package, await package.bundle.LoadAssetAsync(path), path);
@@ -190,7 +285,7 @@ namespace ZGame.Resource
 
             if (resObject is not null && resObject.IsSuccess())
             {
-                GameFrameworkEntry.Cache.SetCacheData(resObject);
+                resObjects.Add(resObject);
             }
 
             return resObject;

@@ -1,13 +1,14 @@
 ﻿using UnityEngine;
 
-namespace TrueSync {
-
+namespace TrueSync
+{
     /**
     * @brief Represents a set of configurations for TrueSync.
     **/
-    public class TrueSyncConfig : ScriptableObject {
-
+    public class TrueSyncConfig : ScriptableObject
+    {
         private const int COLLISION_LAYERS = 32;
+
         // 32 layers -> 516 unique intersections
         private const int COLLISION_TOGGLES = 1024;
 
@@ -76,14 +77,17 @@ namespace TrueSync {
          **/
         public FP lockedTimeStep = 0.02f;
 
-        public TrueSyncConfig() {
+        public TrueSyncConfig()
+        {
         }
 
         /**
          * @brief Returns true if the collision between layerA and layerB should be ignored.
          **/
-        public bool GetIgnoreLayerCollision(int layerA, int layerB) {
-            if (layerB < layerA) {
+        public bool GetIgnoreLayerCollision(int layerA, int layerB)
+        {
+            if (layerB < layerA)
+            {
                 int aux = layerA;
                 layerA = layerB;
                 layerB = aux;
@@ -91,15 +95,16 @@ namespace TrueSync {
 
             int matrixIndex = ((COLLISION_LAYERS + COLLISION_LAYERS - layerA + 1) * layerA) / 2 + layerB;
 
-            if (physics2DEnabled) {
+            if (physics2DEnabled)
+            {
                 return physics2DIgnoreMatrix[matrixIndex];
-            } else if (physics3DEnabled) {
+            }
+            else if (physics3DEnabled)
+            {
                 return physics3DIgnoreMatrix[matrixIndex];
             }
 
             return false;
         }
-
     }
-
 }

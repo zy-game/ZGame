@@ -96,7 +96,7 @@ namespace ZGame.Networking
             public override void ChannelRead(IChannelHandlerContext context, object message)
             {
                 var byteBuffer = message as IByteBuffer;
-                UnityEngine.Debug.LogFormat("Received from server: {0}", byteBuffer.ToString(Encoding.UTF8));
+                GameFrameworkEntry.Logger.LogFormat("Received from server: {0}", byteBuffer.ToString(Encoding.UTF8));
                 byteBuffer.Release();
             }
 
@@ -104,7 +104,7 @@ namespace ZGame.Networking
 
             public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
             {
-                UnityEngine.Debug.LogFormat("Exception: {0}", exception);
+                GameFrameworkEntry.Logger.LogFormat("Exception: {0}", exception);
                 context.CloseAsync();
             }
         }

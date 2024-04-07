@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 using TrueSync.Physics3D;
 
-namespace TrueSync {
-
+namespace TrueSync
+{
     /**
     *  @brief Represents information about a contact point
     **/
-    public class TSContactPoint {
-
+    public class TSContactPoint
+    {
         /**
         *  @brief Contact point between two bodies
         **/
@@ -17,14 +17,13 @@ namespace TrueSync {
         *  @brief Normal vector from the contact point
         **/
         public TSVector normal;
-
     }
 
     /**
     *  @brief Represents information about a contact between two 3D bodies
     **/
-    public class TSCollision {
-
+    public class TSCollision
+    {
         /**
         *  @brief An array of {@link TSContactPoint}
         **/
@@ -55,16 +54,20 @@ namespace TrueSync {
         **/
         public TSVector relativeVelocity;
 
-        internal void Update(GameObject otherGO, Contact c) {
-            if (this.gameObject == null) {
+        public void Update(GameObject otherGO, Contact c)
+        {
+            if (this.gameObject == null)
+            {
                 this.gameObject = otherGO;
                 this.collider = this.gameObject.GetComponent<TSCollider>();
                 this.rigidbody = this.gameObject.GetComponent<TSRigidBody>();
                 this.transform = this.collider.tsTransform;
             }
 
-            if (c != null) {
-                if (contacts[0] == null) {
+            if (c != null)
+            {
+                if (contacts[0] == null)
+                {
                     contacts[0] = new TSContactPoint();
                 }
 
@@ -74,7 +77,5 @@ namespace TrueSync {
                 contacts[0].point = c.p1;
             }
         }
-
     }
-
 }

@@ -5,9 +5,9 @@ namespace ZGame.Language
     /// <summary>
     /// 默认语言定义
     /// </summary>
-    class DefaultLanguageDefine : IConfigDatable
+    class LanguageItem : IConfigDatable
     {
-        public int id { get; } = -1;
+        public int id { get; set; } = -1;
 
         private Dictionary<string, string> map = new();
 

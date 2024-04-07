@@ -88,9 +88,10 @@ namespace ZGame.Editor.Command
 
         private static void OnUploadBuilderResourcePackage(ResourcePackageListManifest manifest, int allCount, ref int successCount)
         {
-            PackageSeting packageSeting = BuilderConfig.instance.packages.Find(x => x.title == manifest.name);
+            PackageSeting packageSeting = BuilderConfig.instance.packages.Find(x => x.title.ToLower() == manifest.name.ToLower());
             if (packageSeting is null)
             {
+                Debug.Log("???" + manifest.name);
                 return;
             }
 

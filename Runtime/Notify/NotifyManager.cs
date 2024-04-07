@@ -36,7 +36,7 @@ namespace ZGame.Notify
     {
         private bool isTouch = false;
         private List<KeyCode> keyDownEvent = new();
-        private Dictionary<object, GameEventGroup> _handlers = new();
+        private List<GameEventGroup> _handlers = new();
 
         public override void Update()
         {
@@ -47,7 +47,7 @@ namespace ZGame.Notify
 
         private void CheckKeyDown()
         {
-            for (int i = 0; i < keyDownEvent.Count; i++)
+            for (int i = keyDownEvent.Count - 1; i >= 0; i--)
             {
                 if (Input.GetKeyDown(keyDownEvent[i]))
                 {
@@ -58,18 +58,18 @@ namespace ZGame.Notify
 
         private void CheckKeyUp()
         {
-            for (int i = 0; i < keyDownEvent.Count; i++)
+            for (int i = keyDownEvent.Count - 1; i >= 0; i--)
             {
                 if (Input.GetKeyUp(keyDownEvent[i]))
                 {
                     Notify(keyDownEvent[i], KeyEventArgs.Create(keyDownEvent[i], KeyEventType.Up));
-                }                                                                
+                }
             }
         }
 
         private void CheckPressKey()
         {
-            for (var i = 0; i < keyDownEvent.Count; i++)
+            for (int i = keyDownEvent.Count - 1; i >= 0; i--)
             {
                 if (Input.GetKey(keyDownEvent[i]) || Input.touchCount > 0)
                 {
@@ -130,9 +130,10 @@ namespace ZGame.Notify
                 keyDownEvent.Add(keyCode);
             }
 
-            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
+            var group = _handlers.Find(x => x.owner.Equals(eventName));
+            if (group is null)
             {
-                _handlers.Add(eventName, group = GameFrameworkFactory.Spawner<GameEventGroup>());
+                _handlers.Add(group = GameEventGroup.Create(eventName));
             }
 
             group.Subscribe(handle);
@@ -146,7 +147,8 @@ namespace ZGame.Notify
         /// <typeparam name="T"></typeparam>
         public void Unsubscribe<T>(object eventName, Action<T> handle) where T : IGameEventArgs
         {
-            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
+            var group = _handlers.Find(x => x.owner.Equals(eventName));
+            if (group is null)
             {
                 return;
             }
@@ -166,7 +168,8 @@ namespace ZGame.Notify
                 keyDownEvent.Remove(keyCode);
             }
 
-            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
+            var group = _handlers.Find(x => x.owner.Equals(eventName));
+            if (group is null)
             {
                 return;
             }
@@ -186,7 +189,8 @@ namespace ZGame.Notify
                 keyDownEvent.Add(keyCode);
             }
 
-            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
+            var group = _handlers.Find(x => x.owner.Equals(eventName));
+            if (group is null)
             {
                 return;
             }
@@ -218,13 +222,14 @@ namespace ZGame.Notify
         /// <param name="eventName"></param>
         public void Clear(object eventName)
         {
-            if (_handlers.TryGetValue(eventName, out GameEventGroup group) is false)
+            var group = _handlers.Find(x => x.owner.Equals(eventName));
+            if (group is null)
             {
                 return;
             }
 
+            _handlers.Remove(group);
             GameFrameworkFactory.Release(group);
-            _handlers.Remove(eventName);
         }
 
         /// <summary>
@@ -236,11 +241,11 @@ namespace ZGame.Notify
             Notify(eventArgs.GetType(), eventArgs);
         }
 
-        public void Notify(object eventKey, IGameEventArgs data)
+        public void Notify(object eventName, IGameEventArgs data)
         {
-            if (_handlers.TryGetValue(eventKey, out GameEventGroup group) is false)
+            var group = _handlers.Find(x => x.owner.Equals(eventName));
+            if (group is null)
             {
-                Debug.LogError("没有找到事件列表：" + eventKey);
                 return;
             }
 
@@ -249,11 +254,7 @@ namespace ZGame.Notify
 
         public override void Release()
         {
-            foreach (var VARIABLE in _handlers.Values)
-            {
-                GameFrameworkFactory.Release(VARIABLE);
-            }
-
+            _handlers.ForEach(GameFrameworkFactory.Release);
             _handlers.Clear();
         }
     }

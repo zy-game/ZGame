@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 
-namespace TrueSync {
-
+namespace TrueSync
+{
     /**
     *  @brief Represents information about a contact point
     **/
-    public class TSContactPoint2D {
-
+    public class TSContactPoint2D
+    {
         /**
         *  @brief Contact point between two bodies
         **/
@@ -16,14 +16,13 @@ namespace TrueSync {
         *  @brief Normal vector from the contact point
         **/
         public TSVector2 normal;
-
     }
 
     /**
     *  @brief Represents information about a contact between two 2D bodies
     **/
-    public class TSCollision2D {
-
+    public class TSCollision2D
+    {
         /**
         *  @brief An array of {@link TSContactPoint}
         **/
@@ -54,16 +53,20 @@ namespace TrueSync {
         **/
         public TSVector2 relativeVelocity;
 
-        internal void Update(GameObject otherGO, Physics2D.Contact c) {
-            if (this.gameObject == null) {
+        public void Update(GameObject otherGO, Physics2D.Contact c)
+        {
+            if (this.gameObject == null)
+            {
                 this.gameObject = otherGO;
                 this.collider = this.gameObject.GetComponent<TSCollider2D>();
                 this.rigidbody = this.gameObject.GetComponent<TSRigidBody2D>();
                 this.transform = this.collider.tsTransform;
             }
 
-            if (c != null) {
-                if (contacts[0] == null) {
+            if (c != null)
+            {
+                if (contacts[0] == null)
+                {
                     contacts[0] = new TSContactPoint2D();
                 }
 
@@ -78,7 +81,5 @@ namespace TrueSync {
                 this.relativeVelocity = c.CalculateRelativeVelocity();
             }
         }
-
     }
-
 }

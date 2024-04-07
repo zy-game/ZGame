@@ -28,6 +28,7 @@ namespace ZGame.VFS
     public class VFSManager : GameFrameworkModule
     {
         private NFSManager _disk;
+        private float refreshTime;
         private const string EDITOR_RESOURCES_PACKAGE = "EDITOR_RESOURCES_PACKAGE";
         private const string NETWORK_RESOURCES_PACKAGE = "NETWORK_RESOURCES_PACKAGE";
         private const string INTERNAL_RESOURCES_PACKAGE = "INTERNAL_RESOURCES_PACKAGE";
@@ -36,6 +37,7 @@ namespace ZGame.VFS
 
         public override void OnAwake(params object[] args)
         {
+            refreshTime = Time.realtimeSinceStartup;
             manifestManager = new ResourcePackageManifestManager();
             _disk = NFSManager.OpenOrCreateDisk(GameConfig.instance.title + " virtual data.disk");
         }
@@ -45,6 +47,60 @@ namespace ZGame.VFS
             GameFrameworkFactory.Release(manifestManager);
             GameFrameworkFactory.Release(_disk);
         }
+#if UNITY_EDITOR
+        protected internal override void OnDrawingGUI()
+        {
+            ResPackage.OnDrawingGUI();
+            ResObject.OnDrawingGUI();
+        }
+#endif
+
+        public override void Update()
+        {
+            if (Time.realtimeSinceStartup - refreshTime < ResConfig.instance.timeout)
+            {
+                return;
+            }
+
+            refreshTime = Time.realtimeSinceStartup;
+            ResPackage.ReleaseUnusedRefObject();
+            ResPackage.CheckUnusedRefObject();
+            ResObject.ReleaseUnusedRefObject();
+            ResObject.CheckUnusedRefObject();
+        }
+
+
+        // internal bool TryGetResPackage(string name, out ResPackage package)
+        // {
+        //     package = packages.Find(x => x.name == name);
+        //     if (package is null)
+        //     {
+        //         package = packageCache.Find(x => x.name == name);
+        //         if (package is not null)
+        //         {
+        //             packageCache.Remove(package);
+        //             packages.Add(package);
+        //         }
+        //     }
+        //
+        //     return package is not null;
+        // }
+        //
+        // internal bool TryGetResObject(string name, out ResObject resObject)
+        // {
+        //     resObject = resObjects.Find(x => x.name == name);
+        //     if (resObject is null)
+        //     {
+        //         resObject = resObjectCache.Find(x => x.name == name);
+        //         if (resObject is not null)
+        //         {
+        //             resObjectCache.Remove(resObject);
+        //             resObjects.Add(resObject);
+        //         }
+        //     }
+        //
+        //     return resObject is not null;
+        // }
 
         /// <summary>
         /// 获取资源所在包的清单
@@ -169,65 +225,21 @@ namespace ZGame.VFS
             }
         }
 
-        public void UnloadResource(Object obj)
+        public ResObject GetAsset(string path)
         {
+            return ResObject.LoadResObjectSync(path);
         }
 
-
-        /// <summary>
-        /// 加载场景
-        /// </summary>
-        /// <param name="path">场景路径</param>
-        /// <param name="callback">场景加载进度回调</param>
-        /// <param name="mode">场景加载模式</param>
-        /// <returns></returns>
-        public async UniTask<ResObject> GetSceneAsync(string path, IProgress<float> callback, LoadSceneMode mode = LoadSceneMode.Single)
+        public async UniTask<ResObject> GetAssetAsync(string path)
         {
             if (path.IsNullOrEmpty())
             {
-                return ResObject.Empty;
+                return ResObject.DEFAULT;
             }
 
-            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject sceneObject))
-            {
-                return sceneObject;
-            }
-
-            UILoading.SetTitle(GameFrameworkEntry.Language.Query("加载场景中..."));
-            Scene scene = default;
-            ResPackage package = default;
-            AsyncOperation operation = default;
-            LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
-#if UNITY_EDITOR
-            if (ResConfig.instance.resMode == ResourceMode.Editor)
-            {
-                operation = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, parameters);
-            }
-#endif
-            if (operation == null)
-            {
-                if (manifestManager.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
-                {
-                    return sceneObject;
-                }
-
-                if (GameFrameworkEntry.Cache.TryGetValue(manifest.name, out package) is false)
-                {
-                    await ResPackage.LoadingResourcePackageListAsync(manifest);
-                    return await GetSceneAsync(path, callback, mode);
-                }
-                else
-                {
-                    operation = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path), parameters);
-                }
-            }
-
-            await operation.ToUniTask(UILoading.Show());
-            scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
-            GameFrameworkEntry.Cache.SetCacheData(sceneObject = ResObject.Create(package, scene, path));
-            UILoading.Hide();
-            return sceneObject;
+            return await ResObject.LoadResObjectAsync(path);
         }
+
 
         /// <summary>
         /// 加载预制体
@@ -236,10 +248,10 @@ namespace ZGame.VFS
         /// <returns></returns>
         public GameObject GetGameObjectSync(string path)
         {
-            ResObject resObject = ResObject.Create(path);
+            ResObject resObject = ResObject.LoadResObjectSync(path);
             if (resObject.IsSuccess() is false)
             {
-                Debug.LogError("加载资源失败：" + path);
+                GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
                 return default;
             }
 
@@ -283,10 +295,10 @@ namespace ZGame.VFS
         /// <returns></returns>
         public async UniTask<GameObject> GetGameObjectAsync(string path)
         {
-            ResObject resObject = await ResObject.CreateAsync(path);
+            ResObject resObject = await ResObject.LoadResObjectAsync(path);
             if (resObject.IsSuccess() is false)
             {
-                Debug.LogError("加载资源失败：" + path);
+                GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
                 return default;
             }
 
@@ -322,353 +334,83 @@ namespace ZGame.VFS
             return gameObject;
         }
 
-        /// <summary>
-        /// 加载音效
-        /// </summary>
-        /// <param name="path">音效路径</param>
-        /// <param name="gameObject">引用持有者</param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        /// <exception cref="NotSupportedException"></exception>
-        public AudioClip GetAudioClipSync(string path, GameObject gameObject)
+        public async UniTask<ResObject> GetAudioStreamingAssetAsync(string path, AudioType type)
         {
-            if (path.IsNullOrEmpty())
+            if (ResObject.TryGetValue(path, out ResObject resObject))
             {
-                throw new NullReferenceException(nameof(path));
+                return resObject;
             }
 
-            if (path.StartsWith("http"))
+            using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(path, type))
             {
-                throw new NotSupportedException();
+                await request.SendWebRequest();
+                if (request.isNetworkError || request.isHttpError)
+                {
+                    GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
+                    return ResObject.DEFAULT;
+                }
+
+                AudioClip clip = DownloadHandlerAudioClip.GetContent(request);
+                clip.name = path;
+                resObject = ResObject.Create(ResPackage.DEFAULT, clip, path);
             }
 
-            ResObject resObject = ResObject.Create(path);
-            if (resObject.IsSuccess() is false)
-            {
-                Debug.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            return resObject.GetAsset<AudioClip>(gameObject);
+            return resObject;
         }
 
         /// <summary>
-        /// 加载音效
+        /// 加载场景
         /// </summary>
-        /// <param name="path">音效路径</param>
-        /// <param name="gameObject">引用持有者</param>
+        /// <param name="path">场景路径</param>
+        /// <param name="callback">场景加载进度回调</param>
+        /// <param name="mode">场景加载模式</param>
         /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        public async UniTask<AudioClip> GetAudioClipAsync(string path, AudioType audioType, GameObject gameObject)
+        public async UniTask<ResObject> GetSceneAsync(string path, IProgress<float> callback, LoadSceneMode mode = LoadSceneMode.Single)
         {
             if (path.IsNullOrEmpty())
             {
-                throw new NullReferenceException(nameof(path));
+                return ResObject.DEFAULT;
             }
 
-            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject resObject) is false)
+            if (ResObject.TryGetValue(path, out ResObject sceneObject))
             {
-                if (path.StartsWith("http") is false)
+                return sceneObject;
+            }
+
+            UILoading.SetTitle(GameFrameworkEntry.Language.Query("加载场景中..."));
+            Scene scene = default;
+            ResPackage package = default;
+            AsyncOperation operation = default;
+            LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
+#if UNITY_EDITOR
+            if (ResConfig.instance.resMode == ResourceMode.Editor)
+            {
+                operation = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, parameters);
+            }
+#endif
+            if (operation == null)
+            {
+                if (manifestManager.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
                 {
-                    resObject = await ResObject.CreateAsync(path);
+                    return sceneObject;
+                }
+
+                if (ResPackage.TryGetValue(manifest.name, out package) is false)
+                {
+                    await ResPackage.LoadingResourcePackageListAsync(manifest);
+                    return await GetSceneAsync(path, callback, mode);
                 }
                 else
                 {
-                    using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(path, audioType))
-                    {
-                        await request.SendWebRequest();
-                        if (request.result is UnityWebRequest.Result.Success)
-                        {
-                            resObject = ResObject.Create(DownloadHandlerAudioClip.GetContent(request), path);
-                            GameFrameworkEntry.Cache.SetCacheData(resObject);
-                        }
-                    }
+                    operation = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path), parameters);
                 }
             }
 
-            if (resObject is null || resObject.IsSuccess() is false)
-            {
-                Debug.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            return resObject.GetAsset<AudioClip>(gameObject);
-        }
-
-        /// <summary>
-        /// 加载图片
-        /// </summary>
-        /// <param name="path">图片路径</param>
-        /// <param name="gameObject">引用持有者</param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        /// <exception cref="NotSupportedException"></exception>
-        public Texture2D GetTexture2DSync(string path, GameObject gameObject)
-        {
-            if (path.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(path));
-            }
-
-            if (path.StartsWith("http"))
-            {
-                throw new NotSupportedException();
-            }
-
-            ResObject resObject = ResObject.Create(path);
-            if (resObject.IsSuccess() is false)
-            {
-                Debug.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            return resObject.GetAsset<Texture2D>(gameObject);
-        }
-
-        /// <summary>
-        /// 加载图片
-        /// </summary>
-        /// <param name="path">图片路径</param>
-        /// <param name="gameObject">引用持有者</param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        /// <exception cref="NotSupportedException"></exception>
-        public async UniTask<Texture2D> GetTexture2DAsync(string path, GameObject gameObject)
-        {
-            if (path.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(path));
-            }
-
-            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject resObject) is false)
-            {
-                if (path.StartsWith("http") is false)
-                {
-                    resObject = await ResObject.CreateAsync(path);
-                }
-                else
-                {
-                    using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(path))
-                    {
-                        await request.SendWebRequest();
-                        if (request.result is UnityWebRequest.Result.Success)
-                        {
-                            resObject = ResObject.Create(DownloadHandlerTexture.GetContent(request), path);
-                            GameFrameworkEntry.Cache.SetCacheData(resObject);
-                        }
-                    }
-                }
-            }
-
-            if (resObject is null || resObject.IsSuccess() is false)
-            {
-                Debug.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            return resObject.GetAsset<Texture2D>(gameObject);
-        }
-
-        /// <summary>
-        /// 加载精灵图片
-        /// </summary>
-        /// <param name="path">图片路径</param>
-        /// <param name="gameObject">引用持有者</param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        /// <exception cref="NotSupportedException"></exception>
-        public Sprite GetSpriteSync(string path, GameObject gameObject)
-        {
-            if (path.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(path));
-            }
-
-            if (path.StartsWith("http"))
-            {
-                throw new NotSupportedException();
-            }
-
-            ResObject resObject = ResObject.Create(path);
-            if (resObject.IsSuccess() is false)
-            {
-                Debug.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            return resObject.GetAsset<Sprite>(gameObject);
-        }
-
-        /// <summary>
-        /// 加载精灵图片
-        /// </summary>
-        /// <param name="path">图片路径</param>
-        /// <param name="gameObject">引用持有者</param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        public async UniTask<Sprite> GetSpriteAsync(string path, GameObject gameObject)
-        {
-            if (path.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(path));
-            }
-
-            if (GameFrameworkEntry.Cache.TryGetValue(path, out ResObject resObject) is false)
-            {
-                if (path.StartsWith("http") is false)
-                {
-                    resObject = await ResObject.CreateAsync(path);
-                }
-                else
-                {
-                    using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(path))
-                    {
-                        await request.SendWebRequest();
-                        if (request.result is UnityWebRequest.Result.Success)
-                        {
-                            Texture2D texture2D = DownloadHandlerTexture.GetContent(request);
-                            Sprite sp = Sprite.Create(texture2D, new Rect(0, 0, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f));
-                            resObject = ResObject.Create(sp, path);
-                            GameFrameworkEntry.Cache.SetCacheData(resObject);
-                        }
-                    }
-                }
-            }
-
-            if (resObject is null || resObject.IsSuccess() is false)
-            {
-                Debug.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            return resObject.GetAsset<Sprite>(gameObject);
-        }
-
-        /// <summary>
-        /// 加载材质球
-        /// </summary>
-        /// <param name="path">材质球路径</param>
-        /// <param name="gameObject">引用持有者</param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        public Material GetMaterialSync(string path, GameObject gameObject)
-        {
-            if (path.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(path));
-            }
-
-            ResObject resObject = ResObject.Create(path);
-            if (resObject.IsSuccess() is false)
-            {
-                Debug.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            return resObject.GetAsset<Material>(gameObject);
-        }
-
-        /// <summary>
-        /// 加载材质球
-        /// </summary>
-        /// <param name="path">材质球路径</param>
-        /// <param name="gameObject">引用持有者</param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        public async UniTask<Material> GetMaterialAsync(string path, GameObject gameObject)
-        {
-            if (path.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(path));
-            }
-
-            ResObject resObject = await ResObject.CreateAsync(path);
-            if (resObject.IsSuccess() is false)
-            {
-                Debug.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            return resObject.GetAsset<Material>(gameObject);
-        }
-
-        /// <summary>
-        /// 获取文本资源
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="gameObject"></param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        public TextAsset GetTextAssetSync(string url, GameObject gameObject)
-        {
-            if (url.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(url));
-            }
-
-            if (GameFrameworkEntry.Cache.TryGetValue(url, out ResObject resObject))
-            {
-                return resObject.GetAsset<TextAsset>(gameObject);
-            }
-
-            if (manifestManager.TryGetPackageManifestWithAssetName(url, out ResourcePackageManifest manifest))
-            {
-                resObject = ResObject.Create(url);
-            }
-
-            if (resObject is null || resObject.IsSuccess() is false)
-            {
-                return default;
-            }
-
-            return resObject.GetAsset<TextAsset>(gameObject);
-        }
-
-        /// <summary>
-        /// 获取文本资源
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="gameObject"></param>
-        /// <returns></returns>
-        /// <exception cref="NullReferenceException"></exception>
-        public async UniTask<TextAsset> GetTextAssetAsync(string url, GameObject gameObject)
-        {
-            if (url.IsNullOrEmpty())
-            {
-                throw new NullReferenceException(nameof(url));
-            }
-
-            if (GameFrameworkEntry.Cache.TryGetValue(url, out ResObject resObject))
-            {
-                return resObject.GetAsset<TextAsset>(gameObject);
-            }
-
-            if (manifestManager.TryGetPackageManifestWithAssetName(url, out ResourcePackageManifest manifest))
-            {
-                resObject = await ResObject.CreateAsync(url);
-            }
-            else
-            {
-                if (url.StartsWith("http"))
-                {
-                    using (UnityWebRequest request = UnityWebRequest.Get(url))
-                    {
-                        await request.SendWebRequest();
-                        if (request.result is UnityWebRequest.Result.Success)
-                        {
-                            resObject = ResObject.Create(new TextAsset(request.downloadHandler.text), url);
-                            GameFrameworkEntry.Cache.SetCacheData(resObject);
-                        }
-                    }
-                }
-            }
-
-            if (resObject is null || resObject.IsSuccess() is false)
-            {
-                return default;
-            }
-
-            return resObject.GetAsset<TextAsset>(gameObject);
+            await operation.ToUniTask(UILoading.Show());
+            scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
+            sceneObject = ResObject.Create(package, scene, path);
+            UILoading.Hide();
+            return sceneObject;
         }
 
         /// <summary>
@@ -688,7 +430,7 @@ namespace ZGame.VFS
                     throw new NullReferenceException(nameof(dllName));
                 }
 
-                Debug.Log("原生代码：" + dllName);
+                GameFrameworkEntry.Logger.Log("原生代码：" + dllName);
                 return AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             }
 
@@ -705,7 +447,7 @@ namespace ZGame.VFS
             {
                 if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
                 {
-                    Debug.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
+                    GameFrameworkEntry.Logger.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
                     continue;
                 }
             }
@@ -717,7 +459,7 @@ namespace ZGame.VFS
                 throw new NullReferenceException(dllName);
             }
 
-            Debug.Log("加载热更代码:" + dllName + ".dll");
+            GameFrameworkEntry.Logger.Log("加载热更代码:" + dllName + ".dll");
             return Assembly.Load(dllBytes);
         }
     }

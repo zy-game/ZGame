@@ -8,7 +8,15 @@ namespace ZGame.Notify
     /// </summary>
     class GameEventGroup : IReferenceObject
     {
+        public object owner { get; private set; }
         private List<IGameEventHandle> _handles = new();
+
+        public static GameEventGroup Create(object owner)
+        {
+            GameEventGroup group = GameFrameworkFactory.Spawner<GameEventGroup>();
+            group.owner = owner;
+            return group;
+        }
 
         public void Notify(IGameEventArgs args)
         {

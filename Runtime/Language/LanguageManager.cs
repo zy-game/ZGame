@@ -19,7 +19,7 @@ namespace ZGame.Language
     public sealed class LanguageManager : GameFrameworkModule
     {
         private Action onSwitch;
-        private List<DefaultLanguageDefine> _map;
+        private List<LanguageItem> _map;
         public string current { get; private set; }
 
         public override void Release()
@@ -33,7 +33,7 @@ namespace ZGame.Language
 
         public override void OnAwake(params object[] args)
         {
-            _map = new List<DefaultLanguageDefine>();
+            _map = new List<LanguageItem>();
             AddLanguageDatable(-1, cn: "是否退出？", en: "Are you sure to quit?");
             AddLanguageDatable(-1, cn: "提示", en: "Tips");
             AddLanguageDatable(-1, cn: "正在获取配置信息...", en: "Getting configuration information...");
@@ -57,12 +57,26 @@ namespace ZGame.Language
         /// <param name="id"></param>
         /// <param name="cn"></param>
         /// <param name="en"></param>
-        public void AddLanguageDatable(int id, string cn, string en)
+        void AddLanguageDatable(int id, string cn, string en)
         {
-            DefaultLanguageDefine defaultLanguageDefine = GameFrameworkFactory.Spawner<DefaultLanguageDefine>();
-            defaultLanguageDefine.SetLanguage("zh", cn);
-            defaultLanguageDefine.SetLanguage("en", en);
-            _map.Add(defaultLanguageDefine);
+            LanguageItem languageItem = GameFrameworkFactory.Spawner<LanguageItem>();
+            languageItem.id = id;
+            languageItem.SetLanguage("zh", cn);
+            languageItem.SetLanguage("en", en);
+            _map.Add(languageItem);
+        }
+
+        public void SetLanguage(int id, string flter, string value)
+        {
+            LanguageItem item = _map.FirstOrDefault(x => x.id == id);
+            if (item is null)
+            {
+                item = GameFrameworkFactory.Spawner<LanguageItem>();
+                item.id = id;
+                _map.Add(item);
+            }
+
+            item.SetLanguage(flter, value);
         }
 
         /// <summary>
@@ -105,13 +119,13 @@ namespace ZGame.Language
         /// <returns></returns>
         public string Query(int key)
         {
-            DefaultLanguageDefine define = _map.Find(x => x.id == key);
-            if (define is null)
+            LanguageItem item = _map.Find(x => x.id == key);
+            if (item is null)
             {
                 return Query(key.ToString());
             }
 
-            return define.GetLanguage(current);
+            return item.GetLanguage(current);
         }
 
         /// <summary>
@@ -121,13 +135,13 @@ namespace ZGame.Language
         /// <returns></returns>
         public string Query(string key)
         {
-            DefaultLanguageDefine define = _map.Find(x => x.id == -1 && x.Contains(key));
-            if (define is null)
+            LanguageItem item = _map.Find(x => x.id == -1 && x.Contains(key));
+            if (item is null)
             {
                 return "Not Key";
             }
 
-            return define.GetLanguage(current);
+            return item.GetLanguage(current);
         }
     }
 }

@@ -50,7 +50,7 @@ namespace ZGame.Resource
 
             if (resourcePackageListManifest is null)
             {
-                Debug.LogError("没有找到资源包列表配置文件：" + iniFilePath);
+                GameFrameworkEntry.Logger.LogError("没有找到资源包列表配置文件：" + iniFilePath);
                 return Status.Fail;
             }
 
@@ -90,7 +90,6 @@ namespace ZGame.Resource
 
             return manifest;
         }
-
 
 
         /// <summary>
@@ -166,6 +165,7 @@ namespace ZGame.Resource
             ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is null)
             {
+                GameFrameworkEntry.Logger.LogError("没有找到资源包列表配置文件：" + packageName);
                 return needUpdatePackages;
             }
 

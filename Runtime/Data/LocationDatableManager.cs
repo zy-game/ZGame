@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Newtonsoft.Json;
 using UnityEngine;
 using ZGame.VFS;
@@ -15,13 +16,13 @@ namespace ZGame.Data
 
         public override async void OnAwake(params object[] args)
         {
-            TextAsset textAsset = await GameFrameworkEntry.VFS.GetTextAssetAsync("dataCache.ini", null);
-            if (textAsset == null)
+            byte[] bytes = GameFrameworkEntry.VFS.Read("dataCache.ini");
+            if (bytes == null || bytes.Length == 0)
             {
                 return;
             }
 
-            cacheDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(textAsset.text);
+            cacheDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(UTF8Encoding.UTF8.GetString(bytes));
         }
 
         /// <summary>
