@@ -48,7 +48,7 @@ namespace ZGame.VFS
             GameFrameworkFactory.Release(_disk);
         }
 #if UNITY_EDITOR
-        protected internal override void OnDrawingGUI()
+        public override void OnGUI()
         {
             ResPackage.OnDrawingGUI();
             ResObject.OnDrawingGUI();

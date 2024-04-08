@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using ZGame;
 
 namespace TrueSync
 {
@@ -21,7 +22,7 @@ namespace TrueSync
         /**
          *  @brief Basic info about the owner of this behaviour.
          */
-        [HideInInspector] public TSPlayerInfo owner;
+        public TSPlayerInfo owner;
 
         /**
          *  @brief Basic info about the local player.
@@ -185,6 +186,7 @@ namespace TrueSync
          */
         public virtual void OnPreSyncedUpdate()
         {
+            GameFrameworkEntry.Logger.Log(nameof(OnPreSyncedUpdate));
         }
 
         /**
@@ -194,14 +196,7 @@ namespace TrueSync
          */
         public virtual void OnSyncedUpdate()
         {
-            FP accell = TrueSyncInput.GetFP(0);
-            FP steer = TrueSyncInput.GetFP(1);
-
-            accell *= 10 * TrueSyncSimulator.DeltaTime;
-            steer *= 250 * TrueSyncSimulator.DeltaTime;
-
-            tsTransform.Translate(0, 0, accell, Space.Self);
-            tsTransform.Rotate(0, steer, 0);
+            GameFrameworkEntry.Logger.Log(nameof(OnSyncedUpdate));
         }
 
         /**
@@ -211,11 +206,7 @@ namespace TrueSync
          */
         public virtual void OnSyncedInput()
         {
-            FP accell = Input.GetAxis("Vertical");
-            FP steer = Input.GetAxis("Horizontal");
-
-            TrueSyncInput.SetFP(0, accell);
-            TrueSyncInput.SetFP(1, steer);
+            GameFrameworkEntry.Logger.Log(nameof(OnSyncedInput));
         }
 
         /**

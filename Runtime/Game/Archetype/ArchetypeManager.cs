@@ -6,14 +6,18 @@ namespace ZGame.Game
     /// <summary>
     /// 组件管理器
     /// </summary>
-    class ComponentManager : IReferenceObject
+    class ArchetypeManager : IReferenceObject
     {
-        private List<ComponentChunk> chunkList = new List<ComponentChunk>();
+        private List<Archetype> chunkList = new List<Archetype>();
 
 
         public void Release()
         {
             Clear();
+        }
+
+        public void OnGUI()
+        {
         }
 
         private void EnsureComponentType(Type type)
@@ -24,16 +28,16 @@ namespace ZGame.Game
             }
         }
 
-        private ComponentChunk GetComponentChunk(Type type)
+        private Archetype GetComponentChunk(Type type)
         {
             EnsureComponentType(type);
-            ComponentChunk componentChunk = chunkList.Find(x => type == x.owner);
-            if (componentChunk is null)
+            Archetype archetype = chunkList.Find(x => type == x.owner);
+            if (archetype is null)
             {
-                chunkList.Add(componentChunk = ComponentChunk.Create(type));
+                chunkList.Add(archetype = Archetype.Create(type));
             }
 
-            return componentChunk;
+            return archetype;
         }
 
         /// <summary>

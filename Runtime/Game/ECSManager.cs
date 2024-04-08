@@ -12,7 +12,7 @@ namespace ZGame.Game
     /// </summary>
     public partial class ECSManager : GameFrameworkModule
     {
-        private ComponentManager _componentManager;
+        private ArchetypeManager _archetypeManager;
         private EntityManager entityManager;
         private SystemManager systemManager;
 
@@ -23,7 +23,7 @@ namespace ZGame.Game
 
         public override void OnAwake(params object[] args)
         {
-            _componentManager = GameFrameworkFactory.Spawner<ComponentManager>();
+            _archetypeManager = GameFrameworkFactory.Spawner<ArchetypeManager>();
             entityManager = GameFrameworkFactory.Spawner<EntityManager>();
             systemManager = GameFrameworkFactory.Spawner<SystemManager>();
             curWorld = World.Create("SYSTEM_DEFAULT_WORLD");
@@ -31,7 +31,7 @@ namespace ZGame.Game
 
         public override void Release()
         {
-            GameFrameworkFactory.Release(_componentManager);
+            GameFrameworkFactory.Release(_archetypeManager);
             GameFrameworkFactory.Release(systemManager);
             GameFrameworkFactory.Release(entityManager);
             GameFrameworkFactory.Release(curWorld);
@@ -51,12 +51,22 @@ namespace ZGame.Game
 
         public override void LateUpdate()
         {
+            curWorld.OnLateUpdate();
             systemManager.LateUpdate();
         }
 
         public override void OnDarwGizom()
         {
+            curWorld?.OnDarwGizom();
             systemManager.OnDarwingGizmons();
+        }
+
+        public override void OnGUI()
+        {
+            curWorld?.OnGUI();
+            systemManager.OnGUI();
+            entityManager.OnGUI();
+            _archetypeManager.OnGUI();
         }
 
         /// <summary>
@@ -67,7 +77,7 @@ namespace ZGame.Game
         public Entity[] GetEntities<T>() where T : IComponent
         {
             Type type = typeof(T);
-            uint[] entitys = _componentManager.GetHaveComponentEntityID(type);
+            uint[] entitys = _archetypeManager.GetHaveComponentEntityID(type);
             Entity[] entities = new Entity[entitys.Length];
             for (int i = 0; i < entities.Length; i++)
             {
@@ -103,7 +113,7 @@ namespace ZGame.Game
         public void DestroyEntity(uint id)
         {
             entityManager.DestroyEntity(id);
-            _componentManager.RemoveEntityComponents(id);
+            _archetypeManager.RemoveEntityComponents(id);
         }
 
         /// <summary>
@@ -121,7 +131,7 @@ namespace ZGame.Game
         public void ClearEntity()
         {
             entityManager.Clear();
-            _componentManager.Clear();
+            _archetypeManager.Clear();
         }
 
         /// <summary>
@@ -164,6 +174,26 @@ namespace ZGame.Game
         }
 
         /// <summary>
+        /// 获取指定类型的系统
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetSystem<T>() where T : ISystem
+        {
+            return (T)GetSystem(typeof(T));
+        }
+
+        /// <summary>
+        /// 获取指定类型的系统
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public ISystem GetSystem(Type type)
+        {
+            return systemManager.GetSystem(type);
+        }
+
+        /// <summary>
         /// 添加组件
         /// </summary>
         /// <param name="type"></param>
@@ -171,7 +201,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public IComponent AddComponent(Entity entity, Type type)
         {
-            return _componentManager.AddComponent(entity.id, type);
+            return _archetypeManager.AddComponent(entity.id, type);
         }
 
         /// <summary>
@@ -182,7 +212,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public IComponent GetComponent(Entity entity, Type type)
         {
-            return _componentManager.GetComponent(entity.id, type);
+            return _archetypeManager.GetComponent(entity.id, type);
         }
 
         /// <summary>
@@ -192,7 +222,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public void RemoveComponent(Entity entity, Type type)
         {
-            _componentManager.RemoveComponent(entity.id, type);
+            _archetypeManager.RemoveComponent(entity.id, type);
         }
 
         /// <summary>
@@ -202,7 +232,7 @@ namespace ZGame.Game
         /// <returns></returns>
         public IEnumerable<T> AllOf<T>() where T : IComponent
         {
-            return ComponentEnumerable<T>.Create(_componentManager.GetComponents(typeof(T)));
+            return ComponentEnumerable<T>.Create(_archetypeManager.GetComponents(typeof(T)));
         }
 
         /// <summary>
@@ -213,7 +243,7 @@ namespace ZGame.Game
         /// <returns></returns>
         public T Of<T>(Entity entity) where T : IComponent
         {
-            return (T)_componentManager.GetComponent(entity.id, typeof(T));
+            return (T)_archetypeManager.GetComponent(entity.id, typeof(T));
         }
 
         /// <summary>
@@ -223,7 +253,7 @@ namespace ZGame.Game
         /// <returns></returns>
         public T Single<T>() where T : ISingletonComponent, new()
         {
-            return (T)_componentManager.GetComponent(0, typeof(T));
+            return (T)_archetypeManager.GetComponent(0, typeof(T));
         }
     }
 }

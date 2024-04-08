@@ -78,7 +78,7 @@ namespace ZGame
                     if (foloutList[title])
                     {
                         GUILayout.BeginVertical(UnityEditor.EditorStyles.helpBox);
-                        VARIABLE.OnDrawingGUI();
+                        VARIABLE.OnGUI();
                         GUILayout.EndVertical();
                     }
 

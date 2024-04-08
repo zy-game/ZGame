@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ZGame.Game
 {
-    public partial class ComponentChunk : IReferenceObject
+    public partial class Archetype : IReferenceObject
     {
         private List<uint> idList;
         private List<IComponent> components;
@@ -14,13 +14,13 @@ namespace ZGame.Game
         public Type owner { get; private set; }
 
 
-        public static ComponentChunk Create(Type owner)
+        public static Archetype Create(Type owner)
         {
-            ComponentChunk componentChunk = GameFrameworkFactory.Spawner<ComponentChunk>();
-            componentChunk.components = new();
-            componentChunk.idList = new();
-            componentChunk.owner = owner;
-            return componentChunk;
+            Archetype archetype = GameFrameworkFactory.Spawner<Archetype>();
+            archetype.components = new();
+            archetype.idList = new();
+            archetype.owner = owner;
+            return archetype;
         }
 
         public void Release()

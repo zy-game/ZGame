@@ -4,6 +4,7 @@ using System.Dynamic;
 using System.Linq;
 using Cinemachine;
 using Cysharp.Threading.Tasks;
+using TrueSync;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -25,6 +26,9 @@ namespace ZGame.Game
         private Gradient sunshineGradient;
         private List<Tuple<int, Camera>> subCameras = new();
         private UniversalAdditionalCameraData mainCameraData;
+        private Simulator _simulator;
+
+        // private TrueSyncStats _trueSyncStats;
 
         /// <summary>
         /// 世界名
@@ -45,6 +49,11 @@ namespace ZGame.Game
         /// 当前世界的时间
         /// </summary>
         public DateTime time => worldTime;
+
+        /// <summary>
+        /// 帧同步模拟器
+        /// </summary>
+        public Simulator simulator => _simulator;
 
         /// <summary>
         /// 世界时间流速，每帧流逝的秒数
@@ -84,8 +93,31 @@ namespace ZGame.Game
 
         public void OnFixedUpdate()
         {
+            _simulator?.FixedUpdate();
             this.worldTime.AddSeconds(timeSpeed);
             RefreshSunshine();
+        }
+
+        public void OnUpdate()
+        {
+            _simulator?.Update();
+        }
+
+        public void OnLateUpdate()
+        {
+        }
+
+        public void OnDarwGizom()
+        {
+        }
+
+        public void OnGUI()
+        {
+        }
+
+        public void OnStartSimulator(TrueSyncConfig config)
+        {
+            _simulator = Simulator.Create3D();
         }
 
         /// <summary>
@@ -251,6 +283,8 @@ namespace ZGame.Game
                 GameObject.DestroyImmediate(_camera.gameObject);
             }
 
+            GameFrameworkFactory.Release(simulator);
+            _simulator = null;
             subCameras.Clear();
             sunshineGradient = null;
             skybox = null;

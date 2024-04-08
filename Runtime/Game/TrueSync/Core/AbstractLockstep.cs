@@ -819,7 +819,7 @@ namespace TrueSync
         }
 
         // 添加玩家
-        public void AddPlayer(byte playerId, string playerName, bool isLocal)
+        public TSPlayer AddPlayer(byte playerId, string playerName, bool isLocal)
         {
             TSPlayer tSPlayer = new TSPlayer(playerId, playerName);
             this.players.Add(tSPlayer.ID, tSPlayer);
@@ -836,6 +836,8 @@ namespace TrueSync
             {
                 this.replayRecord.AddPlayer(tSPlayer);
             }
+
+            return tSPlayer;
         }
 
         private bool CheckDrop(TSPlayer p)

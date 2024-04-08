@@ -1,4 +1,6 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using Cysharp.Threading.Tasks;
+using DotNetty.Buffers;
 
 namespace ZGame.Networking
 {
@@ -6,8 +8,16 @@ namespace ZGame.Networking
     {
         int id { get; }
         string address { get; }
-        UniTask<Status> ConnectAsync(string address, ushort port);
-        UniTask WriteAsync(IMessage message);
-        UniTask WriteAndFlushAsync(IMessage message);
+        bool isConnected { get; }
+        UniTask<Status> ConnectAsync(string address, ushort port, IMessageHandler handler);
+        UniTask WriteAndFlushAsync(byte[] message);
+    }
+
+    public interface IMessageHandler : IReferenceObject
+    {
+        void Active(INetClient client);
+        void Inactive(INetClient client);
+        void Receive(INetClient client, IByteBuffer message);
+        void Exception(INetClient client, Exception exception);
     }
 }

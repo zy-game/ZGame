@@ -40,7 +40,7 @@ namespace ZGame
             
         }
 
-        internal protected virtual void OnDrawingGUI()
+        public virtual void OnGUI()
         {
         }
 

@@ -142,6 +142,11 @@ namespace ZGame
         /// <param name="obj"></param>
         public static void Release(IReferenceObject obj)
         {
+            if (obj is null)
+            {
+                return;
+            }
+
             // Debug.Log("Release Reference Object:" + obj.GetType() + "  " + obj.GetHashCode());
             GetOrCreareReferenceHandle(obj.GetType()).Release(obj);
         }

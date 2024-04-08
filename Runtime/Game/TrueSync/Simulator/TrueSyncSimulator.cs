@@ -2,14 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Cysharp.Threading.Tasks;
+using ZGame;
 
 namespace TrueSync
 {
     /**
      * @brief Manages creation of player prefabs and lockstep execution.
      **/
-    [AddComponentMenu("")]
-    public class TrueSyncSimulator : MonoBehaviour
+    public class TrueSyncSimulator
     {
         private const float JitterTimeFactor = 0.001f;
 
@@ -24,10 +25,6 @@ namespace TrueSync
 
         private StartState startState;
 
-        /**
-         * @brief Player prefabs to be instantiated in each machine.
-         **/
-        public GameObject[] playerPrefabs;
 
         public static TrueSyncConfig _TrueSyncGlobalConfig;
 
@@ -65,7 +62,7 @@ namespace TrueSync
         /**
          * @brief A dictionary holding a list of {@link TrueSyncBehaviour} belonging to each player.
          **/
-        private Dictionary<byte, List<TrueSyncManagedBehaviour>> behaviorsByPlayer;
+        private Dictionary<byte, List<TrueSyncManagedBehaviour>> behaviorsByPlayer = new();
 
         /**
          * @brief The coroutine scheduler.
@@ -80,6 +77,7 @@ namespace TrueSync
         private Dictionary<ITrueSyncBehaviour, TrueSyncManagedBehaviour> mapBehaviorToManagedBehavior = new Dictionary<ITrueSyncBehaviour, TrueSyncManagedBehaviour>();
 
         private FP time = 0;
+        private FP tsDeltaTime = 0;
 
         /**
          * @brief Returns the deltaTime between two simulation calls.
@@ -239,11 +237,11 @@ namespace TrueSync
             }
         }
 
-        void Awake()
+        public async void Start()
         {
+            instance = this;
             TrueSyncConfig currentConfig = ActiveConfig;
             lockedTimeStep = currentConfig.lockedTimeStep;
-
             StateTracker.Init(currentConfig.rollbackWindow);
             TSRandom.Init();
 
@@ -255,26 +253,12 @@ namespace TrueSync
             }
 
             StateTracker.AddTracking(this, "time");
-        }
-
-        void Start()
-        {
-            instance = this;
             Application.runInBackground = true;
-
-            ICommunicator communicator = null;
-            //if (!PhotonNetwork.connected || !PhotonNetwork.inRoom) {
-            //    Debug.LogWarning("You are not connected to Photon. TrueSync will start in offline mode.");
-            //} else {
-            //   communicator = new PhotonTrueSyncCommunicator(PhotonNetwork.networkingPeer);
-            //}
-            Debug.LogWarning("You are not connected to Photon. TrueSync will start in offline mode.");
-
             TrueSyncConfig activeConfig = ActiveConfig;
-
             lockstep = AbstractLockstep.NewInstance(
                 lockedTimeStep.AsFloat(),
-                communicator,
+                null,
+                //SimulatorNetworkHandle.instance,
                 PhysicsManager.instance,
                 activeConfig.syncWindow,
                 activeConfig.panicWindow,
@@ -288,55 +272,41 @@ namespace TrueSync
                 GetLocalData,
                 ProvideInputData
             );
-
-            //if (ReplayRecord.replayMode == ReplayMode.LOAD_REPLAY) {
-            //    ReplayPicker.replayToLoad.Load();
-
-            //    ReplayRecord replayRecord = ReplayRecord.replayToLoad;
-            //    if (replayRecord == null) {
-            //        Debug.LogError("Replay Record can't be loaded");
-            //        gameObject.SetActive(false);
-            //        return;
-            //    } else {
-            //        lockstep.ReplayRecord = replayRecord;
-            //    }
-            //}
-
-            if (activeConfig.showStats)
-            {
-                this.gameObject.AddComponent<TrueSyncStats>().Lockstep = lockstep;
-            }
-
             scheduler = new CoroutineScheduler(lockstep);
-
-            if (ReplayRecord.replayMode != ReplayMode.LOAD_REPLAY)
-            {
-                lockstep.AddPlayer(0, "Local_Player", true);
-                //if (communicator == null) {
-                //    lockstep.AddPlayer(0, "Local_Player", true);
-                //} else {
-                //    List<PhotonPlayer> players = new List<PhotonPlayer>(PhotonNetwork.playerList);
-                //    players.Sort(UnityUtils.playerComparer);
-
-                //    for (int index = 0, length = players.Count; index < length; index++) {
-                //        PhotonPlayer p = players[index];
-                //        lockstep.AddPlayer((byte) p.ID, p.NickName, p.IsLocal);
-                //    }
-                //}
-            }
-
-            TrueSyncBehaviour[] behavioursArray = FindObjectsOfType<TrueSyncBehaviour>();
-            for (int index = 0, length = behavioursArray.Length; index < length; index++)
-            {
-                generalBehaviours.Add(NewManagedBehavior(behavioursArray[index]));
-            }
-
-            initBehaviors();
-            initGeneralBehaviors(generalBehaviours, false);
-
-            PhysicsManager.instance.OnRemoveBody(OnRemovedRigidBody);
-
             startState = StartState.BEHAVIOR_INITIALIZED;
+        }
+
+        public void Update()
+        {
+            // if (lockstep != null && startState != StartState.STARTED)
+            // {
+            //     if (startState == StartState.BEHAVIOR_INITIALIZED)
+            //     {
+            //         startState = StartState.FIRST_UPDATE;
+            //     }
+            //     else if (startState == StartState.FIRST_UPDATE)
+            //     {
+            //         lockstep.RunSimulation(true);
+            //         startState = StartState.STARTED;
+            //     }
+            // }
+        }
+
+
+        public void FixedUpdate()
+        {
+            if (lockstep != null)
+            {
+                tsDeltaTime += UnityEngine.Time.deltaTime;
+
+                if (tsDeltaTime >= (lockedTimeStep - JitterTimeFactor))
+                {
+                    tsDeltaTime = 0;
+
+                    instance.scheduler.UpdateAllCoroutines();
+                    lockstep.Update();
+                }
+            }
         }
 
         private TrueSyncManagedBehaviour NewManagedBehavior(ITrueSyncBehaviour trueSyncBehavior)
@@ -347,43 +317,53 @@ namespace TrueSync
             return result;
         }
 
-        private void initBehaviors()
-        {
-            behaviorsByPlayer = new Dictionary<byte, List<TrueSyncManagedBehaviour>>();
+        private Dictionary<byte, GameObject> playerPrefabs = new();
 
+        public void AddPlayer(GameObject gameObject, byte owner, string name, bool isLocal)
+        {
+            this.lockstep.AddPlayer(owner, name, isLocal);
+        }
+
+        public void StartSimulator()
+        {
+            TrueSyncBehaviour[] behavioursArray = GameObject.FindObjectsOfType<TrueSyncBehaviour>();
+            for (int index = 0, length = behavioursArray.Length; index < length; index++)
+            {
+                generalBehaviours.Add(NewManagedBehavior(behavioursArray[index]));
+            }
+
+            PhysicsManager.instance.OnRemoveBody(OnRemovedRigidBody);
+            behaviorsByPlayer = new Dictionary<byte, List<TrueSyncManagedBehaviour>>();
             var playersEnum = lockstep.Players.GetEnumerator();
             while (playersEnum.MoveNext())
             {
                 TSPlayer p = playersEnum.Current.Value;
 
                 List<TrueSyncManagedBehaviour> behaviorsInstatiated = new List<TrueSyncManagedBehaviour>();
-
-                for (int index = 0, length = playerPrefabs.Length; index < length; index++)
+                if (playerPrefabs.TryGetValue(p.ID, out GameObject gameObject) is false)
                 {
-                    GameObject prefab = playerPrefabs[index];
+                    continue;
+                }
 
-                    GameObject prefabInst = Instantiate(prefab);
-                    InitializeGameObject(prefabInst, prefabInst.transform.position.ToTSVector(), prefabInst.transform.rotation.ToTSQuaternion());
-
-                    TrueSyncBehaviour[] behaviours = prefabInst.GetComponentsInChildren<TrueSyncBehaviour>();
-                    for (int index2 = 0, length2 = behaviours.Length; index2 < length2; index2++)
-                    {
-                        TrueSyncBehaviour behaviour = behaviours[index2];
-
-                        behaviour.owner = p.playerInfo;
-                        behaviour.localOwner = lockstep.LocalPlayer.playerInfo;
-                        behaviour.numberOfPlayers = lockstep.Players.Count;
-
-                        TrueSyncManagedBehaviour tsmb = NewManagedBehavior(behaviour);
-                        tsmb.owner = behaviour.owner;
-                        tsmb.localOwner = behaviour.localOwner;
-
-                        behaviorsInstatiated.Add(tsmb);
-                    }
+                InitializeGameObject(gameObject, gameObject.transform.position.ToTSVector(), gameObject.transform.rotation.ToTSQuaternion());
+                TrueSyncBehaviour[] behaviours = gameObject.GetComponentsInChildren<TrueSyncBehaviour>();
+                for (int index2 = 0, length2 = behaviours.Length; index2 < length2; index2++)
+                {
+                    TrueSyncBehaviour behaviour = behaviours[index2];
+                    behaviour.owner = p.playerInfo;
+                    behaviour.localOwner = lockstep.LocalPlayer.playerInfo;
+                    behaviour.numberOfPlayers = lockstep.Players.Count;
+                    TrueSyncManagedBehaviour tsmb = NewManagedBehavior(behaviour);
+                    tsmb.owner = behaviour.owner;
+                    tsmb.localOwner = behaviour.localOwner;
+                    behaviorsInstatiated.Add(tsmb);
                 }
 
                 behaviorsByPlayer.Add(p.ID, behaviorsInstatiated);
             }
+
+            initGeneralBehaviors(generalBehaviours, false);
+            lockstep.RunSimulation(true);
         }
 
         private void initGeneralBehaviors(IEnumerable<TrueSyncManagedBehaviour> behaviours, bool realOwnerId)
@@ -459,21 +439,6 @@ namespace TrueSync
             }
         }
 
-        void Update()
-        {
-            if (lockstep != null && startState != StartState.STARTED)
-            {
-                if (startState == StartState.BEHAVIOR_INITIALIZED)
-                {
-                    startState = StartState.FIRST_UPDATE;
-                }
-                else if (startState == StartState.FIRST_UPDATE)
-                {
-                    lockstep.RunSimulation(true);
-                    startState = StartState.STARTED;
-                }
-            }
-        }
 
         /**
          * @brief Run/Unpause the game simulation.
@@ -828,23 +793,6 @@ namespace TrueSync
             }
         }
 
-        private FP tsDeltaTime = 0;
-
-        void FixedUpdate()
-        {
-            if (lockstep != null)
-            {
-                tsDeltaTime += UnityEngine.Time.deltaTime;
-
-                if (tsDeltaTime >= (lockedTimeStep - JitterTimeFactor))
-                {
-                    tsDeltaTime = 0;
-
-                    instance.scheduler.UpdateAllCoroutines();
-                    lockstep.Update();
-                }
-            }
-        }
 
         InputDataBase ProvideInputData()
         {

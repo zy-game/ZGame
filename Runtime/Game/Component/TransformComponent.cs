@@ -2,8 +2,9 @@
 
 namespace ZGame.Game
 {
-    public class EntityTransformComponent : IComponent
+    public class TransformComponent : IComponent
     {
+        public uint id { get; set; }
         public GameObject gameObject { get; set; }
         public Transform transform => gameObject.transform;
 

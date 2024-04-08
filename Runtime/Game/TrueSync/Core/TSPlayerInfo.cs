@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TrueSync
 {
-    // Ö¡Í¬²½Íæ¼ÒĞÅÏ¢
+    // å¸§åŒæ­¥ç©å®¶ä¿¡æ¯
 	[Serializable]
 	public class TSPlayerInfo
 	{

@@ -22,29 +22,19 @@ namespace ZGame.Networking
         private MultithreadEventLoopGroup group;
         public int id => channel.Id.GetHashCode();
         public string address { get; private set; }
-        public bool Connected { get; private set; }
+        public bool isConnected { get; private set; }
 
-        public async UniTask WriteAsync(IMessage message)
+        public async UniTask WriteAndFlushAsync(byte[] message)
         {
-            if (Connected is false)
+            if (isConnected is false)
             {
                 return;
             }
 
-            await channel.WriteAsync(Unpooled.WrappedBuffer(MemoryPackSerializer.Serialize(message)));
+            await channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(message));
         }
 
-        public async UniTask WriteAndFlushAsync(IMessage message)
-        {
-            if (Connected is false)
-            {
-                return;
-            }
-
-            await channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(MemoryPackSerializer.Serialize(message)));
-        }
-
-        public async UniTask<Status> ConnectAsync(string host, ushort port)
+        public async UniTask<Status> ConnectAsync(string host, ushort port, IMessageHandler handler)
         {
             group = new MultithreadEventLoopGroup();
             try
@@ -56,11 +46,11 @@ namespace ZGame.Networking
                     pipeline.AddLast(new LoggingHandler("CLIENT-CONN"));
                     pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
                     pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
-                    pipeline.AddLast("echo", new TcpClientHandler());
+                    pipeline.AddLast("echo", new TcpClientHandler(handler, this));
                 }));
 
                 channel = await bootstrap.ConnectAsync(host, port);
-                this.Connected = true;
+                this.isConnected = true;
                 return Status.Success;
             }
             catch (Exception e)
@@ -77,25 +67,34 @@ namespace ZGame.Networking
                 await channel.DisconnectAsync();
             if (group != null)
                 await group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
-            this.Connected = false;
+            this.isConnected = false;
         }
 
         class TcpClientHandler : ChannelHandlerAdapter
         {
-            readonly IByteBuffer initialMessage;
+            private IMessageHandler handler;
+            private INetClient _client;
 
-            public TcpClientHandler()
+            public TcpClientHandler(IMessageHandler handler, INetClient client)
             {
-                this.initialMessage = Unpooled.Buffer(256);
-                byte[] messageBytes = Encoding.UTF8.GetBytes("Hello world");
-                this.initialMessage.WriteBytes(messageBytes);
+                this.handler = handler;
+                this._client = client;
             }
 
-            public override void ChannelActive(IChannelHandlerContext context) => context.WriteAndFlushAsync(this.initialMessage);
+            public override void ChannelActive(IChannelHandlerContext context)
+            {
+                handler?.Active(_client);
+            }
+
+            public override void ChannelInactive(IChannelHandlerContext context)
+            {
+                handler?.Inactive(_client);
+            }
 
             public override void ChannelRead(IChannelHandlerContext context, object message)
             {
                 var byteBuffer = message as IByteBuffer;
+                handler?.Receive(_client, byteBuffer);
                 GameFrameworkEntry.Logger.LogFormat("Received from server: {0}", byteBuffer.ToString(Encoding.UTF8));
                 byteBuffer.Release();
             }
@@ -104,6 +103,7 @@ namespace ZGame.Networking
 
             public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
             {
+                handler?.Exception(_client, exception);
                 GameFrameworkEntry.Logger.LogFormat("Exception: {0}", exception);
                 context.CloseAsync();
             }

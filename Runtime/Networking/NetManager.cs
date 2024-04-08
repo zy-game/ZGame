@@ -38,7 +38,7 @@ namespace ZGame.Networking
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public async UniTask<T> Connect<T>(string address, ushort port) where T : INetClient, new()
+        public async UniTask<T> Connect<T>(string address, ushort port, IMessageHandler handler) where T : INetClient, new()
         {
             string ip = $"{address}:{port}";
             INetClient channel = channels.Find(x => x.address == ip);
@@ -48,11 +48,12 @@ namespace ZGame.Networking
             }
 
             channel = (INetClient)GameFrameworkFactory.Spawner<T>();
-            if (await channel.ConnectAsync(address, port) is Status.Success)
+            if (await channel.ConnectAsync(address, port, handler) is Status.Success)
             {
                 channels.Add(channel);
             }
 
+            await UniTask.SwitchToMainThread();
             return (T)channel;
         }
 
@@ -62,7 +63,7 @@ namespace ZGame.Networking
         /// <param name="address"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        public async void WriteAndFlush(int id, IMessage message)
+        public async void WriteAndFlush(int id, byte[] message)
         {
             INetClient channel = channels.Find(x => x.id == id);
             if (channel is null)
@@ -84,7 +85,7 @@ namespace ZGame.Networking
         /// <param name="message"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public async UniTask<T> WriteAndFlushAsync<T>(int id, IMessage message) where T : IMessage
+        public async UniTask<T> WriteAndFlushAsync<T>(int id, byte[] message) where T : IMessaged
         {
             INetClient channel = channels.Find(x => x.id == id);
             if (channel is null)

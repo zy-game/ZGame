@@ -6,6 +6,10 @@ namespace ZGame.Game
     {
         private List<Entity> entityList = new();
 
+        public void OnGUI()
+        {
+        }
+
         public Entity FindEntity(uint id)
         {
             return entityList.Find(x => x.id == id);
