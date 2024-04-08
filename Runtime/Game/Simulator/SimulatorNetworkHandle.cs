@@ -16,17 +16,6 @@ namespace TrueSync
     {
         INetClient _client;
         private Action<int, byte[]> onEventReceived;
-        private static Lazy<SimulatorNetworkHandle> _instance = new Lazy<SimulatorNetworkHandle>();
-
-        public static SimulatorNetworkHandle instance
-        {
-            get { return _instance.Value; }
-        }
-
-        public async UniTask Initialize()
-        {
-            await GameFrameworkEntry.Network.Connect<UdpClient>("127.0.0.1", 8090, this);
-        }
 
         public int RoundTripTime()
         {
@@ -37,10 +26,11 @@ namespace TrueSync
         {
             if (_client is null || _client.isConnected is false)
             {
+                GameFrameworkEntry.Logger.Log("UDP 网络连接已断开，无法发送消息");
                 return;
             }
 
-            GameFrameworkEntry.Logger.Log("发送消息：" + eventCode);
+            // GameFrameworkEntry.Logger.Log("发送消息：" + eventCode);
             await _client.WriteAndFlushAsync(Packet.Create(eventCode, message));
         }
 
@@ -68,13 +58,14 @@ namespace TrueSync
         public async void Receive(INetClient client, IByteBuffer message)
         {
             Packet msg = Packet.Deserialized(message.Array);
-            GameFrameworkEntry.Logger.Log($"UDP :{client.address} 收到opcode：{msg.opcode}");
+            // GameFrameworkEntry.Logger.Log($"UDP :{client.address} 收到opcode：{msg.opcode}");
             await UniTask.SwitchToMainThread();
             onEventReceived?.Invoke(msg.opcode, msg.Data);
         }
 
         public void Exception(INetClient client, Exception exception)
         {
+            GameFrameworkEntry.Logger.Log("UDP 网络连接异常：" + client.address);
         }
     }
 }

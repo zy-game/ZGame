@@ -52,7 +52,7 @@ namespace ZGame.Networking
                     pipeline.AddLast("echo", new UdpClientHandler(handler, this));
                 }));
                 channel = await bootstrap.ConnectAsync(host, port).ConfigureAwait(false);
-
+                GameFrameworkEntry.Logger.Log("Connect Success：" + address);
                 this.isConnected = true;
                 return Status.Success;
             }

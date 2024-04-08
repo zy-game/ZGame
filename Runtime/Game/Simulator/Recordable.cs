@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ZGame.Game
 {
@@ -7,30 +8,50 @@ namespace ZGame.Game
     /// </summary>
     public class Recordable : IReferenceObject
     {
-        public List<SyncData> data = new();
+        public List<FrameData> frameDataList = new();
+        private int frame;
 
-        /// <summary>
-        /// 从指定帧删除
-        /// </summary>
-        /// <param name="frame"></param>
-        public void RemoveRange(long frame)
+
+        public FrameData GetFrameData()
         {
-            data.RemoveAll(x => x.frame >= frame);
+            if (frame >= frameDataList.Count)
+            {
+                if (frameDataList.Count == 0)
+                {
+                    FrameData frameData = GameFrameworkFactory.Spawner<FrameData>();
+                    frameData.frame = frame;
+                    AddFrameData(frameData);
+                }
+
+                return frameDataList.LastOrDefault();
+            }
+
+            return frameDataList[frame++];
         }
 
-        public SyncData GetFrameData(long frame)
+        public void Reset(int frame)
         {
-            return data.Find(x => x.frame == frame);
+            this.frame = frame;
         }
 
-        public void AddFrameData(SyncData data)
+        public void AddFrameData(FrameData frameData)
         {
-            this.data.Add(data);
+            int index = frameDataList.FindIndex(x => x.frame == frameData.frame);
+            if (index >= 0)
+            {
+                frameDataList[index] = frameData;
+                frame = frameData.frame;
+                GameFrameworkEntry.Logger.Log($"回滚帧到：{frame}");
+            }
+            else
+            {
+                this.frameDataList.Add(frameData);
+            }
         }
 
         public void Clear()
         {
-            data.Clear();
+            frameDataList.Clear();
         }
 
         public byte[] Encode()

@@ -173,8 +173,8 @@ namespace ZGame
             Recorder = GetOrCreateModule<RecorderManager>();
             Notify = GetOrCreateModule<NotifyManager>();
             Config = GetOrCreateModule<ConfigManager>();
-            Network = GetOrCreateModule<NetManager>();
             ECS = GetOrCreateModule<ECSManager>();
+            Network = GetOrCreateModule<NetManager>();
 
             _handle = new GameObject("GAME FRAMEWORK ENTRY").AddComponent<GameFrameworkContent>();
             _handle.gameObject.SetParent(null, Vector3.zero, Vector3.zero, Vector3.one);

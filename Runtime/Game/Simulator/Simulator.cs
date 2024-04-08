@@ -6,14 +6,28 @@ using ZGame.Networking;
 
 namespace ZGame.Game
 {
+    public enum RoomState
+    {
+        Ready,
+        Running,
+        End
+    }
+
+    // await GameFrameworkEntry.ECS.curWorld.OnStartSimulator("127.0.0.1", 8090);
+    // uint uid = Crc32.GetCRC32Str(Guid.NewGuid().ToString());
+    // GameFrameworkEntry.ECS.curWorld.simulator.OnJoinGame(uid, "Assets/Prefabs/player/player_1.prefab", TSVector.zero, TSQuaternion.identity);
+    // await UniTask.Delay(1000);
+    // GameFrameworkEntry.ECS.curWorld.simulator.OnReady();
     public class Simulator : IReferenceObject
     {
-        private long tick;
         private List<UserData> users;
         private Recordable recordable;
         private const float JitterTimeFactor = 0.001f;
         private static FP lockedTimeStep;
         private FP tsDeltaTime = 0;
+        private uint localUid;
+        private SimulatorNetworkHandle networkHandle;
+        private RoomState state = RoomState.Ready;
 
         class UserData
         {
@@ -27,59 +41,56 @@ namespace ZGame.Game
             get { return lockedTimeStep; }
         }
 
-        public static Simulator Create3D()
+        public static Simulator Create3D(SimulatorNetworkHandle simulatorNetworkHandle)
         {
-            PhysicsManager.instance = new Physics3DSimulator();
-            PhysicsManager.instance.Gravity = new TSVector(0, -10, 0);
-            PhysicsManager.instance.SpeculativeContacts = true;
-            PhysicsManager.instance.LockedTimeStep = 0.0167;
-            PhysicsManager.instance.Init();
             Simulator simulator = GameFrameworkFactory.Spawner<Simulator>();
             simulator.recordable = GameFrameworkFactory.Spawner<Recordable>();
             simulator.users = new();
-            SimulatorNetworkHandle.instance.AddEventListener(simulator.OnRiceEvent);
+            simulator.networkHandle = simulatorNetworkHandle;
+            simulator.networkHandle.AddEventListener(simulator.OnRiceEvent);
             return simulator;
         }
 
-        public void Rollback(long frame)
+        public void Rollback(int frame)
         {
-            tick = frame;
+            recordable.Reset(frame);
         }
 
-        private bool isReady()
-        {
-            return users.All(x => x.isReady);
-        }
 
         public void FixedUpdate()
         {
-            if (isReady() is false)
+            if (state is not RoomState.Running)
             {
                 return;
             }
 
             tsDeltaTime += UnityEngine.Time.deltaTime;
 
-            if (tsDeltaTime >= (lockedTimeStep - JitterTimeFactor))
-            {
-                tsDeltaTime = 0;
-                tick++;
-                Sync();
-                GetUserInput();
-                PhysicsManager.instance.UpdateStep();
-            }
-        }
-
-        private void Sync()
-        {
-            SyncData syncData = recordable.GetFrameData(tick);
-            ISyncSystem system = GameFrameworkEntry.ECS.GetSystem<ISyncSystem>();
-            if (system is null)
+            if (tsDeltaTime < (lockedTimeStep - JitterTimeFactor))
             {
                 return;
             }
 
-            system.Sync(syncData);
+            tsDeltaTime = 0;
+            GetUserInput();
+            SyncStep();
+            PhysicsManager.instance.UpdateStep();
+        }
+
+        public void Update()
+        {
+        }
+
+        private void SyncStep()
+        {
+            ISyncSystem system = GameFrameworkEntry.ECS.GetSystem<ISyncSystem>();
+            if (system is null)
+            {
+                GameFrameworkEntry.Logger.Log("没有找到同步系统");
+                return;
+            }
+
+            system.Sync(recordable.GetFrameData());
         }
 
         private void GetUserInput()
@@ -90,10 +101,11 @@ namespace ZGame.Game
                 return;
             }
 
-            SyncData syncData = GameFrameworkFactory.Spawner<SyncData>();
-            syncData.AddFrameData(system.GetInputData());
-            recordable.AddFrameData(syncData);
-            SimulatorNetworkHandle.instance.OpRaiseEvent((int)SyncCode.SYNC, SyncData.Encode(syncData));
+            FrameData frameData = GameFrameworkFactory.Spawner<FrameData>();
+            InputData inputData = system.GetInputData();
+            inputData.owner = localUid;
+            frameData.SetInputData(inputData);
+            networkHandle.OpRaiseEvent((int)SyncCode.SYNC, FrameData.Encode(frameData));
         }
 
         private void OnRiceEvent(int eventId, byte[] data)
@@ -106,13 +118,41 @@ namespace ZGame.Game
                 case SyncCode.LEAVE:
                     OnUserLevae(Leave.Decode(data));
                     break;
-                case SyncCode.SYNC:
-                    recordable.AddFrameData(SyncData.Decode(data));
-                    break;
                 case SyncCode.READY:
                     OnUserReady(Ready.Decode(data));
                     break;
+                case SyncCode.START:
+                    OnGameStart(StartGame.Decode(data));
+                    break;
+                case SyncCode.SYNC:
+                    OnSync(FrameData.Decode(data));
+                    break;
+                case SyncCode.END:
+                    OnGameOver(GameOver.Decode(data));
+                    break;
             }
+        }
+
+        private void OnGameOver(GameOver gameOver)
+        {
+            state = RoomState.End;
+            GameFrameworkEntry.Logger.Log("游戏结束");
+        }
+
+        private void OnGameStart(StartGame startGame)
+        {
+            state = RoomState.Running;
+            GameFrameworkEntry.Logger.Log("游戏开始");
+        }
+
+        private void OnSync(FrameData frameData)
+        {
+            if (frameData is null)
+            {
+                return;
+            }
+
+            recordable.AddFrameData(frameData);
         }
 
         private void OnUserReady(Ready ready)
@@ -145,12 +185,13 @@ namespace ZGame.Game
                 return;
             }
 
+
             Entity entity = GameFrameworkEntry.ECS.CreateEntity();
             TransformComponent transformComponent = entity.AddComponent<TransformComponent>();
             transformComponent.id = entity.id;
-            transformComponent.gameObject = GameFrameworkEntry.VFS.GetGameObjectSync("Assets/Prefabs/Cube.prefab");
-            FrameSyncComponent frameSyncComponent = transformComponent.gameObject.GetComponent<FrameSyncComponent>();
-            frameSyncComponent.GameObject = transformComponent.gameObject;
+            transformComponent.gameObject = GameFrameworkEntry.VFS.GetGameObjectSync(join.path);
+            FrameSyncComponent frameSyncComponent = entity.AddComponent<FrameSyncComponent>();
+            frameSyncComponent.id = join.uid;
             frameSyncComponent.transform = transformComponent.gameObject.GetComponent<TSTransform>();
             frameSyncComponent.rigidBody = transformComponent.gameObject.GetComponent<TSRigidBody>();
             users.Add(new UserData()
@@ -159,22 +200,30 @@ namespace ZGame.Game
                 GameObject = transformComponent.gameObject,
                 isReady = false
             });
-            PhysicsManager.InitializedGameObject(frameSyncComponent.GameObject, join.position, join.rotation);
+            PhysicsManager.InitializedGameObject(frameSyncComponent.transform.gameObject, join.position, join.rotation);
         }
 
-        public void Update()
+
+        public void OnJoinGame(uint uid, string path, TSVector position, TSQuaternion rotation)
         {
+            localUid = uid;
+            byte[] bytes = Join.Create(uid, path, position, rotation);
+            networkHandle.OpRaiseEvent((byte)SyncCode.JOIN, bytes);
+        }
+
+        public void OnReady()
+        {
+            networkHandle.OpRaiseEvent((byte)SyncCode.READY, Ready.Encode(new Ready() { uid = localUid }));
+        }
+
+        public void OnLeaveGame()
+        {
+            networkHandle.OpRaiseEvent((byte)SyncCode.LEAVE, Leave.Encode(new Leave() { uid = localUid }));
         }
 
         public void Release()
         {
-            SimulatorNetworkHandle.instance.OpRaiseEvent((int)SyncCode.LEAVE, Leave.Encode(new Leave() { uid = 1 }));
+            OnLeaveGame();
         }
     }
-    
-    // byte[] bytes = Join.Create(1, "Assets/Prefabs/Cube.prefab", TSVector.zero, TSQuaternion.identity);
-    // SimulatorNetworkHandle.instance.OpRaiseEvent((byte)SyncCode.JOIN, bytes);
-    //
-    // await UniTask.Delay(1000);
-    // SimulatorNetworkHandle.instance.OpRaiseEvent((byte)SyncCode.READY, Ready.Encode(new Ready() { uid = 1 }));
 }

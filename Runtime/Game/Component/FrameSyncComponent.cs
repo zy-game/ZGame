@@ -7,7 +7,6 @@ namespace ZGame.Game
     {
         public uint id;
         public TSVector origin;
-        public GameObject GameObject;
         public TSTransform transform;
         public TSRigidBody rigidBody;
 

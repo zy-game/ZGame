@@ -232,7 +232,7 @@ namespace ZGame.Game
         /// <returns></returns>
         public IEnumerable<T> AllOf<T>() where T : IComponent
         {
-            return ComponentEnumerable<T>.Create(_archetypeManager.GetComponents(typeof(T)));
+            return new ComponentEnumerable<T>(_archetypeManager.GetComponents(typeof(T)));
         }
 
         /// <summary>

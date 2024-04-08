@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
+using ZGame.Networking;
 using ZGame.UI;
 
 namespace ZGame.Game
@@ -115,9 +116,16 @@ namespace ZGame.Game
         {
         }
 
-        public void OnStartSimulator(TrueSyncConfig config)
+        public async UniTask OnStartSimulator(string ip, ushort port)
         {
-            _simulator = Simulator.Create3D();
+            SimulatorNetworkHandle handle = GameFrameworkFactory.Spawner<SimulatorNetworkHandle>();
+            await GameFrameworkEntry.Network.Connect<UdpClient>("127.0.0.1", 8099, handle);
+            PhysicsManager.instance = new Physics3DSimulator();
+            PhysicsManager.instance.Gravity = new TSVector(0, -10, 0);
+            PhysicsManager.instance.SpeculativeContacts = true;
+            PhysicsManager.instance.LockedTimeStep = 0.0167;
+            PhysicsManager.instance.Init();
+            _simulator = Simulator.Create3D(handle);
         }
 
         /// <summary>

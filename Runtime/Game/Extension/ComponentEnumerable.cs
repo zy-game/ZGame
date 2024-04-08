@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace ZGame.Game
@@ -7,17 +8,20 @@ namespace ZGame.Game
     {
         private ComponentEnumerator<T> enumerator;
 
-        public static ComponentEnumerable<T> Create(IComponent[] components)
+        public ComponentEnumerable(IComponent[] components)
         {
-            ComponentEnumerable<T> enumerable = GameFrameworkFactory.Spawner<ComponentEnumerable<T>>();
-            enumerable.enumerator = ComponentEnumerator<T>.Create(components);
-            return enumerable;
+            if (components is null)
+            {
+                throw new ArgumentNullException(nameof(components));
+            }
+
+            enumerator = new ComponentEnumerator<T>(components);
         }
 
         public void Release()
         {
-            GameFrameworkFactory.Release(enumerator);
-            enumerator = null;
+            // GameFrameworkFactory.Release(enumerator);
+            // enumerator = null;
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -34,34 +38,44 @@ namespace ZGame.Game
     public class ComponentEnumerator<T> : IReferenceObject, IEnumerator<T> where T : IComponent
     {
         private IComponent[] components;
-        private int index = 0;
-        private T current;
-        public T Current => current;
+        private int index = -1;
 
-        object IEnumerator.Current => current;
-
-        public static ComponentEnumerator<T> Create(IComponent[] components)
+        public T Current
         {
-            ComponentEnumerator<T> queryable = GameFrameworkFactory.Spawner<ComponentEnumerator<T>>();
-            queryable.components = components;
-            return queryable;
+            get
+            {
+                try
+                {
+                    return (T)components[index];
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+
+        object IEnumerator.Current => Current;
+
+        public ComponentEnumerator(IComponent[] components)
+        {
+            if (components is null)
+            {
+                throw new ArgumentNullException(nameof(components));
+            }
+
+            this.components = components;
         }
 
         public bool MoveNext()
         {
-            if (components is null || components.Length == 0)
+            if (components is null)
             {
-                return false;
+                throw new InvalidOperationException();
             }
 
-            current = (T)components[index];
             index++;
-            if (index > components.Length - 1)
-            {
-                return false;
-            }
-
-            return true;
+            return (index < components.Length);
         }
 
         public void Reset()
@@ -72,7 +86,7 @@ namespace ZGame.Game
 
         public void Release()
         {
-            components = null;
+            // components = null;
         }
     }
 }

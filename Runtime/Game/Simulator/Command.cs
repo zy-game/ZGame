@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using TrueSync;
 using ZGame.Networking;
 
@@ -10,7 +12,9 @@ namespace ZGame.Game
         JOIN = 100,
         LEAVE = 101,
         READY = 102,
-        SYNC = 103,
+        START = 103,
+        SYNC = 104,
+        END = 105
     }
 
     public class Ready : IMessaged
@@ -132,19 +136,19 @@ namespace ZGame.Game
     /// <summary>
     /// 帧同步信息
     /// </summary>
-    public class SyncData : IMessaged
+    public class FrameData : IMessaged
     {
         /// <summary>
         /// 帧编号
         /// </summary>
-        public long frame;
+        public int frame;
 
         /// <summary>
         /// 当前帧所有玩家的输入
         /// </summary>
         public List<InputData> frameData = new();
 
-        public static byte[] Encode(SyncData data)
+        public static byte[] Encode(FrameData data)
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -154,13 +158,9 @@ namespace ZGame.Game
                     bw.Write(data.frameData.Count);
                     foreach (var item in data.frameData)
                     {
-                        bw.Write(item.owner);
-                        bw.Write(item.fpList.Count);
-                        foreach (var fp in item.fpList)
-                        {
-                            bw.Write(fp.Key);
-                            bw.Write(fp.Value.RawValue);
-                        }
+                        byte[] bytes = InputData.Encode(item);
+                        bw.Write(bytes.Length);
+                        bw.Write(bytes);
                     }
 
                     return ms.ToArray();
@@ -168,27 +168,24 @@ namespace ZGame.Game
             }
         }
 
-        public static SyncData Decode(byte[] data)
+        public static FrameData Decode(byte[] data)
         {
             using (MemoryStream ms = new MemoryStream(data))
             {
                 using (BinaryReader br = new BinaryReader(ms))
                 {
-                    SyncData syncData = GameFrameworkFactory.Spawner<SyncData>();
-                    syncData.frame = br.ReadInt64();
+                    FrameData frameData = GameFrameworkFactory.Spawner<FrameData>();
+                    frameData.frame = br.ReadInt32();
                     int count = br.ReadInt32();
                     for (int i = 0; i < count; i++)
                     {
-                        InputData inputData = GameFrameworkFactory.Spawner<InputData>();
-                        inputData.owner = br.ReadUInt32();
-                        int fpCount = br.ReadInt32();
-                        for (int j = 0; j < fpCount; j++)
-                        {
-                            inputData.fpList.Add(br.ReadByte(), br.ReadInt64());
-                        }
+                        byte[] bytes = new byte[br.ReadInt32()];
+                        br.Read(bytes, 0, bytes.Length);
+                        InputData inputData = InputData.Decode(bytes);
+                        frameData.SetInputData(inputData);
                     }
 
-                    return syncData;
+                    return frameData;
                 }
             }
         }
@@ -198,7 +195,7 @@ namespace ZGame.Game
         /// 添加玩家输入数据
         /// </summary>
         /// <param name="data"></param>
-        public void AddFrameData(InputData data)
+        public void SetInputData(InputData data)
         {
             frameData.Add(data);
         }
@@ -229,28 +226,74 @@ namespace ZGame.Game
             return frameData.Exists(x => x.owner == uid);
         }
 
-        public static SyncData Merge(params SyncData[] data)
+        public static FrameData Merge(params FrameData[] data)
         {
-            SyncData syncData = GameFrameworkFactory.Spawner<SyncData>();
-            foreach (SyncData sync in data)
+            FrameData frameData = GameFrameworkFactory.Spawner<FrameData>();
+            foreach (FrameData sync in data)
             {
                 foreach (InputData inputData in sync.frameData)
                 {
-                    if (syncData.Contains(inputData.owner))
+                    if (frameData.Contains(inputData.owner))
                     {
-                        syncData.RemoveFrameData(inputData.owner);
+                        frameData.RemoveFrameData(inputData.owner);
                     }
 
-                    syncData.AddFrameData(inputData);
+                    frameData.SetInputData(inputData);
                 }
             }
 
-            return syncData;
+            return frameData;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("frame:" + frame);
+            foreach (InputData inputData in frameData)
+            {
+                sb.Append("{" + inputData.ToString() + "}");
+            }
+
+            return sb.ToString();
         }
 
         public void Release()
         {
             frameData.Clear();
+        }
+    }
+
+    public class StartGame : IMessaged
+    {
+        public void Release()
+        {
+        }
+
+        public static byte[] Encode(FrameData data)
+        {
+            return Array.Empty<byte>();
+        }
+
+        public static StartGame Decode(byte[] data)
+        {
+            return GameFrameworkFactory.Spawner<StartGame>();
+        }
+    }
+
+    public class GameOver : IMessaged
+    {
+        public void Release()
+        {
+        }
+
+        public static byte[] Encode(FrameData data)
+        {
+            return Array.Empty<byte>();
+        }
+
+        public static GameOver Decode(byte[] data)
+        {
+            return GameFrameworkFactory.Spawner<GameOver>();
         }
     }
 
@@ -282,7 +325,7 @@ namespace ZGame.Game
                     foreach (var item in data.fpList)
                     {
                         bw.Write(item.Key);
-                        bw.Write(item.Value.RawValue);
+                        bw.Write((float)item.Value);
                     }
 
                     return ms.ToArray();
@@ -307,7 +350,7 @@ namespace ZGame.Game
                     inputData.fpList = new Dictionary<byte, FP>();
                     for (int i = 0; i < count; i++)
                     {
-                        inputData.fpList.Add(br.ReadByte(), br.ReadInt64());
+                        inputData.fpList.Add(br.ReadByte(), br.ReadSingle());
                     }
 
                     return inputData;
@@ -357,6 +400,18 @@ namespace ZGame.Game
         public void Release()
         {
             Clear();
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("uid:" + owner + " ");
+            foreach (var item in fpList)
+            {
+                sb.Append($"{item.Key}:{item.Value} ");
+            }
+
+            return sb.ToString();
         }
     }
 }

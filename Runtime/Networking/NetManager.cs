@@ -44,9 +44,11 @@ namespace ZGame.Networking
             INetClient channel = channels.Find(x => x.address == ip);
             if (channel is not null)
             {
+                GameFrameworkEntry.Logger.Log($"{ip} is already connected");
                 return (T)channel;
             }
 
+            GameFrameworkEntry.Logger.Log($"connecting {ip}");
             channel = (INetClient)GameFrameworkFactory.Spawner<T>();
             if (await channel.ConnectAsync(address, port, handler) is Status.Success)
             {
