@@ -14,19 +14,21 @@ namespace ZGame.Game
 
         public FrameData GetFrameData()
         {
-            if (frame >= frameDataList.Count)
+            if (frame < frameDataList.Count)
             {
-                if (frameDataList.Count == 0)
-                {
-                    FrameData frameData = GameFrameworkFactory.Spawner<FrameData>();
-                    frameData.frame = frame;
-                    AddFrameData(frameData);
-                }
-
-                return frameDataList.LastOrDefault();
+                return frameDataList[frame++];
             }
 
-            return frameDataList[frame++];
+            if (frameDataList.Count == 0)
+            {
+                GameFrameworkEntry.Logger.Log("没有帧，预测");
+                FrameData frameData = GameFrameworkFactory.Spawner<FrameData>();
+                frameData.frame = frame++;
+                // AddFrameData(frameData);
+                return frameData;
+            }
+
+            return frameDataList.LastOrDefault();
         }
 
         public void Reset(int frame)
@@ -36,17 +38,7 @@ namespace ZGame.Game
 
         public void AddFrameData(FrameData frameData)
         {
-            int index = frameDataList.FindIndex(x => x.frame == frameData.frame);
-            if (index >= 0)
-            {
-                frameDataList[index] = frameData;
-                frame = frameData.frame;
-                GameFrameworkEntry.Logger.Log($"回滚帧到：{frame}");
-            }
-            else
-            {
-                this.frameDataList.Add(frameData);
-            }
+            this.frameDataList.Add(frameData);
         }
 
         public void Clear()

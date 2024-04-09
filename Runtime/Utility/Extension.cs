@@ -20,6 +20,7 @@ namespace ZGame
     {
         Editor,
         Simulator,
+        Internal
     }
 
     public enum CodeMode

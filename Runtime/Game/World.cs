@@ -116,16 +116,16 @@ namespace ZGame.Game
         {
         }
 
-        public async UniTask OnStartSimulator(string ip, ushort port)
+        public async UniTask OnStartSimulator(string ip, ushort port, FP LockedTimeStep)
         {
             SimulatorNetworkHandle handle = GameFrameworkFactory.Spawner<SimulatorNetworkHandle>();
-            await GameFrameworkEntry.Network.Connect<UdpClient>("127.0.0.1", 8099, handle);
+            await GameFrameworkEntry.Network.Connect<UdpClient>(ip, port, handle);
             PhysicsManager.instance = new Physics3DSimulator();
-            PhysicsManager.instance.Gravity = new TSVector(0, -10, 0);
-            PhysicsManager.instance.SpeculativeContacts = true;
-            PhysicsManager.instance.LockedTimeStep = 0.0167;
+            PhysicsManager.instance.Gravity = new TSVector(0, 10, 0);
+            PhysicsManager.instance.SpeculativeContacts = false;
+            PhysicsManager.instance.LockedTimeStep = LockedTimeStep;
             PhysicsManager.instance.Init();
-            _simulator = Simulator.Create3D(handle);
+            _simulator = Simulator.Create3D(handle,  LockedTimeStep);
         }
 
         /// <summary>

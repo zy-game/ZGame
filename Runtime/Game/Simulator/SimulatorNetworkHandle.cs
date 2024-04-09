@@ -30,7 +30,7 @@ namespace TrueSync
                 return;
             }
 
-            // GameFrameworkEntry.Logger.Log("发送消息：" + eventCode);
+            GameFrameworkEntry.Logger.Log("发送消息：" + eventCode);
             await _client.WriteAndFlushAsync(Packet.Create(eventCode, message));
         }
 
@@ -58,7 +58,7 @@ namespace TrueSync
         public async void Receive(INetClient client, IByteBuffer message)
         {
             Packet msg = Packet.Deserialized(message.Array);
-            // GameFrameworkEntry.Logger.Log($"UDP :{client.address} 收到opcode：{msg.opcode}");
+            GameFrameworkEntry.Logger.Log($"UDP :{client.address} 收到：{msg.opcode}");
             await UniTask.SwitchToMainThread();
             onEventReceived?.Invoke(msg.opcode, msg.Data);
         }

@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Cinemachine;
+using Cysharp.Threading.Tasks;
 using TrueSync;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using ZGame.Networking;
 
 namespace ZGame.Game
@@ -13,6 +16,7 @@ namespace ZGame.Game
         End
     }
 
+
     // await GameFrameworkEntry.ECS.curWorld.OnStartSimulator("127.0.0.1", 8090);
     // uint uid = Crc32.GetCRC32Str(Guid.NewGuid().ToString());
     // GameFrameworkEntry.ECS.curWorld.simulator.OnJoinGame(uid, "Assets/Prefabs/player/player_1.prefab", TSVector.zero, TSQuaternion.identity);
@@ -21,13 +25,16 @@ namespace ZGame.Game
     public class Simulator : IReferenceObject
     {
         private List<UserData> users;
+
         private Recordable recordable;
-        private const float JitterTimeFactor = 0.001f;
-        private static FP lockedTimeStep;
-        private FP tsDeltaTime = 0;
+
+        // private const float JitterTimeFactor = 0.001f;
+        private static FP lockedTimeStep = 0.05;
         private uint localUid;
         private SimulatorNetworkHandle networkHandle;
+
         private RoomState state = RoomState.Ready;
+
 
         class UserData
         {
@@ -41,13 +48,23 @@ namespace ZGame.Game
             get { return lockedTimeStep; }
         }
 
-        public static Simulator Create3D(SimulatorNetworkHandle simulatorNetworkHandle)
+        /// <summary>
+        /// 当前场景中玩家数量
+        /// </summary>
+        public int PlayerCount => users.Count;
+
+        public static Simulator Create3D(SimulatorNetworkHandle simulatorNetworkHandle, FP LockedTime)
         {
+            lockedTimeStep = LockedTime;
+            Application.targetFrameRate = 20;
+            QualitySettings.vSyncCount = 0;
+            Time.fixedDeltaTime = 0.02f;
             Simulator simulator = GameFrameworkFactory.Spawner<Simulator>();
             simulator.recordable = GameFrameworkFactory.Spawner<Recordable>();
             simulator.users = new();
             simulator.networkHandle = simulatorNetworkHandle;
             simulator.networkHandle.AddEventListener(simulator.OnRiceEvent);
+            simulator.m_fFrameLen = lockedTimeStep.AsFloat();
             return simulator;
         }
 
@@ -56,29 +73,52 @@ namespace ZGame.Game
             recordable.Reset(frame);
         }
 
+//累计运行的时间
+        float m_fAccumilatedTime = 0;
+
+        //下一个逻辑帧的时间
+        float m_fNextGameTime = 0;
+
+        //预定的每帧的时间长度
+        float m_fFrameLen;
+
+
+        //两帧之间的时间差
+        float m_fInterpolation = 0;
 
         public void FixedUpdate()
         {
+            PhysicsManager.instance.UpdateStep();
             if (state is not RoomState.Running)
             {
                 return;
             }
 
-            tsDeltaTime += UnityEngine.Time.deltaTime;
+            float deltaTime = UnityEngine.Time.deltaTime;
+            /**************以下是帧同步的核心逻辑*********************/
+            m_fAccumilatedTime = m_fAccumilatedTime + deltaTime;
 
-            if (tsDeltaTime < (lockedTimeStep - JitterTimeFactor))
+            //如果真实累计的时间超过游戏帧逻辑原本应有的时间,则循环执行逻辑,确保整个逻辑的运算不会因为帧间隔时间的波动而计算出不同的结果
+            while (m_fAccumilatedTime > m_fNextGameTime)
             {
-                return;
+                //计算下一个逻辑帧应有的时间
+                m_fNextGameTime += m_fFrameLen;
+                GetUserInput();
+                SyncStep();
             }
 
-            tsDeltaTime = 0;
-            GetUserInput();
-            SyncStep();
-            PhysicsManager.instance.UpdateStep();
+            //计算两帧的时间差,用于运行补间动画
+            m_fInterpolation = (m_fAccumilatedTime + m_fFrameLen - m_fNextGameTime) / m_fFrameLen;
+
+            /**************帧同步的核心逻辑完毕*********************/
         }
 
         public void Update()
         {
+            if (state is not RoomState.Running)
+            {
+                return;
+            }
         }
 
         private void SyncStep()
@@ -200,7 +240,22 @@ namespace ZGame.Game
                 GameObject = transformComponent.gameObject,
                 isReady = false
             });
+            GameFrameworkEntry.Logger.Log(join.position);
             PhysicsManager.InitializedGameObject(frameSyncComponent.transform.gameObject, join.position, join.rotation);
+
+            if (join.uid == localUid)
+            {
+                Camera camera = GameFrameworkEntry.ECS.curWorld.SetSubCamera("follower", 1);
+                GameFrameworkEntry.ECS.curWorld.SetSubCameraPositionAndRotation("follower", Vector3.zero, Quaternion.identity);
+                CinemachineVirtualCamera virtualCamera = camera.gameObject.AddComponent<CinemachineVirtualCamera>();
+                virtualCamera.LookAt = transformComponent.transform;
+                virtualCamera.Follow = transformComponent.transform;
+                //camera.GetComponent<UniversalAdditionalCameraData>()
+                camera.orthographic = true;
+                camera.transform.rotation = Quaternion.Euler(new Vector3(90, 0, 0));
+                CinemachineFramingTransposer transposer = virtualCamera.AddCinemachineComponent<CinemachineFramingTransposer>();
+                transposer.m_CameraDistance = 10;
+            }
         }
 
 
