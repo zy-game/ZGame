@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Sirenix.OdinInspector;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
-namespace ZGame.Editor.ResBuild.Config
+namespace ZGame.Config
 {
     public enum BuildType : byte
     {
@@ -39,20 +38,14 @@ namespace ZGame.Editor.ResBuild.Config
     {
         [TitleGroup("打包设置"), LabelText("打包当前平台")]
         public bool useActiveTarget = true;
-
+#if UNITY_EDITOR
         [TitleGroup("打包设置"), DisableIf("useActiveTarget", true), LabelText("打包平台")]
-        public BuildTarget target = BuildTarget.Android;
+        public UnityEditor.BuildTarget target = UnityEditor.BuildTarget.Android;
 
         [TitleGroup("打包设置"), LabelText("压缩方式")]
-        public BuildAssetBundleOptions comperss;
-
+        public UnityEditor.BuildAssetBundleOptions comperss;
+#endif
         [LabelText("资源包列表"), Title("资源列表")] public List<PackageSeting> packages;
-
-        [Button("Build")]
-        static void Build()
-        {
-        }
-
 
         public static IEnumerable GetAllPackageNameList()
         {
@@ -92,11 +85,7 @@ namespace ZGame.Editor.ResBuild.Config
                 return Array.Empty<string>();
             }
 
-            return BuilderConfig.instance.packages.Select(x =>
-            {
-                Debug.Log(x.title);
-                return x.title;
-            });
+            return BuilderConfig.instance.packages.Select(x => x.title);
         }
     }
 
@@ -114,7 +103,7 @@ namespace ZGame.Editor.ResBuild.Config
          HorizontalGroup,
          ValueDropdown("GetAllFileExetension", IsUniqueList = true, DropdownTitle = "Select Asset Extension", DrawDropdownForListElements = false, AppendNextDrawer = false)]
         public List<string> selector;
-
+#if UNITY_EDITOR
         IEnumerable GetAllFileExetension()
         {
             if (folder == null)
@@ -122,8 +111,9 @@ namespace ZGame.Editor.ResBuild.Config
                 return Array.Empty<string>();
             }
 
-            string path = AssetDatabase.GetAssetPath(folder);
+            string path = UnityEditor.AssetDatabase.GetAssetPath(folder);
             return Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Select(x => Path.GetExtension(x)).Where(y => y != ".meta" && y != ".cs");
         }
+#endif
     }
 }

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using ZGame.Editor.ResBuild.Config;
+using ZGame.Config;
 using ZGame.VFS;
 
 namespace ZGame.Editor.ResBuild

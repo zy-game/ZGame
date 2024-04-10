@@ -8,7 +8,6 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
 using ZGame.Editor.LinkerEditor;
-using ZGame.Editor.ResBuild.Config;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.Command

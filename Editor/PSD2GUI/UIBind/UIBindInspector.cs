@@ -8,7 +8,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Config;
-using ZGame.Editor.ResBuild.Config;
 using ZGame.UI;
 using Object = UnityEngine.Object;
 

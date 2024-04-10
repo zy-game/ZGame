@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -18,6 +19,12 @@ namespace ZGame.Editor.ExcelExprot
     [RefPath("Assets/Settings/ExcelConfig.asset")]
     public class ExcelConfigList : BaseConfig<ExcelConfigList>
     {
+        [LabelText("输出目录")] public UnityEngine.Object output;
+        [LabelText("输出类型")] public ExportType type;
+        [LabelText("数据起始行")] public int dataRow = 3;
+        [LabelText("字段类型行")] public int typeRow = 1;
+        [LabelText("代码命名空间")] public string nameSpace;
+        [LabelText("表头所在行")] public int headerRow = 0;
         public List<ExcelFileObject> exporters;
 
         public override void OnAwake()
@@ -103,58 +110,17 @@ namespace ZGame.Editor.ExcelExprot
 
         private string GetDefaultValue(string t, string name, string v)
         {
-            string temp = $"{name} = ";
-            switch (t)
+            return $"{name} = " + t switch
             {
-                case "int":
-                case "float":
-                    temp += $"{v}, ";
-                    break;
-                case "bool":
-                    temp += $"{(v == "0" ? "false" : "true")}, ";
-                    break;
-                case "string":
-                    temp += $"@\"{v}\", ";
-                    break;
-                case "int[]":
-                    temp += $"new int [] {{{v}}}";
-                    break;
-                case "float[]":
-                    temp += $"new float [] {{v}}";
-                    break;
-                case "bool[]":
-                    string[] m = v.Split(",");
-                    temp += $"new bool [] {{";
-                    for (int i = 0; i < m.Length; i++)
-                    {
-                        temp += m[i] == "0" ? "false" : "true";
-                        if (i != m.Length - 1)
-                        {
-                            temp += ", ";
-                        }
-                    }
-
-                    temp += "}, ";
-                    break;
-                case "string[]":
-                    temp += $"new string [] {{";
-                    string[] m2 = v.Split(",");
-                    for (int i = 0; i < m2.Length; i++)
-                    {
-                        temp += $"@\"{m2[i]}\"";
-                        if (i != m2.Length - 1)
-                        {
-                            temp += ", ";
-                        }
-                    }
-
-                    temp += "}, ";
-                    break;
-                default:
-                    break;
-            }
-
-            return temp;
+                "int" => $"{v}",
+                "float" => $"{v}",
+                "bool" => $"{(v == "0" ? "false" : "true")}",
+                "string" => $"@\"{v}\"",
+                "int[]" => $"new int [] {{{v}}}",
+                "float[]" => $"new float [] {{v}}",
+                "bool[]" => $"new bool [] {{{string.Join(",", v.Split(",").Select(x => x == "0" ? "false" : "true"))}}}",
+                "string[]" => $"new string [] {{{string.Join(",", v.Split(",").Select(x => $"@\"{x}\""))}}}"
+            };
         }
 
         private string GetStructData(DataRow row, DataRow header, DataRow typeRow, int rowIndex)

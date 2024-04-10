@@ -9,7 +9,6 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using ZGame.Editor.ResBuild.Config;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor

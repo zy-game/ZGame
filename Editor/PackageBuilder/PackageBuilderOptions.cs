@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using ZGame.Editor.ResBuild.Config;
+using ZGame.Config;
 
 namespace ZGame.Editor.ResBuild
 {

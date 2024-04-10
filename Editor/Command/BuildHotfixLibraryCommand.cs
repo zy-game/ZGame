@@ -7,8 +7,8 @@ using HybridCLR.Editor.Commands;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
+using ZGame.Config;
 using ZGame.Editor.LinkerEditor;
-using ZGame.Editor.ResBuild.Config;
 using ZGame.VFS;
 using Object = UnityEngine.Object;
 

@@ -11,19 +11,15 @@ using HybridCLR.Editor.Commands;
 using HybridCLR.Editor.Link;
 using HybridCLR.Editor.Meta;
 using Sirenix.OdinInspector;
+using Sirenix.OdinInspector.Editor;
+using Sirenix.OdinInspector.Editor.ValueResolvers;
 using UnityEditor;
 using UnityEngine;
 
 namespace ZGame.Editor.LinkerEditor
 {
-    public class ListSelector : PropertyDrawer
-    {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-        }
-    }
-
     [RefPath("Assets/Settings/LinkerConfig.asset")]
+    [CreateAssetMenu(menuName = "ZGame/Config/LinkerConfig", fileName = "LinkerConfig.asset", order = 2)]
     public class LinkerConfig : BaseConfig<LinkerConfig>
     {
         [Title("Link 设置"), HideLabel, TabGroup("assembly")]
@@ -159,7 +155,7 @@ namespace ZGame.Editor.LinkerEditor
 
         [HideInInspector] public List<string> classs;
 
-        [ValueDropdown("classs", ExcludeExistingValuesInList = true), HorizontalGroup("$name")]
+        [Selector("classs"), HorizontalGroup("$name")]
         public List<string> selection;
 
         [Button("全选"), HorizontalGroup("$name", 60)]

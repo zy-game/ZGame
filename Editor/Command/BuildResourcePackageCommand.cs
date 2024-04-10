@@ -6,8 +6,8 @@ using System.Net;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
+using ZGame.Config;
 using ZGame.Editor.ResBuild;
-using ZGame.Editor.ResBuild.Config;
 using ZGame.VFS;
 
 namespace ZGame.Editor.Command

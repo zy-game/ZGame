@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using ZGame.Config;
 
 namespace ZGame.VFS
 {
@@ -27,7 +28,7 @@ namespace ZGame.VFS
         /// <summary>
         /// 默认资源模块
         /// </summary>
-        [LabelText("主包")] [Tooltip("当游戏启动时自动加载该资源包")]
+        [LabelText("主包")] [Tooltip("当游戏启动时自动加载该资源包"), ValueDropdown("GetPackageList")]
         public string defaultPackageName;
 
         /// <summary>
@@ -70,6 +71,11 @@ namespace ZGame.VFS
         public OSSOptions current
         {
             get { return ossList.Find(x => x.title == seletion); }
+        }
+
+        IEnumerable GetPackageList()
+        {
+            return BuilderConfig.instance.packages.Select(x => x.title);
         }
 
         private IEnumerable GetOSSTitleList()
