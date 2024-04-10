@@ -18,8 +18,6 @@ using ZGame.Language;
 using ZGame.Logger;
 using ZGame.Networking;
 using ZGame.Notify;
-using ZGame.Resource;
-using ZGame.Resource.Config;
 using ZGame.Sound;
 using ZGame.UI;
 

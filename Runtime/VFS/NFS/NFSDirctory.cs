@@ -26,9 +26,9 @@ namespace ZGame.VFS
             if (bundle.optList is null || bundle.optList.Count == 0)
             {
                 bundle.optList = new ConcurrentStack<NFSFileOptions>();
-                for (int i = 0; i < VFSConfig.instance.chunkCount; i++)
+                for (int i = 0; i < ResConfig.instance.chunkCount; i++)
                 {
-                    bundle.optList.Push(NFSFileOptions.Create(bundleName, i * VFSConfig.instance.chunkSize, VFSConfig.instance.chunkSize));
+                    bundle.optList.Push(NFSFileOptions.Create(bundleName, i * ResConfig.instance.chunkSize, ResConfig.instance.chunkSize));
                 }
             }
 
@@ -82,7 +82,7 @@ namespace ZGame.VFS
 
         private long GetWriteableSize()
         {
-            if (VFSConfig.instance.enable is false)
+            if (ResConfig.instance.enable is false)
             {
                 return optList.FirstOrDefault(x => x.state == 0) is null ? 0 : long.MaxValue;
             }
@@ -150,7 +150,7 @@ namespace ZGame.VFS
                 }
             }
 
-            if (VFSConfig.instance.enable is false)
+            if (ResConfig.instance.enable is false)
             {
                 File.Delete(GameFrameworkEntry.GetApplicationFilePath(fileName));
             }
@@ -172,7 +172,7 @@ namespace ZGame.VFS
                 Delete(fileName);
             }
 
-            if (VFSConfig.instance.enable is false)
+            if (ResConfig.instance.enable is false)
             {
                 NFSFileOptions options = optList.FirstOrDefault(x => x.state == 0);
                 if (options is null)
@@ -186,7 +186,7 @@ namespace ZGame.VFS
                 return Status.Success;
             }
 
-            int chunkSize = VFSConfig.instance.chunkSize;
+            int chunkSize = ResConfig.instance.chunkSize;
             // 计算需要写入的块数  
             int totalChunks = (data.Length + chunkSize - 1) / chunkSize;
             // 遍历每个块并写入MemoryStream  
@@ -228,7 +228,7 @@ namespace ZGame.VFS
                 Delete(fileName);
             }
 
-            if (VFSConfig.instance.enable is false)
+            if (ResConfig.instance.enable is false)
             {
                 NFSFileOptions options = optList.FirstOrDefault(x => x.state == 0);
                 if (options is null)
@@ -242,7 +242,7 @@ namespace ZGame.VFS
                 return Status.Success;
             }
 
-            int chunkSize = VFSConfig.instance.chunkSize;
+            int chunkSize = ResConfig.instance.chunkSize;
             // 计算需要写入的块数  
             int totalChunks = (data.Length + chunkSize - 1) / chunkSize;
             // 遍历每个块并写入MemoryStream  
@@ -277,7 +277,7 @@ namespace ZGame.VFS
         /// <returns>文件二进制数据，如果读取失败则返回</returns>
         public byte[] Read(string fileName)
         {
-            if (VFSConfig.instance.enable is false)
+            if (ResConfig.instance.enable is false)
             {
                 return File.ReadAllBytes(GameFrameworkEntry.GetApplicationFilePath(fileName));
             }
@@ -309,7 +309,7 @@ namespace ZGame.VFS
         /// <returns>文件二进制数据，如果读取文件失败则返回空数据</returns>
         public async UniTask<byte[]> ReadAsync(string fileName)
         {
-            if (VFSConfig.instance.enable is false)
+            if (ResConfig.instance.enable is false)
             {
                 return await File.ReadAllBytesAsync(GameFrameworkEntry.GetApplicationFilePath(fileName));
             }

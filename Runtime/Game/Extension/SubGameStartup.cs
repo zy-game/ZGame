@@ -6,7 +6,6 @@ using System.Reflection;
 using Cysharp.Threading.Tasks;
 using HybridCLR;
 using UnityEngine;
-using ZGame.Resource;
 
 namespace ZGame.Game
 {

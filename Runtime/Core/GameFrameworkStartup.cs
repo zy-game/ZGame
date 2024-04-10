@@ -5,7 +5,6 @@ using UnityEngine;
 using ZGame;
 using ZGame.Config;
 using ZGame.Game;
-using ZGame.Resource;
 using ZGame.UI;
 
 public class GameFrameworkStartup : MonoBehaviour

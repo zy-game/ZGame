@@ -5,7 +5,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace ZGame.Resource
+namespace ZGame.VFS
 {
     public class ResourcePackageListManifest
     {

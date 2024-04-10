@@ -8,8 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.ResBuild;
 using ZGame.Editor.ResBuild.Config;
-using ZGame.Resource;
-using ZGame.Resource.Config;
+using ZGame.VFS;
 
 namespace ZGame.Editor.Command
 {
@@ -99,11 +98,11 @@ namespace ZGame.Editor.Command
             {
                 successCount++;
                 string scrPath = GameFrameworkEntry.GetPlatformOutputPath(bundle.name);
-                UploadResourcePackageCommand.Executer(OSSConfig.instance.current, scrPath);
+                UploadResourcePackageCommand.Executer(ResConfig.instance.current, scrPath);
                 EditorUtility.DisplayProgressBar("上传进度", scrPath, successCount / (float)allCount);
             }
 
-            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(manifest.name + ".ini"));
+            UploadResourcePackageCommand.Executer(ResConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(manifest.name + ".ini"));
         }
     }
 }

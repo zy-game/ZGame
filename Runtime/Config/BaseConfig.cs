@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace ZGame
@@ -9,7 +10,6 @@ namespace ZGame
     public class BaseConfig<T> : ScriptableObject where T : BaseConfig<T>
     {
         private static T _config;
-        private static string _path;
 
         public static T instance
         {
@@ -18,7 +18,6 @@ namespace ZGame
                 if (_config is null)
                 {
                     _config = Load();
-                    _config.OnAwake();
                 }
 
                 return _config;
@@ -28,34 +27,22 @@ namespace ZGame
 
         private static T Load()
         {
-            T result = default;
-            RefPath refPath = typeof(T).GetCustomAttribute<RefPath>();
-            if (refPath is null)
-            {
-                _path = "Assets/Resources/" + typeof(T).Name + ".asset";
-                result = Resources.Load<T>(typeof(T).Name);
-            }
-            else
-            {
 #if UNITY_EDITOR
-                _path = refPath.path;
-                result = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(refPath.path);
-#endif
-            }
-
-            if (result is null)
+            string[] files = AssetDatabase.FindAssets($"t:{typeof(T).Name}");
+            if (files is null || files.Length == 0)
             {
-                Debug.Log("创建新的配置文件:" + typeof(T).Name);
-                result = Activator.CreateInstance<T>();
-#if UNITY_EDITOR
-                GameFileSystemHelper.TryCreateDirectory(_path);
-                UnityEditor.AssetDatabase.CreateAsset(result, _path);
-                UnityEditor.AssetDatabase.Refresh();
-#endif
+                return default;
             }
 
+            return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(files[0]));
+#endif
+            T[] o = Resources.FindObjectsOfTypeAll<T>();
+            if (o is null || o.Length == 0)
+            {
+                return default;
+            }
 
-            return result;
+            return Instantiate(o[0]);
         }
 
         public static void Save()

@@ -6,7 +6,6 @@ using Cysharp.Threading.Tasks;
 using Downloader;
 using UnityEngine.Networking;
 using ZGame.Networking;
-using ZGame.Resource;
 using DownloadProgressChangedEventArgs = Downloader.DownloadProgressChangedEventArgs;
 
 namespace ZGame.VFS

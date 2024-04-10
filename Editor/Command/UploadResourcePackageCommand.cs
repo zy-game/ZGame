@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using UnityEngine;
-using ZGame.Resource.Config;
+using ZGame.VFS;
 
 namespace ZGame.Editor.Command
 {

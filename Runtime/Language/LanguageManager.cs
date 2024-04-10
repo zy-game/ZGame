@@ -12,7 +12,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Game;
 using ZGame.Networking;
-using ZGame.Resource;
 
 namespace ZGame.Language
 {

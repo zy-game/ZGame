@@ -15,8 +15,6 @@ using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using ZGame.Config;
 using ZGame.Networking;
-using ZGame.Resource;
-using ZGame.Resource.Config;
 using ZGame.UI;
 using Object = UnityEngine.Object;
 

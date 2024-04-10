@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ZGame.Resource
+namespace ZGame.VFS
 {
     [Serializable]
     public class ResourcePackageManifest

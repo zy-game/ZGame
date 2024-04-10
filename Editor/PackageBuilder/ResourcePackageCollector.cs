@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using ZGame.Editor.ResBuild.Config;
+using ZGame.VFS;
 
 namespace ZGame.Editor.ResBuild
 {
@@ -67,15 +68,15 @@ namespace ZGame.Editor.ResBuild
                 return builds;
             }
 
-            foreach (var VARIABLE in rulerData.selector.items)
-            {
-                string[] fileList = Directory.GetFiles(path, "*" + VARIABLE, SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
-                builds.Add(new AssetBundleBuild()
-                {
-                    assetBundleName = $"{seting.title}_{rulerData.folder.name}_{VARIABLE.name.Substring(1)}{BuilderConfig.instance.fileExtension}",
-                    assetNames = fileList
-                });
-            }
+            // foreach (var VARIABLE in rulerData.selector.items)
+            // {
+            //     string[] fileList = Directory.GetFiles(path, "*" + VARIABLE, SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
+            //     builds.Add(new AssetBundleBuild()
+            //     {
+            //         assetBundleName = $"{seting.title}_{rulerData.folder.name}_{VARIABLE.name.Substring(1)}{BuilderConfig.instance.fileExtension}",
+            //         assetNames = fileList
+            //     });
+            // }
 
             return builds;
         }
@@ -97,7 +98,7 @@ namespace ZGame.Editor.ResBuild
             string[] fileList = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray();
             builds.Add(new AssetBundleBuild()
             {
-                assetBundleName = $"{seting.title}_{rulerData.folder.name}{BuilderConfig.instance.fileExtension}",
+                assetBundleName = $"{seting.title}_{rulerData.folder.name}{ResConfig.instance.ex}",
                 assetNames = fileList
             });
             return builds;
@@ -122,7 +123,7 @@ namespace ZGame.Editor.ResBuild
             {
                 builds.Add(new AssetBundleBuild()
                 {
-                    assetBundleName = $"{seting.title}_{rulerData.folder.name}_base{BuilderConfig.instance.fileExtension}",
+                    assetBundleName = $"{seting.title}_{rulerData.folder.name}_base{ResConfig.instance.ex}",
                     assetNames = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray()
                 });
             }
@@ -132,7 +133,7 @@ namespace ZGame.Editor.ResBuild
                 {
                     builds.Add(new AssetBundleBuild()
                     {
-                        assetBundleName = $"{seting.title}_{rulerData.folder.name}_{Path.GetFileName(VARIABLE)}{BuilderConfig.instance.fileExtension}",
+                        assetBundleName = $"{seting.title}_{rulerData.folder.name}_{Path.GetFileName(VARIABLE)}{ResConfig.instance.ex}",
                         assetNames = Directory.GetFiles(VARIABLE, "*.*", SearchOption.AllDirectories).Where(x => x.EndsWith(".meta") is false).ToArray()
                     });
                 }
@@ -160,7 +161,7 @@ namespace ZGame.Editor.ResBuild
             {
                 builds.Add(new AssetBundleBuild()
                 {
-                    assetBundleName = $"{seting.title}_{rulerData.folder.name}_{Path.GetFileName(VARIABLE)}{BuilderConfig.instance.fileExtension}",
+                    assetBundleName = $"{seting.title}_{rulerData.folder.name}_{Path.GetFileName(VARIABLE)}{ResConfig.instance.ex}",
                     assetNames = new[] { VARIABLE }
                 });
             }

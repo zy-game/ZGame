@@ -5,10 +5,9 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
-using ZGame.Resource.Config;
 using ZGame.UI;
 
-namespace ZGame.Resource
+namespace ZGame.VFS
 {
     public class ResourcePackageManifestManager : IReferenceObject
     {
@@ -37,8 +36,8 @@ namespace ZGame.Resource
                 return Status.Success;
             }
 
-            string iniFilePath = OSSConfig.instance.GetFilePath($"{packageName}.ini");
-            if (OSSConfig.instance.current.type == OSSType.Streaming && Application.isEditor)
+            string iniFilePath = ResConfig.instance.GetFilePath($"{packageName}.ini");
+            if (ResConfig.instance.current.type == OSSType.Streaming && Application.isEditor)
             {
                 resourcePackageListManifest = JsonConvert.DeserializeObject<ResourcePackageListManifest>(File.ReadAllText(iniFilePath));
             }

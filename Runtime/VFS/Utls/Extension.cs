@@ -1,7 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using ZGame.Resource;
+using ZGame.VFS;
 
 namespace ZGame
 {

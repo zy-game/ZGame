@@ -9,8 +9,7 @@ using UnityEditor;
 using UnityEngine;
 using ZGame.Editor.LinkerEditor;
 using ZGame.Editor.ResBuild.Config;
-using ZGame.Resource;
-using ZGame.Resource.Config;
+using ZGame.VFS;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.Command
@@ -46,9 +45,9 @@ namespace ZGame.Editor.Command
             packageListManifest.CreateOrUpdatePackageManifest(hotfixFileName, false, Crc32.GetCRC32File(GameFrameworkEntry.GetPlatformOutputPath(hotfixFileName)), new string[] { hotfixFileName }, new string[0]);
             ResourcePackageListManifest.Save(packageListManifest);
 
-            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(aotFileName));
-            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(hotfixFileName));
-            UploadResourcePackageCommand.Executer(OSSConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath($"{packageSeting.title}.ini"));
+            UploadResourcePackageCommand.Executer(ResConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(aotFileName));
+            UploadResourcePackageCommand.Executer(ResConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(hotfixFileName));
+            UploadResourcePackageCommand.Executer(ResConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath($"{packageSeting.title}.ini"));
         }
     }
 }
