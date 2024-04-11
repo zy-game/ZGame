@@ -169,7 +169,7 @@ namespace AnimationInstancing
             }
         }
 
-        [MenuItem("AnimationInstancing/Animation Generator", false)]
+        [MenuItem("Tools/Animation Generator/Generator", false)]
         static void MakeWindow()
         {
             s_window = GetWindow(typeof(AnimationGenerator)) as AnimationGenerator;

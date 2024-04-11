@@ -8,7 +8,7 @@ public class buidlBundle : MonoBehaviour
     static string Path = "Assets/AssetBundle";
     static string FolderName = "AssetBundle";
 
-    [MenuItem("Custom Editor/AssetBundle/BuildAssetBundle")]
+    [MenuItem("Tools/Animation Generator/BuildAssetBundle")]
     static void CreateAssetBundle()
     {
         CheckDirectory(Path);

@@ -18,12 +18,10 @@ using UnityEngine;
 
 namespace ZGame.Editor.LinkerEditor
 {
-    [RefPath("Assets/Settings/LinkerConfig.asset")]
-    [CreateAssetMenu(menuName = "ZGame/Config/LinkerConfig", fileName = "LinkerConfig.asset", order = 2)]
+    [CreateAssetMenu(menuName = "ZGame/Create Linker Config", fileName = "LinkerConfig.asset", order = 2)]
     public class LinkerConfig : BaseConfig<LinkerConfig>
     {
-        [Title("Link 设置"), HideLabel, TabGroup("assembly")]
-        public List<AssemblyLinker> assemblies;
+        [Title("Link 设置"), HideLabel] public List<AssemblyLinker> assemblies;
 
 
         [Button("Refresh")]
@@ -155,7 +153,7 @@ namespace ZGame.Editor.LinkerEditor
 
         [HideInInspector] public List<string> classs;
 
-        [Selector("classs"), HorizontalGroup("$name")]
+        [Selector("classs"), HorizontalGroup("$name"), LabelText("$GetSllSelectionItems")]
         public List<string> selection;
 
         [Button("全选"), HorizontalGroup("$name", 60)]
@@ -163,6 +161,27 @@ namespace ZGame.Editor.LinkerEditor
         {
             selection.Clear();
             selection.AddRange(classs);
+        }
+
+        private string GetSllSelectionItems()
+        {
+            if (selection is null || selection.Count == 0)
+            {
+                return "None";
+            }
+
+            if (selection is not null && classs is not null && selection.Count == classs.Count)
+            {
+                return "Everything";
+            }
+
+            string i = string.Join(",", selection.Select(x => x.Substring(x.LastIndexOf(".") + 1)));
+            if (i.Length > 20)
+            {
+                return i.Substring(0, 20);
+            }
+
+            return i;
         }
 
         [Button("反选"), HorizontalGroup("$name", 60)]

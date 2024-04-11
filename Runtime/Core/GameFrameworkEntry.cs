@@ -418,7 +418,7 @@ namespace ZGame
         /// <returns></returns>
         public static string GetApiUrl(string path)
         {
-            return $"{IPConfig.instance.GetUrl(path)}";
+            return GameConfig.instance.URL.GetUrl(path);
         }
 
         /// <summary>

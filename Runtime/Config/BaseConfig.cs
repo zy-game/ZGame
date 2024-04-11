@@ -45,16 +45,6 @@ namespace ZGame
             return Instantiate(o[0]);
         }
 
-        public static void Save()
-        {
-            Debug.Log(_config.GetType().FullName);
-#if UNITY_EDITOR
-            UnityEditor.EditorUtility.SetDirty(_config);
-            UnityEditor.AssetDatabase.SaveAssets();
-            UnityEditor.AssetDatabase.Refresh();
-#endif
-        }
-
         public virtual void OnAwake()
         {
         }

@@ -11,6 +11,16 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
 
+public class SelectorAttribute : Attribute
+{
+    public string ValuesGetter;
+
+    public SelectorAttribute(string getter)
+    {
+        ValuesGetter = getter;
+    }
+}
+
 namespace ZGame
 {
     /// <summary>

@@ -351,6 +351,7 @@ namespace ZGame.VFS
                 AudioClip clip = DownloadHandlerAudioClip.GetContent(request);
                 clip.name = path;
                 resObject = ResObject.Create(ResPackage.DEFAULT, clip, path);
+                Debug.Log("audio clip:" + path);
             }
 
             return resObject;

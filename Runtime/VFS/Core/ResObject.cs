@@ -40,11 +40,13 @@ namespace ZGame.VFS
 
         public T GetAsset<T>(GameObject gameObject)
         {
-            if (obj == null || obj is not Object)
+            if (obj == null)
             {
+                Debug.Log("基础资源为空");
                 return default;
             }
 
+            Debug.Log(obj.GetType().Name);
             Ref();
             gameObject?.SubscribeDestroyEvent(() => { Unref(); });
             return (T)obj;
@@ -174,6 +176,7 @@ namespace ZGame.VFS
         {
             if (obj == null)
             {
+                Debug.Log("obj is null");
                 return DEFAULT;
             }
 
@@ -181,7 +184,23 @@ namespace ZGame.VFS
             resObject.obj = obj;
             resObject.name = path;
             resObject.parent = parent;
-            resObject.refCount = 0;
+            resObject.refCount = 1;
+            return resObject;
+        }
+
+        public static ResObject Create(object obj, string path)
+        {
+            if (obj == null)
+            {
+                Debug.Log("obj is null");
+                return DEFAULT;
+            }
+
+            ResObject resObject = new ResObject();
+            resObject.obj = obj;
+            resObject.name = path;
+            resObject.parent = ResPackage.DEFAULT;
+            resObject.refCount = 1;
             return resObject;
         }
 

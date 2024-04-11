@@ -58,6 +58,7 @@ namespace ZGame.Sound
             if (clip == null)
             {
                 callback?.Invoke(PlayState.Complete);
+                Debug.Log("clip is null");
                 return;
             }
 
@@ -66,6 +67,7 @@ namespace ZGame.Sound
             string name = clip.name;
             Resume();
             GameFrameworkEntry.Logger.Log("开始播放：" + name);
+            await UniTask.WaitForSeconds(0.1f);
             await UniTask.WaitWhile(() => _source.isPlaying);
             Stop();
             GameFrameworkEntry.Logger.Log("播放结束：" + name);

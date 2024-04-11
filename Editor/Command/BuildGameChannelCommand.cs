@@ -16,7 +16,7 @@ namespace ZGame.Editor.Command
     {
         public static void Executer(params object[] args)
         {
-            var channel = args is not null && args.Length == 1 ? args[0] as ChannelPackageOptions : default;
+            var channel = args is not null && args.Length == 1 ? args[0] as PacketOption : default;
          
             if (channel is null)
             {
@@ -45,7 +45,7 @@ namespace ZGame.Editor.Command
             EditorUtility.DisplayDialog("打包完成", "资源打包成功", "OK");
         }
 
-        private static string GetBuildLocationPath(ChannelPackageOptions channel, GameConfig config)
+        private static string GetBuildLocationPath(PacketOption channel, GameConfig config)
         {
             string platform = GameFrameworkEntry.GetPlatformName();
             string packageName = channel.packageName;
@@ -89,7 +89,7 @@ namespace ZGame.Editor.Command
             return targetGroup;
         }
 
-        public static void SetPlayerSetting(ChannelPackageOptions channel, string version)
+        public static void SetPlayerSetting(PacketOption channel, string version)
         {
             BuildTargetGroup targetGroup = GetBuildTargetGroup();
             PlayerSettings.SetApplicationIdentifier(targetGroup, channel.packageName);

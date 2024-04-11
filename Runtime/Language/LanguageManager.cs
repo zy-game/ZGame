@@ -47,7 +47,7 @@ namespace ZGame.Language
             AddLanguageDatable(-1, cn: "App 版本过低，请重新安装App后在使用", en: "The app version is too low. Please reinstall the app before using it");
             AddLanguageDatable(-1, cn: "未找到入口配置...", en: "Not Find Entry Point...");
             AddLanguageDatable(-1, cn: "加载场景中...", en: "Loading Scene...");
-            Switch(ChannelConfigList.instance.current.language);
+            Switch(GameConfig.instance.Packet.language);
         }
 
         /// <summary>
