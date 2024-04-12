@@ -36,13 +36,14 @@ namespace ZGame
 
             return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(files[0]));
 #endif
-            T[] o = Resources.FindObjectsOfTypeAll<T>();
-            if (o is null || o.Length == 0)
+            T o = Resources.Load<T>(typeof(T).Name);
+            if (o == null)
             {
+                Debug.Log("没有找到配置文件：" + typeof(T));
                 return default;
             }
 
-            return Instantiate(o[0]);
+            return o;
         }
 
         public virtual void OnAwake()

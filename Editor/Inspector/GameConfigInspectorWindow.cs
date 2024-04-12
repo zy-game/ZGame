@@ -18,7 +18,11 @@ namespace ZGame.Editor.Inspector
             if (EditorGUILayout.DropdownButton(new GUIContent("Generic"), FocusType.Passive))
             {
                 GenericSelector<PacketOption> selector = CreateSelector();
-                selector.SelectionConfirmed += enumerable => { BuildGameChannelCommand.Executer(enumerable.ToArray()); };
+                selector.SelectionConfirmed += enumerable =>
+                {
+                    BuildGameChannelCommand.SetPlayerSetting(enumerable.FirstOrDefault(), GameConfig.instance.version);
+                    BuildGameChannelCommand.Executer(enumerable.ToArray());
+                };
                 selector.ShowInPopup();
             }
         }

@@ -6,6 +6,7 @@ using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
 using ZGame.Config;
+using ZGame.Editor.Command;
 
 namespace ZGame.Editor.Inspector
 {
@@ -21,7 +22,7 @@ namespace ZGame.Editor.Inspector
             if (EditorGUILayout.DropdownButton(new GUIContent("Build Hotfix Package"), FocusType.Passive))
             {
                 GenericSelector<PackageSeting> selector = CreateSelector();
-                selector.SelectionConfirmed += enumerable => { };
+                selector.SelectionConfirmed += enumerable => { BuildResourcePackageCommand.Executer(enumerable.ToArray()); };
                 selector.ShowInPopup();
             }
         }

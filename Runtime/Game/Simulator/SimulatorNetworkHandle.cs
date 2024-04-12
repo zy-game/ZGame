@@ -2,7 +2,6 @@ using System;
 using Cysharp.Threading.Tasks;
 using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
-using MemoryPack;
 using ProtoBuf;
 using ZGame;
 using ZGame.Networking;

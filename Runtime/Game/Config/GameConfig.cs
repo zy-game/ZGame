@@ -2,12 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using ZGame.Language;
 
 namespace ZGame
 {
+    [CreateAssetMenu(menuName = "ZGame/Create Game Config", fileName = "GameConfig.asset", order = 0)]
     public class GameConfig : BaseConfig<GameConfig>
     {
         /// <summary>
@@ -45,16 +47,11 @@ namespace ZGame
         /// </summary>
         [LabelText("安装包地址")] public string apkUrl;
 
-        [ValueDropdown("GetChannelTitleList"), LabelText("当前渠道"), OnValueChanged("OnChangeChannel")]
+        [ValueDropdown(nameof(GetChannelTitleList)), LabelText("当前渠道"), OnValueChanged(nameof(OnSwitchChannelChange))]
         public string curChannel;
 
-        [ValueDropdown("GetAddressTileList"), LabelText("服务器地址")]
+        [ValueDropdown(nameof(GetAddressTileList)), LabelText("服务器地址")]
         public string curAddress;
-
-        [TableList, LabelText("服务器地址配置"), Space(10)]
-        public List<IPOptions> address;
-
-        [LabelText("渠道包配置"), Space(10)] public List<PacketOption> channels;
 
         public IPOptions URL
         {
@@ -65,6 +62,19 @@ namespace ZGame
         {
             get { return channels.Find(x => x.title == curChannel); }
         }
+
+        [TableList, LabelText("多语言配置"), Space(10)]
+        public List<LanguageOptions> languageList = new()
+        {
+            new LanguageOptions() { name = "中文", filter = "zh" },
+            new LanguageOptions() { name = "英文", filter = "en" },
+        };
+
+        [TableList, LabelText("服务器地址配置"), Space(10)]
+        public List<IPOptions> address;
+
+        [LabelText("渠道包配置"), Space(10)] public List<PacketOption> channels;
+
 
         IEnumerable GetAddressTileList()
         {
@@ -86,9 +96,21 @@ namespace ZGame
             return channels.Select(x => new ValueDropdownItem(x.title, x.title));
         }
 
-        private void OnChangeChannel()
+        private void OnSwitchChannelChange()
         {
-            Debug.Log("change");
+#if UNITY_EDITOR
+            foreach (var VARIABLE in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (VARIABLE.GetName().Name != "ZGame.Editor")
+                {
+                    continue;
+                }
+
+                Type t = VARIABLE.GetType("ZGame.Editor.Command.BuildGameChannelCommand");
+                MethodInfo m = t.GetMethod("SetPlayerSetting", BindingFlags.Static | BindingFlags.Public);
+                m.Invoke(null, new object[] { Packet, version });
+            }
+#endif
         }
     }
 
@@ -162,7 +184,14 @@ namespace ZGame
 
         private static IEnumerable FriendlyTextureSizes()
         {
-            return LanguageConfig.instance.lanList.Select(x => new ValueDropdownItem(x.name, x.filter));
+            return GameConfig.instance.languageList.Select(x => new ValueDropdownItem(x.name, x.filter));
         }
+    }
+
+    [Serializable]
+    public class LanguageOptions
+    {
+        public string name;
+        public string filter;
     }
 }

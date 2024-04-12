@@ -2,7 +2,7 @@
     "name": "AnimatorInstanc.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:fbd5e890f85bf444b9ed07121dbe6788"
+        "GUID:b3f574911ffad494c8ded9ca4d40006f"
     ],
     "includePlatforms": [
         "Editor"

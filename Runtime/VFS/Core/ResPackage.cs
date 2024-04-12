@@ -287,22 +287,37 @@ namespace ZGame.VFS
                 return Status.Success;
             }
 
+            AssetBundle bundle = default;
+#if UNITY_WEBGL
+            using (UnityWebRequest request = UnityWebRequestAssetBundle.GetAssetBundle(ResConfig.instance.GetFilePath(manifest.name), manifest.version))
+            {
+                await request.SendWebRequest();
+                if (request.result is not UnityWebRequest.Result.Success)
+                {
+                    return Status.Fail;
+                }
+
+                bundle = DownloadHandlerAssetBundle.GetContent(request);
+            }
+#else
             byte[] bytes = await GameFrameworkEntry.VFS.ReadAsync(manifest.name);
             if (bytes == null || bytes.Length == 0)
             {
                 Debug.Log("资源包不存在：" + manifest.name);
                 return Status.Fail;
             }
+            bundle = await AssetBundle.LoadFromMemoryAsync(bytes);
 
+#endif
             GameFrameworkEntry.Logger.Log("加载资源包：" + manifest.name);
-            ResPackage package = ResPackage.Create(await AssetBundle.LoadFromMemoryAsync(bytes));
+            ResPackage package = ResPackage.Create(bundle);
             if (package.IsSuccess() is false)
             {
                 return Status.Fail;
             }
 
             packages.Add(package);
-            Debug.Log("资源包加载完成：" + manifest.name + " length:" + bytes.Length);
+            Debug.Log("资源包加载完成：" + manifest.name);
             return Status.Success;
         }
 

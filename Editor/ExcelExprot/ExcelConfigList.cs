@@ -13,12 +13,12 @@ namespace ZGame.Editor.ExcelExprot
     [CreateAssetMenu(menuName = "ZGame/Create Excel Generic Config", fileName = "ExcelConfig.asset", order = 2)]
     public class ExcelConfigList : BaseConfig<ExcelConfigList>
     {
-        [LabelText("Êä³öÄ¿Â¼")] public UnityEngine.Object output;
-        [LabelText("Êı¾İÆğÊ¼ĞĞ")] public int dataRowIndex = 3;
-        [LabelText("×Ö¶ÎÀàĞÍĞĞ")] public int typeRowIndex = 1;
-        [LabelText("´úÂëÃüÃû¿Õ¼ä")] public string nameSpace;
-        [LabelText("±íÍ·ËùÔÚĞĞ")] public int headerRowIndex = 0;
-        [LabelText("µ¼³öÎÄ¼şÀàĞÍ")] public ExportType exportType;
+        [LabelText("è¾“å‡ºç›®å½•")] public UnityEngine.Object output;
+        [LabelText("æ•°æ®èµ·å§‹è¡Œ")] public int dataRowIndex = 3;
+        [LabelText("å­—æ®µç±»å‹è¡Œ")] public int typeRowIndex = 1;
+        [LabelText("ä»£ç å‘½åç©ºé—´")] public string nameSpace;
+        [LabelText("è¡¨å¤´æ‰€åœ¨è¡Œ")] public int headerRowIndex = 0;
+        [LabelText("å¯¼å‡ºæ–‡ä»¶ç±»å‹")] public ExportType exportType;
 
         [TableList, LabelText("Excel File List")]
         public List<ExcelImportOptions> exporters;

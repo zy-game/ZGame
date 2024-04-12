@@ -197,12 +197,12 @@ namespace ZGame.VFS
             {
                 return Status.Fail;
             }
-
+#if !UNITY_WEBGL
             if (await ResPackage.UpdateResourcePackageList(manifestManager.GetUpdateResourcePackageList(packageName).ToArray()) is not Status.Success)
             {
                 return Status.Fail;
             }
-
+#endif
             if (await ResPackage.LoadingResourcePackageListAsync(manifestManager.GetResourcePackageAndDependencyList(packageName).ToArray()) is not Status.Success)
             {
                 return Status.Fail;

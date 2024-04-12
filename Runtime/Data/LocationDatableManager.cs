@@ -12,17 +12,18 @@ namespace ZGame.Data
     /// </summary>
     public class LocationDatableManager : GameFrameworkModule
     {
+        private const string DATA_FILE_NAME = "local.data";
         private Dictionary<string, string> cacheDic = new Dictionary<string, string>();
 
         public override async void OnAwake(params object[] args)
         {
-            byte[] bytes = GameFrameworkEntry.VFS.Read("dataCache.ini");
+            string bytes = PlayerPrefs.GetString(DATA_FILE_NAME);
             if (bytes == null || bytes.Length == 0)
             {
                 return;
             }
 
-            cacheDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(UTF8Encoding.UTF8.GetString(bytes));
+            cacheDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(bytes);
         }
 
         /// <summary>
@@ -137,9 +138,7 @@ namespace ZGame.Data
         public void Save()
         {
             string json = JsonConvert.SerializeObject(cacheDic);
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
-            GameFrameworkEntry.VFS.Write("dataCache.ini", bytes, 0);
-            Debug.Log(json);
+            PlayerPrefs.SetString(DATA_FILE_NAME, json);
         }
 
         public void Dispose()

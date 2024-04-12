@@ -1,5 +1,5 @@
 {
-    "name": "ZEngine.Runtime",
+    "name": "ZGame.Runtime",
     "rootNamespace": "",
     "references": [
         "GUID:6055be8ebefd69e48b49212b09b47b2f",
@@ -7,14 +7,14 @@
         "GUID:15fc0a57446b3144c949da3e2b9737a9",
         "GUID:2665a8d13d1b3f18800f46e256720795",
         "GUID:d8b63aba1907145bea998dd612889d6b",
-        "GUID:f51ebe6a0ceec4240a699833d6309b23",
-        "GUID:8b65d8710c3b04373a41cbf6b777ee65",
-        "GUID:d341d1e08d135e047a75add829da1409",
         "GUID:4307f53044263cf4b835bd812fc161a4",
-        "GUID:965047ab78b6eb348b2b3a878c9d78c6",
-        "GUID:b049acfb01ba4e14e9de3283511bae70",
-        "GUID:858936e0c221f3d4b841d100c1759dfa",
-        "GUID:1d636a37f0edbc349a75115b425cf0bc"
+        "GUID:ddbac5d3dcc32a844b29c4afaddfb99d",
+        "GUID:3c8470c9fc4d8494db90d5d206f50b01",
+        "GUID:df380645f10b7bc4b97d4f5eb6303d95",
+        "GUID:ab67fb10353d84448ac887a7367cbda8",
+        "GUID:53caaef778ca7cb49bfa61a7fa3e7b25",
+        "GUID:9b8ce8b9189a7204094c2f4485a823d8",
+        "GUID:e1450818b08639043b6d1caabc9b4dc1"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

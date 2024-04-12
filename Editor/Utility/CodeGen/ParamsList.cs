@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using NPBehave;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ZGame.Editor.CodeGen
 {

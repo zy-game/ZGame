@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5978f8f3dd274e848fbb7a123bde1fb9
+guid: 3fa1c377820947348b0547d2dc3da667
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -76,6 +76,11 @@ PluginImporter:
         DefaultValueInitialized: true
   - first:
       PS4: PS4
+    second:
+      enabled: 1
+      settings: {}
+  - first:
+      Standalone: Win64
     second:
       enabled: 1
       settings: {}

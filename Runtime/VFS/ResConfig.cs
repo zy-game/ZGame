@@ -9,7 +9,7 @@ using ZGame.Config;
 
 namespace ZGame.VFS
 {
-    [CreateAssetMenu(menuName = "ZGame/Config/ResConfig", fileName = "ResConfig.asset", order = 0)]
+    [CreateAssetMenu(menuName = "ZGame/Create ResConfig", fileName = "ResConfig.asset", order = 0)]
     public class ResConfig : BaseConfig<ResConfig>
     {
         /// <summary>

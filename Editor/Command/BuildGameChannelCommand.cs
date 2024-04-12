@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
 using ZGame.Editor.LinkerEditor;
+using BuildTargetGroup = UnityEditor.BuildTargetGroup;
 using Object = UnityEngine.Object;
 
 namespace ZGame.Editor.Command
@@ -17,7 +18,7 @@ namespace ZGame.Editor.Command
         public static void Executer(params object[] args)
         {
             var channel = args is not null && args.Length == 1 ? args[0] as PacketOption : default;
-         
+
             if (channel is null)
             {
                 EditorUtility.DisplayDialog("打包失败", "渠道参数错误", "OK");
@@ -32,7 +33,7 @@ namespace ZGame.Editor.Command
                 options.target = EditorUserBuildSettings.activeBuildTarget;
                 options.scenes = new[] { "Assets/Startup.unity" };
                 options.locationPathName = GetBuildLocationPath(channel, GameConfig.instance);
-                SetPlayerSetting(channel, GameConfig.instance.version);
+
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 BuildPlayerWindow.DefaultBuildMethods.BuildPlayer(options);
@@ -50,12 +51,15 @@ namespace ZGame.Editor.Command
             string platform = GameFrameworkEntry.GetPlatformName();
             string packageName = channel.packageName;
             string version = config.version;
-            string path = $"{GameFrameworkEntry.GetPlatformOutputBaseDir()}/packages/{platform}/{packageName}/{version}/{DateTime.Now.ToString("yyyyMMddHH")}";
+            string path = $"{GameFrameworkEntry.GetPlatformOutputBaseDir()}/packages/{platform}/{version}";
             string fileName = string.Empty;
             switch (EditorUserBuildSettings.activeBuildTarget)
             {
                 case BuildTarget.Android:
                     fileName = $"{channel.packageName}_{config.version}_{DateTime.Now.ToString("yyyyMMddHH")}.apk";
+                    break;
+                default:
+                    fileName = Application.productName + ".exe";
                     break;
             }
 
@@ -78,11 +82,11 @@ namespace ZGame.Editor.Command
                 case BuildTarget.iOS:
                     targetGroup = BuildTargetGroup.iOS;
                     break;
-                case BuildTarget.StandaloneWindows:
-                    targetGroup = BuildTargetGroup.Standalone;
-                    break;
                 case BuildTarget.WebGL:
                     targetGroup = BuildTargetGroup.WebGL;
+                    break;
+                default:
+                    targetGroup = BuildTargetGroup.Standalone;
                     break;
             }
 
@@ -91,6 +95,7 @@ namespace ZGame.Editor.Command
 
         public static void SetPlayerSetting(PacketOption channel, string version)
         {
+            Debug.Log("设置渠道包信息：" + channel.title);
             BuildTargetGroup targetGroup = GetBuildTargetGroup();
             PlayerSettings.SetApplicationIdentifier(targetGroup, channel.packageName);
             PlatformIconKind[] kinds = PlayerSettings.GetSupportedIconKindsForPlatform(targetGroup);

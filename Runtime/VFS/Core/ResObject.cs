@@ -46,7 +46,6 @@ namespace ZGame.VFS
                 return default;
             }
 
-            Debug.Log(obj.GetType().Name);
             Ref();
             gameObject?.SubscribeDestroyEvent(() => { Unref(); });
             return (T)obj;
