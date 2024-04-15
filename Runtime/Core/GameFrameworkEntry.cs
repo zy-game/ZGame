@@ -60,6 +60,11 @@ namespace ZGame
                 GameFrameworkEntry.OnDrawGizmos();
             }
 
+            private void OnBecameVisible()
+            {
+                throw new NotImplementedException();
+            }
+
             public static void OnProfile()
             {
 #if UNITY_EDITOR
@@ -155,6 +160,11 @@ namespace ZGame
         /// </summary>
         public static ECSManager ECS { get; private set; }
 
+        /// <summary>
+        /// 游戏世界
+        /// </summary>
+        public static World world { get; private set; }
+
 
         /// <summary>
         /// 初始化框架
@@ -173,12 +183,10 @@ namespace ZGame
             Config = GetOrCreateModule<ConfigManager>();
             ECS = GetOrCreateModule<ECSManager>();
             Network = GetOrCreateModule<NetManager>();
-
+            world = GetOrCreateModule<World>("GAME_DEFAULT_WORLD");
             _handle = new GameObject("GAME FRAMEWORK ENTRY").AddComponent<GameFrameworkContent>();
             _handle.gameObject.SetParent(null, Vector3.zero, Vector3.zero, Vector3.one);
             GameObject.DontDestroyOnLoad(_handle.gameObject);
-
-            Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             UILoading.SetTitle(Language.Query("正在获取配置信息..."));
             UILoading.SetProgress(0);
@@ -189,23 +197,8 @@ namespace ZGame
                 return;
             }
 
-            Assembly assembly = await VFS.LoadGameAssembly(Path.GetFileNameWithoutExtension(GameConfig.instance.path), GameConfig.instance.mode);
-            if (assembly is null)
+            if (await VFS.LoadingSubGameEntryPoint(Path.GetFileNameWithoutExtension(GameConfig.instance.path), GameConfig.instance.mode) is not Status.Success)
             {
-                UIMsgBox.Show(Language.Query("未找到入口配置..."), GameFrameworkStartup.Quit);
-                return;
-            }
-
-            SubGameStartup subGameStartup = assembly.CreateInstance<SubGameStartup>();
-            if (subGameStartup is null)
-            {
-                UIMsgBox.Show(Language.Query("未找到入口配置..."), GameFrameworkStartup.Quit);
-                return;
-            }
-
-            if (await subGameStartup.OnEntry() is not Status.Success)
-            {
-                UIMsgBox.Show(Language.Query("未找到入口配置..."), GameFrameworkStartup.Quit);
                 return;
             }
 
@@ -237,6 +230,7 @@ namespace ZGame
             Logger = null;
             Network = null;
             ECS = null;
+            world = null;
         }
 
 
@@ -289,7 +283,7 @@ namespace ZGame
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T GetOrCreateModule<T>() where T : GameFrameworkModule
+        public static T GetOrCreateModule<T>(params object[] args) where T : GameFrameworkModule
         {
             return (T)GetOrCreateModule(typeof(T));
         }
@@ -299,13 +293,13 @@ namespace ZGame
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static GameFrameworkModule GetOrCreateModule(Type type)
+        public static GameFrameworkModule GetOrCreateModule(Type type, params object[] args)
         {
             GameFrameworkModule frameworkModule = _modules.Find(m => m.GetType() == type);
             if (frameworkModule is null)
             {
                 frameworkModule = (GameFrameworkModule)GameFrameworkFactory.Spawner(type);
-                frameworkModule.OnAwake();
+                frameworkModule.OnAwake(args);
                 _modules.Add(frameworkModule);
             }
 

@@ -4,6 +4,7 @@ using System.Dynamic;
 using System.Linq;
 using Cinemachine;
 using Cysharp.Threading.Tasks;
+using FixMath.NET;
 using TrueSync;
 using UnityEditor;
 using UnityEngine;
@@ -14,7 +15,31 @@ using ZGame.UI;
 
 namespace ZGame.Game
 {
-    public sealed class World : IReferenceObject
+    class CameraHandle : IReferenceObject
+    {
+        public void Release()
+        {
+            
+        }
+    }
+
+    class LightHandle : IReferenceObject
+    {
+        public void Release()
+        {
+            
+        }
+    }
+
+    class SkyboxHandle : IReferenceObject
+    {
+        public void Release()
+        {
+            
+        }
+    }
+
+    public sealed class World : GameFrameworkModule
     {
         private string _name;
         private Light _light;
@@ -28,6 +53,9 @@ namespace ZGame.Game
         private List<Tuple<int, Camera>> subCameras = new();
         private UniversalAdditionalCameraData mainCameraData;
         private Simulator _simulator;
+        private ArchetypeManager _archetypeManager;
+        private EntityManager entityManager;
+        private SystemManager systemManager;
 
         // private TrueSyncStats _trueSyncStats;
 
@@ -92,40 +120,88 @@ namespace ZGame.Game
         }
 
 
+        public override void OnAwake(params object[] args)
+        {
+            
+            _archetypeManager = GameFrameworkFactory.Spawner<ArchetypeManager>();
+            entityManager = GameFrameworkFactory.Spawner<EntityManager>();
+            systemManager = GameFrameworkFactory.Spawner<SystemManager>();
+        }
+
+        public override void Release()
+        {
+            foreach (var item in subCameras)
+            {
+                GameObject.DestroyImmediate(item.Item2.gameObject);
+            }
+
+            if (_light != null)
+            {
+                GameObject.DestroyImmediate(_light.gameObject);
+            }
+
+            if (_camera != null)
+            {
+                GameObject.DestroyImmediate(_camera.gameObject);
+            }
+
+            GameFrameworkFactory.Release(_archetypeManager);
+            GameFrameworkFactory.Release(systemManager);
+            GameFrameworkFactory.Release(entityManager);
+            GameFrameworkFactory.Release(simulator);
+            _simulator = null;
+            subCameras.Clear();
+            sunshineGradient = null;
+            skybox = null;
+            _light = null;
+            _camera = null;
+        }
+        public override void Update()
+        {
+            systemManager.Update();
+        }
+
+        public override void FixedUpdate()
+        {
+            systemManager.FixedUpdate();
+        }
+
+        public override void LateUpdate()
+        {
+            systemManager.LateUpdate();
+        }
+
+        public override void OnDarwGizom()
+        {
+            systemManager.OnDarwingGizmons();
+        }
+
+        public override void OnGUI()
+        {
+            systemManager.OnGUI();
+            entityManager.OnGUI();
+            _archetypeManager.OnGUI();
+        }
+
         public void OnFixedUpdate()
         {
-            _simulator?.FixedUpdate();
+            _simulator?.OnFixedUpdate();
             this.worldTime.AddSeconds(timeSpeed);
             RefreshSunshine();
         }
 
         public void OnUpdate()
         {
-            _simulator?.Update();
+            _simulator?.OnUpdate();
         }
 
         public void OnLateUpdate()
         {
         }
 
-        public void OnDarwGizom()
+        public async UniTask OnCreateSimulator(string ip, ushort port, Fix64 LockedTimeStep)
         {
-        }
-
-        public void OnGUI()
-        {
-        }
-
-        public async UniTask OnStartSimulator(string ip, ushort port, FP LockedTimeStep)
-        {
-            SimulatorNetworkHandle handle = GameFrameworkFactory.Spawner<SimulatorNetworkHandle>();
-            await GameFrameworkEntry.Network.Connect<UdpClient>(ip, port, handle);
-            PhysicsManager.instance = new Physics3DSimulator();
-            PhysicsManager.instance.Gravity = new TSVector(0, 10, 0);
-            PhysicsManager.instance.SpeculativeContacts = false;
-            PhysicsManager.instance.LockedTimeStep = LockedTimeStep;
-            PhysicsManager.instance.Init();
-            _simulator = Simulator.Create3D(handle,  LockedTimeStep);
+            _simulator = await Simulator.Create3DSimulator(LockedTimeStep, ip, port);
         }
 
         /// <summary>
@@ -273,31 +349,192 @@ namespace ZGame.Game
 
             return item.Item2;
         }
-
-        public void Release()
+        
+        /// <summary>
+        /// 获取所有拥有指定类型组件的实体
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public Entity[] GetEntities<T>() where T : IComponent
         {
-            foreach (var item in subCameras)
+            Type type = typeof(T);
+            uint[] entitys = _archetypeManager.GetHaveComponentEntityID(type);
+            Entity[] entities = new Entity[entitys.Length];
+            for (int i = 0; i < entities.Length; i++)
             {
-                GameObject.DestroyImmediate(item.Item2.gameObject);
+                entities[i] = entityManager.FindEntity(entitys[i]);
             }
 
-            if (_light != null)
-            {
-                GameObject.DestroyImmediate(_light.gameObject);
-            }
+            return entities;
+        }
 
-            if (_camera != null)
-            {
-                GameObject.DestroyImmediate(_camera.gameObject);
-            }
+        /// <summary>
+        /// 获取实体
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Entity GetEntity(uint id)
+        {
+            return entityManager.FindEntity(id);
+        }
 
-            GameFrameworkFactory.Release(simulator);
-            _simulator = null;
-            subCameras.Clear();
-            sunshineGradient = null;
-            skybox = null;
-            _light = null;
-            _camera = null;
+        /// <summary>
+        /// 创建实体
+        /// </summary>
+        /// <returns></returns>
+        public Entity CreateEntity()
+        {
+            return entityManager.CreateEntity();
+        }
+
+        /// <summary>
+        /// 销毁实体
+        /// </summary>
+        /// <param name="id"></param>
+        public void DestroyEntity(uint id)
+        {
+            entityManager.DestroyEntity(id);
+            _archetypeManager.RemoveEntityComponents(id);
+        }
+
+        /// <summary>
+        /// 销毁实体
+        /// </summary>
+        /// <param name="entity"></param>
+        public void DestroyEntity(Entity entity)
+        {
+            DestroyEntity(entity.id);
+        }
+
+        /// <summary>
+        /// 清理所有实体对象
+        /// </summary>
+        public void ClearEntity()
+        {
+            entityManager.Clear();
+            _archetypeManager.Clear();
+        }
+
+        /// <summary>
+        /// 注册逻辑系统
+        /// </summary>
+        /// <param name="systemType"></param>
+        /// <param name="args"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void RegisterGameLogicSystem(Type systemType, params object[] args)
+        {
+            systemManager.RegisterGameLogicSystem(systemType, args);
+        }
+
+        /// <summary>
+        /// 注册逻辑系统
+        /// </summary>
+        /// <param name="args"></param>
+        /// <typeparam name="T"></typeparam>
+        public void RegisterGameLogicSystem<T>(params object[] args) where T : ISystem
+        {
+            RegisterGameLogicSystem(typeof(T), args);
+        }
+
+        /// <summary>
+        /// 卸载逻辑系统
+        /// </summary>
+        /// <param name="systemType"></param>
+        public void UnregisterGameLogicSystem(Type systemType)
+        {
+            systemManager.UnregisterGameLogicSystem(systemType);
+        }
+
+        /// <summary>
+        /// 卸载逻辑系统
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void UnregisterGameLogicSystem<T>() where T : ISystem
+        {
+            UnregisterGameLogicSystem(typeof(T));
+        }
+
+        /// <summary>
+        /// 获取指定类型的系统
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetSystem<T>() where T : ISystem
+        {
+            return (T)GetSystem(typeof(T));
+        }
+
+        /// <summary>
+        /// 获取指定类型的系统
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public ISystem GetSystem(Type type)
+        {
+            return systemManager.GetSystem(type);
+        }
+
+        /// <summary>
+        /// 添加组件
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public IComponent AddComponent(Entity entity, Type type)
+        {
+            return _archetypeManager.AddComponent(entity.id, type);
+        }
+
+        /// <summary>
+        /// 获取组件
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public IComponent GetComponent(Entity entity, Type type)
+        {
+            return _archetypeManager.GetComponent(entity.id, type);
+        }
+
+        /// <summary>
+        /// 移除组件
+        /// </summary>
+        /// <param name="type"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void RemoveComponent(Entity entity, Type type)
+        {
+            _archetypeManager.RemoveComponent(entity.id, type);
+        }
+
+        /// <summary>
+        /// 获取所有指定类型的组件
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public IEnumerable<T> AllOf<T>() where T : IComponent
+        {
+            return new ComponentEnumerable<T>(_archetypeManager.GetComponents(typeof(T)));
+        }
+
+        /// <summary>
+        /// 获取实体上指定的组件
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Of<T>(Entity entity) where T : IComponent
+        {
+            return (T)_archetypeManager.GetComponent(entity.id, typeof(T));
+        }
+
+        /// <summary>
+        /// 获取全局组件
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Single<T>() where T : ISingletonComponent, new()
+        {
+            return (T)_archetypeManager.GetComponent(0, typeof(T));
         }
     }
 }

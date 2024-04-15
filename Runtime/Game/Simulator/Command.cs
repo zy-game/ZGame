@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using FixMath.NET;
 using TrueSync;
 using ZGame.Networking;
 
@@ -89,14 +90,14 @@ namespace ZGame.Game
     {
         public uint uid;
         public string path;
-        public TSVector position;
-        public TSQuaternion rotation;
+        public BEPUutilities.Vector3 position;
+        public BEPUutilities.Quaternion rotation;
 
         public void Release()
         {
         }
 
-        public static byte[] Create(uint uid, string path, TSVector position, TSQuaternion rotation)
+        public static byte[] Create(uint uid, string path, BEPUutilities.Vector3 position, BEPUutilities.Quaternion rotation)
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -104,13 +105,13 @@ namespace ZGame.Game
                 {
                     bw.Write(uid);
                     bw.Write(path);
-                    bw.Write(position.x.AsLong());
-                    bw.Write(position.y.AsLong());
-                    bw.Write(position.z.AsLong());
-                    bw.Write(rotation.x.AsLong());
-                    bw.Write(rotation.y.AsLong());
-                    bw.Write(rotation.z.AsLong());
-                    bw.Write(rotation.w.AsLong());
+                    bw.Write(position.X.RawValue);
+                    bw.Write(position.Y.RawValue);
+                    bw.Write(position.Z.RawValue);
+                    bw.Write(rotation.X.RawValue);
+                    bw.Write(rotation.Y.RawValue);
+                    bw.Write(rotation.Z.RawValue);
+                    bw.Write(rotation.W.RawValue);
                     return ms.ToArray();
                 }
             }
@@ -124,13 +125,13 @@ namespace ZGame.Game
                 {
                     bw.Write(data.uid);
                     bw.Write(data.path);
-                    bw.Write(data.position.x.AsLong());
-                    bw.Write(data.position.y.AsLong());
-                    bw.Write(data.position.z.AsLong());
-                    bw.Write(data.rotation.x.AsLong());
-                    bw.Write(data.rotation.y.AsLong());
-                    bw.Write(data.rotation.z.AsLong());
-                    bw.Write(data.rotation.w.AsLong());
+                    bw.Write(data.position.X.RawValue);
+                    bw.Write(data.position.Y.RawValue);
+                    bw.Write(data.position.Z.RawValue);
+                    bw.Write(data.rotation.X.RawValue);
+                    bw.Write(data.rotation.Y.RawValue);
+                    bw.Write(data.rotation.Z.RawValue);
+                    bw.Write(data.rotation.W.RawValue);
                     return ms.ToArray();
                 }
             }
@@ -145,8 +146,8 @@ namespace ZGame.Game
                     Join join = GameFrameworkFactory.Spawner<Join>();
                     join.uid = br.ReadUInt32();
                     join.path = br.ReadString();
-                    join.position = new TSVector(br.ReadInt64(), br.ReadInt64(), br.ReadInt64());
-                    join.rotation = new TSQuaternion(br.ReadInt64(), br.ReadInt64(), br.ReadInt64(), br.ReadInt64());
+                    join.position = new BEPUutilities.Vector3(br.ReadInt64(), br.ReadInt64(), br.ReadInt64());
+                    join.rotation = new BEPUutilities.Quaternion(br.ReadInt64(), br.ReadInt64(), br.ReadInt64(), br.ReadInt64());
                     return join;
                 }
             }
@@ -327,7 +328,7 @@ namespace ZGame.Game
         /// </summary>
         public uint owner;
 
-        public Dictionary<byte, FP> fpList = new();
+        public Dictionary<byte, Fix64> fpList = new();
 
         /// <summary>
         /// 序列化输入数据
@@ -345,7 +346,7 @@ namespace ZGame.Game
                     foreach (var item in data.fpList)
                     {
                         bw.Write(item.Key);
-                        bw.Write(item.Value.AsLong());
+                        bw.Write(item.Value.RawValue);
                     }
 
                     return ms.ToArray();
@@ -367,7 +368,7 @@ namespace ZGame.Game
                     InputData inputData = GameFrameworkFactory.Spawner<InputData>();
                     inputData.owner = br.ReadUInt32();
                     int count = br.ReadInt32();
-                    inputData.fpList = new Dictionary<byte, FP>();
+                    inputData.fpList = new Dictionary<byte, Fix64>();
                     for (int i = 0; i < count; i++)
                     {
                         inputData.fpList.Add(br.ReadByte(), br.ReadInt64());
@@ -383,14 +384,14 @@ namespace ZGame.Game
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public FP Get(byte id)
+        public Fix64 Get(byte id)
         {
             if (fpList.TryGetValue(id, out var value))
             {
                 return value;
             }
 
-            return default(FP);
+            return default(Fix64);
         }
 
         /// <summary>
@@ -398,7 +399,7 @@ namespace ZGame.Game
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        public void Set(byte id, FP value)
+        public void Set(byte id, Fix64 value)
         {
             if (fpList.ContainsKey(id))
             {

@@ -1,0 +1,16 @@
+{
+    "name": "BEPUPhysice.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "GUID:fce0a101e2fb34540a4a42cd2a788c3a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
