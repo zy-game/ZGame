@@ -6,7 +6,7 @@ namespace ZGame
     /// <summary>
     /// 数据接口
     /// </summary>
-    public interface IConfigDatable : IReferenceObject
+    public interface IConfigDatable : IReference
     {
         bool Equals(string field, object value);
     }

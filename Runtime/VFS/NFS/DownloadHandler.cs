@@ -10,7 +10,7 @@ using DownloadProgressChangedEventArgs = Downloader.DownloadProgressChangedEvent
 
 namespace ZGame.VFS
 {
-    public class DownloadHandler : IReferenceObject, IProgress<float>
+    public class DownloadHandler : IReference, IProgress<float>
     {
         private DownloadConfiguration downloadOpt = new DownloadConfiguration()
         {
@@ -101,7 +101,7 @@ namespace ZGame.VFS
                 await request.SendWebRequest().ToUniTask(this);
                 if (request.result is not UnityWebRequest.Result.Success)
                 {
-                    GameFrameworkEntry.Logger.LogError($"Error: {request.error}");
+                    ZG.Logger.LogError($"Error: {request.error}");
                     status = Status.Fail;
                 }
                 else
@@ -111,7 +111,7 @@ namespace ZGame.VFS
                 }
             }
 
-            GameFrameworkEntry.Logger.Log($"Download Complete: {url}");
+            ZG.Logger.Log($"Download Complete: {url}");
             return status;
         }
 
@@ -135,7 +135,7 @@ namespace ZGame.VFS
 
         public static DownloadHandler Create(string url, uint version, Action<DownloadHandler> startCallback)
         {
-            DownloadHandler downloadHandler = GameFrameworkFactory.Spawner<DownloadHandler>();
+            DownloadHandler downloadHandler = RefPooled.Spawner<DownloadHandler>();
             downloadHandler.url = url;
             downloadHandler.name = Path.GetFileName(url);
             downloadHandler.version = version;

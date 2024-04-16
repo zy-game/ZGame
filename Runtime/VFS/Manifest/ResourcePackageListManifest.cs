@@ -79,7 +79,7 @@ namespace ZGame.VFS
         {
             ResourcePackageListManifest packageListManifest = null;
             string fileName = name + ".ini";
-            if (File.Exists(GameFrameworkEntry.GetPlatformOutputPath(fileName)) is false)
+            if (File.Exists(ZG.GetPlatformOutputPath(fileName)) is false)
             {
                 packageListManifest = new ResourcePackageListManifest()
                 {
@@ -92,7 +92,7 @@ namespace ZGame.VFS
             }
             else
             {
-                string json = File.ReadAllText(GameFrameworkEntry.GetPlatformOutputPath(fileName));
+                string json = File.ReadAllText(ZG.GetPlatformOutputPath(fileName));
                 packageListManifest = JsonConvert.DeserializeObject<ResourcePackageListManifest>(json);
             }
 
@@ -103,7 +103,7 @@ namespace ZGame.VFS
         {
             foreach (var VARIABLE in packageListManifest)
             {
-                File.WriteAllText(GameFrameworkEntry.GetPlatformOutputPath(VARIABLE.name + ".ini"), JsonConvert.SerializeObject(VARIABLE));
+                File.WriteAllText(ZG.GetPlatformOutputPath(VARIABLE.name + ".ini"), JsonConvert.SerializeObject(VARIABLE));
             }
         }
     }

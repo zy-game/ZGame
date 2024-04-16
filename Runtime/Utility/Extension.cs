@@ -82,7 +82,7 @@ namespace ZGame
         public static void StopSample(string format)
         {
             sw.Stop();
-            GameFrameworkEntry.Logger.Log(string.Format(format, sw.ElapsedMilliseconds));
+            ZG.Logger.Log(string.Format(format, sw.ElapsedMilliseconds));
         }
 
         private const int CopyThreshold = 12;
@@ -274,7 +274,7 @@ namespace ZGame
                 throw new EntryPointNotFoundException();
             }
 
-            T startup = (T)GameFrameworkFactory.Spawner(entryType);
+            T startup = (T)RefPooled.Spawner(entryType);
             if (startup is null)
             {
                 throw new EntryPointNotFoundException();

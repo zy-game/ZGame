@@ -6,7 +6,7 @@ using ZGame.VFS;
 
 namespace ZGame.Sound
 {
-    public class AudioSourceHandler : IReferenceObject
+    public class AudioSourceHandler : IReference
     {
         private AudioSource _source;
         private ResObject resObject;
@@ -66,11 +66,11 @@ namespace ZGame.Sound
             _source.clip = clip;
             string name = clip.name;
             Resume();
-            GameFrameworkEntry.Logger.Log("开始播放：" + name);
+            ZG.Logger.Log("开始播放：" + name);
             await UniTask.WaitForSeconds(0.1f);
             await UniTask.WaitWhile(() => _source.isPlaying);
             Stop();
-            GameFrameworkEntry.Logger.Log("播放结束：" + name);
+            ZG.Logger.Log("播放结束：" + name);
         }
 
         public void Pause()
@@ -106,7 +106,7 @@ namespace ZGame.Sound
 
         public static AudioSourceHandler Create(GameObject gameObject, string name, bool isLoop)
         {
-            AudioSourceHandler handler = GameFrameworkFactory.Spawner<AudioSourceHandler>();
+            AudioSourceHandler handler = RefPooled.Spawner<AudioSourceHandler>();
             if (gameObject == null)
             {
                 gameObject = new GameObject(name);

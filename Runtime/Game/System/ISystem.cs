@@ -3,7 +3,7 @@
     /// <summary>
     /// 逻辑系统
     /// </summary>
-    public interface ISystem : IReferenceObject
+    public interface ISystem : IReference
     {
         /// <summary>
         /// 系统轮询优先级

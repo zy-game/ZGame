@@ -137,19 +137,19 @@ namespace ZGame.VFS
                 case OSSType.Aliyun:
                     if (enableAccelerate)
                     {
-                        return $"https://{bucket}.oss-accelerate.aliyuncs.com/{GameFrameworkEntry.GetPlatformName()}/{fileName.ToLower()}";
+                        return $"https://{bucket}.oss-accelerate.aliyuncs.com/{ZG.GetPlatformName()}/{fileName.ToLower()}";
                     }
 
-                    return $"https://{bucket}.oss-{region}.aliyuncs.com/{GameFrameworkEntry.GetPlatformName()}/{fileName.ToLower()}";
+                    return $"https://{bucket}.oss-{region}.aliyuncs.com/{ZG.GetPlatformName()}/{fileName.ToLower()}";
                 case OSSType.Tencent:
                     if (enableAccelerate)
                     {
-                        return $"https://{bucket}.cos.accelerate.myqcloud.com/{GameFrameworkEntry.GetPlatformName()}/{fileName.ToLower()}";
+                        return $"https://{bucket}.cos.accelerate.myqcloud.com/{ZG.GetPlatformName()}/{fileName.ToLower()}";
                     }
 
-                    return $"https://{bucket}.cos.{region}.myqcloud.com/{GameFrameworkEntry.GetPlatformName()}/{fileName.ToLower()}";
+                    return $"https://{bucket}.cos.{region}.myqcloud.com/{ZG.GetPlatformName()}/{fileName.ToLower()}";
                 case OSSType.URL:
-                    return $"{region}{GameFrameworkEntry.GetPlatformName()}/{fileName.Replace(" ", "_").ToLower()}";
+                    return $"{region}{ZG.GetPlatformName()}/{fileName.Replace(" ", "_").ToLower()}";
                 default:
                     throw new ArgumentOutOfRangeException();
             }

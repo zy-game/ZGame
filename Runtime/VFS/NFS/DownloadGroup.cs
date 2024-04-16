@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 
 namespace ZGame.VFS
 {
-    public class DownloadGroup : IReferenceObject
+    public class DownloadGroup : IReference
     {
         private Action<DownloadGroup> groupStateChangeCallback;
         private List<DownloadHandler> downloadHandlers = new();
@@ -39,7 +39,7 @@ namespace ZGame.VFS
             status = Status.Runing;
             groupStateChangeCallback?.Invoke(this);
             await UniTask.WhenAll(task);
-            GameFrameworkEntry.Logger.Log("Download Complete");
+            ZG.Logger.Log("Download Complete");
             status = Status.Fail;
             if (downloadHandlers.All(x => x.status == Status.Success))
             {
@@ -51,7 +51,7 @@ namespace ZGame.VFS
 
         public void Release()
         {
-            downloadHandlers.ForEach(GameFrameworkFactory.Release);
+            downloadHandlers.ForEach(RefPooled.Release);
             downloadHandlers.Clear();
             groupStateChangeCallback = null;
             progress = 0;
@@ -59,7 +59,7 @@ namespace ZGame.VFS
 
         public static DownloadGroup Create(Action<DownloadGroup> groupStateChangeCallback)
         {
-            DownloadGroup downloadGroup = GameFrameworkFactory.Spawner<DownloadGroup>();
+            DownloadGroup downloadGroup = RefPooled.Spawner<DownloadGroup>();
             downloadGroup.groupStateChangeCallback = groupStateChangeCallback;
             return downloadGroup;
         }

@@ -6,14 +6,14 @@ namespace ZGame.Notify
     /// <summary>
     /// 游戏事件分组
     /// </summary>
-    class GameEventGroup : IReferenceObject
+    class GameEventGroup : IReference
     {
         public object owner { get; private set; }
         private List<IGameEventHandle> _handles = new();
 
         public static GameEventGroup Create(object owner)
         {
-            GameEventGroup group = GameFrameworkFactory.Spawner<GameEventGroup>();
+            GameEventGroup group = RefPooled.Spawner<GameEventGroup>();
             group.owner = owner;
             return group;
         }
@@ -27,7 +27,7 @@ namespace ZGame.Notify
         {
             if (_handles.Exists(x => x.Equals(handle)))
             {
-                GameFrameworkEntry.Logger.LogError("重复注册事件：" + handle.ToString());
+                ZG.Logger.LogError("重复注册事件：" + handle.ToString());
                 return;
             }
 

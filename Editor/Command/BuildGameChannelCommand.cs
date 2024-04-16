@@ -48,10 +48,10 @@ namespace ZGame.Editor.Command
 
         private static string GetBuildLocationPath(PacketOption channel, GameConfig config)
         {
-            string platform = GameFrameworkEntry.GetPlatformName();
+            string platform = ZG.GetPlatformName();
             string packageName = channel.packageName;
             string version = config.version;
-            string path = $"{GameFrameworkEntry.GetPlatformOutputBaseDir()}/packages/{platform}/{version}";
+            string path = $"{ZG.GetPlatformOutputBaseDir()}/packages/{platform}/{version}";
             string fileName = string.Empty;
             switch (EditorUserBuildSettings.activeBuildTarget)
             {

@@ -20,7 +20,7 @@ namespace ZGame.Sound
     /// <summary>
     /// 音效管理器
     /// </summary>
-    public class AudioPlayerManager : GameFrameworkModule
+    public class AudioPlayerManager : ZModule
     {
         private List<AudioSourceHandler> _handles = new List<AudioSourceHandler>();
 
@@ -50,7 +50,7 @@ namespace ZGame.Sound
         /// <param name="playCallback"></param>
         public async void PlaySound(string clipName, bool isLoop = false, Action<PlayState> playCallback = null)
         {
-            using (ResObject resObject = GameFrameworkEntry.VFS.GetAsset(clipName))
+            using (ResObject resObject = ZG.VFS.GetAsset(clipName))
             {
                 PlaySound(resObject.GetAsset<AudioClip>(null), isLoop, (x) =>
                 {
@@ -91,7 +91,7 @@ namespace ZGame.Sound
         /// <param name="playCallback"></param>
         public async UniTask PlaySoundAsync(string clipName, bool isLoop = false)
         {
-            using (ResObject resObject = await GameFrameworkEntry.VFS.GetAssetAsync(clipName))
+            using (ResObject resObject = await ZG.VFS.GetAssetAsync(clipName))
             {
                 UniTaskCompletionSource tcs = new UniTaskCompletionSource();
                 PlaySound(resObject.GetAsset<AudioClip>(null), isLoop, (x) =>
@@ -230,7 +230,7 @@ namespace ZGame.Sound
         {
             foreach (var handle in _handles)
             {
-                GameFrameworkFactory.Release(handle);
+                RefPooled.Release(handle);
             }
 
             _handles.Clear();

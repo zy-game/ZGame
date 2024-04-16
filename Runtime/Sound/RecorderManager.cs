@@ -12,7 +12,7 @@ using Microphone =
 
 namespace ZGame.Sound
 {
-    public class RecorderManager : GameFrameworkModule
+    public class RecorderManager : ZModule
     {
         private int _rate;
         private float _volume;
@@ -221,7 +221,7 @@ namespace ZGame.Sound
         /// </summary>
         public void StopRecordingSound(bool isCancel)
         {
-            GameFrameworkEntry.Logger.Log("Stop Recording");
+            ZG.Logger.Log("Stop Recording");
             _isRecording = false;
             if (isCancel is false)
             {

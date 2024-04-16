@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace ZGame.VFS
 {
-    public interface INFSClient : IReferenceObject
+    public interface INFSClient : IReference
     {
         byte[] Download(string path);
         UniTask<byte[]> DownloadAsync(string path);
@@ -19,11 +19,11 @@ namespace ZGame.VFS
     {
         public static NFSManager OpenOrCreateDisk(string name)
         {
-            NFSManager disk = GameFrameworkFactory.Spawner<NFSManager>();
+            NFSManager disk = RefPooled.Spawner<NFSManager>();
             disk.name = name;
             disk._bundles = new ConcurrentStack<NFSDirctory>();
-            GameFrameworkEntry.Logger.Log(name);
-            GameFrameworkEntry.Logger.Log(PlayerPrefs.GetString(name, "[]"));
+            ZG.Logger.Log(name);
+            ZG.Logger.Log(PlayerPrefs.GetString(name, "[]"));
             List<string> vfsList = JsonConvert.DeserializeObject<List<string>>(PlayerPrefs.GetString(name, "[]"));
             foreach (string n in vfsList)
             {
@@ -37,7 +37,7 @@ namespace ZGame.VFS
     /// <summary>
     /// 虚拟磁盘
     /// </summary>
-    partial class NFSManager : IReferenceObject
+    partial class NFSManager : IReference
     {
         public string name;
         private INFSClient _client;
@@ -47,7 +47,7 @@ namespace ZGame.VFS
         {
             foreach (var VARIABLE in _bundles)
             {
-                GameFrameworkFactory.Release(VARIABLE);
+                RefPooled.Release(VARIABLE);
             }
 
             _bundles.Clear();
@@ -57,7 +57,7 @@ namespace ZGame.VFS
         {
             string cfg = JsonConvert.SerializeObject(_bundles.Select(x => x.name).ToArray());
             PlayerPrefs.SetString(this.name, cfg);
-            GameFrameworkEntry.Logger.Log(cfg);
+            ZG.Logger.Log(cfg);
         }
 
         /// <summary>

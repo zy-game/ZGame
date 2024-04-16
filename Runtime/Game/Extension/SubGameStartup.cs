@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace ZGame.Game
 {
-    public class SubGameStartup : IReferenceObject
+    public class SubGameStartup : IReference
     {
         public virtual UniTask<Status> OnEntry()
         {

@@ -19,7 +19,7 @@ namespace ZGame.Networking
     /// <summary>
     /// 网络管理器
     /// </summary>
-    public class NetManager : GameFrameworkModule
+    public class NetManager : ZModule
     {
         private List<INetClient> channels = new();
 
@@ -29,7 +29,7 @@ namespace ZGame.Networking
 
         public override async void Release()
         {
-            channels.ForEach(GameFrameworkFactory.Release);
+            channels.ForEach(RefPooled.Release);
             channels.Clear();
         }
 
@@ -38,19 +38,19 @@ namespace ZGame.Networking
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public async UniTask<T> Connect<T>(string address, ushort port, IMessageHandler handler) where T : INetClient, new()
+        public async UniTask<T> Connect<T>(int cid, string address, ushort port, IDispatcher dispatcher) where T : INetClient
         {
             string ip = $"{address}:{port}";
             INetClient channel = channels.Find(x => x.address == ip);
             if (channel is not null)
             {
-                GameFrameworkEntry.Logger.Log($"{ip} is already connected");
+                ZG.Logger.Log($"{ip} is already connected");
                 return (T)channel;
             }
 
-            GameFrameworkEntry.Logger.Log($"connecting {ip}");
-            channel = (INetClient)GameFrameworkFactory.Spawner<T>();
-            if (await channel.ConnectAsync(address, port, handler) is Status.Success)
+            ZG.Logger.Log($"connecting {ip}");
+            channel = (INetClient)RefPooled.Spawner<T>();
+            if (await channel.ConnectAsync(cid, address, port, dispatcher) is Status.Success)
             {
                 channels.Add(channel);
             }
@@ -65,37 +65,15 @@ namespace ZGame.Networking
         /// <param name="address"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        public async void WriteAndFlush(int id, byte[] message)
+        public async void WriteAndFlushAsync(int cid, byte[] message)
         {
-            INetClient channel = channels.Find(x => x.id == id);
+            INetClient channel = channels.Find(x => x.cid == cid);
             if (channel is null)
             {
                 return;
             }
 
-            // MemoryStream memoryStream = new MemoryStream();
-            // BinaryWriter writer = new BinaryWriter(memoryStream);
-            // writer.Write(Crc32.GetCRC32Str(message.GetType().FullName));
-            // Serializer.Serialize(memoryStream, message);
             await channel.WriteAndFlushAsync(message);
-        }
-
-        /// <summary>
-        /// 写入消息并等待响应
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="message"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public async UniTask<T> WriteAndFlushAsync<T>(int id, byte[] message) where T : IMessaged
-        {
-            INetClient channel = channels.Find(x => x.id == id);
-            if (channel is null)
-            {
-                return default;
-            }
-
-            return default;
         }
 
         /// <summary>
@@ -103,15 +81,15 @@ namespace ZGame.Networking
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public async void Close(int id)
+        public async void Close(int cid)
         {
-            INetClient channel = channels.Find(x => x.id == id);
+            INetClient channel = channels.Find(x => x.cid == cid);
             if (channel is null)
             {
                 return;
             }
 
-            GameFrameworkFactory.Release(channel);
+            RefPooled.Release(channel);
         }
 
         /// <summary>
@@ -161,7 +139,7 @@ namespace ZGame.Networking
                     }
                 }
 
-                GameFrameworkEntry.Logger.Log($"POST DATA:{url} parmas:{(postData).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
+                ZG.Logger.Log($"POST DATA:{url} parmas:{(postData).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
             }
@@ -199,7 +177,7 @@ namespace ZGame.Networking
                     }
                 }
 
-                GameFrameworkEntry.Logger.Log($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                ZG.Logger.Log($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
             }
@@ -234,7 +212,7 @@ namespace ZGame.Networking
                     _data = request.GetResultData<T>();
                 }
 
-                GameFrameworkEntry.Logger.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()} data: {request.downloadHandler?.text}");
+                ZG.Logger.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()} data: {request.downloadHandler?.text}");
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
             }

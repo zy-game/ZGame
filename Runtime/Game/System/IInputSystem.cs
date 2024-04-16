@@ -4,7 +4,7 @@ namespace ZGame.Game
 {
     public interface IInputSystem : ISystem
     {
-        InputData GetInputData();
+        UserInput GetInputData();
     }
 
     // public class InputCollectionSystem : IInputSystem

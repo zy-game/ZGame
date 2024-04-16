@@ -12,7 +12,7 @@ namespace ZGame.UI
     /// <summary>
     /// UI界面
     /// </summary>
-    public class UIBase : IReferenceObject
+    public class UIBase : IReference
     {
         private RectTransform _rectTransform;
         private Dictionary<object, Coroutine> _coroutines = new Dictionary<object, Coroutine>();
@@ -37,14 +37,14 @@ namespace ZGame.UI
 
         internal static UIBase Create(string path, Type type, Canvas canvas)
         {
-            GameObject gameObject = GameFrameworkEntry.VFS.GetGameObjectSync(path);
+            GameObject gameObject = ZG.VFS.GetGameObjectSync(path);
             if (gameObject == null)
             {
-                GameFrameworkEntry.Logger.Log("加载资源失败：" + path);
+                ZG.Logger.Log("加载资源失败：" + path);
                 return default;
             }
 
-            UIBase uiBase = (UIBase)GameFrameworkFactory.Spawner(type);
+            UIBase uiBase = (UIBase)RefPooled.Spawner(type);
             uiBase.gameObject = gameObject;
             uiBase.gameObject.transform.SetParent(canvas.transform);
             uiBase.gameObject.transform.position = Vector3.zero;
@@ -98,7 +98,7 @@ namespace ZGame.UI
             name = String.Empty;
             foreach (var VARIABLE in _coroutines.Values)
             {
-                GameFrameworkEntry.StopCoroutine(VARIABLE);
+                ZG.StopCoroutine(VARIABLE);
             }
 
             _coroutines.Clear();
@@ -122,7 +122,7 @@ namespace ZGame.UI
             }
 
             StopCountDown(tmp_text);
-            _coroutines.Add(tmp_text, GameFrameworkEntry.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
+            _coroutines.Add(tmp_text, ZG.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace ZGame.UI
 
             if (_coroutines.TryGetValue(target, out Coroutine coroutine))
             {
-                GameFrameworkEntry.StopCoroutine(coroutine);
+                ZG.StopCoroutine(coroutine);
                 _coroutines.Remove(target);
             }
         }

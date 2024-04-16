@@ -7,7 +7,7 @@ namespace ZGame.Game
     /// <summary>
     /// 游戏实体对象
     /// </summary>
-    public sealed class Entity : IReferenceObject
+    public sealed class Entity : IReference
     {
         private uint _id;
 
@@ -19,7 +19,7 @@ namespace ZGame.Game
 
         internal static Entity Create()
         {
-            Entity entity = GameFrameworkFactory.Spawner<Entity>();
+            Entity entity = RefPooled.Spawner<Entity>();
             entity._id = Crc32.GetCRC32Str(Guid.NewGuid().ToString());
             return entity;
         }
@@ -42,7 +42,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public IComponent AddComponent(Type type)
         {
-            return GameFrameworkEntry.ECS.AddComponent(this, type);
+            return ZG.world.AddComponent(this, type);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public IComponent GetComponent(Type type)
         {
-            return GameFrameworkEntry.ECS.GetComponent(this, type);
+            return ZG.world.GetComponent(this, type);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public void RemoveComponent(Type type)
         {
-            GameFrameworkEntry.ECS.RemoveComponent(this, type);
+            ZG.world.RemoveComponent(this, type);
         }
 
         public void Release()

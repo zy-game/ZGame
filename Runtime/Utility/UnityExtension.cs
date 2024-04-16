@@ -374,7 +374,7 @@ namespace ZGame
                 {
                     // VARIABLE.sharedMesh.RecalculateBounds();
                     boundscenter += VARIABLE.sharedMesh.bounds.center;
-                    GameFrameworkEntry.Logger.Log(VARIABLE.sharedMesh.bounds);
+                    ZG.Logger.Log(VARIABLE.sharedMesh.bounds);
                     count++;
                 }
             }

@@ -1,35 +1,31 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Linq;
 using Cinemachine;
 using Cysharp.Threading.Tasks;
-using TrueSync;
+using DotNetty.Buffers;
+using FixMath.NET;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using ZGame.Networking;
 using ZGame.UI;
 
 namespace ZGame.Game
 {
-    public sealed class World : IReferenceObject
+    public sealed class World : IReference
     {
         private string _name;
-        private Light _light;
-        private Skybox skybox;
-        private Camera _camera;
         private int timeSpeed = 1;
-        private GameObject mapRoot;
         private DateTime worldTime;
-        private CinemachineBrain brain;
-        private Gradient sunshineGradient;
-        private List<Tuple<int, Camera>> subCameras = new();
-        private UniversalAdditionalCameraData mainCameraData;
-        private Simulator _simulator;
+        private ISimulator _simulator;
+        private EntityManager _entitys;
+        private SystemManager _systems;
+        private LightManager _lightManager;
+        private CameraManager _cameraManager;
+        private ArchetypeManager _archetypes;
+        private SkyboxManager _skyboxManager;
 
-        // private TrueSyncStats _trueSyncStats;
 
         /// <summary>
         /// 世界名
@@ -39,12 +35,12 @@ namespace ZGame.Game
         /// <summary>
         /// 主相机
         /// </summary>
-        public Camera mainCamera => _camera;
+        public Camera mainCamera => _cameraManager.main;
 
         /// <summary>
         /// 主灯光
         /// </summary>
-        public Light mainLight => _light;
+        public Light mainLight => _lightManager.main;
 
         /// <summary>
         /// 当前世界的时间
@@ -52,98 +48,85 @@ namespace ZGame.Game
         public DateTime time => worldTime;
 
         /// <summary>
-        /// 帧同步模拟器
+        /// 帧间隔时间
         /// </summary>
-        public Simulator simulator => _simulator;
-
-        /// <summary>
-        /// 世界时间流速，每帧流逝的秒数
-        /// </summary>
-        public int TimeFlowRate
+        public Fix64 DeltaTime
         {
-            get => timeSpeed;
-            set => timeSpeed = value;
+            get
+            {
+                if (_simulator == null)
+                {
+                    return 0.02f;
+                }
+
+                return _simulator.DeltaTime;
+            }
         }
 
-        public static World Create(string name)
+
+        internal static World Create(string name)
         {
-            World world = GameFrameworkFactory.Spawner<World>();
+            World world = RefPooled.Spawner<World>();
             world._name = name;
             world.worldTime = new DateTime();
-            world._camera = new GameObject(world._name).AddComponent<Camera>();
-            world.brain = world._camera.gameObject.AddComponent<CinemachineBrain>();
-            world.brain.m_UpdateMethod = CinemachineBrain.UpdateMethod.FixedUpdate;
-            world.mainCameraData = world.mainCamera.gameObject.AddComponent<UniversalAdditionalCameraData>();
-            world.mainCameraData.renderShadows = false;
-            world.mainCameraData.renderType = CameraRenderType.Base;
-            world.mainCameraData.volumeLayerMask = 0;
-            world.mainCamera.cullingMask = 0;
-            world.mainCamera.allowMSAA = false;
-
-            world._light = new GameObject("Main Light").AddComponent<Light>();
-            world._light.type = LightType.Directional;
-            world._light.transform.rotation = Quaternion.Euler(50, -30, 0);
-            world._light.intensity = 1;
-            world._light.transform.parent = world.mainCamera.transform;
-            world._light.renderMode = LightRenderMode.Auto;
-            world._light.shadows = LightShadows.None;
-            world._light.color = Color.white;
+            world._archetypes = RefPooled.Spawner<ArchetypeManager>();
+            world._entitys = RefPooled.Spawner<EntityManager>();
+            world._systems = RefPooled.Spawner<SystemManager>();
+            world._lightManager = LightManager.Create(name, Color.white);
+            world._cameraManager = CameraManager.Create(name);
+            world._skyboxManager = SkyboxManager.Create(name, world._cameraManager.main);
             return world;
         }
 
-
-        public void OnFixedUpdate()
+        public void Release()
         {
-            _simulator?.FixedUpdate();
-            this.worldTime.AddSeconds(timeSpeed);
-            RefreshSunshine();
+            RefPooled.Release(_skyboxManager);
+            RefPooled.Release(_cameraManager);
+            RefPooled.Release(_lightManager);
+            RefPooled.Release(_archetypes);
+            RefPooled.Release(_systems);
+            RefPooled.Release(_entitys);
         }
 
-        public void OnUpdate()
+        public void Update()
         {
+            _systems.Update();
             _simulator?.Update();
         }
 
-        public void OnLateUpdate()
+        public void FixedUpdate()
         {
+            this.worldTime.AddSeconds(timeSpeed);
+            this._lightManager.Refresh(this.time.Hour);
+            _systems.FixedUpdate();
+            _simulator?.FixedUpdate();
+        }
+
+
+        public void LateUpdate()
+        {
+            _systems.LateUpdate();
+            _cameraManager.LateUpdate();
+            _simulator?.LateUpdate();
         }
 
         public void OnDarwGizom()
         {
+            _systems.OnDarwGizmons();
+            _simulator.OnDrawGizmos();
         }
 
         public void OnGUI()
         {
+            _systems.OnGUI();
+            _entitys.OnGUI();
+            _archetypes.OnGUI();
+            _simulator?.OnGUI();
         }
 
-        public async UniTask OnStartSimulator(string ip, ushort port, FP LockedTimeStep)
+        public async UniTask OnCreateSimulator(int cid, string ip, ushort port, int milliseconds)
         {
-            SimulatorNetworkHandle handle = GameFrameworkFactory.Spawner<SimulatorNetworkHandle>();
-            await GameFrameworkEntry.Network.Connect<UdpClient>(ip, port, handle);
-            PhysicsManager.instance = new Physics3DSimulator();
-            PhysicsManager.instance.Gravity = new TSVector(0, 10, 0);
-            PhysicsManager.instance.SpeculativeContacts = false;
-            PhysicsManager.instance.LockedTimeStep = LockedTimeStep;
-            PhysicsManager.instance.Init();
-            _simulator = Simulator.Create3D(handle,  LockedTimeStep);
-        }
-
-        /// <summary>
-        /// 加载世界场景
-        /// </summary>
-        /// <param name="mapName"></param>
-        public async UniTask SetWorldMapAsync(string mapName)
-        {
-            mapRoot = await GameFrameworkEntry.VFS.GetGameObjectAsync(mapName);
-        }
-
-        /// <summary>
-        /// 加载世界场景
-        /// </summary>
-        /// <param name="sceneName"></param>
-        public async UniTask SetWorldSceneAsync(string sceneName, LoadSceneMode mode = LoadSceneMode.Single)
-        {
-            await GameFrameworkEntry.VFS.GetSceneAsync(sceneName, UILoading.Show(), mode);
+            this._simulator = await FrameSyncSimulator.Create(cid, ip, port, milliseconds);
         }
 
         /// <summary>
@@ -152,17 +135,7 @@ namespace ZGame.Game
         /// <param name="gradient"></param>
         public void SetSunshine(Gradient gradient)
         {
-            sunshineGradient = gradient;
-        }
-
-        private void RefreshSunshine()
-        {
-            if (sunshineGradient == null)
-            {
-                return;
-            }
-
-            mainLight.color = sunshineGradient.Evaluate(worldTime.Hour / 24f);
+            _lightManager.SetSunshine(gradient);
         }
 
         /// <summary>
@@ -171,13 +144,7 @@ namespace ZGame.Game
         /// <param name="material"></param>
         public void SetSkybox(Material material)
         {
-            if (skybox == null)
-            {
-                skybox = mainCamera.gameObject.AddComponent<Skybox>();
-            }
-
-            skybox.material = material;
-            mainCamera.clearFlags = CameraClearFlags.Skybox;
+            _skyboxManager.SetSkybox(material);
         }
 
         /// <summary>
@@ -185,119 +152,247 @@ namespace ZGame.Game
         /// </summary>
         public void CloseSkybox()
         {
-            if (skybox == null)
-            {
-                return;
-            }
-
-            skybox.enabled = false;
-            mainCamera.clearFlags = CameraClearFlags.Color;
-            mainCamera.backgroundColor = Color.clear;
+            _skyboxManager.Release();
         }
 
         /// <summary>
         /// 设置子摄像机
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="cameraName"></param>
         /// <param name="sort"></param>
         /// <param name="layers"></param>
         /// <returns></returns>
-        public Camera SetSubCamera(string name, int sort)
+        public Camera SetSubCamera(string cameraName, int sort, params string[] layers)
         {
-            Camera camera = new GameObject(name).AddComponent<Camera>();
-            camera.allowMSAA = false;
-            if (camera.TryGetComponent<UniversalAdditionalCameraData>(out UniversalAdditionalCameraData universal) is false)
-            {
-                universal = camera.gameObject.AddComponent<UniversalAdditionalCameraData>();
-            }
-
-            universal.renderShadows = false;
-            universal.renderType = CameraRenderType.Overlay;
-            subCameras.Add(new Tuple<int, Camera>(sort, camera));
-            subCameras.Sort((x, y) => x.Item1.CompareTo(y.Item1));
-            foreach (var item in subCameras)
-            {
-                mainCameraData.cameraStack.Add(item.Item2);
-            }
-
-            return camera;
-        }
-
-        /// <summary>
-        /// 设置子摄像机渲染层
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="layers"></param>
-        public void SetSubCameraRenderLayers(string name, params string[] layers)
-        {
-            Camera main = GetSubCamera(name);
-            if (main is null)
-            {
-                return;
-            }
-
-            main.cullingMask = LayerMask.GetMask(layers);
-            if (main.gameObject.TryGetComponent<UniversalAdditionalCameraData>(out UniversalAdditionalCameraData universal) is false)
-            {
-                universal = main.gameObject.AddComponent<UniversalAdditionalCameraData>();
-            }
-
-            universal.volumeLayerMask = main.cullingMask;
+            return _cameraManager.SetSubCamera(cameraName, sort, layers);
         }
 
         /// <summary>
         /// 设置子摄像机位置和旋转
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="cameraName"></param>
         /// <param name="position"></param>
         /// <param name="rotation"></param>
-        public void SetSubCameraPositionAndRotation(string name, Vector3 position, Quaternion rotation)
+        public void SetSubCameraPositionAndRotation(string cameraName, Vector3 position, Quaternion rotation)
         {
-            Camera main = GetSubCamera(name);
-            if (main is null)
-            {
-                return;
-            }
-
-            main.transform.position = position;
-            main.transform.rotation = rotation;
+            _cameraManager.SetSubCameraPositionAndRotation(cameraName, position, rotation);
         }
 
-        public Camera GetSubCamera(string name)
+        /// <summary>
+        /// 设置指定的相机跟随目标
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="target"></param>
+        public void SetFollowTarget(string cameraName, Transform target)
         {
-            Tuple<int, Camera> item = subCameras.FirstOrDefault(x => x.Item2.name == name);
-            if (item is null || item.Item2 is null)
-            {
-                return default;
-            }
-
-            return item.Item2;
+            _cameraManager.SetFollowTarget(cameraName, target);
         }
 
-        public void Release()
+        /// <summary>
+        /// 设置指定的相机注视目标
+        /// </summary>
+        /// <param name="cameraName"></param>
+        /// <param name="transform"></param>
+        public void SetLockAtTarget(string cameraName, Transform transform)
         {
-            foreach (var item in subCameras)
+            _cameraManager.SetLockAtTarget(cameraName, transform);
+        }
+
+        /// <summary>
+        /// 获取子相机
+        /// </summary>
+        /// <param name="cameraName"></param>
+        /// <returns></returns>
+        public Camera GetSubCamera(string cameraName)
+        {
+            return _cameraManager.GetSubCamera(cameraName);
+        }
+
+        /// <summary>
+        /// 获取所有拥有指定类型组件的实体
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public Entity[] GetEntities<T>() where T : IComponent
+        {
+            Type type = typeof(T);
+            uint[] entitys = _archetypes.GetHaveComponentEntityID(type);
+            Entity[] entities = new Entity[entitys.Length];
+            for (int i = 0; i < entities.Length; i++)
             {
-                GameObject.DestroyImmediate(item.Item2.gameObject);
+                entities[i] = _entitys.FindEntity(entitys[i]);
             }
 
-            if (_light != null)
-            {
-                GameObject.DestroyImmediate(_light.gameObject);
-            }
+            return entities;
+        }
 
-            if (_camera != null)
-            {
-                GameObject.DestroyImmediate(_camera.gameObject);
-            }
+        /// <summary>
+        /// 获取实体
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Entity GetEntity(uint id)
+        {
+            return _entitys.FindEntity(id);
+        }
 
-            GameFrameworkFactory.Release(simulator);
-            _simulator = null;
-            subCameras.Clear();
-            sunshineGradient = null;
-            skybox = null;
-            _light = null;
-            _camera = null;
+        /// <summary>
+        /// 创建实体
+        /// </summary>
+        /// <returns></returns>
+        public Entity CreateEntity()
+        {
+            return _entitys.CreateEntity();
+        }
+
+        /// <summary>
+        /// 销毁实体
+        /// </summary>
+        /// <param name="id"></param>
+        public void DestroyEntity(uint id)
+        {
+            _entitys.DestroyEntity(id);
+            _archetypes.RemoveEntityComponents(id);
+        }
+
+        /// <summary>
+        /// 销毁实体
+        /// </summary>
+        /// <param name="entity"></param>
+        public void DestroyEntity(Entity entity)
+        {
+            DestroyEntity(entity.id);
+        }
+
+        /// <summary>
+        /// 清理所有实体对象
+        /// </summary>
+        public void ClearEntity()
+        {
+            _entitys.Clear();
+            _archetypes.Clear();
+        }
+
+        /// <summary>
+        /// 注册逻辑系统
+        /// </summary>
+        /// <param name="systemType"></param>
+        /// <param name="args"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void RegisterGameLogicSystem(Type systemType, params object[] args)
+        {
+            _systems.RegisterGameLogicSystem(systemType, args);
+        }
+
+        /// <summary>
+        /// 注册逻辑系统
+        /// </summary>
+        /// <param name="args"></param>
+        /// <typeparam name="T"></typeparam>
+        public void RegisterGameLogicSystem<T>(params object[] args) where T : ISystem
+        {
+            RegisterGameLogicSystem(typeof(T), args);
+        }
+
+        /// <summary>
+        /// 卸载逻辑系统
+        /// </summary>
+        /// <param name="systemType"></param>
+        public void UnregisterGameLogicSystem(Type systemType)
+        {
+            _systems.UnregisterGameLogicSystem(systemType);
+        }
+
+        /// <summary>
+        /// 卸载逻辑系统
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void UnregisterGameLogicSystem<T>() where T : ISystem
+        {
+            UnregisterGameLogicSystem(typeof(T));
+        }
+
+        /// <summary>
+        /// 获取指定类型的系统
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetSystem<T>() where T : ISystem
+        {
+            return (T)GetSystem(typeof(T));
+        }
+
+        /// <summary>
+        /// 获取指定类型的系统
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public ISystem GetSystem(Type type)
+        {
+            return _systems.GetSystem(type);
+        }
+
+        /// <summary>
+        /// 添加组件
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public IComponent AddComponent(Entity entity, Type type)
+        {
+            return _archetypes.AddComponent(entity.id, type);
+        }
+
+        /// <summary>
+        /// 获取组件
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public IComponent GetComponent(Entity entity, Type type)
+        {
+            return _archetypes.GetComponent(entity.id, type);
+        }
+
+        /// <summary>
+        /// 移除组件
+        /// </summary>
+        /// <param name="type"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void RemoveComponent(Entity entity, Type type)
+        {
+            _archetypes.RemoveComponent(entity.id, type);
+        }
+
+        /// <summary>
+        /// 获取所有指定类型的组件
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public IEnumerable<T> AllOf<T>() where T : IComponent
+        {
+            return new ComponentEnumerable<T>(_archetypes.GetComponents(typeof(T)));
+        }
+
+        /// <summary>
+        /// 获取实体上指定的组件
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Of<T>(Entity entity) where T : IComponent
+        {
+            return (T)_archetypes.GetComponent(entity.id, typeof(T));
+        }
+
+        /// <summary>
+        /// 获取全局组件
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Single<T>() where T : ISingletonComponent
+        {
+            return (T)_archetypes.GetComponent(0, typeof(T));
         }
     }
 }

@@ -14,6 +14,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using ZGame.Config;
+using ZGame.Game;
 using ZGame.Networking;
 using ZGame.UI;
 using Object = UnityEngine.Object;
@@ -23,7 +24,7 @@ namespace ZGame.VFS
     /// <summary>
     /// 虚拟文件系统
     /// </summary>
-    public class VFSManager : GameFrameworkModule
+    public class VFSManager : ZModule
     {
         private NFSManager _disk;
         private float refreshTime;
@@ -42,8 +43,8 @@ namespace ZGame.VFS
 
         public override void Release()
         {
-            GameFrameworkFactory.Release(manifestManager);
-            GameFrameworkFactory.Release(_disk);
+            RefPooled.Release(manifestManager);
+            RefPooled.Release(_disk);
         }
 #if UNITY_EDITOR
         public override void OnGUI()
@@ -249,7 +250,7 @@ namespace ZGame.VFS
             ResObject resObject = ResObject.LoadResObjectSync(path);
             if (resObject.IsSuccess() is false)
             {
-                GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
+                ZG.Logger.LogError("加载资源失败：" + path);
                 return default;
             }
 
@@ -296,7 +297,7 @@ namespace ZGame.VFS
             ResObject resObject = await ResObject.LoadResObjectAsync(path);
             if (resObject.IsSuccess() is false)
             {
-                GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
+                ZG.Logger.LogError("加载资源失败：" + path);
                 return default;
             }
 
@@ -344,7 +345,7 @@ namespace ZGame.VFS
                 await request.SendWebRequest();
                 if (request.isNetworkError || request.isHttpError)
                 {
-                    GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
+                    ZG.Logger.LogError("加载资源失败：" + path);
                     return ResObject.DEFAULT;
                 }
 
@@ -376,7 +377,7 @@ namespace ZGame.VFS
                 return sceneObject;
             }
 
-            UILoading.SetTitle(GameFrameworkEntry.Language.Query("加载场景中..."));
+            UILoading.SetTitle(ZG.Language.Query("加载场景中..."));
             Scene scene = default;
             ResPackage package = default;
             AsyncOperation operation = default;
@@ -420,8 +421,9 @@ namespace ZGame.VFS
         /// <returns></returns>
         /// <exception cref="NullReferenceException"></exception>
         /// <exception cref="FileNotFoundException"></exception>
-        public async UniTask<Assembly> LoadGameAssembly(string dllName, CodeMode mode)
+        public async UniTask<Status> LoadingSubGameEntryPoint(string dllName, CodeMode mode)
         {
+            Assembly assembly = default;
             if (mode is CodeMode.Native || (ResConfig.instance.resMode == ResourceMode.Editor && Application.isEditor))
             {
                 if (dllName.IsNullOrEmpty())
@@ -429,37 +431,60 @@ namespace ZGame.VFS
                     throw new NullReferenceException(nameof(dllName));
                 }
 
-                GameFrameworkEntry.Logger.Log("原生代码：" + dllName);
-                return AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
+                ZG.Logger.Log("原生代码：" + dllName);
+                assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             }
-
-            string aotFileName = $"{dllName.ToLower()}_aot.bytes";
-            string hotfixFile = $"{dllName.ToLower()}_hotfix.bytes";
-            if (manifestManager.TryGetPackageVersion(aotFileName, out uint crc) is false || manifestManager.TryGetPackageVersion(hotfixFile, out crc) is false)
+            else
             {
-                throw new FileNotFoundException();
-            }
-
-            byte[] bytes = await _disk.ReadAsync(aotFileName);
-            Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(bytes);
-            foreach (var VARIABLE in aotZipDict)
-            {
-                if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
+                string aotFileName = $"{dllName.ToLower()}_aot.bytes";
+                string hotfixFile = $"{dllName.ToLower()}_hotfix.bytes";
+                if (manifestManager.TryGetPackageVersion(aotFileName, out uint crc) is false || manifestManager.TryGetPackageVersion(hotfixFile, out crc) is false)
                 {
-                    GameFrameworkEntry.Logger.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
-                    continue;
+                    throw new FileNotFoundException();
                 }
+
+                byte[] bytes = await _disk.ReadAsync(aotFileName);
+                Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(bytes);
+                foreach (var VARIABLE in aotZipDict)
+                {
+                    if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
+                    {
+                        ZG.Logger.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
+                        continue;
+                    }
+                }
+
+                bytes = await _disk.ReadAsync(hotfixFile);
+                Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(bytes);
+                if (dllZipDict.TryGetValue(dllName + ".dll", out byte[] dllBytes) is false)
+                {
+                    throw new NullReferenceException(dllName);
+                }
+
+                ZG.Logger.Log("加载热更代码:" + dllName + ".dll");
+                assembly = Assembly.Load(dllBytes);
             }
 
-            bytes = await _disk.ReadAsync(hotfixFile);
-            Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(bytes);
-            if (dllZipDict.TryGetValue(dllName + ".dll", out byte[] dllBytes) is false)
+            if (assembly is null)
             {
-                throw new NullReferenceException(dllName);
+                UIMsgBox.Show(ZG.Language.Query("未找到入口配置..."), ZStartup.Quit);
+                return Status.Fail;
             }
 
-            GameFrameworkEntry.Logger.Log("加载热更代码:" + dllName + ".dll");
-            return Assembly.Load(dllBytes);
+            SubGameStartup subGameStartup = assembly.CreateInstance<SubGameStartup>();
+            if (subGameStartup is null)
+            {
+                UIMsgBox.Show(ZG.Language.Query("未找到入口配置..."), ZStartup.Quit);
+                return Status.Fail;
+            }
+
+            if (await subGameStartup.OnEntry() is not Status.Success)
+            {
+                UIMsgBox.Show(ZG.Language.Query("加载游戏失败..."), ZStartup.Quit);
+                return Status.Fail;
+            }
+
+            return Status.Success;
         }
     }
 }
