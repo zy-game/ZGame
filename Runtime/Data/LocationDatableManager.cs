@@ -10,7 +10,7 @@ namespace ZGame.Data
     /// <summary>
     /// 本地数据缓存管理器
     /// </summary>
-    public class LocationDatableManager : GameFrameworkModule
+    public class LocationDatableManager : ZModule
     {
         private const string DATA_FILE_NAME = "local.data";
         private Dictionary<string, string> cacheDic = new Dictionary<string, string>();

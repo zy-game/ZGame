@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ZGame.Config
 {
-    public class ConfigManager : GameFrameworkModule
+    public class ConfigManager : ZModule
     {
         private Dictionary<Type, ConfigHandler> cfgDict;
 
@@ -108,7 +108,7 @@ namespace ZGame.Config
         {
             foreach (var VARIABLE in cfgDict.Values)
             {
-                GameFrameworkFactory.Release(VARIABLE);
+                RefPooled.Release(VARIABLE);
             }
 
             cfgDict.Clear();

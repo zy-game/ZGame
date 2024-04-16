@@ -41,13 +41,13 @@ namespace ZGame.Editor.Command
             Zip.CompressToPath(aotFileName, "*.dll", aotList.Select(x => $"{aotDir}/{x}").ToArray());
             Zip.CompressToPath(hotfixFileName, "*.dll", SettingsUtil.GetHotUpdateDllsOutputDirByTarget(EditorUserBuildSettings.activeBuildTarget));
             ResourcePackageListManifest packageListManifest = ResourcePackageListManifest.LoadOrCreate(packageSeting.title);
-            packageListManifest.CreateOrUpdatePackageManifest(aotFileName, false, Crc32.GetCRC32File(GameFrameworkEntry.GetPlatformOutputPath(aotFileName)), new string[] { aotFileName }, new string[0]);
-            packageListManifest.CreateOrUpdatePackageManifest(hotfixFileName, false, Crc32.GetCRC32File(GameFrameworkEntry.GetPlatformOutputPath(hotfixFileName)), new string[] { hotfixFileName }, new string[0]);
+            packageListManifest.CreateOrUpdatePackageManifest(aotFileName, false, Crc32.GetCRC32File(ZG.GetPlatformOutputPath(aotFileName)), new string[] { aotFileName }, new string[0]);
+            packageListManifest.CreateOrUpdatePackageManifest(hotfixFileName, false, Crc32.GetCRC32File(ZG.GetPlatformOutputPath(hotfixFileName)), new string[] { hotfixFileName }, new string[0]);
             ResourcePackageListManifest.Save(packageListManifest);
 
-            UploadResourcePackageCommand.Executer(ResConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(aotFileName));
-            UploadResourcePackageCommand.Executer(ResConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(hotfixFileName));
-            UploadResourcePackageCommand.Executer(ResConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath($"{packageSeting.title}.ini"));
+            UploadResourcePackageCommand.Executer(ResConfig.instance.current, ZG.GetPlatformOutputPath(aotFileName));
+            UploadResourcePackageCommand.Executer(ResConfig.instance.current, ZG.GetPlatformOutputPath(hotfixFileName));
+            UploadResourcePackageCommand.Executer(ResConfig.instance.current, ZG.GetPlatformOutputPath($"{packageSeting.title}.ini"));
         }
     }
 }

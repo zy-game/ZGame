@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace ZGame.Game
 {
-    public class ComponentEnumerable<T> : IReferenceObject, IEnumerable<T> where T : IComponent
+    public class ComponentEnumerable<T> : IReference, IEnumerable<T> where T : IComponent
     {
         private ComponentEnumerator<T> enumerator;
 
@@ -35,7 +35,7 @@ namespace ZGame.Game
         }
     }
 
-    public class ComponentEnumerator<T> : IReferenceObject, IEnumerator<T> where T : IComponent
+    public class ComponentEnumerator<T> : IReference, IEnumerator<T> where T : IComponent
     {
         private IComponent[] components;
         private int index = -1;

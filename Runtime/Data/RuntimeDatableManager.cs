@@ -6,7 +6,7 @@ namespace ZGame.Data
     /// <summary>
     /// 运行时游戏数据
     /// </summary>
-    public class RuntimeDatableManager : GameFrameworkModule
+    public class RuntimeDatableManager : ZModule
     {
         private List<IRuntimeDatable> map = new();
 
@@ -103,7 +103,7 @@ namespace ZGame.Data
         {
             foreach (var VARIABLE in map)
             {
-                GameFrameworkFactory.Release(VARIABLE);
+                RefPooled.Release(VARIABLE);
             }
 
             map.Clear();

@@ -14,7 +14,7 @@ using Object = UnityEngine.Object;
 
 namespace ZGame.VFS
 {
-    public partial class ResObject : IReferenceObject
+    public partial class ResObject : IReference
     {
         public static ResObject DEFAULT => new ResObject();
         private object obj;
@@ -149,7 +149,7 @@ namespace ZGame.VFS
                     continue;
                 }
 
-                GameFrameworkFactory.Release(resObjectCache[i]);
+                RefPooled.Release(resObjectCache[i]);
             }
 
             resObjectCache.Clear();
@@ -179,7 +179,7 @@ namespace ZGame.VFS
                 return DEFAULT;
             }
 
-            ResObject resObject = GameFrameworkFactory.Spawner<ResObject>();
+            ResObject resObject = RefPooled.Spawner<ResObject>();
             resObject.obj = obj;
             resObject.name = path;
             resObject.parent = parent;
@@ -234,9 +234,9 @@ namespace ZGame.VFS
 #endif
             else
             {
-                if (GameFrameworkEntry.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
+                if (ZG.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
                 {
-                    GameFrameworkEntry.Logger.LogError("资源未找到：" + path);
+                    ZG.Logger.LogError("资源未找到：" + path);
                     return ResObject.DEFAULT;
                 }
 
@@ -286,9 +286,9 @@ namespace ZGame.VFS
 #endif
             else
             {
-                if (GameFrameworkEntry.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
+                if (ZG.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
                 {
-                    GameFrameworkEntry.Logger.LogError("资源未找到：" + path);
+                    ZG.Logger.LogError("资源未找到：" + path);
                     return ResObject.DEFAULT;
                 }
 

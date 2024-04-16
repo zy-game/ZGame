@@ -2,7 +2,7 @@
 
 namespace ZGame.Game
 {
-    class EntityManager : IReferenceObject
+    class EntityManager : IReference
     {
         private List<Entity> entityList = new();
 
@@ -39,12 +39,12 @@ namespace ZGame.Game
             entityList.Remove(entity);
 
 
-            GameFrameworkFactory.Release(entity);
+            RefPooled.Release(entity);
         }
 
         public void Clear()
         {
-            entityList.ForEach(GameFrameworkFactory.Release);
+            entityList.ForEach(RefPooled.Release);
             entityList.Clear();
         }
 

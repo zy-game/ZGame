@@ -24,7 +24,7 @@ namespace ZGame.VFS
     /// <summary>
     /// 虚拟文件系统
     /// </summary>
-    public class VFSManager : GameFrameworkModule
+    public class VFSManager : ZModule
     {
         private NFSManager _disk;
         private float refreshTime;
@@ -43,8 +43,8 @@ namespace ZGame.VFS
 
         public override void Release()
         {
-            GameFrameworkFactory.Release(manifestManager);
-            GameFrameworkFactory.Release(_disk);
+            RefPooled.Release(manifestManager);
+            RefPooled.Release(_disk);
         }
 #if UNITY_EDITOR
         public override void OnGUI()
@@ -250,7 +250,7 @@ namespace ZGame.VFS
             ResObject resObject = ResObject.LoadResObjectSync(path);
             if (resObject.IsSuccess() is false)
             {
-                GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
+                ZG.Logger.LogError("加载资源失败：" + path);
                 return default;
             }
 
@@ -297,7 +297,7 @@ namespace ZGame.VFS
             ResObject resObject = await ResObject.LoadResObjectAsync(path);
             if (resObject.IsSuccess() is false)
             {
-                GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
+                ZG.Logger.LogError("加载资源失败：" + path);
                 return default;
             }
 
@@ -345,7 +345,7 @@ namespace ZGame.VFS
                 await request.SendWebRequest();
                 if (request.isNetworkError || request.isHttpError)
                 {
-                    GameFrameworkEntry.Logger.LogError("加载资源失败：" + path);
+                    ZG.Logger.LogError("加载资源失败：" + path);
                     return ResObject.DEFAULT;
                 }
 
@@ -377,7 +377,7 @@ namespace ZGame.VFS
                 return sceneObject;
             }
 
-            UILoading.SetTitle(GameFrameworkEntry.Language.Query("加载场景中..."));
+            UILoading.SetTitle(ZG.Language.Query("加载场景中..."));
             Scene scene = default;
             ResPackage package = default;
             AsyncOperation operation = default;
@@ -431,7 +431,7 @@ namespace ZGame.VFS
                     throw new NullReferenceException(nameof(dllName));
                 }
 
-                GameFrameworkEntry.Logger.Log("原生代码：" + dllName);
+                ZG.Logger.Log("原生代码：" + dllName);
                 assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
             }
             else
@@ -449,7 +449,7 @@ namespace ZGame.VFS
                 {
                     if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
                     {
-                        GameFrameworkEntry.Logger.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
+                        ZG.Logger.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
                         continue;
                     }
                 }
@@ -461,26 +461,26 @@ namespace ZGame.VFS
                     throw new NullReferenceException(dllName);
                 }
 
-                GameFrameworkEntry.Logger.Log("加载热更代码:" + dllName + ".dll");
+                ZG.Logger.Log("加载热更代码:" + dllName + ".dll");
                 assembly = Assembly.Load(dllBytes);
             }
 
             if (assembly is null)
             {
-                UIMsgBox.Show(GameFrameworkEntry.Language.Query("未找到入口配置..."), GameFrameworkStartup.Quit);
+                UIMsgBox.Show(ZG.Language.Query("未找到入口配置..."), ZStartup.Quit);
                 return Status.Fail;
             }
 
             SubGameStartup subGameStartup = assembly.CreateInstance<SubGameStartup>();
             if (subGameStartup is null)
             {
-                UIMsgBox.Show(GameFrameworkEntry.Language.Query("未找到入口配置..."), GameFrameworkStartup.Quit);
+                UIMsgBox.Show(ZG.Language.Query("未找到入口配置..."), ZStartup.Quit);
                 return Status.Fail;
             }
 
             if (await subGameStartup.OnEntry() is not Status.Success)
             {
-                UIMsgBox.Show(GameFrameworkEntry.Language.Query("加载游戏失败..."), GameFrameworkStartup.Quit);
+                UIMsgBox.Show(ZG.Language.Query("加载游戏失败..."), ZStartup.Quit);
                 return Status.Fail;
             }
 

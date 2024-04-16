@@ -44,7 +44,7 @@ namespace ZGame.UI
         /// <param name="timeout">超时时长，如果超时为0，则一直显示，直到调用<see cref="Hide"/></param>
         public static void Show(string s, float timeout = 0)
         {
-            GameFrameworkEntry.UI.Active<UIWait>(new object[] { s, timeout });
+            ZG.UI.Active<UIWait>(new object[] { s, timeout });
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace ZGame.UI
         /// </summary>
         public static void Hide()
         {
-            GameFrameworkEntry.UI.Inactive<UIWait>();
+            ZG.UI.Inactive<UIWait>();
         }
     }
 }

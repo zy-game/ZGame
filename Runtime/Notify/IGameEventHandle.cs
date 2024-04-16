@@ -5,14 +5,14 @@ namespace ZGame.Notify
     /// <summary>
     /// 事件参数
     /// </summary>
-    public interface IGameEventArgs : IReferenceObject
+    public interface IGameEventArgs : IReference
     {
     }
 
     /// <summary>
     /// 游戏事件处理管道
     /// </summary>
-    public interface IGameEventHandle : IReferenceObject
+    public interface IGameEventHandle : IReference
     {
         void Notify(IGameEventArgs args);
     }

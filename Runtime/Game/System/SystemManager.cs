@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ZGame.Game
 {
-    class SystemManager : IReferenceObject
+    class SystemManager : IReference
     {
         private List<ISystem> systemList = new();
 
@@ -22,7 +22,7 @@ namespace ZGame.Game
             }
 
             UnregisterGameLogicSystem(systemType);
-            ISystem system = (ISystem)GameFrameworkFactory.Spawner(systemType);
+            ISystem system = (ISystem)RefPooled.Spawner(systemType);
             if (system is IInitSystem initSystem)
             {
                 initSystem.OnAwakw();
@@ -98,7 +98,7 @@ namespace ZGame.Game
             }
         }
 
-        public void OnDarwingGizmons()
+        public void OnDarwGizmons()
         {
             for (int i = systemList.Count - 1; i >= 0; i--)
             {
@@ -115,7 +115,7 @@ namespace ZGame.Game
 
         public void Release()
         {
-            systemList.ForEach(GameFrameworkFactory.Release);
+            systemList.ForEach(RefPooled.Release);
             systemList.Clear();
         }
     }

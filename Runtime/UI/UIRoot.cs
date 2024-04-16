@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace ZGame.UI
 {
-    class UIRoot : IReferenceObject
+    class UIRoot : IReference
     {
         public int layer;
         private Canvas canvas;
@@ -77,7 +77,7 @@ namespace ZGame.UI
                 RefPath reference = type.GetCustomAttribute<RefPath>();
                 if (reference is null || reference.path.IsNullOrEmpty())
                 {
-                    GameFrameworkEntry.Logger.LogError("没找到资源引用:" + type.Name);
+                    ZG.Logger.LogError("没找到资源引用:" + type.Name);
                     return default;
                 }
 
@@ -102,14 +102,14 @@ namespace ZGame.UI
             UIOptions options = type.GetCustomAttribute<UIOptions>();
             if (options is null)
             {
-                GameFrameworkEntry.Logger.LogError("没有找到UIOptions:" + type);
+                ZG.Logger.LogError("没有找到UIOptions:" + type);
                 return;
             }
 
             UIBase uiBase = uiList.Find(x => x.GetType() == type);
             if (uiBase == null)
             {
-                GameFrameworkEntry.Logger.LogError("没有找到指定的UI:" + type);
+                ZG.Logger.LogError("没有找到指定的UI:" + type);
                 return;
             }
 
@@ -117,7 +117,7 @@ namespace ZGame.UI
             uiBase.gameObject.transform.SetAsFirstSibling();
             if (options.cacheType == CacheType.Temp)
             {
-                GameFrameworkFactory.Release(uiBase);
+                RefPooled.Release(uiBase);
                 uiList.Remove(uiBase);
             }
         }
@@ -134,7 +134,7 @@ namespace ZGame.UI
         {
             foreach (var VARIABLE in uiList)
             {
-                GameFrameworkFactory.Release(VARIABLE);
+                RefPooled.Release(VARIABLE);
             }
 
             uiList.Clear();

@@ -15,7 +15,7 @@ namespace ZGame.Notify
 
         public static KeyEventArgs Create(KeyCode keyCode, KeyEventType type)
         {
-            KeyEventArgs args = GameFrameworkFactory.Spawner<KeyEventArgs>();
+            KeyEventArgs args = RefPooled.Spawner<KeyEventArgs>();
             args.keyCode = keyCode;
             args.type = type;
             return args;
@@ -32,7 +32,7 @@ namespace ZGame.Notify
     /// <summary>
     /// 事件通知管理器
     /// </summary>
-    public sealed class NotifyManager : GameFrameworkModule
+    public sealed class NotifyManager : ZModule
     {
         private bool isTouch = false;
         private List<KeyCode> keyDownEvent = new();
@@ -83,7 +83,7 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Subscribe<T>(Action<T> handle) where T : IGameEventArgs, new()
+        public void Subscribe<T>(Action<T> handle) where T : IGameEventArgs
         {
             Subscribe(typeof(T).Name, GameEventHandle<T>.Create(handle));
         }
@@ -93,7 +93,7 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="handle"></param>
-        public void Subscribe<T>(object eventName, Action<T> handle) where T : IGameEventArgs, new()
+        public void Subscribe<T>(object eventName, Action<T> handle) where T : IGameEventArgs
         {
             Subscribe(eventName, GameEventHandle<T>.Create(handle));
         }
@@ -103,7 +103,7 @@ namespace ZGame.Notify
         /// </summary>
         /// <param name="handle"></param>
         /// <typeparam name="T"></typeparam>
-        public void Subscribe<T>(object eventName, IGameEventHandle<T> handle) where T : IGameEventArgs, new()
+        public void Subscribe<T>(object eventName, IGameEventHandle<T> handle) where T : IGameEventArgs
         {
             Subscribe(eventName, (IGameEventHandle)handle);
         }
@@ -229,7 +229,7 @@ namespace ZGame.Notify
             }
 
             _handlers.Remove(group);
-            GameFrameworkFactory.Release(group);
+            RefPooled.Release(group);
         }
 
         /// <summary>
@@ -254,7 +254,7 @@ namespace ZGame.Notify
 
         public override void Release()
         {
-            _handlers.ForEach(GameFrameworkFactory.Release);
+            _handlers.ForEach(RefPooled.Release);
             _handlers.Clear();
         }
     }

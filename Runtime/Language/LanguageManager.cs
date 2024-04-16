@@ -15,7 +15,7 @@ using ZGame.Networking;
 
 namespace ZGame.Language
 {
-    public sealed class LanguageManager : GameFrameworkModule
+    public sealed class LanguageManager : ZModule
     {
         private Action onSwitch;
         private List<LanguageItem> _map;
@@ -23,7 +23,7 @@ namespace ZGame.Language
 
         public override void Release()
         {
-            _map.ForEach(GameFrameworkFactory.Release);
+            _map.ForEach(RefPooled.Release);
             _map.Clear();
             _map = null;
             onSwitch = null;
@@ -59,7 +59,7 @@ namespace ZGame.Language
         /// <param name="en"></param>
         void AddLanguageDatable(int id, string cn, string en)
         {
-            LanguageItem languageItem = GameFrameworkFactory.Spawner<LanguageItem>();
+            LanguageItem languageItem = RefPooled.Spawner<LanguageItem>();
             languageItem.id = id;
             languageItem.SetLanguage("zh", cn);
             languageItem.SetLanguage("en", en);
@@ -71,7 +71,7 @@ namespace ZGame.Language
             LanguageItem item = _map.FirstOrDefault(x => x.id == id);
             if (item is null)
             {
-                item = GameFrameworkFactory.Spawner<LanguageItem>();
+                item = RefPooled.Spawner<LanguageItem>();
                 item.id = id;
                 _map.Add(item);
             }

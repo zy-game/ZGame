@@ -8,7 +8,7 @@ namespace ZGame.Notify
 
         public static GameEventHandle<T2> Create<T2>(Action<T2> action) where T2 : IGameEventArgs
         {
-            GameEventHandle<T2> handle = GameFrameworkFactory.Spawner<GameEventHandle<T2>>();
+            GameEventHandle<T2> handle = RefPooled.Spawner<GameEventHandle<T2>>();
             handle._handle = action;
             return handle;
         }

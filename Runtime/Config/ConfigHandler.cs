@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace ZGame.Config
 {
-    class ConfigHandler : IReferenceObject
+    class ConfigHandler : IReference
     {
         private List<IConfigDatable> cfgList;
 

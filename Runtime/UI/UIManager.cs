@@ -11,7 +11,7 @@ namespace ZGame.UI
     /// <summary>
     /// 界面管理器
     /// </summary>
-    public sealed class UIManager : GameFrameworkModule
+    public sealed class UIManager : ZModule
     {
         private List<UIRoot> rootList;
         private GameObject eventSystem;
@@ -49,7 +49,7 @@ namespace ZGame.UI
         {
             if (type is null || type.IsInterface || type.IsAbstract)
             {
-                GameFrameworkEntry.Logger.LogError("创建UI失败");
+                ZG.Logger.LogError("创建UI失败");
                 return default;
             }
 
@@ -61,7 +61,7 @@ namespace ZGame.UI
             UIOptions options = type.GetCustomAttribute<UIOptions>();
             if (options is null)
             {
-                GameFrameworkEntry.Logger.LogError("没找到UIOptions:" + type.Name);
+                ZG.Logger.LogError("没找到UIOptions:" + type.Name);
                 return default;
             }
 
@@ -96,7 +96,7 @@ namespace ZGame.UI
         {
             if (uiBase is null)
             {
-                GameFrameworkEntry.Logger.LogError("ui is null");
+                ZG.Logger.LogError("ui is null");
                 return;
             }
 
@@ -111,7 +111,7 @@ namespace ZGame.UI
         {
             if (type is null)
             {
-                GameFrameworkEntry.Logger.LogError(new NullReferenceException(type.Name));
+                ZG.Logger.LogError(new NullReferenceException(type.Name));
                 return;
             }
 
@@ -123,7 +123,7 @@ namespace ZGame.UI
             UIRoot root = rootList.Find(x => x.Contains(type));
             if (root is null)
             {
-                GameFrameworkEntry.Logger.LogError("没有找到父节点：" + type.Name);
+                ZG.Logger.LogError("没有找到父节点：" + type.Name);
                 return;
             }
 
@@ -145,7 +145,7 @@ namespace ZGame.UI
             UIRoot root = rootList.Find(x => x.Contains(type));
             if (root is null)
             {
-                GameFrameworkEntry.Logger.LogError("没有找到父节点：" + type.Name);
+                ZG.Logger.LogError("没有找到父节点：" + type.Name);
                 return default;
             }
 
@@ -159,7 +159,7 @@ namespace ZGame.UI
         {
             for (int i = 0; i < rootList.Count; i++)
             {
-                GameFrameworkFactory.Release(rootList[i]);
+                RefPooled.Release(rootList[i]);
             }
 
             rootList.Clear();

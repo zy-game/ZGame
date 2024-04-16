@@ -29,7 +29,7 @@ namespace ZGame.UI
             this.onYes = (Action)(args[2]);
             this.onNo = (Action)(args[3]);
 
-            GameFrameworkEntry.Notify.Subscribe<KeyEventArgs>(KeyCode.Escape, OnBackup);
+            ZG.Notify.Subscribe<KeyEventArgs>(KeyCode.Escape, OnBackup);
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>(true);
             foreach (var VARIABLE in texts)
             {
@@ -45,12 +45,12 @@ namespace ZGame.UI
 
                 if (VARIABLE.name.Equals("text_yes"))
                 {
-                    VARIABLE.SetText(GameFrameworkEntry.Language.Query("确定"));
+                    VARIABLE.SetText(ZG.Language.Query("确定"));
                 }
 
                 if (VARIABLE.name.Equals("text_no"))
                 {
-                    VARIABLE.SetText(GameFrameworkEntry.Language.Query("取消"));
+                    VARIABLE.SetText(ZG.Language.Query("取消"));
                 }
             }
 
@@ -83,8 +83,8 @@ namespace ZGame.UI
 
         private void Switch(bool state)
         {
-            GameFrameworkEntry.Notify.Unsubscribe<KeyEventArgs>(KeyCode.Escape, OnBackup);
-            GameFrameworkEntry.UI?.Inactive(this);
+            ZG.Notify.Unsubscribe<KeyEventArgs>(KeyCode.Escape, OnBackup);
+            ZG.UI?.Inactive(this);
             switch (state)
             {
                 case true:
@@ -105,7 +105,7 @@ namespace ZGame.UI
         /// <param name="onNo">点击取消按钮回调</param>
         public static void Show(string title, string content, Action onYes, Action onNo)
         {
-            GameFrameworkEntry.UI.Active<UIMsgBox>(new object[] { title, content, onYes, onNo });
+            ZG.UI.Active<UIMsgBox>(new object[] { title, content, onYes, onNo });
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace ZGame.UI
         /// <param name="onNo">点击取消按钮回调</param>
         public static void Show(string content, Action onYes, Action onNo)
         {
-            Show(GameFrameworkEntry.Language.Query("提示"), content, onYes, onNo);
+            Show(ZG.Language.Query("提示"), content, onYes, onNo);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace ZGame.UI
         /// <returns>点击的是确定还是取消按钮</returns>
         public static UniTask<bool> ShowAsync(string content, bool isNo = false)
         {
-            return ShowAsync(GameFrameworkEntry.Language.Query("提示"), content, isNo);
+            return ShowAsync(ZG.Language.Query("提示"), content, isNo);
         }
 
         /// <summary>

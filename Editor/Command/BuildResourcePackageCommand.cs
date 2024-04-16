@@ -27,14 +27,14 @@ namespace ZGame.Editor.Command
 
                 BuildTarget target = BuilderConfig.instance.useActiveTarget ? EditorUserBuildSettings.activeBuildTarget : BuilderConfig.instance.target;
                 Debug.Log("Build Resource Package List:" + string.Join("\n", list.Select(x => x.assetBundleName)));
-                var manifest = BuildPipeline.BuildAssetBundles(GameFrameworkEntry.GetPlatformOutputPathDir(), list.ToArray(), BuildAssetBundleOptions.None, target);
+                var manifest = BuildPipeline.BuildAssetBundles(ZG.GetPlatformOutputPathDir(), list.ToArray(), BuildAssetBundleOptions.None, target);
                 OnUploadResourcePackageList(CreatePackageManifest(manifest, options));
             }
         }
 
         private static List<ResourcePackageListManifest> CreatePackageManifest(AssetBundleManifest manifest, params PackageBuilderOptions[] builds)
         {
-            BuildPipeline.GetCRCForAssetBundle(new DirectoryInfo(GameFrameworkEntry.GetPlatformOutputPathDir()).Name, out uint crc);
+            BuildPipeline.GetCRCForAssetBundle(new DirectoryInfo(ZG.GetPlatformOutputPathDir()).Name, out uint crc);
             List<ResourcePackageListManifest> packageListManifests = new List<ResourcePackageListManifest>();
             foreach (var VARIABLE in builds)
             {
@@ -44,7 +44,7 @@ namespace ZGame.Editor.Command
                 for (int i = 0; i < VARIABLE.builds.Length; i++)
                 {
                     string[] dependencies = manifest.GetAllDependencies(VARIABLE.builds[i].assetBundleName);
-                    BuildPipeline.GetCRCForAssetBundle(GameFrameworkEntry.GetPlatformOutputPath(VARIABLE.builds[i].assetBundleName), out crc);
+                    BuildPipeline.GetCRCForAssetBundle(ZG.GetPlatformOutputPath(VARIABLE.builds[i].assetBundleName), out crc);
                     string[] assetNames = VARIABLE.builds[i].assetNames.Select(x => x.Replace("\\", "/")).ToArray();
                     packageListManifest.CreateOrUpdatePackageManifest(VARIABLE.builds[i].assetBundleName.ToLower(), true, crc, assetNames, dependencies);
                 }
@@ -55,7 +55,7 @@ namespace ZGame.Editor.Command
                     List<string> libraryAssets = new List<string>() { $"{dllName}_aot.bytes", $"{dllName}_hotfix.bytes" };
                     for (int i = 0; i < libraryAssets.Count; i++)
                     {
-                        string librayPath = GameFrameworkEntry.GetPlatformOutputPath(libraryAssets[i]);
+                        string librayPath = ZG.GetPlatformOutputPath(libraryAssets[i]);
                         if (File.Exists(librayPath))
                         {
                             packageListManifest.CreateOrUpdatePackageManifest(libraryAssets[i], false, Crc32.GetCRC32File(librayPath), new string[] { libraryAssets[i] }, new string[0]);
@@ -97,12 +97,12 @@ namespace ZGame.Editor.Command
             foreach (var bundle in manifest.packages)
             {
                 successCount++;
-                string scrPath = GameFrameworkEntry.GetPlatformOutputPath(bundle.name);
+                string scrPath = ZG.GetPlatformOutputPath(bundle.name);
                 UploadResourcePackageCommand.Executer(ResConfig.instance.current, scrPath);
                 EditorUtility.DisplayProgressBar("上传进度", scrPath, successCount / (float)allCount);
             }
 
-            UploadResourcePackageCommand.Executer(ResConfig.instance.current, GameFrameworkEntry.GetPlatformOutputPath(manifest.name + ".ini"));
+            UploadResourcePackageCommand.Executer(ResConfig.instance.current, ZG.GetPlatformOutputPath(manifest.name + ".ini"));
         }
     }
 }
