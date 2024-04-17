@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ZGame.Logger
 {
-    public class LoggerManager : ZModule
+    public class LoggerManager : GameFrameworkModule
     {
         private bool _isDebug = GameConfig.instance.isDebug;
 

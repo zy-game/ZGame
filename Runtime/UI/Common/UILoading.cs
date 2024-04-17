@@ -88,7 +88,7 @@ namespace ZGame.UI
                 return _instance;
             }
 
-            return _instance = ZG.UI.Active<UILoading>();
+            return _instance = CoreAPI.UI.Active<UILoading>();
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace ZGame.UI
                 return;
             }
 
-            ZG.UI.Inactive<UILoading>();
+            CoreAPI.UI.Inactive<UILoading>();
             _instance = null;
         }
     }

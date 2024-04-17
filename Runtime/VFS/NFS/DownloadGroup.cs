@@ -39,7 +39,7 @@ namespace ZGame.VFS
             status = Status.Runing;
             groupStateChangeCallback?.Invoke(this);
             await UniTask.WhenAll(task);
-            ZG.Logger.Log("Download Complete");
+            CoreAPI.Logger.Log("Download Complete");
             status = Status.Fail;
             if (downloadHandlers.All(x => x.status == Status.Success))
             {

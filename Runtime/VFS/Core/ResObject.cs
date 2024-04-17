@@ -234,9 +234,9 @@ namespace ZGame.VFS
 #endif
             else
             {
-                if (ZG.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
+                if (CoreAPI.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
                 {
-                    ZG.Logger.LogError("资源未找到：" + path);
+                    CoreAPI.Logger.LogError("资源未找到：" + path);
                     return ResObject.DEFAULT;
                 }
 
@@ -286,9 +286,9 @@ namespace ZGame.VFS
 #endif
             else
             {
-                if (ZG.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
+                if (CoreAPI.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
                 {
-                    ZG.Logger.LogError("资源未找到：" + path);
+                    CoreAPI.Logger.LogError("资源未找到：" + path);
                     return ResObject.DEFAULT;
                 }
 

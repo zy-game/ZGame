@@ -15,7 +15,7 @@ using ZGame.Networking;
 
 namespace ZGame.Language
 {
-    public sealed class LanguageManager : ZModule
+    public sealed class LanguageManager : GameFrameworkModule
     {
         private Action onSwitch;
         private List<LanguageItem> _map;

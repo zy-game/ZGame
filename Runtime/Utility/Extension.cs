@@ -82,7 +82,7 @@ namespace ZGame
         public static void StopSample(string format)
         {
             sw.Stop();
-            ZG.Logger.Log(string.Format(format, sw.ElapsedMilliseconds));
+            CoreAPI.Logger.Log(string.Format(format, sw.ElapsedMilliseconds));
         }
 
         private const int CopyThreshold = 12;

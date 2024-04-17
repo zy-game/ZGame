@@ -5,7 +5,7 @@ namespace ZGame
     /// <summary>
     /// 框架模块
     /// </summary>
-    public class ZModule : IReference
+    public class GameFrameworkModule : IReference
     {
         /// <summary>
         /// 激活模块

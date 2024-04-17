@@ -42,7 +42,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public IComponent AddComponent(Type type)
         {
-            return ZG.world.AddComponent(this, type);
+            return CoreAPI.world.AddComponent(this, type);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public IComponent GetComponent(Type type)
         {
-            return ZG.world.GetComponent(this, type);
+            return CoreAPI.world.GetComponent(this, type);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace ZGame.Game
         /// <exception cref="NotImplementedException"></exception>
         public void RemoveComponent(Type type)
         {
-            ZG.world.RemoveComponent(this, type);
+            CoreAPI.world.RemoveComponent(this, type);
         }
 
         public void Release()

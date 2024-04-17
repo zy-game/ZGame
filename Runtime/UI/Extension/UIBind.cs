@@ -19,9 +19,8 @@ namespace ZGame.UI
         [LabelText("输出目录"), SerializeField, HideIf("isTemplete")]
         public UnityEngine.Object output;
 
-        // [SerializeField] public List<string> reference = new List<string>();
         [LabelText("Bind List"), TableList, SerializeField]
-        public List<UIBindData> options = new List<UIBindData>();
+        public List<UIBindData> bindList = new List<UIBindData>();
 
         public string GetTitleName()
         {
@@ -39,14 +38,22 @@ namespace ZGame.UI
     public class UIBindData
     {
         public GameObject target;
-        [HideInInspector] public string name;
-        [HideInInspector] public string path;
+
+        public string name
+        {
+            get
+            {
+                if (target == null)
+                {
+                    throw new NullReferenceException(nameof(target));
+                }
+
+                return target.name;
+            }
+        }
 
         [Selector("OnInitialized"), LabelText("$selectionList")]
         public List<string> selection;
-
-        [HideInInspector] public Selector selector;
-        [NonSerialized] public bool isOn;
 
         IEnumerable<string> OnInitialized()
         {

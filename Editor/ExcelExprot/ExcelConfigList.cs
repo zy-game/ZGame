@@ -18,6 +18,7 @@ namespace ZGame.Editor.ExcelExprot
         [LabelText("字段类型行")] public int typeRowIndex = 1;
         [LabelText("代码命名空间")] public string nameSpace;
         [LabelText("表头所在行")] public int headerRowIndex = 0;
+        [LabelText("字段描述所在行")] public int descIndex = 2;
         [LabelText("导出文件类型")] public ExportType exportType;
 
         [TableList, LabelText("Excel File List")]
@@ -80,7 +81,7 @@ namespace ZGame.Editor.ExcelExprot
         {
             using (ExportCsharpCodeCommand csharpCodeCommand = new ExportCsharpCodeCommand())
             {
-                csharpCodeCommand.OnExecute(table, headerRowIndex, dataRowIndex, typeRowIndex, output, nameSpace);
+                csharpCodeCommand.OnExecute(table, headerRowIndex, dataRowIndex, typeRowIndex, descIndex, output, nameSpace);
             }
         }
 

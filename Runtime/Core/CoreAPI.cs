@@ -27,7 +27,7 @@ namespace ZGame
     /// <summary>
     /// 框架入口
     /// </summary>
-    public static class ZG
+    public static class CoreAPI
     {
         public class GameFrameworkContent : MonoBehaviour
         {
@@ -35,7 +35,7 @@ namespace ZGame
 
             private void OnApplicationQuit()
             {
-                ZG.Uninitialized();
+                CoreAPI.Uninitialized();
             }
 
             private void FixedUpdate()
@@ -121,7 +121,7 @@ namespace ZGame
             {
 #if UNITY_EDITOR
 
-                foreach (var VARIABLE in ZG._modules)
+                foreach (var VARIABLE in CoreAPI._modules)
                 {
                     string title = VARIABLE.GetType().Name;
                     if (foloutList.ContainsKey(title) is false)
@@ -151,7 +151,7 @@ namespace ZGame
 
         private static GameFrameworkContent _handle;
         private static List<World> _worlds = new List<World>();
-        private static List<ZModule> _modules = new List<ZModule>();
+        private static List<GameFrameworkModule> _modules = new List<GameFrameworkModule>();
 
         /// <summary>
         /// 虚拟文件系统
@@ -242,7 +242,7 @@ namespace ZGame
 
             if (await VFS.LoadingResourcePackageAsync(ResConfig.instance.defaultPackageName) is not Status.Success)
             {
-                UIMsgBox.Show(Language.Query("资源加载失败..."), ZStartup.Quit);
+                UIMsgBox.Show(Language.Query("资源加载失败..."), GameFrameworkStartup.Quit);
                 return;
             }
 
@@ -287,7 +287,7 @@ namespace ZGame
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T GetOrCreateModule<T>(params object[] args) where T : ZModule
+        public static T GetOrCreateModule<T>(params object[] args) where T : GameFrameworkModule
         {
             return (T)GetOrCreateModule(typeof(T));
         }
@@ -297,12 +297,12 @@ namespace ZGame
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static ZModule GetOrCreateModule(Type type, params object[] args)
+        public static GameFrameworkModule GetOrCreateModule(Type type, params object[] args)
         {
-            ZModule frameworkModule = _modules.Find(m => m.GetType() == type);
+            GameFrameworkModule frameworkModule = _modules.Find(m => m.GetType() == type);
             if (frameworkModule is null)
             {
-                frameworkModule = (ZModule)RefPooled.Spawner(type);
+                frameworkModule = (GameFrameworkModule)RefPooled.Spawner(type);
                 frameworkModule.OnAwake(args);
                 _modules.Add(frameworkModule);
             }
@@ -314,7 +314,7 @@ namespace ZGame
         /// 释放模块
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public static void DisposeModule<T>() where T : ZModule
+        public static void DisposeModule<T>() where T : GameFrameworkModule
         {
             DisposeModule(typeof(T));
         }
@@ -325,7 +325,7 @@ namespace ZGame
         /// <param name="type"></param>
         public static void DisposeModule(Type type)
         {
-            ZModule frameworkModule = _modules.Find(m => m.GetType() == type);
+            GameFrameworkModule frameworkModule = _modules.Find(m => m.GetType() == type);
             if (frameworkModule is null)
             {
                 return;

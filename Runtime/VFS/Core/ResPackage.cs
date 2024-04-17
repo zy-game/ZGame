@@ -193,7 +193,7 @@ namespace ZGame.VFS
             }
 
             UILoading.SetProgress(0);
-            UILoading.SetTitle(ZG.Language.Query("更新资源列表中..."));
+            UILoading.SetTitle(CoreAPI.Language.Query("更新资源列表中..."));
             using (DownloadGroup downloadGroup = DownloadGroup.Create(x => { UILoading.SetProgress(x.progress); }))
             {
                 foreach (ResourcePackageManifest manifest in manifests)
@@ -203,25 +203,25 @@ namespace ZGame.VFS
 
                 if (await downloadGroup.StartAsync() is not Status.Success)
                 {
-                    UIMsgBox.Show("更新资源失败", ZStartup.Quit);
+                    UIMsgBox.Show("更新资源失败", GameFrameworkStartup.Quit);
                     return Status.Fail;
                 }
 
                 UniTask<Status>[] writeHandles = new UniTask<Status>[downloadGroup.items.Length];
                 for (int i = 0; i < downloadGroup.items.Length; i++)
                 {
-                    writeHandles[i] = ZG.VFS.WriteAsync(downloadGroup.items[i].name, downloadGroup.items[i].bytes, downloadGroup.items[i].version);
+                    writeHandles[i] = CoreAPI.VFS.WriteAsync(downloadGroup.items[i].name, downloadGroup.items[i].bytes, downloadGroup.items[i].version);
                 }
 
                 Status[] result = await UniTask.WhenAll(writeHandles);
                 if (result.Any(x => x is not Status.Success))
                 {
-                    UIMsgBox.Show("更新资源失败", ZStartup.Quit);
+                    UIMsgBox.Show("更新资源失败", GameFrameworkStartup.Quit);
                     return Status.Fail;
                 }
 
-                ZG.Logger.Log("资源更新完成");
-                UILoading.SetTitle(ZG.Language.Query("资源更新完成..."));
+                CoreAPI.Logger.Log("资源更新完成");
+                UILoading.SetTitle(CoreAPI.Language.Query("资源更新完成..."));
                 UILoading.SetProgress(1);
                 return Status.Success;
             }
@@ -250,7 +250,7 @@ namespace ZGame.VFS
 
             InitializedDependenciesPackage(manifests);
             Debug.Log($"资源加载完成，总耗时：{Extension.GetSampleTime()}");
-            UILoading.SetTitle(ZG.Language.Query("资源加载完成..."));
+            UILoading.SetTitle(CoreAPI.Language.Query("资源加载完成..."));
             UILoading.SetProgress(1);
             return Status.Success;
         }
@@ -274,7 +274,7 @@ namespace ZGame.VFS
 
             InitializedDependenciesPackage(manifests);
             Debug.Log($"资源加载完成，总耗时：{Extension.GetSampleTime()}");
-            UILoading.SetTitle(ZG.Language.Query("资源加载完成..."));
+            UILoading.SetTitle(CoreAPI.Language.Query("资源加载完成..."));
             UILoading.SetProgress(1);
             return Status.Success;
         }
@@ -300,7 +300,7 @@ namespace ZGame.VFS
                 bundle = DownloadHandlerAssetBundle.GetContent(request);
             }
 #else
-            byte[] bytes = await ZG.VFS.ReadAsync(manifest.name);
+            byte[] bytes = await CoreAPI.VFS.ReadAsync(manifest.name);
             if (bytes == null || bytes.Length == 0)
             {
                 Debug.Log("资源包不存在：" + manifest.name);
@@ -309,7 +309,7 @@ namespace ZGame.VFS
             bundle = await AssetBundle.LoadFromMemoryAsync(bytes);
 
 #endif
-            ZG.Logger.Log("加载资源包：" + manifest.name);
+            CoreAPI.Logger.Log("加载资源包：" + manifest.name);
             ResPackage package = ResPackage.Create(bundle);
             if (package.IsSuccess() is false)
             {
@@ -329,7 +329,7 @@ namespace ZGame.VFS
                 return Status.Success;
             }
 
-            byte[] bytes = ZG.VFS.Read(manifest.name);
+            byte[] bytes = CoreAPI.VFS.Read(manifest.name);
             if (bytes == null)
             {
                 return Status.Fail;

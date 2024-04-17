@@ -19,7 +19,7 @@ namespace ZGame.Networking
     /// <summary>
     /// 网络管理器
     /// </summary>
-    public class NetManager : ZModule
+    public class NetManager : GameFrameworkModule
     {
         private List<INetClient> channels = new();
 
@@ -44,11 +44,11 @@ namespace ZGame.Networking
             INetClient channel = channels.Find(x => x.address == ip);
             if (channel is not null)
             {
-                ZG.Logger.Log($"{ip} is already connected");
+                CoreAPI.Logger.Log($"{ip} is already connected");
                 return (T)channel;
             }
 
-            ZG.Logger.Log($"connecting {ip}");
+            CoreAPI.Logger.Log($"connecting {ip}");
             channel = (INetClient)RefPooled.Spawner<T>();
             if (await channel.ConnectAsync(cid, address, port, dispatcher) is Status.Success)
             {
@@ -139,7 +139,7 @@ namespace ZGame.Networking
                     }
                 }
 
-                ZG.Logger.Log($"POST DATA:{url} parmas:{(postData).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
+                CoreAPI.Logger.Log($"POST DATA:{url} parmas:{(postData).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
             }
@@ -177,7 +177,7 @@ namespace ZGame.Networking
                     }
                 }
 
-                ZG.Logger.Log($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
+                CoreAPI.Logger.Log($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
             }
@@ -212,7 +212,7 @@ namespace ZGame.Networking
                     _data = request.GetResultData<T>();
                 }
 
-                ZG.Logger.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()} data: {request.downloadHandler?.text}");
+                CoreAPI.Logger.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()} data: {request.downloadHandler?.text}");
                 request.downloadHandler?.Dispose();
                 request.uploadHandler?.Dispose();
             }

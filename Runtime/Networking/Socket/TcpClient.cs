@@ -54,7 +54,7 @@ namespace ZGame.Networking
             }
             catch (Exception e)
             {
-                ZG.Logger.LogError(e);
+                CoreAPI.Logger.LogError(e);
                 RefPooled.Release(this);
                 return Status.Fail;
             }
@@ -94,7 +94,7 @@ namespace ZGame.Networking
             {
                 var byteBuffer = message as IByteBuffer;
                 Packet packet = Packet.Deserialized(byteBuffer.Array);
-                ZG.Logger.LogFormat("Received from server: {0}", byteBuffer.ToString(Encoding.UTF8));
+                CoreAPI.Logger.LogFormat("Received from server: {0}", byteBuffer.ToString(Encoding.UTF8));
                 this._dispatcher?.Dispatch(_client, packet);
                 byteBuffer.Release();
             }
@@ -104,7 +104,7 @@ namespace ZGame.Networking
             public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
             {
                 // handler?.Exception(_client, exception);
-                ZG.Logger.LogFormat("Exception: {0}", exception);
+                CoreAPI.Logger.LogFormat("Exception: {0}", exception);
                 context.CloseAsync();
             }
         }

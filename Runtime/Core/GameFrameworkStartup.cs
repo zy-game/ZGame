@@ -7,12 +7,12 @@ using ZGame.Config;
 using ZGame.Game;
 using ZGame.UI;
 
-public class ZStartup : MonoBehaviour
+public class GameFrameworkStartup : MonoBehaviour
 {
     private void Awake()
     {
         GameObject.DontDestroyOnLoad(this.gameObject);
-        ZG.Initialized();
+        CoreAPI.Initialized();
     }
 
     public static void Quit()

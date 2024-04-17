@@ -27,7 +27,7 @@ namespace ZGame.Notify
         {
             if (_handles.Exists(x => x.Equals(handle)))
             {
-                ZG.Logger.LogError("重复注册事件：" + handle.ToString());
+                CoreAPI.Logger.LogError("重复注册事件：" + handle.ToString());
                 return;
             }
 

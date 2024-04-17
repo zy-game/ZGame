@@ -19,7 +19,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = ZG.VFS.GetAsset(spritePath);
+            ResObject res = CoreAPI.VFS.GetAsset(spritePath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -40,7 +40,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = await ZG.VFS.GetAssetAsync(spritePath);
+            ResObject res = await CoreAPI.VFS.GetAssetAsync(spritePath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -61,7 +61,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = ZG.VFS.GetAsset(texturePath);
+            ResObject res = CoreAPI.VFS.GetAsset(texturePath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -82,7 +82,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = await ZG.VFS.GetAssetAsync(texturePath);
+            ResObject res = await CoreAPI.VFS.GetAssetAsync(texturePath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -105,7 +105,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = ZG.VFS.GetAsset(texturePath);
+            ResObject res = CoreAPI.VFS.GetAsset(texturePath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -128,7 +128,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = await ZG.VFS.GetAssetAsync(texturePath);
+            ResObject res = await CoreAPI.VFS.GetAssetAsync(texturePath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -149,7 +149,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = ZG.VFS.GetAsset(materialPath);
+            ResObject res = CoreAPI.VFS.GetAsset(materialPath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -170,7 +170,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject resObject = await ZG.VFS.GetAssetAsync(materialPath);
+            ResObject resObject = await CoreAPI.VFS.GetAssetAsync(materialPath);
             if (resObject == null || resObject.IsSuccess() is false)
             {
                 return;
@@ -191,7 +191,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = ZG.VFS.GetAsset(materialPath);
+            ResObject res = CoreAPI.VFS.GetAsset(materialPath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -212,7 +212,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject resObject = await ZG.VFS.GetAssetAsync(materialPath);
+            ResObject resObject = await CoreAPI.VFS.GetAssetAsync(materialPath);
             if (resObject == null || resObject.IsSuccess() is false)
             {
                 return;
@@ -233,7 +233,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = ZG.VFS.GetAsset(materialPath);
+            ResObject res = CoreAPI.VFS.GetAsset(materialPath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -254,7 +254,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject resObject = await ZG.VFS.GetAssetAsync(materialPath);
+            ResObject resObject = await CoreAPI.VFS.GetAssetAsync(materialPath);
             if (resObject == null || resObject.IsSuccess() is false)
             {
                 return;
@@ -275,7 +275,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = ZG.VFS.GetAsset(materialPath);
+            ResObject res = CoreAPI.VFS.GetAsset(materialPath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -296,7 +296,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject resObject = await ZG.VFS.GetAssetAsync(materialPath);
+            ResObject resObject = await CoreAPI.VFS.GetAssetAsync(materialPath);
             if (resObject == null || resObject.IsSuccess() is false)
             {
                 return;
@@ -317,7 +317,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = ZG.VFS.GetAsset(materialPath);
+            ResObject res = CoreAPI.VFS.GetAsset(materialPath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -338,7 +338,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject resObject = await ZG.VFS.GetAssetAsync(materialPath);
+            ResObject resObject = await CoreAPI.VFS.GetAssetAsync(materialPath);
             if (resObject == null || resObject.IsSuccess() is false)
             {
                 return;
@@ -361,7 +361,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = ZG.VFS.GetAsset(audioClipPath);
+            ResObject res = CoreAPI.VFS.GetAsset(audioClipPath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;
@@ -388,7 +388,7 @@ namespace ZGame
                 return;
             }
 
-            ResObject res = await ZG.VFS.GetAssetAsync(audioClipPath);
+            ResObject res = await CoreAPI.VFS.GetAssetAsync(audioClipPath);
             if (res == null || res.IsSuccess() is false)
             {
                 return;

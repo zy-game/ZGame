@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ZGame.Editor.CodeGen
 {
-    public class CodeGener
+    public class CodeGenerMapping
     {
         private ICodeGen current;
         private string nameSpace;
@@ -13,9 +13,9 @@ namespace ZGame.Editor.CodeGen
         private List<string> referenceNameSpace = new();
 
 
-        public CodeGener(string className)
+        public CodeGenerMapping(string className, string desc)
         {
-            classCodeGen = new ClassGener(className, ACL.Public, null);
+            classCodeGen = new ClassCodeGeneric(className, ACL.Public, desc, null);
             current = classCodeGen;
         }
 
@@ -53,14 +53,14 @@ namespace ZGame.Editor.CodeGen
             }
         }
 
-        public void SetProperty(string propertyName, string propertyType, ACL acl = ACL.Public)
+        public void SetProperty(string propertyName, string propertyType, string desc, ACL acl = ACL.Public)
         {
             if (current is not IClassCodeGen classCodeGen)
             {
                 return;
             }
 
-            classCodeGen.AddProperty(propertyName, propertyType, acl);
+            classCodeGen.AddProperty(propertyName, propertyType, desc, acl);
         }
 
 
@@ -79,14 +79,14 @@ namespace ZGame.Editor.CodeGen
             current = null;
         }
 
-        public void BeginClass(string nestedClassName, ACL acl = ACL.Public)
+        public void BeginClass(string nestedClassName, string desc, ACL acl = ACL.Public)
         {
             if (current is not IClassCodeGen classCodeGen)
             {
                 return;
             }
 
-            current = classCodeGen.AddClass(nestedClassName, acl);
+            current = classCodeGen.AddClass(nestedClassName, desc, acl);
         }
 
         public void EndClass()
@@ -109,14 +109,14 @@ namespace ZGame.Editor.CodeGen
             current = classCodeGen.SwitchMethod(methodName);
         }
 
-        public void BeginMethod(string methodName, bool isStatic, bool isOverride, string returnType = "", ACL acl = ACL.Public, ParamsList paramsList = null)
+        public void BeginMethod(string methodName, bool isStatic, bool isOverride, string desc, string returnType = "", ACL acl = ACL.Public, ParamsList paramsList = null)
         {
             if (current is not IClassCodeGen classCodeGen)
             {
                 return;
             }
 
-            current = classCodeGen.AddMethod(methodName, isStatic, isOverride, returnType, acl, paramsList);
+            current = classCodeGen.AddMethod(methodName, isStatic, isOverride, desc, returnType, acl, paramsList);
         }
 
         public void EndMethod()

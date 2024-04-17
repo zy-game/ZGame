@@ -6,7 +6,7 @@ namespace ZGame.Data
     /// <summary>
     /// 运行时游戏数据
     /// </summary>
-    public class RuntimeDatableManager : ZModule
+    public class RuntimeDatableManager : GameFrameworkModule
     {
         private List<IRuntimeDatable> map = new();
 

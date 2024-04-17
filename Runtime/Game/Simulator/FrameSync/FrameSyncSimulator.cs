@@ -12,7 +12,7 @@ namespace ZGame.Game
         internal static async UniTask<FrameSyncSimulator> Create(int cid, string ip, ushort port, int lockedTimeStep)
         {
             FrameSyncSimulator simulator = RefPooled.Spawner<FrameSyncSimulator>();
-            UdpClient client = await ZG.Network.Connect<UdpClient>(cid, ip, port, simulator);
+            UdpClient client = await CoreAPI.Network.Connect<UdpClient>(cid, ip, port, simulator);
             if (client is null || client.isConnected is false)
             {
                 return default;

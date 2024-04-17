@@ -77,7 +77,7 @@ namespace ZGame.UI
                 RefPath reference = type.GetCustomAttribute<RefPath>();
                 if (reference is null || reference.path.IsNullOrEmpty())
                 {
-                    ZG.Logger.LogError("没找到资源引用:" + type.Name);
+                    CoreAPI.Logger.LogError("没找到资源引用:" + type.Name);
                     return default;
                 }
 
@@ -102,14 +102,14 @@ namespace ZGame.UI
             UIOptions options = type.GetCustomAttribute<UIOptions>();
             if (options is null)
             {
-                ZG.Logger.LogError("没有找到UIOptions:" + type);
+                CoreAPI.Logger.LogError("没有找到UIOptions:" + type);
                 return;
             }
 
             UIBase uiBase = uiList.Find(x => x.GetType() == type);
             if (uiBase == null)
             {
-                ZG.Logger.LogError("没有找到指定的UI:" + type);
+                CoreAPI.Logger.LogError("没有找到指定的UI:" + type);
                 return;
             }
 

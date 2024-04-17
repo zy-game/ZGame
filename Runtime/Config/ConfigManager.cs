@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ZGame.Config
 {
-    public class ConfigManager : ZModule
+    public class ConfigManager : GameFrameworkModule
     {
         private Dictionary<Type, ConfigHandler> cfgDict;
 

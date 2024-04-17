@@ -19,7 +19,7 @@ namespace ZGame
 
         public CancellationTokenSourceGroup(CancellationTokenSource cancellationTokenSource)
         {
-            ZG.Notify.Subscribe<AppQuitEventDatable>(KeyCode.Escape, OnHandleAppQuitEvent);
+            CoreAPI.Notify.Subscribe<AppQuitEventDatable>(KeyCode.Escape, OnHandleAppQuitEvent);
             if (cancellationTokenSource is null)
             {
                 return;
@@ -52,7 +52,7 @@ namespace ZGame
 
         public void Dispose()
         {
-            ZG.Notify.Unsubscribe<AppQuitEventDatable>(KeyCode.Escape, OnHandleAppQuitEvent);
+            CoreAPI.Notify.Unsubscribe<AppQuitEventDatable>(KeyCode.Escape, OnHandleAppQuitEvent);
             foreach (var token in tokens)
             {
                 token.Dispose();

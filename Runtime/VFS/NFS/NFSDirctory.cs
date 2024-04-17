@@ -65,7 +65,7 @@ namespace ZGame.VFS
             {
                 if (_stream is null)
                 {
-                    _stream = new FileStream(ZG.GetApplicationFilePath(name), FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                    _stream = new FileStream(CoreAPI.GetApplicationFilePath(name), FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 }
 
                 return _stream;
@@ -76,7 +76,7 @@ namespace ZGame.VFS
         {
             string cfg = JsonConvert.SerializeObject(this.optList.ToList());
             PlayerPrefs.SetString(this.name, cfg);
-            ZG.Logger.Log(this.name + " -> " + cfg);
+            CoreAPI.Logger.Log(this.name + " -> " + cfg);
         }
 
 
@@ -152,7 +152,7 @@ namespace ZGame.VFS
 
             if (ResConfig.instance.enable is false)
             {
-                File.Delete(ZG.GetApplicationFilePath(fileName));
+                File.Delete(CoreAPI.GetApplicationFilePath(fileName));
             }
 
             SaveCfg();
@@ -181,7 +181,7 @@ namespace ZGame.VFS
                 }
 
                 options.Use(0, fileName, data.Length, version);
-                File.WriteAllBytes(ZG.GetApplicationFilePath(fileName), data);
+                File.WriteAllBytes(CoreAPI.GetApplicationFilePath(fileName), data);
                 SaveCfg();
                 return Status.Success;
             }
@@ -237,7 +237,7 @@ namespace ZGame.VFS
                 }
 
                 options.Use(0, fileName, data.Length, version);
-                await File.WriteAllBytesAsync(ZG.GetApplicationFilePath(fileName), data);
+                await File.WriteAllBytesAsync(CoreAPI.GetApplicationFilePath(fileName), data);
                 SaveCfg();
                 return Status.Success;
             }
@@ -279,7 +279,7 @@ namespace ZGame.VFS
         {
             if (ResConfig.instance.enable is false)
             {
-                return File.ReadAllBytes(ZG.GetApplicationFilePath(fileName));
+                return File.ReadAllBytes(CoreAPI.GetApplicationFilePath(fileName));
             }
 
             List<NFSFileOptions> opts = optList.Where(x => x.name == fileName).ToList();
@@ -311,7 +311,7 @@ namespace ZGame.VFS
         {
             if (ResConfig.instance.enable is false)
             {
-                return await File.ReadAllBytesAsync(ZG.GetApplicationFilePath(fileName));
+                return await File.ReadAllBytesAsync(CoreAPI.GetApplicationFilePath(fileName));
             }
 
             List<NFSFileOptions> opts = optList.Where(x => x.name == fileName).ToList();

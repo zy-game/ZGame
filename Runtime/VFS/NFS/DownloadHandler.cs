@@ -101,7 +101,7 @@ namespace ZGame.VFS
                 await request.SendWebRequest().ToUniTask(this);
                 if (request.result is not UnityWebRequest.Result.Success)
                 {
-                    ZG.Logger.LogError($"Error: {request.error}");
+                    CoreAPI.Logger.LogError($"Error: {request.error}");
                     status = Status.Fail;
                 }
                 else
@@ -111,7 +111,7 @@ namespace ZGame.VFS
                 }
             }
 
-            ZG.Logger.Log($"Download Complete: {url}");
+            CoreAPI.Logger.Log($"Download Complete: {url}");
             return status;
         }
 

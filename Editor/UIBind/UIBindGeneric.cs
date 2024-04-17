@@ -43,25 +43,52 @@ namespace ZGame.Editor.PSD2GUI
             initList = new List<string>();
         }
 
+        private static bool GetPath(UIBind setting, Transform _transform, out string path)
+        {
+            if (_transform.Equals(setting.transform))
+            {
+                path = String.Empty;
+                return false;
+            }
+
+            path = String.Empty;
+            while (_transform.Equals(setting.transform) is false)
+            {
+                if (_transform.parent is null)
+                {
+                    break;
+                }
+
+                path = _transform.name + "/" + path;
+                _transform = _transform.parent;
+            }
+
+            path = path.Substring(0, path.Length - 1);
+            return true;
+        }
+
         private void GenericAllCode()
         {
-            foreach (var VARIABLE in setting.options)
+            foreach (var VARIABLE in setting.bindList)
             {
                 AddField($"\t\tpublic GameObject go_{VARIABLE.name}{{ get; private set; }}");
                 AddDispose($"\t\t\tgo_{VARIABLE.name} = null;");
-                AddInit($"\t\t\tgo_{VARIABLE.name} = this.gameObject.transform.Find(\"{VARIABLE.path}\").gameObject;");
-                foreach (var VARIABLE2 in VARIABLE.selector.items)
+                GetPath(setting, VARIABLE.target.transform, out var path);
+                AddInit($"\t\t\tgo_{VARIABLE.name} = this.gameObject.transform.Find(\"{path}\").gameObject;");
+                if (VARIABLE.selection is null || VARIABLE.selection.Count == 0)
                 {
-                    if (VARIABLE2.isOn is false)
+                    continue;
+                }
+
+
+                foreach (var VARIABLE2 in VARIABLE.selection)
+                {
+                    if (UIBindRulerConfig.instance.TryGetRuler(VARIABLE2, out var rule) is false)
                     {
                         continue;
                     }
 
-                    if (UIBindRulerConfig.instance.TryGetRuler(VARIABLE2.name, out var rule) is false)
-                    {
-                        continue;
-                    }
-
+                    Debug.Log("type:" + string.Join(",", VARIABLE.selection));
                     GenericInitializedCode(VARIABLE, rule);
                     switch (rule.TypeName)
                     {
@@ -115,7 +142,7 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericLoopScrollViewerCode(UIBindData variable, string fieldName)
         {
-            LoopScrollViewer loopScrollViewer = setting.transform.Find(variable.path).GetComponent<LoopScrollViewer>();
+            LoopScrollViewer loopScrollViewer = variable.target.GetComponent<LoopScrollViewer>();
             if (loopScrollViewer == null)
             {
                 return;
@@ -154,13 +181,7 @@ namespace ZGame.Editor.PSD2GUI
         {
             if (rule.TypeName.Equals("UIBind"))
             {
-                Transform target = setting.transform.Find(variable.path);
-                if (target == null)
-                {
-                    return;
-                }
-
-                UIBind bindData = target.GetComponent<UIBind>();
+                UIBind bindData = variable.target.GetComponent<UIBind>();
                 if (bindData == null)
                 {
                     return;
@@ -194,15 +215,10 @@ namespace ZGame.Editor.PSD2GUI
 
         private void GenericTempleteComponent(UIBindData variable, string fieldName)
         {
-            Transform target = setting.transform.Find(variable.path);
-            if (target == null)
-            {
-                return;
-            }
-
-            UIBind bindData = target.GetComponent<UIBind>();
+            UIBind bindData = variable.target.GetComponent<UIBind>();
             if (bindData == null)
             {
+                Debug.Log("UIBind not found");
                 return;
             }
 
@@ -500,7 +516,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
 
-            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Sprite sprite)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}({nameof(Sprite)} sprite)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -508,7 +524,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup($"\t\t\t{fieldName}.texture = sprite.texture;");
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
-            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(Texture2D texture)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}({nameof(Texture2D)} texture)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -517,7 +533,7 @@ namespace ZGame.Editor.PSD2GUI
             AddSetup("\t\t}");
             AddSetup(Environment.NewLine);
 
-            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}(RenderTexture texture)");
+            AddSetup($"\t\tpublic void on_setup_{VARIABLE.name}({nameof(RenderTexture)} texture)");
             AddSetup("\t\t{");
             AddSetup($"\t\t\tif ({fieldName}== null)");
             AddSetup($"\t\t\t\treturn;");
@@ -592,6 +608,7 @@ namespace ZGame.Editor.PSD2GUI
             }
 
             sb.AppendLine($"\t[{nameof(RefPath)}(\"{temp}\")]");
+            sb.AppendLine($"[{nameof(UIOptions)}({nameof(UILayer.Middle)}, {nameof(SceneType.Overlap)}, {nameof(CacheType.Permanent)})]");
             sb.AppendLine("\tpublic class UICode_" + setting.name + " : UIBind_" + setting.name);
             sb.AppendLine("\t{");
             int index = 0;
@@ -634,7 +651,7 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("\t\t/// By:" + SystemInfo.deviceName);
             sb.AppendLine("\t\t/// Time: " + DateTime.Now.ToString("g"));
             sb.AppendLine("\t\t/// </summary>");
-            sb.AppendLine($"\t\tpublic class Templete_{setting.NameSpace} : UIBase");
+            sb.AppendLine($"\t\tpublic class Templete_{setting.NameSpace} : {nameof(UIBase)}");
             sb.AppendLine($"\t\t{{");
             fieldList.ForEach(x => sb.AppendLine("\t" + x));
             sb.AppendLine("\t\t\tpublic override void Awake()");
@@ -650,7 +667,7 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("\t\t\t}");
             sb.AppendLine($"\t\t\tpublic Templete_{setting.NameSpace} Instantiate(params object[] args)");
             sb.AppendLine("\t\t\t{");
-            sb.AppendLine($"\t\t\t\tTemplete_{setting.NameSpace} _templete = GameFrameworkFactory.Spawner<Templete_{setting.NameSpace}>();");
+            sb.AppendLine($"\t\t\t\tTemplete_{setting.NameSpace} _templete = {nameof(RefPooled)}.Spawner<Templete_{setting.NameSpace}>();");
             sb.AppendLine("\t\t\t\t_templete.gameObject = GameObject.Instantiate(this.gameObject);");
             sb.AppendLine("\t\t\t\t_templete.gameObject.transform.SetParent(this.gameObject.transform.parent);");
             sb.AppendLine("\t\t\t\t_templete.transform.localPosition = Vector3.zero;");
@@ -686,7 +703,7 @@ namespace ZGame.Editor.PSD2GUI
             sb.AppendLine("\t/// By:" + SystemInfo.deviceName);
             sb.AppendLine("\t/// Time: " + DateTime.Now.ToString("g"));
             sb.AppendLine("\t/// </summary>");
-            sb.AppendLine("\tpublic class UIBind_" + setting.name + " : UIBase");
+            sb.AppendLine($"\tpublic class UIBind_{setting.name} : {nameof(UIBase)}");
             sb.AppendLine("\t{");
             templeteList.ForEach(x => sb.AppendLine(x));
             fieldList.ForEach(x => sb.AppendLine(x));

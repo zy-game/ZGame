@@ -22,8 +22,8 @@ namespace ZGame.VFS
             NFSManager disk = RefPooled.Spawner<NFSManager>();
             disk.name = name;
             disk._bundles = new ConcurrentStack<NFSDirctory>();
-            ZG.Logger.Log(name);
-            ZG.Logger.Log(PlayerPrefs.GetString(name, "[]"));
+            CoreAPI.Logger.Log(name);
+            CoreAPI.Logger.Log(PlayerPrefs.GetString(name, "[]"));
             List<string> vfsList = JsonConvert.DeserializeObject<List<string>>(PlayerPrefs.GetString(name, "[]"));
             foreach (string n in vfsList)
             {
@@ -57,7 +57,7 @@ namespace ZGame.VFS
         {
             string cfg = JsonConvert.SerializeObject(_bundles.Select(x => x.name).ToArray());
             PlayerPrefs.SetString(this.name, cfg);
-            ZG.Logger.Log(cfg);
+            CoreAPI.Logger.Log(cfg);
         }
 
         /// <summary>

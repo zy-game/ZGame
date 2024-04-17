@@ -21,7 +21,7 @@ namespace ZGame.UI
             Action onFinish = args[2] as Action;
             float time = (float)args[1];
             await UniTask.Delay((int)(time * 1000));
-            ZG.UI.Inactive<UITips>();
+            CoreAPI.UI.Inactive<UITips>();
             onFinish?.Invoke();
         }
 
@@ -57,8 +57,8 @@ namespace ZGame.UI
         /// <param name="onFinish">提示框关闭回调</param>
         public static void Show(string content, float timeout, Action onFinish)
         {
-            ZG.Logger.Log("tips:" + content);
-            ZG.UI.Active<UITips>(new object[] { content, timeout, onFinish });
+            CoreAPI.Logger.Log("tips:" + content);
+            CoreAPI.UI.Active<UITips>(new object[] { content, timeout, onFinish });
         }
 
         /// <summary>

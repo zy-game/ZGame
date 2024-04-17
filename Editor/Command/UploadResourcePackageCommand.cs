@@ -63,7 +63,7 @@ namespace ZGame.Editor.Command
 
         private static void OSSUpload(OSSOptions options, string filePath)
         {
-            string putName = $"{ZG.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
+            string putName = $"{CoreAPI.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
             if (client is null)
             {
                 var accessKeyId = options.key;
@@ -109,7 +109,7 @@ namespace ZGame.Editor.Command
         {
             try
             {
-                string putName = $"{ZG.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
+                string putName = $"{CoreAPI.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
                 if (server is null)
                 {
                     COSXML.CosXmlConfig config = new COSXML.CosXmlConfig.Builder().SetRegion(options.region).Build();

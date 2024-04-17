@@ -66,11 +66,11 @@ namespace ZGame.Sound
             _source.clip = clip;
             string name = clip.name;
             Resume();
-            ZG.Logger.Log("开始播放：" + name);
+            CoreAPI.Logger.Log("开始播放：" + name);
             await UniTask.WaitForSeconds(0.1f);
             await UniTask.WaitWhile(() => _source.isPlaying);
             Stop();
-            ZG.Logger.Log("播放结束：" + name);
+            CoreAPI.Logger.Log("播放结束：" + name);
         }
 
         public void Pause()

@@ -16,7 +16,7 @@ namespace ZGame
         public static void CompressToPath(string fileName, string ext, params string[] args)
         {
             byte[] bytes = Compress(ext, args);
-            File.WriteAllBytes(ZG.GetPlatformOutputPath(fileName), bytes);
+            File.WriteAllBytes(CoreAPI.GetPlatformOutputPath(fileName), bytes);
         }
 
         /// <summary>

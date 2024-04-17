@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -25,10 +26,11 @@ namespace ZGame.Editor.ExcelExprot
 
             var table = args[0] as DataTable;
             int headerRowIndex = (int)args[1];
-            int typeRowIndex = (int)args[2];
-            int dataRowIndex = (int)args[3];
-            Object output = (Object)args[4];
-            string nameSpace = args[5].ToString();
+            int dataRowIndex = (int)args[2];
+            int typeRowIndex = (int)args[3];
+            int descIndex = (int)args[4];
+            Object output = (Object)args[5];
+            string nameSpace = args[6].ToString();
 
             DataRow header = table.Rows[headerRowIndex];
             if (header is null)
@@ -42,7 +44,9 @@ namespace ZGame.Editor.ExcelExprot
                 return;
             }
 
-            CodeGener codeGen = new CodeGener(table.TableName);
+            DataRow descRow = table.Rows[descIndex];
+
+            CodeGenerMapping codeGen = new CodeGenerMapping(table.TableName, "此代码由工具生成，任何修改在再次生成时都不会被保留");
             codeGen.AddReferenceNameSpace("System", "System.Linq", "System.Collections", "System.Collections.Generic", "UnityEngine", "ZGame");
             codeGen.SetInherit(nameof(IConfigDatable));
             codeGen.SetNameSpace(nameSpace);
@@ -54,10 +58,10 @@ namespace ZGame.Editor.ExcelExprot
                     continue;
                 }
 
-                codeGen.SetProperty(header[i].ToString(), typeRow[i].ToString(), CodeGen.ACL.Public);
+                codeGen.SetProperty(header[i].ToString(), typeRow[i].ToString(), descRow[i].ToString(), CodeGen.ACL.Public);
             }
 
-            codeGen.BeginMethod("Equals", false, true, "bool", ACL.Public, new ParamsList(new CodeGen.Params("object", "value")));
+            codeGen.BeginMethod("Equals", false, true, String.Empty, "bool", ACL.Public, new ParamsList(new CodeGen.Params("object", "value")));
             codeGen.BeginCodeScope("if (value is null)");
             codeGen.WriteLine("return false;");
             codeGen.EndCodeScope();
@@ -66,7 +70,7 @@ namespace ZGame.Editor.ExcelExprot
             codeGen.EndCodeScope();
             codeGen.WriteLine($"return {header[0].ToString()} == ({typeRow[0].ToString()})value;");
             codeGen.EndMethod();
-            codeGen.BeginMethod("Equals", false, false, "bool", ACL.Public, new ParamsList(new CodeGen.Params("string", "field"), new CodeGen.Params("object", "value")));
+            codeGen.BeginMethod("Equals", false, false, String.Empty, "bool", ACL.Public, new ParamsList(new CodeGen.Params("string", "field"), new CodeGen.Params("object", "value")));
             codeGen.BeginCodeScope("switch(field)");
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
@@ -84,7 +88,7 @@ namespace ZGame.Editor.ExcelExprot
             codeGen.EndCodeScope();
             codeGen.WriteLine("return false;");
             codeGen.EndMethod();
-            codeGen.BeginMethod("Release", false, true, String.Empty, ACL.Public);
+            codeGen.BeginMethod("Release", false, false, String.Empty, String.Empty, ACL.Public);
             for (int i = 0; i < header.ItemArray.Length; i++)
             {
                 string name = header.ItemArray[i].ToString();
@@ -97,7 +101,7 @@ namespace ZGame.Editor.ExcelExprot
             }
 
             codeGen.EndMethod();
-            codeGen.BeginMethod("InitConfig", true, false, $"List<{table.TableName}>", ACL.Private);
+            codeGen.BeginMethod("InitConfig", true, false, String.Empty, $"List<{table.TableName}>", ACL.Private);
             codeGen.BeginCodeScope("return new () ");
             for (int rowIndex = dataRowIndex; rowIndex < table.Rows.Count; rowIndex++)
             {
@@ -122,11 +126,11 @@ namespace ZGame.Editor.ExcelExprot
             return $"{name} = " + t switch
             {
                 "int" => $"{v}",
-                "float" => $"{v}",
+                "float" => $"{v}f",
                 "bool" => $"{(v == "0" ? "false" : "true")}",
                 "string" => $"@\"{v}\"",
                 "int[]" => $"new int [] {{{v}}}",
-                "float[]" => $"new float [] {{v}}",
+                "float[]" => $"new float [] {{{string.Join(",", v.Split(",").Select(x => x + "f"))}}}",
                 "bool[]" => $"new bool [] {{{string.Join(",", v.Split(",").Select(x => x == "0" ? "false" : "true"))}}}",
                 "string[]" => $"new string [] {{{string.Join(",", v.Split(",").Select(x => $"@\"{x}\""))}}}"
             };
@@ -134,7 +138,7 @@ namespace ZGame.Editor.ExcelExprot
 
         private string GetStructData(DataRow row, DataRow header, DataRow typeRow, int rowIndex)
         {
-            string templete = "new () {";
+            List<string> fields = new List<string>();
             for (int columnIndex = 0; columnIndex < row.ItemArray.Length; columnIndex++)
             {
                 string data = row.ItemArray[columnIndex].ToString();
@@ -144,12 +148,10 @@ namespace ZGame.Editor.ExcelExprot
                     continue;
                 }
 
-                templete += GetDefaultValue(typeRow[columnIndex].ToString(), name, data);
+                fields.Add(GetDefaultValue(typeRow[columnIndex].ToString(), name, data));
             }
 
-            templete.Replace("\n", String.Empty);
-            templete += "},";
-            return templete;
+            return $"new () {{{string.Join(",", fields)}}},";
         }
     }
 }

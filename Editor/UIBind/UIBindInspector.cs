@@ -41,7 +41,7 @@ namespace ZGame.Editor.PSD2GUI
                     return;
                 }
 
-                if (setting.options.Count == 0)
+                if (setting.bindList.Count == 0)
                 {
                     EditorUtility.DisplayDialog("Error", "Please select bind list", "OK");
                     return;

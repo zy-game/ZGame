@@ -32,7 +32,7 @@ namespace ZGame.Notify
     /// <summary>
     /// 事件通知管理器
     /// </summary>
-    public sealed class NotifyManager : ZModule
+    public sealed class NotifyManager : GameFrameworkModule
     {
         private bool isTouch = false;
         private List<KeyCode> keyDownEvent = new();

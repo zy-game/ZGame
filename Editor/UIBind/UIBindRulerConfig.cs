@@ -84,7 +84,6 @@ namespace ZGame.Editor.PSD2GUI
                     "ZGame",
                     "ZGame.UI",
                     "ZGame.Config",
-                    "ZGame.Resource",
                 };
             }
 

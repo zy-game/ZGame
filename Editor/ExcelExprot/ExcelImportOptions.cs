@@ -46,13 +46,12 @@ namespace ZGame.Editor.ExcelExprot
 
         public DataTable GetTable(string name)
         {
-            var o = _tables.Find(x => x.TableName == name);
-            if (o is null)
+            if (_tables is null)
             {
                 LoadTable();
             }
 
-            return GetTable(name);
+            return _tables.Find(x => x.TableName == name);
         }
 
         private void LoadTable()

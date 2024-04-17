@@ -57,14 +57,14 @@ namespace ZGame.Networking
                     pipeline.AddLast("echo", new UdpClientHandler(this, dispatcher));
                 }));
                 channel = await bootstrap.ConnectAsync(host, port).ConfigureAwait(false);
-                ZG.Logger.Log("Connect Success：" + address);
+                CoreAPI.Logger.Log("Connect Success：" + address);
                 this.isConnected = true;
                 this.cid = cid;
                 return Status.Success;
             }
             catch (Exception e)
             {
-                ZG.Logger.LogError(e);
+                CoreAPI.Logger.LogError(e);
                 RefPooled.Release(this);
                 return Status.Fail;
             }
@@ -106,7 +106,7 @@ namespace ZGame.Networking
 
             public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
             {
-                ZG.Logger.LogFormat("Exception: {0}", exception);
+                CoreAPI.Logger.LogFormat("Exception: {0}", exception);
                 context.CloseAsync();
             }
         }

@@ -43,22 +43,22 @@ namespace ZGame.VFS
             }
             else
             {
-                resourcePackageListManifest = await ZG.Network.GetData<ResourcePackageListManifest>(iniFilePath);
+                resourcePackageListManifest = await CoreAPI.Network.GetData<ResourcePackageListManifest>(iniFilePath);
             }
 
 
             if (resourcePackageListManifest is null)
             {
-                ZG.Logger.LogError("没有找到资源包列表配置文件：" + iniFilePath);
+                CoreAPI.Logger.LogError("没有找到资源包列表配置文件：" + iniFilePath);
                 return Status.Fail;
             }
 
             if (resourcePackageListManifest.appVersion.Equals(GameConfig.instance.version) is false)
             {
-                if (await UIMsgBox.ShowAsync(ZG.Language.Query("App 版本过低，请重新安装App后在使用")))
+                if (await UIMsgBox.ShowAsync(CoreAPI.Language.Query("App 版本过低，请重新安装App后在使用")))
                 {
                     Application.OpenURL(GameConfig.instance.apkUrl);
-                    ZStartup.Quit();
+                    GameFrameworkStartup.Quit();
                 }
 
                 throw new Exception("App 版本过低，请重新安装App后在使用");
@@ -164,14 +164,14 @@ namespace ZGame.VFS
             ResourcePackageListManifest resourcePackageListManifest = _packageListManifests.Find(x => x.name == packageName);
             if (resourcePackageListManifest is null)
             {
-                ZG.Logger.LogError("没有找到资源包列表配置文件：" + packageName);
+                CoreAPI.Logger.LogError("没有找到资源包列表配置文件：" + packageName);
                 return needUpdatePackages;
             }
 
 
             foreach (var package in resourcePackageListManifest.packages)
             {
-                if (ZG.VFS.Exist(package.name, package.version) || needUpdatePackages.Contains(package))
+                if (CoreAPI.VFS.Exist(package.name, package.version) || needUpdatePackages.Contains(package))
                 {
                     continue;
                 }

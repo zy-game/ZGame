@@ -37,10 +37,10 @@ namespace ZGame.UI
 
         internal static UIBase Create(string path, Type type, Canvas canvas)
         {
-            GameObject gameObject = ZG.VFS.GetGameObjectSync(path);
+            GameObject gameObject = CoreAPI.VFS.GetGameObjectSync(path);
             if (gameObject == null)
             {
-                ZG.Logger.Log("加载资源失败：" + path);
+                CoreAPI.Logger.Log("加载资源失败：" + path);
                 return default;
             }
 
@@ -98,7 +98,7 @@ namespace ZGame.UI
             name = String.Empty;
             foreach (var VARIABLE in _coroutines.Values)
             {
-                ZG.StopCoroutine(VARIABLE);
+                CoreAPI.StopCoroutine(VARIABLE);
             }
 
             _coroutines.Clear();
@@ -122,7 +122,7 @@ namespace ZGame.UI
             }
 
             StopCountDown(tmp_text);
-            _coroutines.Add(tmp_text, ZG.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
+            _coroutines.Add(tmp_text, CoreAPI.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace ZGame.UI
 
             if (_coroutines.TryGetValue(target, out Coroutine coroutine))
             {
-                ZG.StopCoroutine(coroutine);
+                CoreAPI.StopCoroutine(coroutine);
                 _coroutines.Remove(target);
             }
         }
