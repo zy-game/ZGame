@@ -5,11 +5,12 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
+using ZGame.Language;
 using ZGame.UI;
 
 namespace ZGame.VFS
 {
-    public class ResourcePackageManifestManager : IReference
+    public class PackageManifestManager : IReference
     {
         private List<ResourcePackageListManifest> _packageListManifests = new List<ResourcePackageListManifest>();
 
@@ -55,7 +56,7 @@ namespace ZGame.VFS
 
             if (resourcePackageListManifest.appVersion.Equals(GameConfig.instance.version) is false)
             {
-                if (await UIMsgBox.ShowAsync(CoreAPI.Language.Query("App 版本过低，请重新安装App后在使用")))
+                if (await UIMsgBox.ShowAsync(CoreAPI.Language.Query(CommonLanguage.AppLevelLow)))
                 {
                     Application.OpenURL(GameConfig.instance.apkUrl);
                     GameFrameworkStartup.Quit();

@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using ZGame.Networking;
 using ZGame.UI;
+using ZGame.VFS;
 
 namespace ZGame.Game
 {
@@ -245,6 +246,20 @@ namespace ZGame.Game
             return _entitys.CreateEntity();
         }
 
+        public Entity CreateFromPrefab(string prefabPath, Transform parent, Vector3 pos, Vector3 rot, Vector3 scl)
+        {
+            Entity entity = CreateEntity();
+            ResObject resObject = CoreAPI.VFS.GetAsset(prefabPath);
+            if (resObject.IsSuccess() is false)
+            {
+                return default;
+            }
+
+            TransformComponent transformComponent = entity.AddComponent<TransformComponent>();
+            transformComponent.gameObject = resObject.Instantiate(parent, pos, rot, scl);
+            return entity;
+        }
+
         /// <summary>
         /// 销毁实体
         /// </summary>
@@ -330,6 +345,21 @@ namespace ZGame.Game
         public ISystem GetSystem(Type type)
         {
             return _systems.GetSystem(type);
+        }
+
+        /// <summary>
+        /// 调用响应式系统
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void OnRunningResponsive<T>(params object[] args) where T : IResponsiveSystem
+        {
+            T responsiveSystem = GetSystem<T>();
+            if (responsiveSystem is null)
+            {
+                return;
+            }
+
+            responsiveSystem.OnRunning(args);
         }
 
         /// <summary>

@@ -13,7 +13,7 @@ namespace ZGame.Editor.ExcelExprot
 {
     class ExportCsharpCodeCommand : ICommandHandler
     {
-        public void Dispose()
+        public void Release()
         {
         }
 

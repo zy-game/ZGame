@@ -114,38 +114,43 @@ namespace ZGame.Networking
         /// <returns></returns>
         public async UniTask<T> PostData<T>(string url, object data, Dictionary<string, object> headers)
         {
-            Extension.StartSample();
-            object _data = default;
-            if (data is not string postData)
+#if UNITY_EDITOR
+            using (ProfileWatcher watcher = ProfileWatcher.StartProfileWatcher(url))
             {
-                postData = JsonConvert.SerializeObject(data);
-            }
-
-            using (UnityWebRequest request = UnityWebRequest.Post(url, postData))
-            {
-                headers = headers ?? new Dictionary<string, object>();
-                headers.TryAdd("Content-Type", "application/json");
-                request.SetIgnoreCertificate();
-                request.SetRequestHeaderWithCors(headers);
-                request.uploadHandler.Dispose();
-                request.uploadHandler = null;
-                using (request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(postData)))
+#endif
+                object _data = default;
+                if (data is not string postData)
                 {
-                    await request.SendWebRequest().ToUniTask();
-
-                    if (request.result is UnityWebRequest.Result.Success)
-                    {
-                        _data = request.GetResultData<T>();
-                    }
+                    postData = JsonConvert.SerializeObject(data);
                 }
 
-                CoreAPI.Logger.Log($"POST DATA:{url} parmas:{(postData).ToString()} state:{request.result} time:{Extension.GetSampleTime()}");
-                request.downloadHandler?.Dispose();
-                request.uploadHandler?.Dispose();
+                using (UnityWebRequest request = UnityWebRequest.Post(url, postData))
+                {
+                    headers = headers ?? new Dictionary<string, object>();
+                    headers.TryAdd("Content-Type", "application/json");
+                    request.SetIgnoreCertificate();
+                    request.SetRequestHeaderWithCors(headers);
+                    request.uploadHandler.Dispose();
+                    request.uploadHandler = null;
+                    using (request.uploadHandler = new UploadHandlerRaw(UTF8Encoding.UTF8.GetBytes(postData)))
+                    {
+                        await request.SendWebRequest().ToUniTask();
+
+                        if (request.result is UnityWebRequest.Result.Success)
+                        {
+                            CoreAPI.Logger.Log(request.downloadHandler.text);
+                            _data = request.GetResultData<T>();
+                        }
+                    }
+
+                    request.downloadHandler?.Dispose();
+                    request.uploadHandler?.Dispose();
+                }
+
+                return (T)_data;
+#if UNITY_EDITOR
             }
-
-
-            return (T)_data;
+#endif
         }
 
         /// <summary>
@@ -158,32 +163,36 @@ namespace ZGame.Networking
         /// <returns></returns>
         public async UniTask<T> PostDataForm<T>(string url, WWWForm form, Dictionary<string, object> headers)
         {
-            object _data = default;
-            Extension.StartSample();
-            using (UnityWebRequest request = UnityWebRequest.Post(url, form))
+#if UNITY_EDITOR
+            using (ProfileWatcher watcher = ProfileWatcher.StartProfileWatcher(url))
             {
-                headers = headers ?? new Dictionary<string, object>();
-                request.SetIgnoreCertificate();
-                request.SetRequestHeaderWithCors(headers);
-                request.uploadHandler.Dispose();
-                request.uploadHandler = null;
-                using (request.uploadHandler = new UploadHandlerRaw(form.data))
+#endif
+                object _data = default;
+                using (UnityWebRequest request = UnityWebRequest.Post(url, form))
                 {
-                    await request.SendWebRequest().ToUniTask();
-
-                    if (request.result is UnityWebRequest.Result.Success)
+                    headers = headers ?? new Dictionary<string, object>();
+                    request.SetIgnoreCertificate();
+                    request.SetRequestHeaderWithCors(headers);
+                    request.uploadHandler.Dispose();
+                    request.uploadHandler = null;
+                    using (request.uploadHandler = new UploadHandlerRaw(form.data))
                     {
-                        _data = request.GetResultData<T>();
+                        await request.SendWebRequest().ToUniTask();
+
+                        if (request.result is UnityWebRequest.Result.Success)
+                        {
+                            _data = request.GetResultData<T>();
+                        }
                     }
+
+                    request.downloadHandler?.Dispose();
+                    request.uploadHandler?.Dispose();
                 }
 
-                CoreAPI.Logger.Log($"POST FORM:{url} state:{request.result} time:{Extension.GetSampleTime()}");
-                request.downloadHandler?.Dispose();
-                request.uploadHandler?.Dispose();
+                return (T)_data;
+#if UNITY_EDITOR
             }
-
-
-            return (T)_data;
+#endif
         }
 
         /// <summary>
@@ -194,30 +203,35 @@ namespace ZGame.Networking
         /// <returns></returns>
         public async UniTask<T> GetData<T>(string url, bool isJson = true)
         {
-            Extension.StartSample();
-            object _data = default;
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+#if UNITY_EDITOR
+            using (ProfileWatcher watcher = ProfileWatcher.StartProfileWatcher(url))
             {
-                Dictionary<string, object> headers = new Dictionary<string, object>();
-                if (isJson)
+#endif
+                object _data = default;
+                using (UnityWebRequest request = UnityWebRequest.Get(url))
                 {
-                    headers.Add("Content-Type", "application/json");
+                    Dictionary<string, object> headers = new Dictionary<string, object>();
+                    if (isJson)
+                    {
+                        headers.Add("Content-Type", "application/json");
+                    }
+
+                    request.SetIgnoreCertificate();
+                    request.SetRequestHeaderWithCors(headers);
+                    await request.SendWebRequest().ToUniTask();
+                    if (request.result is UnityWebRequest.Result.Success)
+                    {
+                        _data = request.GetResultData<T>();
+                    }
+
+                    request.downloadHandler?.Dispose();
+                    request.uploadHandler?.Dispose();
                 }
 
-                request.SetIgnoreCertificate();
-                request.SetRequestHeaderWithCors(headers);
-                await request.SendWebRequest().ToUniTask();
-                if (request.result is UnityWebRequest.Result.Success)
-                {
-                    _data = request.GetResultData<T>();
-                }
-
-                CoreAPI.Logger.Log($"GET:{url} state:{request.result} time:{Extension.GetSampleTime()} data: {request.downloadHandler?.text}");
-                request.downloadHandler?.Dispose();
-                request.uploadHandler?.Dispose();
+                return (T)_data;
+#if UNITY_EDITOR
             }
-
-            return (T)_data;
+#endif
         }
 
         /// <summary>
@@ -228,25 +242,30 @@ namespace ZGame.Networking
         /// <returns></returns>
         public async UniTask<string> GetHead(string url, string headName)
         {
-            Extension.StartSample();
-            string result = "";
-            using (UnityWebRequest request = UnityWebRequest.Head(url))
+#if UNITY_EDITOR
+            using (ProfileWatcher watcher = ProfileWatcher.StartProfileWatcher(url))
             {
-                request.SetIgnoreCertificate();
-                request.SetRequestHeaderWithCors(null);
-                await request.SendWebRequest().ToUniTask();
-
-                if (request.result is UnityWebRequest.Result.Success)
+#endif
+                string result = "";
+                using (UnityWebRequest request = UnityWebRequest.Head(url))
                 {
-                    result = request.GetResponseHeader(headName);
+                    request.SetIgnoreCertificate();
+                    request.SetRequestHeaderWithCors(null);
+                    await request.SendWebRequest().ToUniTask();
+
+                    if (request.result is UnityWebRequest.Result.Success)
+                    {
+                        result = request.GetResponseHeader(headName);
+                    }
+
+                    request.downloadHandler?.Dispose();
+                    request.uploadHandler?.Dispose();
                 }
 
-                Debug.Log($"HEAD:{url} state:{request.result} time:{Extension.GetSampleTime()}");
-                request.downloadHandler?.Dispose();
-                request.uploadHandler?.Dispose();
+                return result;
+#if UNITY_EDITOR
             }
-
-            return result;
+#endif
         }
     }
 }

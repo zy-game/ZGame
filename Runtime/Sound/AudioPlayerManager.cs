@@ -9,223 +9,35 @@ using ZGame.VFS;
 
 namespace ZGame.Sound
 {
-    public enum PlayState
-    {
-        None,
-        Playing,
-        Paused,
-        Complete,
-    }
-
     /// <summary>
     /// 音效管理器
     /// </summary>
     public class AudioPlayerManager : GameFrameworkModule
     {
-        private List<AudioSourceHandler> _handles = new List<AudioSourceHandler>();
+        private List<IAudioPlayable> _handles = new List<IAudioPlayable>();
 
 
         public override void OnAwake(params object[] args)
         {
-            new GameObject("AUDIO PLAYER MANAGER").AddComponent<AudioListener>();
+            Create("Background Audio Playable", 1, true);
         }
 
-
-        /// <summary>
-        /// 指定的音效是否正在播放
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public bool HasPlayClip(string name)
+        public override void Update()
         {
-            return _handles.Find(x => x.name == name).isPlaying;
-        }
-
-        /// <summary>
-        /// 将音效加入指定的播放器播放队列
-        /// </summary>
-        /// <param name="playName"></param>
-        /// <param name="clipName"></param>
-        /// <param name="isLoop"></param>
-        /// <param name="playCallback"></param>
-        public async void PlaySound(string clipName, bool isLoop = false, Action<PlayState> playCallback = null)
-        {
-            using (ResObject resObject = CoreAPI.VFS.GetAsset(clipName))
+            for (int i = _handles.Count - 1; i >= 0; i--)
             {
-                PlaySound(resObject.GetAsset<AudioClip>(null), isLoop, (x) =>
-                {
-                    if (x is not PlayState.Complete)
-                    {
-                        return;
-                    }
-
-                    playCallback?.Invoke(x);
-                });
-            }
-        }
-
-        /// <summary>
-        /// 将音效加入指定的播放器播放队列
-        /// </summary>
-        /// <param name="playName"></param>
-        /// <param name="clip"></param>
-        /// <param name="isLoop"></param>
-        /// <param name="playCallback"></param>
-        public void PlaySound(AudioClip clip, bool isLoop = false, Action<PlayState> playCallback = null)
-        {
-            AudioSourceHandler handle = _handles.Find(x => x.isPlaying is false);
-            if (handle is null)
-            {
-                _handles.Add(handle = AudioSourceHandler.Create(null, "Audio Player " + _handles.Count, isLoop));
-            }
-
-            handle.Play(clip, playCallback);
-        }
-
-        /// <summary>
-        /// 将音效加入指定的播放器播放队列
-        /// </summary>
-        /// <param name="playName"></param>
-        /// <param name="clipName"></param>
-        /// <param name="isLoop"></param>
-        /// <param name="playCallback"></param>
-        public async UniTask PlaySoundAsync(string clipName, bool isLoop = false)
-        {
-            using (ResObject resObject = await CoreAPI.VFS.GetAssetAsync(clipName))
-            {
-                UniTaskCompletionSource tcs = new UniTaskCompletionSource();
-                PlaySound(resObject.GetAsset<AudioClip>(null), isLoop, (x) =>
-                {
-                    if (x is not PlayState.Complete)
-                    {
-                        return;
-                    }
-
-                    tcs.TrySetResult();
-                });
-                await tcs.Task;
-            }
-        }
-
-        /// <summary>
-        /// 将音效加入指定的播放器播放队列
-        /// </summary>
-        /// <param name="playName"></param>
-        /// <param name="clip"></param>
-        /// <param name="isLoop"></param>
-        /// <param name="playCallback"></param>
-        public UniTask PlaySoundAsync(AudioClip clip, bool isLoop = false)
-        {
-            UniTaskCompletionSource tcs = new UniTaskCompletionSource();
-            PlaySound(clip, isLoop, state =>
-            {
-                if (state is not PlayState.Complete)
-                {
-                    return;
-                }
-
-                tcs.TrySetResult();
-            });
-            return tcs.Task;
-        }
-
-
-        /// <summary>
-        /// 暂停指定的音效
-        /// </summary>
-        /// <param name="clipName"></param>
-        public void Pause(string clipName)
-        {
-            AudioSourceHandler handle = _handles.Find(x => x.clipName == clipName);
-            if (handle is null)
-            {
-                return;
-            }
-
-            handle.Pause();
-        }
-
-        /// <summary>
-        /// 暂停所有播放
-        /// </summary>
-        public void PauseAll()
-        {
-            foreach (AudioSourceHandler soundPlayer in _handles)
-            {
-                soundPlayer.Pause();
-            }
-        }
-
-        /// <summary>
-        /// 停止指定的播放器
-        /// </summary>
-        /// <param name="clipName"></param>
-        public void Stop(string clipName)
-        {
-            AudioSourceHandler handle = _handles.Find(x => x.clipName == clipName);
-            if (handle is null)
-            {
-                return;
-            }
-
-            handle.Stop();
-        }
-
-        /// <summary>
-        /// 停止所有音效的播放
-        /// </summary>
-        public void StopAll()
-        {
-            foreach (AudioSourceHandler soundPlayer in _handles)
-            {
-                soundPlayer.Stop();
-            }
-        }
-
-        /// <summary>
-        /// 恢复指定音效的播放
-        /// </summary>
-        /// <param name="clipName"></param>
-        public void Resume(string clipName)
-        {
-            AudioSourceHandler handle = _handles.Find(x => x.clipName == clipName);
-            if (handle is null)
-            {
-                return;
-            }
-
-            handle.Resume();
-        }
-
-        /// <summary>
-        /// 恢复所有音效的播放
-        /// </summary>
-        public void Resume()
-        {
-            foreach (AudioSourceHandler soundPlayer in _handles)
-            {
-                soundPlayer.Resume();
-            }
-        }
-
-        /// <summary>
-        /// 设置播放器音量
-        /// </summary>
-        /// <param name="volume"></param>
-        public void SetVolume(float volume)
-        {
-            foreach (AudioSourceHandler soundPlayer in _handles)
-            {
-                soundPlayer.SetVolume(volume);
+                _handles[i].Update();
             }
         }
 
         public override void Release()
         {
-            StopAll();
             Clear();
         }
 
+        /// <summary>
+        /// 清理所有播放器
+        /// </summary>
         public void Clear()
         {
             foreach (var handle in _handles)
@@ -234,6 +46,226 @@ namespace ZGame.Sound
             }
 
             _handles.Clear();
+        }
+
+        /// <summary>
+        /// 指定的播放器是否在播放
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool HasPlaying(string name)
+        {
+            IAudioPlayable playable = _handles.Find(x => x.name == name);
+            if (playable is null)
+            {
+                return false;
+            }
+
+            return playable.state == PlayState.Playing;
+        }
+
+
+        /// <summary>
+        /// 创建音效播放器
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="volume"></param>
+        /// <param name="isLoop"></param>
+        /// <returns></returns>
+        public IAudioPlayable Create(string name, float volume, bool isLoop)
+        {
+            IAudioPlayable result = default;
+            _handles.Add(result = IAudioPlayable.Create(name, volume, isLoop));
+            return result;
+        }
+
+        /// <summary>
+        /// 获取指定的音效播放器
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public IAudioPlayable GetPlayable(string name)
+        {
+            return _handles.Find(x => x.name == name);
+        }
+
+        /// <summary>
+        /// 获取或创建一个播放器
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="volume"></param>
+        /// <param name="isLoop"></param>
+        /// <returns></returns>
+        public IAudioPlayable GetOrCreatePlayable(string name, float volume, bool isLoop)
+        {
+            IAudioPlayable playable = _handles.Find(x => x.name == name);
+            if (playable is null)
+            {
+                return playable;
+            }
+
+            return Create(name, volume, isLoop);
+        }
+
+        /// <summary>
+        /// 获取未使用的音效播放器
+        /// </summary>
+        /// <param name="isLoop"></param>
+        /// <returns></returns>
+        public IAudioPlayable GetFree(bool isLoop = false)
+        {
+            IAudioPlayable playable = _handles.Find(x => x.state == PlayState.None);
+            if (playable is null)
+            {
+                return playable;
+            }
+
+            return Create("Audio Clip Playable " + _handles.Count, 1, isLoop);
+        }
+
+        /// <summary>
+        /// 全部播放器静音
+        /// </summary>
+        public void MuteAll()
+        {
+            _handles.ForEach(x => x.Mute());
+        }
+
+        /// <summary>
+        /// 恢复所有播放器
+        /// </summary>
+        public void ResumeAll()
+        {
+            _handles.ForEach(x => x.Resume());
+        }
+
+        /// <summary>
+        /// 设置所有播放器音量
+        /// </summary>
+        /// <param name="volume"></param>
+        public void SetAllVolume(float volume)
+        {
+            _handles.ForEach(x => x.SetVolume(volume));
+        }
+
+        /// <summary>
+        /// 停止所有播放器
+        /// </summary>
+        public void StopAll()
+        {
+            _handles.ForEach(x => x.Stop());
+        }
+
+        /// <summary>
+        /// 播放音效
+        /// </summary>
+        /// <param name="clipName"></param>
+        /// <param name="type"></param>
+        /// <param name="isLoop"></param>
+        /// <param name="callback"></param>
+        public async void PlaySound(string clipName, StreamingAssetType type, bool isLoop, Action<PlayState> callback)
+        {
+            if (clipName.IsNullOrEmpty())
+            {
+                callback.Invoke(PlayState.Error);
+                return;
+            }
+
+            if (type is not StreamingAssetType.Audio_MPEG && type is not StreamingAssetType.Audio_WAV)
+            {
+                callback.Invoke(PlayState.NotSupported);
+                return;
+            }
+
+            ResObject resObject = await CoreAPI.VFS.GetStreamingAssetAsync(clipName, type);
+            if (resObject.IsSuccess() is false)
+            {
+                return;
+            }
+
+            PlaySound(resObject.GetAsset<AudioClip>(), isLoop, x =>
+            {
+                callback?.Invoke(x);
+                if (x is PlayState.Complete)
+                {
+                    ResObject.Unload(resObject);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 播放音效
+        /// </summary>
+        /// <param name="clip"></param>
+        /// <param name="isLoop"></param>
+        /// <param name="callback"></param>
+        public void PlaySound(AudioClip clip, bool isLoop, Action<PlayState> callback)
+        {
+            if (clip == null)
+            {
+                callback?.Invoke(PlayState.Error);
+                return;
+            }
+
+            IAudioPlayable playable = GetFree();
+            playable.SetClip(clip);
+            playable.SetLoop(isLoop);
+            playable.SetCallback(callback);
+            playable.Play();
+        }
+
+        /// <summary>
+        /// 播放音效
+        /// </summary>
+        /// <param name="clipName"></param>
+        /// <param name="isLoop"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public async UniTask<PlayState> PlaySound(string clipName, bool isLoop, StreamingAssetType type)
+        {
+            if (clipName.IsNullOrEmpty())
+            {
+                return PlayState.Error;
+            }
+
+            if (type is not StreamingAssetType.Audio_MPEG && type is not StreamingAssetType.Audio_WAV)
+            {
+                return PlayState.NotSupported;
+            }
+
+            ResObject resObject = await CoreAPI.VFS.GetStreamingAssetAsync(clipName, type);
+            if (resObject.IsSuccess() is false)
+            {
+                return PlayState.Error;
+            }
+
+            PlayState state = await PlaySound(resObject.GetAsset<AudioClip>(), isLoop);
+            ResObject.Unload(resObject);
+            return state;
+        }
+
+        /// <summary>
+        /// 播放音效
+        /// </summary>
+        /// <param name="clip"></param>
+        /// <param name="isLoop"></param>
+        /// <returns></returns>
+        public UniTask<PlayState> PlaySound(AudioClip clip, bool isLoop)
+        {
+            if (clip == null)
+            {
+                return UniTask.FromResult(PlayState.Error);
+            }
+
+            UniTaskCompletionSource<PlayState> taskCompletionSource = new UniTaskCompletionSource<PlayState>();
+            PlaySound(clip, isLoop, x =>
+            {
+                if (x is PlayState.Complete)
+                {
+                    taskCompletionSource.TrySetResult(x);
+                }
+            });
+            return taskCompletionSource.Task;
         }
     }
 }

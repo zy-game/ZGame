@@ -17,20 +17,31 @@ namespace ZGame.VFS
     public partial class ResObject : IReference
     {
         public static ResObject DEFAULT => new ResObject();
-        private object obj;
+        private object source;
         private ResPackage parent;
 
+        /// <summary>
+        /// 资源名
+        /// </summary>
         public string name { get; private set; }
 
+        /// <summary>
+        /// 引用计数
+        /// </summary>
         public int refCount { get; private set; }
 
-        public Object Asset => (Object)obj;
-
+        /// <summary>
+        /// 所属资源包
+        /// </summary>
         private ResPackage Parent => parent;
 
+        /// <summary>
+        /// 加载是否成功
+        /// </summary>
+        /// <returns></returns>
         public bool IsSuccess()
         {
-            if (obj != null)
+            if (source != null)
             {
                 return true;
             }
@@ -38,40 +49,76 @@ namespace ZGame.VFS
             return false;
         }
 
-        public T GetAsset<T>(GameObject gameObject)
+        /// <summary>
+        /// 获取指定类型的资源
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetAsset<T>(GameObject gameObject = null) where T : Object
         {
-            if (obj == null)
+            if (source == null)
             {
                 Debug.Log("基础资源为空");
                 return default;
             }
 
             Ref();
-            gameObject?.SubscribeDestroyEvent(() => { Unref(); });
-            return (T)obj;
+            gameObject?.SubscribeDestroyEvent(() => { ResObject.Unload(this); });
+            if (typeof(T) == typeof(Sprite) && source is Texture2D texture2D)
+            {
+                source = Sprite.Create(texture2D, new Rect(Vector2.zero, new Vector2(texture2D.width, texture2D.height)), Vector2.one / 2);
+            }
+
+            return (T)source;
         }
+
+        /// <summary>
+        /// 实例化成游戏对象
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="pos"></param>
+        /// <param name="rot"></param>
+        /// <param name="scale"></param>
+        /// <returns></returns>
+        public GameObject Instantiate(Transform parent, Vector3 pos, Vector3 rot, Vector3 scale)
+        {
+            GameObject gameObject = (GameObject)GameObject.Instantiate((Object)source);
+            if (gameObject == null)
+            {
+                return gameObject;
+            }
+
+            gameObject.SubscribeDestroyEvent(() => { ResObject.Unload(this); });
+            if (parent != null)
+            {
+                gameObject.SetParent(parent.transform, pos, rot, scale);
+            }
+            else
+            {
+                gameObject.SetParent(null, pos, rot, scale);
+            }
+
+            return gameObject;
+        }
+
 
         public void Release()
         {
             Debug.Log("Dispose ResObject:" + name);
-            for (int i = 0; i < refCount; i++)
-            {
-                parent?.Unref();
-            }
-
             refCount = 0;
-            obj = null;
+            source = null;
             parent = null;
             name = String.Empty;
         }
 
-        public void Ref()
+        internal void Ref()
         {
             refCount++;
             parent?.Ref();
         }
 
-        public void Unref()
+        internal void Unref()
         {
             refCount--;
             parent?.Unref();
@@ -171,141 +218,31 @@ namespace ZGame.VFS
             return resObject is not null;
         }
 
+        public static void Unload(ResObject resObject)
+        {
+            resObject.Unref();
+            if (resObject.refCount > 0)
+            {
+                return;
+            }
+
+            resObjectCache.Add(resObject);
+            resObjects.Remove(resObject);
+        }
+
         internal static ResObject Create(ResPackage parent, object obj, string path)
         {
             if (obj == null)
             {
-                Debug.Log("obj is null");
-                return DEFAULT;
+                throw new NullReferenceException(nameof(obj));
             }
 
             ResObject resObject = RefPooled.Spawner<ResObject>();
-            resObject.obj = obj;
+            resObject.source = obj;
             resObject.name = path;
             resObject.parent = parent;
             resObject.refCount = 1;
-            return resObject;
-        }
-
-        public static ResObject Create(object obj, string path)
-        {
-            if (obj == null)
-            {
-                Debug.Log("obj is null");
-                return DEFAULT;
-            }
-
-            ResObject resObject = new ResObject();
-            resObject.obj = obj;
-            resObject.name = path;
-            resObject.parent = ResPackage.DEFAULT;
-            resObject.refCount = 1;
-            return resObject;
-        }
-
-
-        /// <summary>
-        /// 加载资源
-        /// </summary>
-        /// <param name="path">资源路径</param>
-        /// <returns>资源加载结果</returns>
-        internal static ResObject LoadResObjectSync(string path)
-        {
-            if (path.IsNullOrEmpty())
-            {
-                return ResObject.DEFAULT;
-            }
-
-            if (TryGetValue(path, out ResObject resObject))
-            {
-                return resObject;
-            }
-
-            if (path.StartsWith("Resources"))
-            {
-                resObject = ResObject.Create(ResPackage.DEFAULT, Resources.Load(path.Substring(10)), path);
-            }
-
-#if UNITY_EDITOR
-            else if (ResConfig.instance.resMode == ResourceMode.Editor && path.StartsWith("Assets"))
-            {
-                resObject = ResObject.Create(ResPackage.DEFAULT, UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path), path);
-            }
-#endif
-            else
-            {
-                if (CoreAPI.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
-                {
-                    CoreAPI.Logger.LogError("资源未找到：" + path);
-                    return ResObject.DEFAULT;
-                }
-
-                if (ResPackage.TryGetValue(manifest.name, out ResPackage package) is false)
-                {
-                    ResPackage.LoadingAssetBundleSync(manifest);
-                    return LoadResObjectSync(path);
-                }
-
-                resObject = ResObject.Create(package, package.bundle.LoadAsset(path), path);
-            }
-
-            if (resObject is not null && resObject.IsSuccess())
-            {
-                resObjects.Add(resObject);
-            }
-
-            return resObject;
-        }
-
-        /// <summary>
-        /// 加载资源
-        /// </summary>
-        /// <param name="path">资源路径</param>
-        /// <returns>资源加载任务</returns>
-        internal static async UniTask<ResObject> LoadResObjectAsync(string path)
-        {
-            if (path.IsNullOrEmpty())
-            {
-                return ResObject.DEFAULT;
-            }
-
-            if (TryGetValue(path, out ResObject resObject))
-            {
-                return resObject;
-            }
-
-            if (path.StartsWith("Resources"))
-            {
-                resObject = ResObject.Create(ResPackage.DEFAULT, await Resources.LoadAsync(path.Substring(10)), path);
-            }
-#if UNITY_EDITOR
-            else if (ResConfig.instance.resMode == ResourceMode.Editor)
-            {
-                resObject = ResObject.Create(ResPackage.DEFAULT, UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path), path);
-            }
-#endif
-            else
-            {
-                if (CoreAPI.VFS.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
-                {
-                    CoreAPI.Logger.LogError("资源未找到：" + path);
-                    return ResObject.DEFAULT;
-                }
-
-                if (ResPackage.TryGetValue(manifest.name, out ResPackage package) is false)
-                {
-                    await ResPackage.LoadingAssetBundleAsync(manifest);
-                    return await LoadResObjectAsync(path);
-                }
-
-                resObject = ResObject.Create(package, await package.bundle.LoadAssetAsync(path), path);
-            }
-
-            if (resObject is not null && resObject.IsSuccess())
-            {
-                resObjects.Add(resObject);
-            }
-
+            resObjects.Add(resObject);
             return resObject;
         }
     }

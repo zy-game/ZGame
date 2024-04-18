@@ -24,6 +24,7 @@ using ZGame.UI;
 
 namespace ZGame
 {
+
     /// <summary>
     /// 框架入口
     /// </summary>
@@ -237,12 +238,12 @@ namespace ZGame
             _handle.gameObject.SetParent(null, Vector3.zero, Vector3.zero, Vector3.one);
             GameObject.DontDestroyOnLoad(_handle.gameObject);
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            UILoading.SetTitle(Language.Query("正在获取配置信息..."));
+            UILoading.SetTitle(Language.Query(CommonLanguage.GetConfig));
             UILoading.SetProgress(0);
 
             if (await VFS.LoadingResourcePackageAsync(ResConfig.instance.defaultPackageName) is not Status.Success)
             {
-                UIMsgBox.Show(Language.Query("资源加载失败..."), GameFrameworkStartup.Quit);
+                UIMsgBox.Show(Language.Query(CommonLanguage.ResLoadFail), GameFrameworkStartup.Quit);
                 return;
             }
 

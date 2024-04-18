@@ -3,17 +3,6 @@ using UnityEngine;
 
 namespace ZGame.UI
 {
-    public enum ParamType
-    {
-        Int,
-        Float,
-        String,
-        Bool,
-        Vector2,
-        Vector3,
-        Vector4,
-        Color,
-    }
 
     [Serializable]
     public class SwitchOptions
@@ -28,16 +17,5 @@ namespace ZGame.UI
         public GameObject gameObject;
     }
 
-    public enum SwitchType2 : byte
-    {
-        Sprite,
-        Text,
-        GameObject,
-    }
-
-    public enum SwitchType : byte
-    {
-        Single,
-        Multiple,
-    }
+   
 }

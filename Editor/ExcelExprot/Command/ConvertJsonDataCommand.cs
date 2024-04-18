@@ -10,13 +10,10 @@ namespace ZGame.Editor.ExcelExprot
 {
     class ConvertJsonDataCommand : ICommandHandler<List<DataTable>>
     {
-        public void Dispose()
+        public void Release()
         {
         }
 
-        void ICommandHandler.OnExecute(params object[] args)
-        {
-        }
 
         public List<DataTable> OnExecute(params object[] args)
         {

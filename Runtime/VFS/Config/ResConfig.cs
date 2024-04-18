@@ -95,14 +95,7 @@ namespace ZGame.VFS
         }
     }
 
-    public enum OSSType
-    {
-        None,
-        Aliyun,
-        Tencent,
-        Streaming,
-        URL,
-    }
+
 
     [Serializable]
     public class OSSOptions

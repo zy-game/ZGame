@@ -7,4 +7,9 @@ namespace ZGame.Game
     {
         void OnFixedUpdate();
     }
+
+    public interface IResponsiveSystem : ISystem
+    {
+        void OnRunning(params object[] args);
+    }
 }

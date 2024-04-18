@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using ZGame;
 using ZGame.Config;
+using ZGame.Language;
 using ZGame.Notify;
 
 namespace ZGame.UI
@@ -45,12 +46,12 @@ namespace ZGame.UI
 
                 if (VARIABLE.name.Equals("text_yes"))
                 {
-                    VARIABLE.SetText(CoreAPI.Language.Query("确定"));
+                    VARIABLE.SetText(CoreAPI.Language.Query(CommonLanguage.Confirm));
                 }
 
                 if (VARIABLE.name.Equals("text_no"))
                 {
-                    VARIABLE.SetText(CoreAPI.Language.Query("取消"));
+                    VARIABLE.SetText(CoreAPI.Language.Query(CommonLanguage.Cancel));
                 }
             }
 
@@ -116,7 +117,7 @@ namespace ZGame.UI
         /// <param name="onNo">点击取消按钮回调</param>
         public static void Show(string content, Action onYes, Action onNo)
         {
-            Show(CoreAPI.Language.Query("提示"), content, onYes, onNo);
+            Show(CoreAPI.Language.Query(CommonLanguage.Tips), content, onYes, onNo);
         }
 
         /// <summary>
@@ -145,7 +146,7 @@ namespace ZGame.UI
         /// <returns>点击的是确定还是取消按钮</returns>
         public static UniTask<bool> ShowAsync(string content, bool isNo = false)
         {
-            return ShowAsync(CoreAPI.Language.Query("提示"), content, isNo);
+            return ShowAsync(CoreAPI.Language.Query(CommonLanguage.Tips), content, isNo);
         }
 
         /// <summary>

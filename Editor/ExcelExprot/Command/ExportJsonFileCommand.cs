@@ -12,7 +12,7 @@ namespace ZGame.Editor.ExcelExprot
 {
     class ExportJsonFileCommand : ICommandHandler
     {
-        public void Dispose()
+        public void Release()
         {
         }
 

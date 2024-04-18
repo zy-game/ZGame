@@ -11,6 +11,7 @@ public class GameFrameworkStartup : MonoBehaviour
 {
     private void Awake()
     {
+        this.gameObject.AddComponent<AudioListener>();
         GameObject.DontDestroyOnLoad(this.gameObject);
         CoreAPI.Initialized();
     }

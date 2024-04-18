@@ -109,7 +109,7 @@ namespace ZGame
         /// <param name="gameObject"></param>
         /// <param name="callback"></param>
         /// <param name="userData"></param>
-        public static void SubscribeColliderEntryEvent(this GameObject gameObject, UnityAction<object> callback, object userData)
+        public static void SubscribeColliderEntryEvent(this GameObject gameObject, UnityAction<object> callback, object userData = null)
         {
             if (gameObject == null)
             {
@@ -171,7 +171,7 @@ namespace ZGame
         /// <param name="gameObject"></param>
         /// <param name="callback"></param>
         /// <param name="userData"></param>
-        public static void SubscribeColliderExitEvent(this GameObject gameObject, UnityAction<object> callback, object userData)
+        public static void SubscribeColliderExitEvent(this GameObject gameObject, UnityAction<object> callback, object userData = null)
         {
             if (gameObject == null)
             {

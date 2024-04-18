@@ -6,121 +6,199 @@ using ZGame.VFS;
 
 namespace ZGame.Sound
 {
-    public class AudioSourceHandler : IReference
+    public interface IPlayable : IReference
     {
-        private AudioSource _source;
-        private ResObject resObject;
-        private Action<PlayState> callback;
-        public string name => _source.name;
+        string name { get; }
+        PlayState state { get; }
+        void Play();
+        void Update();
+    }
 
-        public bool isPlaying
+    /// <summary>
+    /// 音效播放器
+    /// </summary>
+    public interface IAudioPlayable : IPlayable
+    {
+        /// <summary>
+        /// 当前正在播放的音效片段
+        /// </summary>
+        AudioClip clip { get; }
+
+        /// <summary>
+        /// 播放器音量
+        /// </summary>
+        float volume { get; }
+
+        /// <summary>
+        /// 当前播放器是否循环
+        /// </summary>
+        bool loop { get; }
+
+
+        /// <summary>
+        /// 静音
+        /// </summary>
+        void Mute();
+
+        /// <summary>
+        /// 恢复播放
+        /// </summary>
+        void Resume();
+
+        /// <summary>
+        /// 设置音量
+        /// </summary>
+        /// <param name="f"></param>
+        void SetVolume(float f);
+
+        /// <summary>
+        /// 停止播放
+        /// </summary>
+        void Stop();
+
+        /// <summary>
+        /// 设置播放音效片段
+        /// </summary>
+        /// <param name="clip"></param>
+        void SetClip(AudioClip clip);
+
+        /// <summary>
+        /// 设置是否循环
+        /// </summary>
+        /// <param name="isLoop"></param>
+        void SetLoop(bool isLoop);
+
+        /// <summary>
+        /// 设置音效播放回调
+        /// </summary>
+        /// <param name="callback"></param>
+        void SetCallback(Action<PlayState> callback);
+
+        class PlayableChannel : IAudioPlayable
         {
-            get
+            private AudioSource audioSource;
+            private bool isStopping = false;
+            private Action<PlayState> callback;
+            public string name { get; private set; }
+            public PlayState state { get; private set; }
+            public AudioClip clip { get; private set; }
+            public float volume { get; private set; }
+            public bool loop { get; private set; }
+
+            public void Awake()
             {
-                if (_source == null)
+                audioSource = new GameObject(name).AddComponent<AudioSource>();
+                audioSource.loop = loop;
+                audioSource.volume = volume;
+            }
+
+            public void SetClip(AudioClip clip)
+            {
+                this.clip = clip;
+            }
+
+            public void SetLoop(bool isLoop)
+            {
+                this.loop = isLoop;
+                audioSource.loop = loop;
+            }
+
+            public void SetCallback(Action<PlayState> callback)
+            {
+                this.callback = callback;
+            }
+
+            public void SetVolume(float f)
+            {
+                volume = f;
+                audioSource.volume = volume;
+            }
+
+            public void Mute()
+            {
+                audioSource.volume = 0;
+                state = PlayState.Paused;
+                callback?.Invoke(state);
+            }
+
+            public void Resume()
+            {
+                audioSource.volume = volume;
+                audioSource.loop = loop;
+
+                if (state is not PlayState.Paused)
                 {
-                    return false;
+                    return;
                 }
 
-                return _source.isPlaying;
-            }
-        }
-
-        public string clipName
-        {
-            get
-            {
-                if (_source == null || _source.clip == null)
+                state = PlayState.Playing;
+                callback?.Invoke(state);
+                if (isStopping)
                 {
-                    return String.Empty;
+                    audioSource.Play();
+                }
+            }
+
+
+            public void Stop()
+            {
+                audioSource.Stop();
+                state = PlayState.Complete;
+                callback?.Invoke(state);
+            }
+
+            public async void Play()
+            {
+                if (this.clip == null)
+                {
+                    return;
                 }
 
-                return _source.clip.name;
+                isStopping = false;
+                audioSource.clip = clip;
+                audioSource.Play();
+                await UniTask.DelayFrame(1);
+                state = PlayState.Playing;
+                callback?.Invoke(state);
             }
-        }
 
-        public float volume
-        {
-            get
+            public void Update()
             {
-                if (_source == null)
+                if (state is not PlayState.Playing)
                 {
-                    return 0;
+                    return;
                 }
 
-                return _source.volume;
+                if (audioSource.isPlaying)
+                {
+                    return;
+                }
+
+                state = PlayState.Complete;
+                callback?.Invoke(state);
+                state = PlayState.None;
             }
-        }
 
-
-        public async void Play(AudioClip clip, Action<PlayState> callback)
-        {
-            if (clip == null)
+            public void Release()
             {
-                callback?.Invoke(PlayState.Complete);
-                Debug.Log("clip is null");
-                return;
+                this.clip = null;
+                GameObject.DestroyImmediate(this.audioSource.gameObject);
             }
 
-            this.callback = callback;
-            _source.clip = clip;
-            string name = clip.name;
-            Resume();
-            CoreAPI.Logger.Log("开始播放：" + name);
-            await UniTask.WaitForSeconds(0.1f);
-            await UniTask.WaitWhile(() => _source.isPlaying);
-            Stop();
-            CoreAPI.Logger.Log("播放结束：" + name);
-        }
-
-        public void Pause()
-        {
-            _source.Pause();
-            callback?.Invoke(PlayState.Paused);
-        }
-
-        public void Stop()
-        {
-            _source.Stop();
-            _source.clip = null;
-            callback?.Invoke(PlayState.Complete);
-            resObject = null;
-        }
-
-        public void Resume()
-        {
-            _source.Play();
-            callback?.Invoke(PlayState.Playing);
-        }
-
-        public void SetVolume(float volume)
-        {
-            _source.volume = volume;
-        }
-
-        public void Release()
-        {
-            Stop();
-            GameObject.DestroyImmediate(_source.gameObject);
-        }
-
-        public static AudioSourceHandler Create(GameObject gameObject, string name, bool isLoop)
-        {
-            AudioSourceHandler handler = RefPooled.Spawner<AudioSourceHandler>();
-            if (gameObject == null)
+            internal static PlayableChannel Create(string name, float volume, bool isLoop)
             {
-                gameObject = new GameObject(name);
-                gameObject.SetParent(null, Vector3.zero, Vector3.zero, Vector3.one);
-                GameObject.DontDestroyOnLoad(gameObject);
+                PlayableChannel channel = RefPooled.Spawner<PlayableChannel>();
+                channel.name = name;
+                channel.volume = volume;
+                channel.loop = isLoop;
+                channel.Awake();
+                return channel;
             }
+        }
 
-            if (gameObject.TryGetComponent<AudioSource>(out handler._source) is false)
-            {
-                handler._source = gameObject.AddComponent<AudioSource>();
-            }
-
-            handler._source.loop = isLoop;
-            return handler;
+        public static IAudioPlayable Create(string name, float volume, bool isLoop)
+        {
+            return PlayableChannel.Create(name, volume, isLoop);
         }
     }
 }

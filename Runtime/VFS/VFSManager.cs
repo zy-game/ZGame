@@ -15,8 +15,10 @@ using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using ZGame.Config;
 using ZGame.Game;
+using ZGame.Language;
 using ZGame.Networking;
 using ZGame.UI;
+using ZGame.VFS.Command;
 using Object = UnityEngine.Object;
 
 namespace ZGame.VFS
@@ -27,17 +29,13 @@ namespace ZGame.VFS
     public class VFSManager : GameFrameworkModule
     {
         private NFSManager _disk;
-        private float refreshTime;
-        private const string EDITOR_RESOURCES_PACKAGE = "EDITOR_RESOURCES_PACKAGE";
-        private const string NETWORK_RESOURCES_PACKAGE = "NETWORK_RESOURCES_PACKAGE";
-        private const string INTERNAL_RESOURCES_PACKAGE = "INTERNAL_RESOURCES_PACKAGE";
-
-        private ResourcePackageManifestManager manifestManager;
+        private float lastCheckUnuseResourceTime;
+        private PackageManifestManager manifestManager;
 
         public override void OnAwake(params object[] args)
         {
-            refreshTime = Time.realtimeSinceStartup;
-            manifestManager = new ResourcePackageManifestManager();
+            manifestManager = new PackageManifestManager();
+            lastCheckUnuseResourceTime = Time.realtimeSinceStartup;
             _disk = NFSManager.OpenOrCreateDisk(GameConfig.instance.title + " virtual data.disk");
         }
 
@@ -56,50 +54,13 @@ namespace ZGame.VFS
 
         public override void Update()
         {
-            if (Time.realtimeSinceStartup - refreshTime < ResConfig.instance.timeout)
+            if (Time.realtimeSinceStartup - lastCheckUnuseResourceTime < ResConfig.instance.timeout)
             {
                 return;
             }
 
-            refreshTime = Time.realtimeSinceStartup;
-            ResPackage.ReleaseUnusedRefObject();
-            ResPackage.CheckUnusedRefObject();
-            ResObject.ReleaseUnusedRefObject();
-            ResObject.CheckUnusedRefObject();
+            UnloadUnuseResources();
         }
-
-
-        // internal bool TryGetResPackage(string name, out ResPackage package)
-        // {
-        //     package = packages.Find(x => x.name == name);
-        //     if (package is null)
-        //     {
-        //         package = packageCache.Find(x => x.name == name);
-        //         if (package is not null)
-        //         {
-        //             packageCache.Remove(package);
-        //             packages.Add(package);
-        //         }
-        //     }
-        //
-        //     return package is not null;
-        // }
-        //
-        // internal bool TryGetResObject(string name, out ResObject resObject)
-        // {
-        //     resObject = resObjects.Find(x => x.name == name);
-        //     if (resObject is null)
-        //     {
-        //         resObject = resObjectCache.Find(x => x.name == name);
-        //         if (resObject is not null)
-        //         {
-        //             resObjectCache.Remove(resObject);
-        //             resObjects.Add(resObject);
-        //         }
-        //     }
-        //
-        //     return resObject is not null;
-        // }
 
         /// <summary>
         /// 获取资源所在包的清单
@@ -199,163 +160,102 @@ namespace ZGame.VFS
                 return Status.Fail;
             }
 #if !UNITY_WEBGL
-            if (await ResPackage.UpdateResourcePackageList(manifestManager.GetUpdateResourcePackageList(packageName).ToArray()) is not Status.Success)
+            using (UpdatePackageCommand command = RefPooled.Spawner<UpdatePackageCommand>())
             {
-                return Status.Fail;
+                if (await command.OnExecute(manifestManager.GetUpdateResourcePackageList(packageName).ToArray()) is not Status.Success)
+                {
+                    return Status.Fail;
+                }
             }
 #endif
-            if (await ResPackage.LoadingResourcePackageListAsync(manifestManager.GetResourcePackageAndDependencyList(packageName).ToArray()) is not Status.Success)
+            using (LoadingResPackageAsyncCommand command = RefPooled.Spawner<LoadingResPackageAsyncCommand>())
             {
-                return Status.Fail;
+                if (await command.OnExecute(manifestManager.GetResourcePackageAndDependencyList(packageName).ToArray()) is not Status.Success)
+                {
+                    return Status.Fail;
+                }
             }
 
             return Status.Success;
         }
 
         /// <summary>
-        /// 卸载资源包
+        /// 卸载未使用的资源对象和资源包
         /// </summary>
         /// <param name="packageNameList"></param>
-        public void UnloadPackages(params string[] packageNameList)
+        public void UnloadUnuseResources()
         {
-            if (packageNameList is null || packageNameList.Length == 0)
+            lastCheckUnuseResourceTime = Time.realtimeSinceStartup;
+            ResPackage.ReleaseUnusedRefObject();
+            ResPackage.CheckUnusedRefObject();
+            ResObject.ReleaseUnusedRefObject();
+            ResObject.CheckUnusedRefObject();
+        }
+
+        /// <summary>
+        /// 卸载指定的资源包
+        /// </summary>
+        /// <param name="packageNameList"></param>
+        public void UnloadResPackageList(string packageManifestName)
+        {
+            if (packageManifestName.IsNullOrEmpty())
             {
                 return;
             }
+
+            List<ResourcePackageManifest> manifests = manifestManager.GetResourcePackageAndDependencyList(packageManifestName);
+            if (manifests is null || manifests.Count == 0)
+            {
+                return;
+            }
+
+            manifests.ForEach(x => ResPackage.Unload(x.name));
         }
 
+        /// <summary>
+        /// 加载资源
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public ResObject GetAsset(string path)
         {
-            return ResObject.LoadResObjectSync(path);
+            using (LoadingResObjectCommand command = RefPooled.Spawner<LoadingResObjectCommand>())
+            {
+                return command.OnExecute(path);
+            }
         }
 
+        /// <summary>
+        /// 加载资源
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public async UniTask<ResObject> GetAssetAsync(string path)
         {
-            if (path.IsNullOrEmpty())
+            using (LoadingResObjectAsyncCommand command = RefPooled.Spawner<LoadingResObjectAsyncCommand>())
             {
-                return ResObject.DEFAULT;
+                return await command.OnExecute(path);
             }
-
-            return await ResObject.LoadResObjectAsync(path);
-        }
-
-
-        /// <summary>
-        /// 加载预制体
-        /// </summary>
-        /// <param name="path">预制体路径</param>
-        /// <returns></returns>
-        public GameObject GetGameObjectSync(string path)
-        {
-            ResObject resObject = ResObject.LoadResObjectSync(path);
-            if (resObject.IsSuccess() is false)
-            {
-                CoreAPI.Logger.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            GameObject gameObject = (GameObject)GameObject.Instantiate(resObject.GetAsset<Object>(null));
-            gameObject.SubscribeDestroyEvent(() => { resObject.Release(); });
-            return gameObject;
         }
 
         /// <summary>
-        /// 加载预制体
+        /// 获取网络资源
         /// </summary>
-        /// <param name="path">预制体路径</param>
-        /// <param name="parent">初始化时的父物体</param>
-        /// <param name="pos">初始化的位置</param>
-        /// <param name="rot">初始化的旋转</param>
-        /// <param name="scale">初始化时的缩放</param>
+        /// <param name="path"></param>
+        /// <param name="type"></param>
+        /// <param name="assetName"></param>
         /// <returns></returns>
-        /// <returns></returns>
-        public GameObject GetGameObjectSync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
-        {
-            GameObject gameObject = GetGameObjectSync(path);
-            if (gameObject != null)
-            {
-                if (parent != null)
-                {
-                    gameObject.SetParent(parent.transform, pos, rot, scale);
-                }
-                else
-                {
-                    gameObject.SetParent(null, pos, rot, scale);
-                }
-            }
-
-            return gameObject;
-        }
-
-        /// <summary>
-        /// 加载预制体
-        /// </summary>
-        /// <param name="path">预制体路径</param>
-        /// <returns></returns>
-        public async UniTask<GameObject> GetGameObjectAsync(string path)
-        {
-            ResObject resObject = await ResObject.LoadResObjectAsync(path);
-            if (resObject.IsSuccess() is false)
-            {
-                CoreAPI.Logger.LogError("加载资源失败：" + path);
-                return default;
-            }
-
-            GameObject gameObject = (GameObject)GameObject.Instantiate(resObject.GetAsset<Object>(null));
-            gameObject.SubscribeDestroyEvent(() => { resObject.Release(); });
-            return gameObject;
-        }
-
-        /// <summary>
-        /// 加载预制体
-        /// </summary>
-        /// <param name="path">预制体路径</param>
-        /// <param name="parent">初始化时的父物体</param>
-        /// <param name="pos">初始化的位置</param>
-        /// <param name="rot">初始化的旋转</param>
-        /// <param name="scale">初始化时的缩放</param>
-        /// <returns></returns>
-        public async UniTask<GameObject> GetGameObjectAsync(string path, GameObject parent, Vector3 pos, Vector3 rot, Vector3 scale)
-        {
-            GameObject gameObject = await GetGameObjectAsync(path);
-            if (gameObject != null)
-            {
-                if (parent != null)
-                {
-                    gameObject.SetParent(parent.transform, pos, rot, scale);
-                }
-                else
-                {
-                    gameObject.SetParent(null, pos, rot, scale);
-                }
-            }
-
-            return gameObject;
-        }
-
-        public async UniTask<ResObject> GetAudioStreamingAssetAsync(string path, AudioType type)
+        public async UniTask<ResObject> GetStreamingAssetAsync(string path, StreamingAssetType type, string assetName = "")
         {
             if (ResObject.TryGetValue(path, out ResObject resObject))
             {
                 return resObject;
             }
 
-            using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip(path, type))
+            using (LoadingStreamingAssetCommand command = RefPooled.Spawner<LoadingStreamingAssetCommand>())
             {
-                await request.SendWebRequest();
-                if (request.isNetworkError || request.isHttpError)
-                {
-                    CoreAPI.Logger.LogError("加载资源失败：" + path);
-                    return ResObject.DEFAULT;
-                }
-
-                AudioClip clip = DownloadHandlerAudioClip.GetContent(request);
-                clip.name = path;
-                resObject = ResObject.Create(ResPackage.DEFAULT, clip, path);
-                Debug.Log("audio clip:" + path);
+                return await command.OnExecute(path, type, assetName);
             }
-
-            return resObject;
         }
 
         /// <summary>
@@ -377,40 +277,10 @@ namespace ZGame.VFS
                 return sceneObject;
             }
 
-            UILoading.SetTitle(CoreAPI.Language.Query("加载场景中..."));
-            Scene scene = default;
-            ResPackage package = default;
-            AsyncOperation operation = default;
-            LoadSceneParameters parameters = new LoadSceneParameters(LoadSceneMode.Single);
-#if UNITY_EDITOR
-            if (ResConfig.instance.resMode == ResourceMode.Editor)
+            using (LoadingSceneCommand command = RefPooled.Spawner<LoadingSceneCommand>())
             {
-                operation = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, parameters);
+                return await command.OnExecute(path, callback, mode, manifestManager);
             }
-#endif
-            if (operation == null)
-            {
-                if (manifestManager.TryGetPackageManifestWithAssetName(path, out ResourcePackageManifest manifest) is false)
-                {
-                    return sceneObject;
-                }
-
-                if (ResPackage.TryGetValue(manifest.name, out package) is false)
-                {
-                    await ResPackage.LoadingResourcePackageListAsync(manifest);
-                    return await GetSceneAsync(path, callback, mode);
-                }
-                else
-                {
-                    operation = SceneManager.LoadSceneAsync(Path.GetFileNameWithoutExtension(path), parameters);
-                }
-            }
-
-            await operation.ToUniTask(UILoading.Show());
-            scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
-            sceneObject = ResObject.Create(package, scene, path);
-            UILoading.Hide();
-            return sceneObject;
         }
 
         /// <summary>
@@ -423,68 +293,10 @@ namespace ZGame.VFS
         /// <exception cref="FileNotFoundException"></exception>
         public async UniTask<Status> LoadingSubGameEntryPoint(string dllName, CodeMode mode)
         {
-            Assembly assembly = default;
-            if (mode is CodeMode.Native || (ResConfig.instance.resMode == ResourceMode.Editor && Application.isEditor))
+            using (LoadingHotfixAssemblyCommand command = RefPooled.Spawner<LoadingHotfixAssemblyCommand>())
             {
-                if (dllName.IsNullOrEmpty())
-                {
-                    throw new NullReferenceException(nameof(dllName));
-                }
-
-                CoreAPI.Logger.Log("原生代码：" + dllName);
-                assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals(dllName)).FirstOrDefault();
+                return await command.OnExecute(dllName, mode, manifestManager);
             }
-            else
-            {
-                string aotFileName = $"{dllName.ToLower()}_aot.bytes";
-                string hotfixFile = $"{dllName.ToLower()}_hotfix.bytes";
-                if (manifestManager.TryGetPackageVersion(aotFileName, out uint crc) is false || manifestManager.TryGetPackageVersion(hotfixFile, out crc) is false)
-                {
-                    throw new FileNotFoundException();
-                }
-
-                byte[] bytes = await _disk.ReadAsync(aotFileName);
-                Dictionary<string, byte[]> aotZipDict = await Zip.Decompress(bytes);
-                foreach (var VARIABLE in aotZipDict)
-                {
-                    if (RuntimeApi.LoadMetadataForAOTAssembly(VARIABLE.Value, HomologousImageMode.SuperSet) != LoadImageErrorCode.OK)
-                    {
-                        CoreAPI.Logger.LogError("加载AOT补元数据资源失败:" + VARIABLE.Key);
-                        continue;
-                    }
-                }
-
-                bytes = await _disk.ReadAsync(hotfixFile);
-                Dictionary<string, byte[]> dllZipDict = await Zip.Decompress(bytes);
-                if (dllZipDict.TryGetValue(dllName + ".dll", out byte[] dllBytes) is false)
-                {
-                    throw new NullReferenceException(dllName);
-                }
-
-                CoreAPI.Logger.Log("加载热更代码:" + dllName + ".dll");
-                assembly = Assembly.Load(dllBytes);
-            }
-
-            if (assembly is null)
-            {
-                UIMsgBox.Show(CoreAPI.Language.Query("未找到入口配置..."), GameFrameworkStartup.Quit);
-                return Status.Fail;
-            }
-
-            SubGameStartup subGameStartup = assembly.CreateInstance<SubGameStartup>();
-            if (subGameStartup is null)
-            {
-                UIMsgBox.Show(CoreAPI.Language.Query("未找到入口配置..."), GameFrameworkStartup.Quit);
-                return Status.Fail;
-            }
-
-            if (await subGameStartup.OnEntry() is not Status.Success)
-            {
-                UIMsgBox.Show(CoreAPI.Language.Query("加载游戏失败..."), GameFrameworkStartup.Quit);
-                return Status.Fail;
-            }
-
-            return Status.Success;
         }
     }
 }

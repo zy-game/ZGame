@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Sound;
+using ZGame.VFS;
 
 namespace ZGame.UI
 {
@@ -37,19 +38,16 @@ namespace ZGame.UI
 
         internal static UIBase Create(string path, Type type, Canvas canvas)
         {
-            GameObject gameObject = CoreAPI.VFS.GetGameObjectSync(path);
-            if (gameObject == null)
+            ResObject resObject = CoreAPI.VFS.GetAsset(path);
+            if (resObject.IsSuccess() is false)
             {
                 CoreAPI.Logger.Log("加载资源失败：" + path);
                 return default;
             }
 
             UIBase uiBase = (UIBase)RefPooled.Spawner(type);
+            GameObject gameObject = resObject.Instantiate(canvas.transform, Vector3.zero, Vector3.zero, Vector3.one);
             uiBase.gameObject = gameObject;
-            uiBase.gameObject.transform.SetParent(canvas.transform);
-            uiBase.gameObject.transform.position = Vector3.zero;
-            uiBase.gameObject.transform.rotation = Quaternion.Euler(Vector3.zero);
-            uiBase.gameObject.transform.localScale = Vector3.one;
             uiBase.name = gameObject.name;
             uiBase.rect_transform.sizeDelta = Vector2.zero;
             uiBase.rect_transform.anchoredPosition = Vector2.zero;
@@ -89,7 +87,7 @@ namespace ZGame.UI
             gameObject.SetActive(false);
         }
 
-        
+
         /// <summary>
         /// 释放UI界面
         /// </summary>

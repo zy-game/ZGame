@@ -45,13 +45,9 @@ namespace ZGame.Editor.ExcelExprot
             }
         }
 
-        public void Dispose()
+        public void Release()
         {
-        }
-
-        void ICommandHandler.OnExecute(params object[] args)
-        {
-            throw new NotImplementedException();
+            
         }
     }
 }

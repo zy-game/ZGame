@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using ZGame.Language;
+using ZGame.UI;
 
 namespace ZGame.Notify
 {
@@ -22,11 +24,11 @@ namespace ZGame.Notify
         }
     }
 
-    public enum KeyEventType : byte
+    public sealed class AppQuitEventDatable : IGameEventArgs
     {
-        Down,
-        Up,
-        Press
+        public void Release()
+        {
+        }
     }
 
     /// <summary>
@@ -37,6 +39,11 @@ namespace ZGame.Notify
         private bool isTouch = false;
         private List<KeyCode> keyDownEvent = new();
         private List<GameEventGroup> _handlers = new();
+
+        public override void OnAwake(params object[] args)
+        {
+            this.Subscribe(KeyCode.Escape, x => { UIMsgBox.Show(CoreAPI.Language.Query(CommonLanguage.Quit), CoreAPI.Uninitialized); });
+        }
 
         public override void Update()
         {

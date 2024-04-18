@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
+using ZGame.VFS;
 
 namespace ZGame
 {
@@ -15,6 +16,17 @@ namespace ZGame
         /// </summary>
         void IDisposable.Dispose()
         {
+            if (this is ResObject resObject)
+            {
+                ResObject.Unload(resObject);
+                return;
+            }
+
+            if (this is ResPackage resPackage)
+            {
+                ResPackage.Unload(resPackage);
+            }
+
             RefPooled.Release(this);
         }
 
