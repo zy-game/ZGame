@@ -43,7 +43,7 @@ public class PSDEditorWindow : EditorWindow {
 
     private Transform selectedTransform;
 
-    [MenuItem("Sprites/PSD Import")]
+    [MenuItem("Tools/PSD Import")]
     public static void ShowWindow() {
         var wnd = GetWindow<PSDEditorWindow>();
         wnd.title = "PSD Import";

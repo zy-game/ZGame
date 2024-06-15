@@ -11,6 +11,12 @@ namespace ZGame
     {
         public const string SPLIT = "%s";
 
+        public static string FirstUpper(this string str)
+        {
+            //将str首字母转为大写
+            return str.Substring(0, 1).ToUpper() + str.Substring(1);
+        }
+
         public static bool IsEnglish(string input)
         {
             // 英文字符的Unicode范围是 U+0041 到 U+005A（大写）和 U+0061 到 U+007A（小写）  

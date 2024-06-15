@@ -45,9 +45,11 @@ namespace ZGame.Editor
         public const string GUI_STYLE_LAYER_RANGE_SLIDER_SELECTION = "OL SelectedRow";
 
         public static Color inColor = new Color(1f, 0.92f, 0.01f, .8f);
-        public static Color outColor = new Color(0, 0, 0, 0.2f);
+        public static Color outColor = new Color(0, 0, 0, 0.3f);
+        public static Color selectColor = new Color(0, 0.5f, 1, 0.2f);
 
         public static Color splitColor = Color.black;
+        public static Color darkColor = new Color(0.2196079f, 0.2196079f, 0.2196079f, 1);
 
         public static string MORE_BUTTON_ICON = "d_more";
         public static string PLAY_BUTTON_ICON = "d_forward@2x";

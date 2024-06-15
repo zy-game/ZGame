@@ -3,153 +3,296 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using ZGame.Game;
 
 namespace ZGame.UI
 {
+    class BackupData : IReference
+    {
+        public int layer;
+        public Type uiType;
+
+        public void Release()
+        {
+            uiType = null;
+            layer = 0;
+        }
+
+        public static BackupData Create(int layer, Type uiType)
+        {
+            BackupData backupData = RefPooled.Alloc<BackupData>();
+            backupData.layer = layer;
+            backupData.uiType = uiType;
+            return backupData;
+        }
+    }
+
     /// <summary>
     /// 界面管理器
     /// </summary>
-    public sealed class UIManager : GameFrameworkModule
+    public sealed class UIManager : GameManager
     {
-        private List<UIRoot> rootList;
-        private GameObject eventSystem;
+        private UIStack _stack;
+        private UILayers _layers;
+        private List<IUIFrom> uiList = new();
+        private List<IUIFrom> cacheList = new();
+        private Stack<BackupData> _backupQueue = new();
+
 
         public override void OnAwake(params object[] args)
         {
-            eventSystem = new GameObject("EventSystem");
-            GameObject.DontDestroyOnLoad(eventSystem);
-            eventSystem.AddComponent<EventSystem>();
-            eventSystem.AddComponent<StandaloneInputModule>();
-
-            rootList = new List<UIRoot>()
-            {
-                new UIRoot(UILayer.Background),
-                new UIRoot(UILayer.Middle),
-                new UIRoot(UILayer.Popup),
-                new UIRoot(UILayer.Notification),
-            };
+            _stack = UIStack.Create();
+            _layers = UILayers.Create();
         }
 
-        /// <summary>
-        /// 激活窗口
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public T Active<T>(params object[] args) where T : UIBase
+
+        public void Backup()
         {
-            return (T)Active(typeof(T), args);
-        }
-
-        /// <summary>
-        /// 激活窗口
-        /// </summary>
-        /// <param name="type"></param>
-        public UIBase Active(Type type, params object[] args)
-        {
-            if (type is null || type.IsInterface || type.IsAbstract)
+            AppCore.Logger.Log("Backup");
+            // UIGroup group = _stack.Backup();
+            if (_backupQueue.TryPop(out var backup))
             {
-                CoreAPI.Logger.LogError("创建UI失败");
-                return default;
+                Close(backup.uiType);
+                RefPooled.Free(backup);
             }
 
-            if (typeof(UIBase).IsAssignableFrom(type) is false)
+            if (_backupQueue.TryPeek(out backup) is false)
             {
-                throw new NotImplementedException(nameof(type));
-            }
-
-            UIOptions options = type.GetCustomAttribute<UIOptions>();
-            if (options is null)
-            {
-                CoreAPI.Logger.LogError("没找到UIOptions:" + type.Name);
-                return default;
-            }
-
-            UIRoot root = rootList.Find(x => x.Contains(type));
-            if (root is null)
-            {
-                root = rootList.Find(x => x.layer == options.layer);
-            }
-
-            if (root is null)
-            {
-                rootList.Add(root = new UIRoot(options.layer));
-            }
-
-            return root.Active(options, type, args);
-        }
-
-        /// <summary>
-        /// 窗口失活
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public void Inactive<T>()
-        {
-            Inactive(typeof(T));
-        }
-
-        /// <summary>
-        /// 失活活UI
-        /// </summary>
-        /// <param name="uiBase"></param>
-        public void Inactive(UIBase uiBase)
-        {
-            if (uiBase is null)
-            {
-                CoreAPI.Logger.LogError("ui is null");
                 return;
             }
 
-            Inactive(uiBase.GetType());
+            Enable(backup.uiType);
+        }
+
+        /// <summary>
+        /// 显示或者加载UI
+        /// </summary>
+        /// <param name="layer"></param>
+        /// <param name="args"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Show<T>(int layer, params object[] args) where T : IUIFrom
+        {
+            return (T)Show(layer, typeof(T), args);
+        }
+
+        /// <summary>
+        /// 显示或者加载UI
+        /// </summary>
+        /// <param name="layer"></param>
+        /// <param name="args"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Show<T>(UILayer layer, params object[] args) where T : IUIFrom
+        {
+            return (T)Show((int)layer, typeof(T), args);
+        }
+
+        /// <summary>
+        /// 显示或者加载UI
+        /// </summary>
+        /// <param name="layer"></param>
+        /// <param name="type"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public IUIFrom Show(UILayer layer, Type type, params object[] args)
+        {
+            return Show((int)layer, type, args);
+        }
+
+        /// <summary>
+        /// 显示或者加载UI
+        /// </summary>
+        /// <param name="layer"></param>
+        /// <param name="type"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        /// <exception cref="NullReferenceException"></exception>
+        public IUIFrom Show(int layer, Type type, params object[] args)
+        {
+            if (type is null || type.IsInterface || type.IsAbstract || typeof(IUIFrom).IsAssignableFrom(type) is false)
+            {
+                AppCore.Logger.LogError("创建UI失败");
+                return default;
+            }
+
+            IUIFrom uiBase = GetWindow(type);
+            if (uiBase is null)
+            {
+                uiBase = cacheList.Find(x => x.GetType() == type);
+                if (uiBase is not null)
+                {
+                    cacheList.Remove(uiBase);
+                    uiList.Add(uiBase);
+                }
+                else
+                {
+                    RefPath refPath = type.GetCustomAttribute<RefPath>();
+                    if (refPath is null)
+                    {
+                        throw new NullReferenceException(nameof(RefPath));
+                    }
+
+                    uiBase = UIBase.Create(refPath.path, type);
+                    _layers.SetChild(layer, uiBase.rect_transform);
+                    uiList.Add(uiBase);
+                    uiBase.Awake();
+                }
+
+                uiBase.Start(args);
+            }
+
+            if (uiBase.GetType().GetCustomAttribute<UIBackup>() is not null)
+            {
+                if (_backupQueue.TryPeek(out var data))
+                {
+                    Disable(data.uiType);
+                }
+
+                _backupQueue.Push(BackupData.Create(layer, type));
+            }
+
+            UIName uiName = uiBase.GetType().GetCustomAttribute<UIName>();
+            if (uiName is not null)
+            {
+                AppCore.Logger.Log("Show " + uiName.name);
+                GetWindow<IUITitle>()?.SetTitle(uiName.name.IsNullOrEmpty() ? AppCore.Language.Query(uiName.code) : uiName.name);
+            }
+
+
+            uiBase.Enable();
+            return uiBase;
+        }
+
+        /// <summary>
+        /// 隐藏窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void Disable<T>() where T : IUIFrom
+        {
+            Disable(typeof(T));
         }
 
         /// <summary>
         /// 隐藏窗口
         /// </summary>
         /// <param name="type"></param>
-        public void Inactive(Type type)
+        public void Disable(Type type)
         {
-            if (type is null)
+            AppCore.Logger.Log("Disable");
+            IUIFrom ui = GetWindow(type);
+            if (ui is null)
             {
-                CoreAPI.Logger.LogError(new NullReferenceException(type.Name));
                 return;
             }
 
-            if (typeof(UIBase).IsAssignableFrom(type) is false)
-            {
-                throw new NotImplementedException(nameof(type));
-            }
-
-            UIRoot root = rootList.Find(x => x.Contains(type));
-            if (root is null)
-            {
-                CoreAPI.Logger.LogError("没有找到父节点：" + type.Name);
-                return;
-            }
-
-            root.Inactive(type);
+            ui.Disable();
         }
 
-        public T GetWindow<T>() where T : UIBase
+        /// <summary>
+        /// 隐藏所有窗口
+        /// </summary>
+        /// <param name="type"></param>
+        public void DisableAll(Type type)
+        {
+            uiList.ForEach(x => x.Disable());
+        }
+
+        /// <summary>
+        /// 隐藏窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void Enable<T>() where T : IUIFrom
+        {
+            Enable(typeof(T));
+        }
+
+        /// <summary>
+        /// 隐藏窗口
+        /// </summary>
+        /// <param name="type"></param>
+        public void Enable(Type type)
+        {
+            IUIFrom ui = GetWindow(type);
+            if (ui is null)
+            {
+                return;
+            }
+
+            ui.Enable();
+        }
+
+        /// <summary>
+        /// 隐藏所有窗口
+        /// </summary>
+        /// <param name="type"></param>
+        public void EnableAll(Type type)
+        {
+            uiList.ForEach(x => x.Enable());
+        }
+
+        /// <summary>
+        /// 关闭指定类型的窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void Close<T>() where T : IUIFrom
+        {
+            Close(typeof(T));
+        }
+
+        /// <summary>
+        /// 关闭指定类型的窗口
+        /// </summary>
+        /// <param name="type"></param>
+        public void Close(Type type)
+        {
+            IUIFrom ui = GetWindow(type);
+            if (ui is null)
+            {
+                return;
+            }
+
+            ui.Disable();
+            cacheList.Add(ui);
+            uiList.Remove(ui);
+        }
+
+        /// <summary>
+        /// 关闭所有窗口
+        /// </summary>
+        public void CloseAll()
+        {
+            AppCore.Logger.Log("Close");
+            _backupQueue.Clear();
+            uiList.ForEach(x => x.Disable());
+            cacheList.AddRange(uiList);
+            uiList.Clear();
+        }
+
+        /// <summary>
+        /// 获取指定类型的窗口
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetWindow<T>() where T : IUIFrom
         {
             return (T)GetWindow(typeof(T));
         }
 
-        public UIBase GetWindow(Type type)
+        /// <summary>
+        /// 获取指定类型的窗口
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public IUIFrom GetWindow(Type type)
         {
-            if (typeof(UIBase).IsAssignableFrom(type) is false)
+            if (typeof(IUIFrom).IsAssignableFrom(type) is false)
             {
                 throw new NotImplementedException(nameof(type));
             }
 
-            UIRoot root = rootList.Find(x => x.Contains(type));
-            if (root is null)
-            {
-                CoreAPI.Logger.LogError("没有找到父节点：" + type.Name);
-                return default;
-            }
-
-            return root.GetWindow(type);
+            return uiList.Find(x => type.IsAssignableFrom(x.GetType()));
         }
 
         /// <summary>
@@ -157,18 +300,20 @@ namespace ZGame.UI
         /// </summary>
         public void Clear()
         {
-            for (int i = 0; i < rootList.Count; i++)
-            {
-                RefPooled.Release(rootList[i]);
-            }
+            uiList.ForEach(RefPooled.Free);
+            cacheList.ForEach(RefPooled.Free);
+            uiList.Clear();
+            cacheList.Clear();
+        }
 
-            rootList.Clear();
+        public Vector3 WorldToScreenPoint(Vector3 worldPosition, Camera renderCamera)
+        {
+            return _layers.WorldToScreenPoint(worldPosition, renderCamera);
         }
 
         public override void Release()
         {
             Clear();
-            GC.SuppressFinalize(this);
         }
     }
 }

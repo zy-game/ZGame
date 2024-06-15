@@ -1,27 +1,84 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace ZGame.Config
 {
-    public class ConfigManager : GameFrameworkModule
+    public class ConfigManager : GameManager
     {
-        private Dictionary<Type, ConfigHandler> cfgDict;
+        private Dictionary<Type, ConfigBase> cfgDict;
 
         public override void OnAwake(params object[] args)
         {
-            cfgDict = new Dictionary<Type, ConfigHandler>();
+            cfgDict = new Dictionary<Type, ConfigBase>();
         }
 
-        private ConfigHandler GetMap<T>() where T : IConfigDatable
+        /// <summary>
+        /// 加载配置表
+        /// </summary>
+        /// <param name="path"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T LoadConfig<T>(string path) where T : ConfigBase
         {
-            if (cfgDict.TryGetValue(typeof(T), out ConfigHandler cfg) is false)
+            if (cfgDict.TryGetValue(typeof(T), out var cfg))
             {
-                cfgDict.Add(typeof(T), cfg = new ConfigHandler());
+                return (T)cfg;
             }
 
-            return cfg;
+            var resObject = AppCore.Resource.LoadAsset<T>(path);
+            if (resObject is null || resObject.IsSuccess() is false)
+            {
+                return default;
+            }
+
+            cfg = resObject.GetAsset<T>();
+            if (cfg is LanguageConfig languageConfig)
+            {
+                AppCore.Language.SetData(languageConfig);
+            }
+
+            return (T)cfg;
+        }
+
+        /// <summary>
+        /// 加载配置表
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T LoadConfig<T>() where T : ConfigBase
+        {
+            if (cfgDict.TryGetValue(typeof(T), out var cfg))
+            {
+                return (T)cfg;
+            }
+
+            var refPath = typeof(T).GetCustomAttribute<RefPath>();
+            if (refPath is null)
+            {
+                AppCore.Logger.LogError("RefPath is null");
+                return default;
+            }
+
+            return LoadConfig<T>(refPath.path);
+        }
+
+        /// <summary>
+        /// 获取指定的配置
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetConfig<T>() where T : ConfigBase
+        {
+            if (cfgDict.TryGetValue(typeof(T), out var cfg))
+            {
+                return (T)cfg;
+            }
+
+            return LoadConfig<T>();
         }
 
         /// <summary>
@@ -29,89 +86,52 @@ namespace ZGame.Config
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public int Count<T>() where T : IConfigDatable
+        public int Count<T>() where T : ConfigBase
         {
-            return GetMap<T>().Count<T>();
-        }
-
-        /// <summary>
-        /// 判断配置项是否存在
-        /// </summary>
-        /// <param name="value"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public bool Contains<T>(T value) where T : IConfigDatable
-        {
-            return GetMap<T>().Contains(value);
-        }
-
-        /// <summary>
-        /// 获取配置项
-        /// </summary>
-        /// <param name="value"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T GetConfig<T>(object value) where T : IConfigDatable
-        {
-            return GetMap<T>().GetConfig<T>(value);
-        }
-
-        /// <summary>
-        /// 获取配置项
-        /// </summary>
-        /// <param name="match"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T GetConfig<T>(Predicate<T> match) where T : IConfigDatable
-        {
-            return GetMap<T>().GetConfig(match);
-        }
-
-        /// <summary>
-        /// 获取所有配置项
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T[] All<T>() where T : IConfigDatable
-        {
-            return GetMap<T>().All<T>();
-        }
-
-        public T[] GetRange<T>(int start, int end) where T : IConfigDatable
-        {
-            return GetMap<T>().GetRange<T>(start, end);
-        }
-
-        /// <summary>
-        /// 筛选配置项
-        /// </summary>
-        /// <param name="match"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T[] Where<T>(Predicate<T> match) where T : IConfigDatable
-        {
-            return GetMap<T>().Where(match);
-        }
-
-        /// <summary>
-        /// 通过下标获取配置
-        /// </summary>
-        /// <param name="index"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T GetConfigWithIndex<T>(int index) where T : IConfigDatable
-        {
-            return GetMap<T>().GetRange<T>(index, 1).FirstOrDefault();
-        }
-
-        public override void Release()
-        {
-            foreach (var VARIABLE in cfgDict.Values)
+            if (cfgDict.TryGetValue(typeof(T), out var cfg))
             {
-                RefPooled.Release(VARIABLE);
+                return cfg.Config.Count;
+            }
+
+            return 0;
+        }
+
+        public void Clear()
+        {
+            foreach (var VARIABLE in cfgDict.Keys)
+            {
+                RefPath refPath = VARIABLE.GetCustomAttribute<RefPath>();
+                if (refPath is null)
+                {
+                    continue;
+                }
+
+                AppCore.Resource.Unload(refPath.path);
             }
 
             cfgDict.Clear();
+        }
+
+        public void Remove<T>() where T : ConfigBase
+        {
+            Remove((typeof(T)));
+        }
+
+        public void Remove(Type type)
+        {
+            if (typeof(ConfigBase).IsAssignableFrom(type) is false)
+            {
+                return;
+            }
+
+            cfgDict.Remove(type);
+            RefPath refPath = type.GetCustomAttribute<RefPath>();
+            if (refPath is null)
+            {
+                return;
+            }
+
+            AppCore.Resource.Unload(refPath.path);
         }
     }
 }

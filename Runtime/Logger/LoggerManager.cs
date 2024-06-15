@@ -1,12 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace ZGame.Logger
 {
-    public class LoggerManager : GameFrameworkModule
+    public class LoggerManager : GameManager
     {
-        private bool _isDebug = GameConfig.instance.isDebug;
+        private bool _isDebug;
+        private ILogger _log;
+
+        public override void OnAwake(params object[] args)
+        {
+            _isDebug = AppCore.isDebug;
+            _log = ILogger.Create("DEFAULT LOGGER");
+        }
+
+        public ILogger CreateLogger(string name)
+        {
+            return ILogger.Create(name);
+        }
 
         /// <summary>
         /// 输出普通日志
@@ -19,7 +31,7 @@ namespace ZGame.Logger
                 return;
             }
 
-            Debug.Log(msg);
+            _log.Log(msg);
         }
 
         /// <summary>
@@ -34,7 +46,7 @@ namespace ZGame.Logger
                 return;
             }
 
-            Debug.LogFormat(format, args);
+            _log.LogFormat(format, args);
         }
 
         /// <summary>
@@ -48,7 +60,7 @@ namespace ZGame.Logger
                 return;
             }
 
-            Debug.LogError(msg);
+            _log.LogError(msg);
         }
 
         /// <summary>
@@ -63,7 +75,7 @@ namespace ZGame.Logger
                 return;
             }
 
-            Debug.LogErrorFormat(format, args);
+            _log.LogErrorFormat(format, args);
         }
 
         /// <summary>
@@ -77,7 +89,7 @@ namespace ZGame.Logger
                 return;
             }
 
-            Debug.LogWarning(msg);
+            _log.LogWarning(msg);
         }
 
         /// <summary>
@@ -92,7 +104,7 @@ namespace ZGame.Logger
                 return;
             }
 
-            Debug.LogWarningFormat(format, args);
+            _log.LogWarningFormat(format, args);
         }
     }
 }

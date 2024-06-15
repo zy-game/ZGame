@@ -2,16 +2,43 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using ZGame.Game;
+using ZGame.UI;
 
 namespace ZGame
 {
     public static partial class Extension
     {
+
+
+        public static string GetPathWithToRoot(this Transform _transform, Transform root)
+        {
+            if (_transform.Equals(root))
+            {
+                return String.Empty;
+            }
+
+            string path = String.Empty;
+            while (_transform.Equals(root) is false)
+            {
+                if (_transform.parent is null)
+                {
+                    break;
+                }
+
+                path = _transform.name + "/" + path;
+                _transform = _transform.parent;
+            }
+
+            path = path.Substring(0, path.Length - 1);
+            return path;
+        }
+
         public static void SetIgnoreCertificate(this UnityWebRequest request)
         {
             if (request == null)
@@ -63,29 +90,6 @@ namespace ZGame
             }
 
             SetRequestHeaderWithCors(request, null);
-        }
-
-        public static T GetResultData<T>(this UnityWebRequest request)
-        {
-            object _data = default;
-            if (typeof(T) == typeof(string))
-            {
-                _data = request.downloadHandler.text;
-            }
-            else if (typeof(T) == typeof(byte[]))
-            {
-                _data = request.downloadHandler.data;
-            }
-            else if (typeof(T) is JObject)
-            {
-                _data = JObject.Parse(request.downloadHandler.text);
-            }
-            else
-            {
-                _data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
-            }
-
-            return (T)_data;
         }
 
         public static void SetBoxCollider(this GameObject gameObject, Vector3 center, Vector3 size, bool isTrigger)
@@ -243,7 +247,7 @@ namespace ZGame
         /// </summary>
         /// <param name="gameObject"></param>
         /// <param name="action"></param>
-        public static void SubscribeDestroyEvent(this GameObject gameObject, UnityAction action)
+        public static void DestroyEvent(this GameObject gameObject, UnityAction action)
         {
             if (gameObject == null)
             {
@@ -291,6 +295,16 @@ namespace ZGame
             gameObject.transform.localPosition = position;
             gameObject.transform.localRotation = Quaternion.Euler(rotation);
             gameObject.transform.localScale = scale;
+        }
+
+        public static void SetRectTransformSizeDelta(this RectTransform rectTransform, Vector2 size)
+        {
+            rectTransform.sizeDelta = size;
+        }
+
+        public static void SetRectTransformAnchoredPosition(this RectTransform rectTransform, Vector2 pos)
+        {
+            rectTransform.anchoredPosition = pos;
         }
 
         public static string ToBase64String(this AudioClip clip)
@@ -374,7 +388,7 @@ namespace ZGame
                 {
                     // VARIABLE.sharedMesh.RecalculateBounds();
                     boundscenter += VARIABLE.sharedMesh.bounds.center;
-                    CoreAPI.Logger.Log(VARIABLE.sharedMesh.bounds);
+                    AppCore.Logger.Log(VARIABLE.sharedMesh.bounds);
                     count++;
                 }
             }

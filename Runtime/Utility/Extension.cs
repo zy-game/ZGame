@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
@@ -15,6 +15,11 @@ namespace ZGame
 {
     public static partial class Extension
     {
+        public static TimeSpan ToTimeSpan(this DateTime dateTime)
+        {
+            return new TimeSpan(dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Millisecond);
+        }
+
         /// <summary>
         /// 对lenght进行最大均分
         /// </summary>
@@ -82,6 +87,22 @@ namespace ZGame
             editor.Copy();
         }
 
+        public static long GetHash(this byte[] data, int index, int length)
+        {
+            const int p = 16777619;
+            long hash = 2166136261L;
 
+            for (int i = index; i < index + length; i++)
+            {
+                hash = (hash ^ data[i]) * p;
+            }
+
+            hash += hash << 13;
+            hash ^= hash >> 7;
+            hash += hash << 3;
+            hash ^= hash >> 17;
+            hash += hash << 5;
+            return hash;
+        }
     }
 }

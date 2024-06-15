@@ -18,7 +18,5 @@ namespace ZGame.UI
         {
             _userData = args;
         }
-        
-        
     }
 }

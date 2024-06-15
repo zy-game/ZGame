@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -13,25 +14,37 @@ namespace ZGame
     /// </summary>
     public class Zip
     {
-        public static void CompressToPath(string fileName, string ext, params string[] args)
+        public static void ComperessDirectory(string fileName, string dir)
         {
-            byte[] bytes = Compress(ext, args);
-            File.WriteAllBytes(CoreAPI.GetPlatformOutputPath(fileName), bytes);
+            byte[] bytes = Compress(Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories));
+            File.WriteAllBytes(AppCore.GetFileOutputPath(fileName), bytes);
+        }
+
+        public static void ComperessDirectory(string fileName, string ext, string dir)
+        {
+            byte[] bytes = Compress(Directory.GetFiles(dir, ext, SearchOption.AllDirectories));
+            File.WriteAllBytes(AppCore.GetFileOutputPath(fileName), bytes);
+        }
+
+        public static void CompressFiles(string fileName, params string[] files)
+        {
+            byte[] bytes = Compress(files);
+            File.WriteAllBytes(AppCore.GetFileOutputPath(fileName), bytes);
         }
 
         /// <summary>
         /// 压缩字节数组
         /// </summary>
         /// <param name="args"></param>
-        public static byte[] Compress(string ext, params string[] args)
+        public static byte[] Compress(params string[] files)
         {
             using (MemoryStream ms = new MemoryStream())
             {
                 using (ZipArchive archive = new ZipArchive(ms, ZipArchiveMode.Create))
                 {
-                    foreach (string s in args)
+                    foreach (string s in files)
                     {
-                        AddFileToZip(archive, s, ext);
+                        AddFileToZip(archive, s);
                     }
                 }
 
@@ -39,19 +52,8 @@ namespace ZGame
             }
         }
 
-        private static void AddFileToZip(ZipArchive archive, string s, string ext)
+        private static void AddFileToZip(ZipArchive archive, string s)
         {
-            if (Path.GetExtension(s).IsNullOrEmpty())
-            {
-                string[] files = Directory.GetFiles(s, ext, SearchOption.AllDirectories);
-                foreach (string file in files)
-                {
-                    AddFileToZip(archive, file, ext);
-                }
-
-                return;
-            }
-
             if (File.Exists(s) is false)
             {
                 return;
@@ -71,14 +73,14 @@ namespace ZGame
         /// 解压缩字节数组
         /// </summary>
         /// <param name="str"></param>
-        public static UniTask<string[]> Decompress(string zip, string dir)
+        public static async UniTask<string[]> Decompress(string zip, string dir)
         {
             if (zip.IsNullOrEmpty() || dir.IsNullOrEmpty())
             {
                 return default;
             }
 
-            return Decompress(File.ReadAllBytes(zip), dir);
+            return await Decompress(await File.ReadAllBytesAsync(zip), dir);
         }
 
         /// <summary>
@@ -118,7 +120,7 @@ namespace ZGame
         /// 解压缩字节数组
         /// </summary>
         /// <param name="str"></param>
-        public static async UniTask<Dictionary<string, byte[]>> Decompress(byte[] zip)
+        public static async UniTask<Dictionary<string, byte[]>> Decompress(byte[] zip, CancellationToken cancellationToken = default)
         {
             if (zip is null || zip.Length == 0)
             {
@@ -136,9 +138,9 @@ namespace ZGame
                         {
                             using (MemoryStream m = new MemoryStream())
                             {
-                                await stream.CopyToAsync(m);
+                                await stream.CopyToAsync(m, cancellationToken);
                                 files.Add(entry.FullName, m.ToArray());
-                                await m.FlushAsync();
+                                await m.FlushAsync(cancellationToken);
                             }
                         }
                     }

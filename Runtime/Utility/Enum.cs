@@ -1,5 +1,31 @@
+using System.ComponentModel;
+
 namespace ZGame
 {
+    public enum BuildRuler : byte
+    {
+        /// <summary>
+        /// 将所有文件打入一个资源包中
+        /// </summary>
+        Once,
+
+        /// <summary>
+        /// 以单个资源为一个包
+        /// </summary>
+        Asset,
+
+        /// <summary>
+        /// 按文件夹打包
+        /// </summary>
+        Folder,
+    }
+
+    public enum BuildType : byte
+    {
+        Bundle,
+        Bytes
+    }
+
     /// <summary>
     /// 资源模式
     /// </summary>
@@ -7,23 +33,31 @@ namespace ZGame
     {
         Editor,
         Simulator,
-        Internal
     }
 
+    /// <summary>
+    /// 代码模式
+    /// </summary>
     public enum CodeMode
     {
         Native,
         Hotfix,
     }
 
+    /// <summary>
+    /// 状态标志
+    /// </summary>
     public enum Status : byte
     {
         None,
         Success,
+        Cancel,
         Fail,
-        Runing,
     }
 
+    /// <summary>
+    /// 云存储类型
+    /// </summary>
     public enum OSSType
     {
         None,
@@ -43,17 +77,10 @@ namespace ZGame
         NotSupported
     }
 
-    public enum KeyEventType : byte
-    {
-        Down,
-        Up,
-        Press
-    }
-
     /// <summary>
     /// 游戏状态
     /// </summary>
-    public enum GameState : byte
+    public enum RunningStated : byte
     {
         None,
         Ready,
@@ -63,43 +90,11 @@ namespace ZGame
         Over,
     }
 
+  
+
     /// <summary>
-    /// 帧同步消息号
+    /// 参数类型
     /// </summary>
-    internal enum SyncOpcode : byte
-    {
-        /// <summary>
-        /// 玩家加入
-        /// </summary>
-        PLAYER_JOIN = 100,
-
-        /// <summary>
-        /// 玩家离开
-        /// </summary>
-        PLAYER_LEAVE = 101,
-
-        /// <summary>
-        /// 玩家准备
-        /// </summary>
-        PLAYER_READY = 102,
-
-        /// <summary>
-        /// 游戏开始
-        /// </summary>
-        GAME_START = 103,
-
-        /// <summary>
-        /// 同步帧数据
-        /// </summary>
-        UPDATE_FRAME_DATA = 104,
-
-        /// <summary>
-        /// 游戏结束
-        /// </summary>
-        GAME_OVER = 105
-    }
-
-
     public enum ParamType
     {
         Int,
@@ -149,43 +144,6 @@ namespace ZGame
         /// 通知弹窗层
         /// </summary>
         Notification = 150,
-    }
-
-    /// <summary>
-    /// 界面显示方式
-    /// </summary>
-    public enum SceneType : byte
-    {
-        /// <summary>
-        /// 叠加窗口
-        /// </summary>
-        Addition,
-
-        /// <summary>
-        /// 覆盖窗口
-        /// </summary>
-        Overlap,
-    }
-
-    /// <summary>
-    /// 缓存类型
-    /// </summary>
-    public enum CacheType : byte
-    {
-        /// <summary>
-        /// 零时缓存，用完就删，不会缓存此标记的物体
-        /// </summary>
-        Temp,
-
-        /// <summary>
-        /// 常驻行，用完回收进缓存池中，等待下次使用
-        /// </summary>
-        Permanent,
-
-        /// <summary>
-        /// 自动管理，由框架根据运行时状态自动管理卸载
-        /// </summary>
-        Auto,
     }
 
     /// <summary>

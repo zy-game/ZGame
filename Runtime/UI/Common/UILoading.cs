@@ -8,7 +8,6 @@ using UnityEngine.UI;
 namespace ZGame.UI
 {
     [RefPath("Resources/Loading")]
-    [UIOptions(UILayer.Notification, SceneType.Overlap, CacheType.Permanent)]
     public class UILoading : UIBase, IProgress<float>
     {
         private Slider slider;
@@ -88,7 +87,7 @@ namespace ZGame.UI
                 return _instance;
             }
 
-            return _instance = CoreAPI.UI.Active<UILoading>();
+            return _instance = AppCore.UI.Show<UILoading>(UILayer.Notification);
         }
 
         /// <summary>
@@ -101,7 +100,7 @@ namespace ZGame.UI
                 return;
             }
 
-            CoreAPI.UI.Inactive<UILoading>();
+            AppCore.UI.Close<UILoading>();
             _instance = null;
         }
     }

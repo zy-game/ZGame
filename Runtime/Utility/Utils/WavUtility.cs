@@ -36,7 +36,9 @@ namespace ZGame
         {
             if (filePath.StartsWith(Application.persistentDataPath) || filePath.StartsWith(Application.dataPath))
                 return WavUtility.ToAudioClip(File.ReadAllBytes(filePath));
-            Debug.LogWarning((object)"This only supports files that are stored using Unity's Application data path. \nTo load bundled resources use 'Resources.Load(\"filename\") typeof(AudioClip)' method. \nhttps://docs.unity3d.com/ScriptReference/Resources.Load.html");
+            Debug.LogWarning(
+                (object)
+                "This only supports files that are stored using Unity's Application data path. \nTo load bundled resources use 'Resources.Load(\"filename\") typeof(AudioClip)' method. \nhttps://docs.unity3d.com/ScriptReference/Resources.Load.html");
             return (AudioClip)null;
         }
 
@@ -59,7 +61,8 @@ namespace ZGame
                     break;
             }
 
-            Debug.AssertFormat(((uint)num1 > 0U ? 1 : 0) != 0, "Detected format code '{0}' {1}, but only PCM and WaveFormatExtensable uncompressed formats are currently supported.", (object)uint16_1, (object)str);
+            Debug.AssertFormat(((uint)num1 > 0U ? 1 : 0) != 0, "Detected format code '{0}' {1}, but only PCM and WaveFormatExtensable uncompressed formats are currently supported.", (object)uint16_1,
+                (object)str);
             ushort uint16_2 = BitConverter.ToUInt16(fileBytes, 22);
             int int32_2 = BitConverter.ToInt32(fileBytes, 24);
             ushort uint16_3 = BitConverter.ToUInt16(fileBytes, 34);
@@ -102,7 +105,8 @@ namespace ZGame
         {
             int int32 = BitConverter.ToInt32(source, headerOffset);
             headerOffset += 4;
-            Debug.AssertFormat((int32 > 0 && (int32 == dataSize || 0U > 0U) ? 1 : 0) != 0, "Failed to get valid 8-bit wav size: {0} from data bytes: {1} at offset: {2}", (object)int32, (object)dataSize, (object)headerOffset);
+            Debug.AssertFormat((int32 > 0 && (int32 == dataSize || 0U > 0U) ? 1 : 0) != 0, "Failed to get valid 8-bit wav size: {0} from data bytes: {1} at offset: {2}", (object)int32,
+                (object)dataSize, (object)headerOffset);
             float[] audioClipData = new float[int32];
             sbyte maxValue = sbyte.MaxValue;
             for (int index = 0; index < int32; ++index)
@@ -114,7 +118,8 @@ namespace ZGame
         {
             int int32 = BitConverter.ToInt32(source, headerOffset);
             headerOffset += 4;
-            Debug.AssertFormat((int32 > 0 && (int32 == dataSize || 0U > 0U) ? 1 : 0) != 0, "Failed to get valid 16-bit wav size: {0} from data bytes: {1} at offset: {2}", (object)int32, (object)dataSize, (object)headerOffset);
+            Debug.AssertFormat((int32 > 0 && (int32 == dataSize || 0U > 0U) ? 1 : 0) != 0, "Failed to get valid 16-bit wav size: {0} from data bytes: {1} at offset: {2}", (object)int32,
+                (object)dataSize, (object)headerOffset);
             int num = 2;
             int length = int32 / num;
             float[] audioClipData = new float[length];
@@ -133,7 +138,8 @@ namespace ZGame
         {
             int int32 = BitConverter.ToInt32(source, headerOffset);
             headerOffset += 4;
-            Debug.AssertFormat((int32 > 0 && (int32 == dataSize || 0U > 0U) ? 1 : 0) != 0, "Failed to get valid 24-bit wav size: {0} from data bytes: {1} at offset: {2}", (object)int32, (object)dataSize, (object)headerOffset);
+            Debug.AssertFormat((int32 > 0 && (int32 == dataSize || 0U > 0U) ? 1 : 0) != 0, "Failed to get valid 24-bit wav size: {0} from data bytes: {1} at offset: {2}", (object)int32,
+                (object)dataSize, (object)headerOffset);
             int count = 3;
             int length = int32 / count;
             int maxValue = int.MaxValue;
@@ -154,7 +160,8 @@ namespace ZGame
         {
             int int32 = BitConverter.ToInt32(source, headerOffset);
             headerOffset += 4;
-            Debug.AssertFormat((int32 > 0 && (int32 == dataSize || 0U > 0U) ? 1 : 0) != 0, "Failed to get valid 32-bit wav size: {0} from data bytes: {1} at offset: {2}", (object)int32, (object)dataSize, (object)headerOffset);
+            Debug.AssertFormat((int32 > 0 && (int32 == dataSize || 0U > 0U) ? 1 : 0) != 0, "Failed to get valid 32-bit wav size: {0} from data bytes: {1} at offset: {2}", (object)int32,
+                (object)dataSize, (object)headerOffset);
             int num = 4;
             int length = int32 / num;
             int maxValue = int.MaxValue;
@@ -169,7 +176,16 @@ namespace ZGame
             return audioClipData;
         }
 
-        public static byte[] FromAudioClip(AudioClip audioClip) => WavUtility.FromAudioClip(audioClip, audioClip.samples, out string _, false);
+        public static byte[] FromAudioClip(AudioClip audioClip)
+        {
+            if (audioClip == null)
+            {
+                return Array.Empty<byte>();
+            }
+
+            return WavUtility.FromAudioClip(audioClip, audioClip.samples, out string _, false);
+        }
+
         public static byte[] FromAudioClip(AudioClip audioClip, int position, out string filepath, bool saveAsFile = true, string dirname = "recordings")
         {
             MemoryStream stream = new MemoryStream();
@@ -218,11 +234,13 @@ namespace ZGame
             ushort num6 = 1;
             int num7 = num5 + WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(num6), "AUDIO_FORMAT");
             ushort uint16_1 = Convert.ToUInt16(channels);
-            int num8 = num7 + WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(uint16_1), "CHANNELS") + WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(sampleRate), "SAMPLE_RATE");
+            int num8 = num7 + WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(uint16_1), "CHANNELS") +
+                       WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(sampleRate), "SAMPLE_RATE");
             int num9 = sampleRate * channels * WavUtility.BytesPerSample(bitDepth);
             int num10 = num8 + WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(num9), "BYTE_RATE");
             ushort uint16_2 = Convert.ToUInt16(channels * WavUtility.BytesPerSample(bitDepth));
-            int num11 = num10 + WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(uint16_2), "BLOCK_ALIGN") + WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(bitDepth), "BITS_PER_SAMPLE");
+            int num11 = num10 + WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(uint16_2), "BLOCK_ALIGN") +
+                        WavUtility.WriteBytesToMemoryStream(ref stream, BitConverter.GetBytes(bitDepth), "BITS_PER_SAMPLE");
             Debug.AssertFormat((num11 == num2 || 0U > 0U ? 1 : 0) != 0, "Unexpected wav fmt byte count: {0} == {1}", (object)num11, (object)num2);
             return num11;
         }
@@ -252,7 +270,8 @@ namespace ZGame
             for (int index = 0; index < data.Length; ++index)
                 memoryStream.Write(BitConverter.GetBytes(Convert.ToInt16(data[index] * (float)maxValue)), 0, count);
             byte[] array = memoryStream.ToArray();
-            Debug.AssertFormat((data.Length * count == array.Length || 0U > 0U ? 1 : 0) != 0, "Unexpected float[] to Int16 to byte[] size: {0} == {1}", (object)(data.Length * count), (object)array.Length);
+            Debug.AssertFormat((data.Length * count == array.Length || 0U > 0U ? 1 : 0) != 0, "Unexpected float[] to Int16 to byte[] size: {0} == {1}", (object)(data.Length * count),
+                (object)array.Length);
             memoryStream.Dispose();
             return array;
         }

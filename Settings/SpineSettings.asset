@@ -19,7 +19,7 @@ MonoBehaviour:
   defaultInstantiateLoop: 1
   showHierarchyIcons: 1
   setTextureImporterSettings: 1
-  textureSettingsReference: 
+  textureSettingsReference: Packages/com.zh.zgame/Packages/Spine/Editor/spine-unity/Editor/ImporterPresets/PMATexturePreset.preset
   fixPrefabOverrideViaMeshFilter: 0
   blendModeMaterialMultiply: {fileID: 0}
   blendModeMaterialScreen: {fileID: 0}

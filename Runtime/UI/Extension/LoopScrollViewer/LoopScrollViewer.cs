@@ -22,7 +22,6 @@ namespace ZGame.UI
         {
             scroller = GetComponent<EnhancedScroller>();
             scroller.Delegate = this;
-            scroller?.ReloadData();
         }
 
 
@@ -33,6 +32,7 @@ namespace ZGame.UI
                 _data = new SmallList<object>();
             }
 
+            Debug.Log("data count:" + args.Length);
             _data.Clear();
             for (var i = 0; i < args.Length; i++)
             {
@@ -44,7 +44,7 @@ namespace ZGame.UI
 
         public int GetNumberOfCells(EnhancedScroller scroller)
         {
-            return _data.Count;
+            return _data == null ? 0 : _data.Count;
         }
 
 

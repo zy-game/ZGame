@@ -10,10 +10,18 @@ namespace ZGame.UI
     /// 等待界面
     /// </summary>
     [RefPath("Resources/Waiting")]
-    [UIOptions(UILayer.Notification, SceneType.Addition, CacheType.Permanent)]
     public sealed class UIWait : UIBase
     {
-        public override async void Enable(params object[] args)
+        private string title;
+        private float timeout;
+
+        public override void Start(params object[] args)
+        {
+            this.title = args[0].ToString();
+            this.timeout = (float)args[1];
+        }
+
+        public override async void Enable()
         {
             base.Enable();
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>();
@@ -24,16 +32,15 @@ namespace ZGame.UI
                     continue;
                 }
 
-                VARIABLE.SetText(args[0].ToString());
+                VARIABLE.SetText(title);
             }
 
-            float time = (float)args[1];
-            if (time == 0)
+            if (timeout == 0)
             {
                 return;
             }
 
-            await UniTask.Delay((int)(time * 1000));
+            await UniTask.Delay((int)(timeout * 1000));
             Hide();
         }
 
@@ -44,7 +51,7 @@ namespace ZGame.UI
         /// <param name="timeout">超时时长，如果超时为0，则一直显示，直到调用<see cref="Hide"/></param>
         public static void Show(string s, float timeout = 0)
         {
-            CoreAPI.UI.Active<UIWait>(new object[] { s, timeout });
+            AppCore.UI.Show<UIWait>(UILayer.Notification, new object[] { s, timeout });
         }
 
         /// <summary>
@@ -52,7 +59,7 @@ namespace ZGame.UI
         /// </summary>
         public static void Hide()
         {
-            CoreAPI.UI.Inactive<UIWait>();
+            AppCore.UI.Close<UIWait>();
         }
     }
 }

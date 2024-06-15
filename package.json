@@ -5,8 +5,13 @@
   "unity": "2021.2",
   "displayName": "ZGame",
   "dependencies": {
+    "com.unity.cinemachine": "2.9.5",
+    "com.unity.feature.2d": "1.0.0",
     "com.unity.2d.psdimporter": "6.0.9",
     "com.unity.editorcoroutines": "1.0.0",
-    "com.unity.jobs": "0.70.0-preview.7"
+    "com.unity.jobs": "0.70.0-preview.7",
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.render-pipelines.universal": "14.0.10"
+
   }
 }

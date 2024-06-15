@@ -12,7 +12,7 @@ using Microphone =
 
 namespace ZGame.Sound
 {
-    public class RecorderManager : GameFrameworkModule
+    public class RecorderManager : GameManager
     {
         private int _rate;
         private float _volume;
@@ -89,7 +89,7 @@ namespace ZGame.Sound
             m_ByteBuffer = new byte[m_BufferSize * 1 * k_SizeofInt16];
         }
 
-        public override void Update()
+        protected override void Update()
         {
             HasRecordTimeout();
             OnSplitAudioClip();
@@ -205,6 +205,12 @@ namespace ZGame.Sound
         /// </summary>
         public void StartRecordingSound(int timeout, Action<byte[]> callback, bool isHeader = true, int bufferSize = 6400)
         {
+            if (_divName.IsNullOrEmpty())
+            {
+                AppCore.Logger.Log("No Mic Device");
+                return;
+            }
+
             this.isHeader = isHeader;
             this._isRecording = true;
             this._limit_time = timeout;
@@ -221,7 +227,12 @@ namespace ZGame.Sound
         /// </summary>
         public void StopRecordingSound(bool isCancel)
         {
-            CoreAPI.Logger.Log("Stop Recording");
+            if (_divName.IsNullOrEmpty())
+            {
+                return;
+            }
+
+            AppCore.Logger.Log("Stop Recording");
             _isRecording = false;
             if (isCancel is false)
             {

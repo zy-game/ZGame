@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
@@ -13,101 +14,144 @@ using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
+using LiteNetLib;
+using ZGame.Events;
 
 
 namespace ZGame.Networking
 {
-    public class UdpClient : INetClient
+    public enum NetEvent : byte
     {
-        private bool isSsl = false;
-        private IChannel channel;
-        private MultithreadEventLoopGroup group;
+        None,
+        Active,
+        Inactive,
+        Error,
+        Recived,
+    }
 
-        public bool isConnected { get; private set; }
+    public sealed class NetworkEventArgs : IGameEventArgs
+    {
+        public NetEvent type;
+        public MSGPacket packet;
+        public ISocketClient socket;
+        public SocketError Error;
+
+        public void Release()
+        {
+            type = NetEvent.None;
+            RefPooled.Free(packet);
+            packet = null;
+            socket = null;
+        }
+    }
+
+    public class UdpClient : ISocketClient, INetEventListener
+    {
+        private NetManager _netClient;
+        private UniTaskCompletionSource _connectTask;
         public int cid { get; private set; }
+        public ushort port { get; private set; }
         public string address { get; private set; }
 
 
-        public async UniTask WriteAndFlushAsync(byte[] message)
+        public void Release()
         {
-            if (isConnected is false)
+            if (_netClient != null)
+                _netClient.Stop();
+        }
+
+
+        public async UniTask Connect(string address, ushort port)
+        {
+            this.port = port;
+            this.address = address;
+            _connectTask = new UniTaskCompletionSource();
+            _netClient = new NetManager(this);
+            this.cid = _netClient.GetHashCode();
+            _netClient.UpdateTime = 15;
+            _netClient.Start();
+            _netClient.Connect(address, port, "sample_app");
+            await _connectTask.Task;
+        }
+
+        public void DoUpdate()
+        {
+            _netClient.PollEvents();
+        }
+
+        public void Write(byte[] message)
+        {
+            if (_netClient is null || _netClient.FirstPeer is null || _netClient.FirstPeer.ConnectionState is not ConnectionState.Connected)
             {
                 return;
             }
 
-            await channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(message));
+            _netClient.FirstPeer.Send(message, DeliveryMethod.ReliableOrdered);
         }
 
-        public void Receive(Packet packet)
+        public void OnPeerConnected(NetPeer peer)
         {
-            
-        }
-
-        public async UniTask<Status> ConnectAsync(int cid, string host, ushort port, IDispatcher dispatcher)
-        {
-            address = $"{host}:{port}";
-            var group = new MultithreadEventLoopGroup(1);
-            try
+            AppCore.Logger.Log("[CLIENT] We connected to " + peer);
+            using (NetworkEventArgs args = RefPooled.Alloc<NetworkEventArgs>())
             {
-                var bootstrap = new Bootstrap();
-                bootstrap.Group(group).ChannelFactory(() => new SocketDatagramChannel(AddressFamily.InterNetwork)).Handler(new ActionChannelInitializer<IChannel>(c =>
-                {
-                    IChannelPipeline pipeline = c.Pipeline;
-                    pipeline.AddLast(new IdleStateHandler(0, 0, 20));
-                    pipeline.AddLast("echo", new UdpClientHandler(this, dispatcher));
-                }));
-                channel = await bootstrap.ConnectAsync(host, port).ConfigureAwait(false);
-                CoreAPI.Logger.Log("Connect Success：" + address);
-                this.isConnected = true;
-                this.cid = cid;
-                return Status.Success;
+                args.socket = this;
+                args.type = NetEvent.Active;
+                AppCore.Events.Dispatch(NetEvent.Active, args);
             }
-            catch (Exception e)
+
+            _connectTask.TrySetResult();
+        }
+
+        public void OnNetworkError(IPEndPoint endPoint, SocketError socketErrorCode)
+        {
+            AppCore.Logger.Log("[CLIENT] We received error " + socketErrorCode);
+            using (NetworkEventArgs args = RefPooled.Alloc<NetworkEventArgs>())
             {
-                CoreAPI.Logger.LogError(e);
-                RefPooled.Release(this);
-                return Status.Fail;
+                args.socket = this;
+                args.type = NetEvent.Error;
+                args.Error = socketErrorCode;
+                AppCore.Events.Dispatch(NetEvent.Error, args);
             }
         }
 
-
-        public async void Release()
+        public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
         {
-            if (this.channel != null)
-                await channel.DisconnectAsync();
-            if (group != null)
-                await group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
-            this.isConnected = false;
+            MSGPacket packet = MSGPacket.Deserialize(reader.GetRemainingBytes());
+            AppCore.Logger.Log($"[CLIENT] We received message:{packet.opcode}status:{packet.status} message:{packet.message} lenght:{packet.Content.Length}");
+            using (NetworkEventArgs args = RefPooled.Alloc<NetworkEventArgs>())
+            {
+                args.socket = this;
+                args.type = NetEvent.Recived;
+                args.packet = packet;
+                AppCore.Events.Dispatch(NetEvent.Recived, args);
+            }
         }
 
-        class UdpClientHandler : ChannelHandlerAdapter
+        public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
         {
-            private INetClient _client;
-            private IDispatcher _dispatcher;
-
-            public UdpClientHandler(INetClient client, IDispatcher dispatcher)
+            if (messageType == UnconnectedMessageType.BasicMessage && _netClient.ConnectedPeersCount == 0 && reader.GetInt() == 1)
             {
-                this._client = client;
-                this._dispatcher = dispatcher;
+                AppCore.Logger.Log("[CLIENT] Received discovery response. Connecting to: " + remoteEndPoint);
+                _netClient.Connect(remoteEndPoint, "sample_app");
             }
+        }
 
-            public override void ChannelActive(IChannelHandlerContext context)
-            {
-                this._dispatcher?.Active(_client);
-            }
+        public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
+        {
+        }
 
-            public override void ChannelRead(IChannelHandlerContext context, object message)
-            {
-                var packet = message as DatagramPacket;
-                Packet p2 = Packet.Deserialized(packet.Content.Array);
-                this._dispatcher?.Dispatch(_client, p2);
-                packet.Release();
-            }
+        public void OnConnectionRequest(ConnectionRequest request)
+        {
+        }
 
-            public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
+        public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
+        {
+            AppCore.Logger.Log("[CLIENT] We disconnected because " + disconnectInfo.Reason);
+            using (NetworkEventArgs args = RefPooled.Alloc<NetworkEventArgs>())
             {
-                CoreAPI.Logger.LogFormat("Exception: {0}", exception);
-                context.CloseAsync();
+                args.socket = this;
+                args.type = NetEvent.Inactive;
+                AppCore.Events.Dispatch(NetEvent.Inactive, args);
             }
         }
     }

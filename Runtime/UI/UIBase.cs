@@ -6,53 +6,40 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using ZGame.Sound;
-using ZGame.VFS;
+using ZGame.Resource;
 
 namespace ZGame.UI
 {
+    public interface IUIFrom : IReference
+    {
+        string name { get; }
+        GameObject gameObject { get; }
+        Transform transform { get; }
+        RectTransform rect_transform { get; }
+
+        void Awake();
+        void Start(params object[] args);
+        void Disable();
+        void Enable();
+    }
+
+    public interface IUITitle : IUIFrom
+    {
+        void SetTitle(string title);
+    }
+
     /// <summary>
     /// UI界面
     /// </summary>
-    public class UIBase : IReference
+    public class UIBase : IUIFrom
     {
+        private GameObject _gameObject;
         private RectTransform _rectTransform;
-        private Dictionary<object, Coroutine> _coroutines = new Dictionary<object, Coroutine>();
+        public string name => _gameObject.name;
+        public Transform transform => _gameObject.transform;
+        public GameObject gameObject => _gameObject;
+        public RectTransform rect_transform => _rectTransform;
 
-        public string name { get; private set; }
-        public Transform transform => gameObject.transform;
-        public GameObject gameObject { get; set; }
-
-        public RectTransform rect_transform
-        {
-            get
-            {
-                if (_rectTransform == null)
-                {
-                    _rectTransform = gameObject.GetComponent<RectTransform>();
-                }
-
-                return _rectTransform;
-            }
-        }
-
-
-        internal static UIBase Create(string path, Type type, Canvas canvas)
-        {
-            ResObject resObject = CoreAPI.VFS.GetAsset(path);
-            if (resObject.IsSuccess() is false)
-            {
-                CoreAPI.Logger.Log("加载资源失败：" + path);
-                return default;
-            }
-
-            UIBase uiBase = (UIBase)RefPooled.Spawner(type);
-            GameObject gameObject = resObject.Instantiate(canvas.transform, Vector3.zero, Vector3.zero, Vector3.one);
-            uiBase.gameObject = gameObject;
-            uiBase.name = gameObject.name;
-            uiBase.rect_transform.sizeDelta = Vector2.zero;
-            uiBase.rect_transform.anchoredPosition = Vector2.zero;
-            return uiBase;
-        }
 
         /// <summary>
         /// 激活界面
@@ -62,9 +49,17 @@ namespace ZGame.UI
         }
 
         /// <summary>
+        /// 初始化界面
+        /// </summary>
+        /// <param name="args"></param>
+        public virtual void Start(params object[] args)
+        {
+        }
+
+        /// <summary>
         /// 显示界面
         /// </summary>
-        public virtual void Enable(params object[] args)
+        public virtual void Enable()
         {
             if (gameObject == null)
             {
@@ -87,82 +82,44 @@ namespace ZGame.UI
             gameObject.SetActive(false);
         }
 
-
         /// <summary>
         /// 释放UI界面
         /// </summary>
         public virtual void Release()
         {
-            name = String.Empty;
-            foreach (var VARIABLE in _coroutines.Values)
-            {
-                CoreAPI.StopCoroutine(VARIABLE);
-            }
-
-            _coroutines.Clear();
-            GameObject.DestroyImmediate(gameObject);
-            gameObject = null;
+            GameObject.DestroyImmediate(_gameObject);
+            _gameObject = null;
+            _rectTransform = null;
         }
 
-        /// <summary>
-        /// 启动一个倒计时
-        /// </summary>
-        /// <param name="tmp_text"></param>
-        /// <param name="count"></param>
-        /// <param name="interval"></param>
-        /// <param name="format"></param>
-        /// <param name="onFinish"></param>
-        public void StartCountDown(TMP_Text tmp_text, int count, int interval, string format, Action onFinish)
+        internal static UIBase Create(string path, Type type)
         {
-            if (tmp_text == null)
+            ResObject resObject = AppCore.Resource.LoadAsset<GameObject>(path);
+            if (resObject.IsSuccess() is false)
             {
-                return;
+                AppCore.Logger.Log("加载资源失败：" + path);
+                return default;
             }
 
-            StopCountDown(tmp_text);
-            _coroutines.Add(tmp_text, CoreAPI.StartCoroutine(this.OnStartCountDown(tmp_text, count, interval, format, onFinish)));
+            UIBase uiBase = (UIBase)RefPooled.Alloc(type);
+            uiBase._gameObject = resObject.Instantiate();
+            uiBase._rectTransform = uiBase._gameObject.GetComponent<RectTransform>();
+            return uiBase;
         }
 
-        /// <summary>
-        /// 启动一个倒计时
-        /// </summary>
-        /// <param name="tmp_text"></param>
-        /// <param name="count"></param>
-        /// <param name="interval"></param>
-        /// <param name="format"></param>
-        /// <param name="onFinish"></param>
-        /// <returns></returns>
-        private IEnumerator OnStartCountDown(TMP_Text tmp_text, int count, int interval, string format, Action onFinish)
+        public static T Create<T>(GameObject gameObject, Transform parent, params object[] args) where T : UIBase
         {
-            while (count > 0)
+            T uiBase = RefPooled.Alloc<T>();
+            uiBase._gameObject = gameObject;
+            if (parent != null)
             {
-                tmp_text.text = string.Format(format, count);
-                yield return new WaitForSeconds(interval);
-                count--;
+                uiBase._gameObject.SetParent(parent, Vector3.zero, Vector3.zero, Vector3.one);
             }
 
-            if (onFinish != null)
-            {
-                onFinish();
-            }
-        }
-
-        /// <summary>
-        /// 停止倒计时
-        /// </summary>
-        /// <param name="target"></param>
-        public void StopCountDown(object target)
-        {
-            if (target == null)
-            {
-                return;
-            }
-
-            if (_coroutines.TryGetValue(target, out Coroutine coroutine))
-            {
-                CoreAPI.StopCoroutine(coroutine);
-                _coroutines.Remove(target);
-            }
+            uiBase.Awake();
+            uiBase.Start(args);
+            uiBase.Enable();
+            return uiBase;
         }
     }
 }

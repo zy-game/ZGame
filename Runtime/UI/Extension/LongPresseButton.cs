@@ -16,16 +16,56 @@ namespace ZGame.UI
         [SerializeField] public float limitTime;
         private float startTime;
         private bool isDown;
-        private bool isUp;
-        private bool isCancel;
-        private bool callDown;
-        private Vector2 touchPos;
 
         public void SetLimitTime(float time)
         {
             limitTime = time;
         }
 
+        private void MarkDown()
+        {
+            isDown = true;
+            startTime = Time.realtimeSinceStartup;
+        }
+
+        private void Refresh()
+        {
+            isDown = false;
+            startTime = 0;
+        }
+
+        public override void OnPointerClick(PointerEventData eventData)
+        {
+            base.OnPointerClick(eventData);
+            Refresh();
+            onClick?.Invoke();
+        }
+
+        public override void OnPointerDown(PointerEventData eventData)
+        {
+            base.OnPointerDown(eventData);
+            MarkDown();
+            onDown?.Invoke();
+        }
+
+        public override void OnPointerUp(PointerEventData eventData)
+        {
+            base.OnPointerUp(eventData);
+            Refresh();
+            onUp?.Invoke();
+        }
+
+        public override void OnPointerExit(PointerEventData eventData)
+        {
+            base.OnPointerExit(eventData);
+            if (isDown is false)
+            {
+                return;
+            }
+
+            Refresh();
+            onCancel?.Invoke();
+        }
 
         private void Update()
         {
@@ -34,56 +74,13 @@ namespace ZGame.UI
                 return;
             }
 
-            if (Time.realtimeSinceStartup - startTime > 0.2f && callDown is false)
-            {
-                callDown = true;
-                onDown.Invoke();
-            }
-
-            if (Vector2.Distance(Input.mousePosition, touchPos) > 150)
-            {
-                isDown = false;
-                onCancel.Invoke();
-            }
-
             if (Time.realtimeSinceStartup - startTime < limitTime)
             {
                 return;
             }
 
-            isDown = false;
-            if (onUp != null)
-            {
-                onUp.Invoke();
-            }
-        }
-
-        public override void OnPointerDown(PointerEventData eventData)
-        {
-            base.OnPointerDown(eventData);
-            isDown = true;
-            callDown = false;
-            touchPos = eventData.position;
-            startTime = Time.realtimeSinceStartup;
-        }
-
-        public override void OnPointerUp(PointerEventData eventData)
-        {
-            base.OnPointerUp(eventData);
-            if (isDown is false)
-            {
-                return;
-            }
-
-            isDown = false;
-            if (Time.realtimeSinceStartup - startTime < 1)
-            {
-                onClick?.Invoke();
-            }
-            else
-            {
-                onUp.Invoke();
-            }
+            Refresh();
+            onUp?.Invoke();
         }
     }
 }

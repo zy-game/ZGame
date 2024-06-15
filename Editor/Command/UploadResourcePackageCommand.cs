@@ -2,10 +2,12 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+using UnityEditor;
 using UnityEngine;
-using ZGame.VFS;
+using ZGame.Config;
+using ZGame.Resource;
 
-namespace ZGame.Editor.Command
+namespace ZGame.Editor
 {
     public class UploadResourcePackageCommand
     {
@@ -20,7 +22,7 @@ namespace ZGame.Editor.Command
                 return;
             }
 
-            var options = args[0] as OSSOptions;
+            var options = args[0] as ResourceServerOptions;
             var filePath = args[1] as string;
             if (File.Exists(filePath) is false)
             {
@@ -45,9 +47,9 @@ namespace ZGame.Editor.Command
             Debug.Log("upload:" + filePath);
         }
 
-        private static void StreamingUpload(OSSOptions options, string filePath)
+        private static void StreamingUpload(ResourceServerOptions options, string filePath)
         {
-            string path = options.GetFilePath(Path.GetFileName(filePath));
+            string path = Path.Combine(Application.streamingAssetsPath, Path.GetFileName(filePath).ToLower());
             if (Directory.Exists(Application.streamingAssetsPath) is false)
             {
                 Directory.CreateDirectory(Application.streamingAssetsPath);
@@ -61,9 +63,9 @@ namespace ZGame.Editor.Command
             File.Copy(filePath, path, true);
         }
 
-        private static void OSSUpload(OSSOptions options, string filePath)
+        private static void OSSUpload(ResourceServerOptions options, string filePath)
         {
-            string putName = $"{CoreAPI.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
+            string putName = $"{AppCore.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
             if (client is null)
             {
                 var accessKeyId = options.key;
@@ -105,11 +107,11 @@ namespace ZGame.Editor.Command
             }
         }
 
-        private static async void COSUpload(OSSOptions options, string filePath)
+        private static async void COSUpload(ResourceServerOptions options, string filePath)
         {
             try
             {
-                string putName = $"{CoreAPI.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
+                string putName = $"{AppCore.GetPlatformName()}/{Path.GetFileName(filePath)}".ToLower();
                 if (server is null)
                 {
                     COSXML.CosXmlConfig config = new COSXML.CosXmlConfig.Builder().SetRegion(options.region).Build();
@@ -131,7 +133,6 @@ namespace ZGame.Editor.Command
                 COSXML.Transfer.TransferManager transferManager = new COSXML.Transfer.TransferManager(server, transferConfig);
                 COSXML.Transfer.COSXMLUploadTask uploadTask = new COSXML.Transfer.COSXMLUploadTask(options.bucket, putName);
                 uploadTask.SetSrcPath(filePath);
-                uploadTask.progressCallback = delegate(long completed, long total) { Console.WriteLine(String.Format("progress = {0:##.##}%", completed * 100.0 / total)); };
                 COSXML.Transfer.COSXMLUploadTask.UploadTaskResult result = await transferManager.UploadAsync(uploadTask);
                 Debug.Log(result.GetResultInfo());
                 string eTag = result.eTag;

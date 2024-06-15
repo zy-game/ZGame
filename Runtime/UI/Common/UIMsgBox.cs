@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using ZGame;
 using ZGame.Config;
 using ZGame.Language;
-using ZGame.Notify;
+using ZGame.Events;
 
 namespace ZGame.UI
 {
@@ -15,22 +15,24 @@ namespace ZGame.UI
     /// 消息弹窗
     /// </summary>
     [RefPath("Resources/MsgBox")]
-    [UIOptions(UILayer.Notification, SceneType.Addition, CacheType.Permanent)]
     public class UIMsgBox : UIBase
     {
+        private string title;
+        private string content;
         private Action onYes;
         private Action onNo;
 
-
-        public override void Enable(params object[] args)
+        public override void Start(params object[] args)
         {
-            base.Enable(args);
-            string title = args[0].ToString();
-            string content = args[1].ToString();
+            this.title = args[0].ToString();
+            this.content = args[1].ToString();
             this.onYes = (Action)(args[2]);
             this.onNo = (Action)(args[3]);
+        }
 
-            CoreAPI.Notify.Subscribe<KeyEventArgs>(KeyCode.Escape, OnBackup);
+        public override void Enable()
+        {
+            base.Enable();
             TMP_Text[] texts = this.gameObject.GetComponentsInChildren<TMP_Text>(true);
             foreach (var VARIABLE in texts)
             {
@@ -46,12 +48,12 @@ namespace ZGame.UI
 
                 if (VARIABLE.name.Equals("text_yes"))
                 {
-                    VARIABLE.SetText(CoreAPI.Language.Query(CommonLanguage.Confirm));
+                    VARIABLE.SetText(AppCore.Language.Query(LanguageCode.Confirm));
                 }
 
                 if (VARIABLE.name.Equals("text_no"))
                 {
-                    VARIABLE.SetText(CoreAPI.Language.Query(CommonLanguage.Cancel));
+                    VARIABLE.SetText(AppCore.Language.Query(LanguageCode.Cancel));
                 }
             }
 
@@ -72,20 +74,9 @@ namespace ZGame.UI
             }
         }
 
-        private void OnBackup(KeyEventArgs args)
-        {
-            if (args.keyCode is not KeyCode.Escape && args.type is not KeyEventType.Down)
-            {
-                return;
-            }
-
-            Switch(false);
-        }
-
         private void Switch(bool state)
         {
-            CoreAPI.Notify.Unsubscribe<KeyEventArgs>(KeyCode.Escape, OnBackup);
-            CoreAPI.UI?.Inactive(this);
+            AppCore.UI?.Close<UIMsgBox>();
             switch (state)
             {
                 case true:
@@ -106,7 +97,7 @@ namespace ZGame.UI
         /// <param name="onNo">点击取消按钮回调</param>
         public static void Show(string title, string content, Action onYes, Action onNo)
         {
-            CoreAPI.UI.Active<UIMsgBox>(new object[] { title, content, onYes, onNo });
+            AppCore.UI.Show<UIMsgBox>(UILayer.Notification, new object[] { title, content, onYes, onNo });
         }
 
         /// <summary>
@@ -117,7 +108,7 @@ namespace ZGame.UI
         /// <param name="onNo">点击取消按钮回调</param>
         public static void Show(string content, Action onYes, Action onNo)
         {
-            Show(CoreAPI.Language.Query(CommonLanguage.Tips), content, onYes, onNo);
+            Show(AppCore.Language.Query(LanguageCode.Tips), content, onYes, onNo);
         }
 
         /// <summary>
@@ -146,7 +137,7 @@ namespace ZGame.UI
         /// <returns>点击的是确定还是取消按钮</returns>
         public static UniTask<bool> ShowAsync(string content, bool isNo = false)
         {
-            return ShowAsync(CoreAPI.Language.Query(CommonLanguage.Tips), content, isNo);
+            return ShowAsync(AppCore.Language.Query(LanguageCode.Tips), content, isNo);
         }
 
         /// <summary>

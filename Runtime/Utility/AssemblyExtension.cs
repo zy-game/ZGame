@@ -91,6 +91,32 @@ namespace ZGame
         /// <param name="domain"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
+        public static Dictionary<Type, List<T>> GetCustomAttributeMapList<T>(this AppDomain domain) where T : Attribute
+        {
+            Dictionary<Type, List<T>> map = new Dictionary<Type, List<T>>();
+            foreach (var assembly in domain.GetAssemblies())
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    var attribute = type.GetCustomAttributes<T>();
+                    if (attribute is null || attribute.Count() == 0)
+                    {
+                        continue;
+                    }
+
+                    map.Add(type, attribute.ToList());
+                }
+            }
+
+            return map;
+        }
+
+        /// <summary>
+        /// 获取当前程序域中所有指定类型的特性
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static Dictionary<Type, T> GetCustomAttributeMap<T>(this AppDomain domain) where T : Attribute
         {
             Dictionary<Type, T> map = new Dictionary<Type, T>();
@@ -98,7 +124,7 @@ namespace ZGame
             {
                 foreach (var type in assembly.GetTypes())
                 {
-                    T attribute = type.GetCustomAttribute<T>();
+                    var attribute = type.GetCustomAttribute<T>();
                     if (attribute is null)
                     {
                         continue;
@@ -202,7 +228,7 @@ namespace ZGame
                 throw new EntryPointNotFoundException();
             }
 
-            T startup = (T)RefPooled.Spawner(entryType);
+            T startup = (T)RefPooled.Alloc(entryType);
             if (startup is null)
             {
                 throw new EntryPointNotFoundException();
